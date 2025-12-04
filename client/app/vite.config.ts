@@ -1,10 +1,13 @@
+import path from "path"
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from "@tailwindcss/vite"
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(), // 1. Added Tailwind plugin
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
@@ -35,7 +38,6 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
-          // --- EXISTING FONT CACHING RULES ---
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
@@ -58,7 +60,6 @@ export default defineConfig({
               }
             }
           },
-          // --- NEW API CACHING RULE ADDED HERE ---
           {
             urlPattern: /^https:\/\/your-api-domain\.com\/api\/.*/i,
             handler: 'NetworkFirst',
@@ -75,6 +76,13 @@ export default defineConfig({
       }
     })
   ],
+
+  // 2. Added Resolve Alias for shadcn
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
 
   // Server Proxy Configuration
   server: {
