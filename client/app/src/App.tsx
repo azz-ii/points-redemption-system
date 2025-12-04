@@ -10,6 +10,7 @@ function App() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setMessage(''); // Clear previous messages
 
     try {
       const response = await fetch('http://127.0.0.1:8000/login/', {
@@ -22,14 +23,17 @@ function App() {
 
       if (response.ok) {
         console.log('Login successful:', data);
-        setMessage(`✅ ${data.message || 'Login successful'}`);
+        setMessage(`✅ Access Granted: ${data.message || 'Login successful'}`);
+        // Clear the form on success
+        setUsername('');
+        setPassword('');
       } else {
         console.error('Login failed:', data);
-        setMessage(`❌ ${data.error || 'Login failed'}`);
+        setMessage(`❌ Access Denied: ${data.error || 'Invalid credentials'}`);
       }
     } catch (err) {
       console.error('Error connecting to server:', err);
-      setMessage('❌ Server error');
+      setMessage('❌ Server Error: Unable to connect to authentication server');
     }
   };
 
@@ -43,9 +47,19 @@ function App() {
       <h1>Sign In</h1>
 
       {message && (
-        <p style={{ color: message.includes('✅') ? 'green' : 'red' }}>
+        <div 
+          style={{ 
+            padding: '12px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            backgroundColor: message.includes('✅') ? '#d4edda' : '#f8d7da',
+            color: message.includes('✅') ? '#155724' : '#721c24',
+            border: `1px solid ${message.includes('✅') ? '#c3e6cb' : '#f5c6cb'}`,
+            fontWeight: '500'
+          }}
+        >
           {message}
-        </p>
+        </div>
       )}
 
       <form onSubmit={handleLogin} className="login-form">

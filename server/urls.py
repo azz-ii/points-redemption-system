@@ -8,12 +8,6 @@ from .views import LoginView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', LoginView.as_view(), name='login'),
-
-    # Redirect root URL to login page
-    path('', RedirectView.as_view(pattern_name='login', permanent=False)),
-
-    # PWA URLs (keep if you still need them)
-    path('', include('pwa.urls')),
 ]
 
 # Serve static files in development
