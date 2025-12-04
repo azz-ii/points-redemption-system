@@ -38,57 +38,66 @@ function App() {
   };
 
   return (
-    <div className="login-container">
-      <div className="logo-container">
-        <img src={viteLogo} className="logo" alt="Vite logo" />
-        <img src={reactLogo} className="logo react" alt="React logo" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
+        <div className="flex justify-center gap-4 mb-6">
+          <img src={viteLogo} className="h-16 w-16 hover:scale-110 transition-transform" alt="Vite logo" />
+          <img src={reactLogo} className="h-16 w-16 hover:rotate-180 transition-transform duration-1000" alt="React logo" />
+        </div>
+
+        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-slate-50">Sign In</h1>
+
+        {message && (
+          <div 
+            className={`p-4 rounded-lg mb-4 font-medium text-sm ${
+              message.includes('✅') 
+                ? 'bg-green-50 text-green-800 border border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900' 
+                : 'bg-red-50 text-red-800 border border-red-200 dark:bg-red-950 dark:text-red-200 dark:border-red-900'
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <button 
+            type="submit"
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Login
+          </button>
+        </form>
       </div>
-
-      <h1>Sign In</h1>
-
-      {message && (
-        <div 
-          style={{ 
-            padding: '12px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            backgroundColor: message.includes('✅') ? '#d4edda' : '#f8d7da',
-            color: message.includes('✅') ? '#155724' : '#721c24',
-            border: `1px solid ${message.includes('✅') ? '#c3e6cb' : '#f5c6cb'}`,
-            fontWeight: '500'
-          }}
-        >
-          {message}
-        </div>
-      )}
-
-      <form onSubmit={handleLogin} className="login-form">
-        <div className="input-group">
-          <label htmlFor="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            placeholder="Enter your username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit">Login</button>
-      </form>
     </div>
   );
 }
