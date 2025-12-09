@@ -3,6 +3,7 @@ import Login from "./page/Login";
 import Dashboard from "./page/Dashboard";
 import History from "./page/History";
 import Accounts from "./page/Accounts";
+import Catalogue from "./page/Catalogue";
 
 type PageType = "login" | "dashboard" | "history" | "accounts" | "catalogue";
 
@@ -38,6 +39,10 @@ function App() {
 
   if (currentPage === "accounts") {
     return <Accounts onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+  }
+
+  if (currentPage === "catalogue") {
+    return <Catalogue onNavigate={handleNavigateTo} onLogout={handleLogout} />;
   }
 
   return <Dashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;

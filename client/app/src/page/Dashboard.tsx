@@ -372,7 +372,13 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody
+                className={`divide-y ${
+                  resolvedTheme === "dark"
+                    ? "divide-gray-700"
+                    : "divide-gray-200"
+                }`}
+              >
                 {requests.map((request) => (
                   <tr
                     key={request.id}
