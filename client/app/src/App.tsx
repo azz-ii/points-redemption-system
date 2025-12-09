@@ -1,11 +1,18 @@
 import { useState } from "react";
-import Login from "./page/Login";
-import Dashboard from "./page/Dashboard";
-import History from "./page/History";
-import Accounts from "./page/Accounts";
-import Catalogue from "./page/Catalogue";
+import Login from "./page/login/Login";
+import Dashboard from "./page/superadmin/Dashboard";
+import History from "./page/superadmin/History";
+import Accounts from "./page/superadmin/Accounts";
+import Catalogue from "./page/superadmin/Catalogue";
+import Redemption from "./page/superadmin/Redemption";
 
-type PageType = "login" | "dashboard" | "history" | "accounts" | "catalogue";
+type PageType =
+  | "login"
+  | "dashboard"
+  | "history"
+  | "accounts"
+  | "catalogue"
+  | "redemption";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
@@ -43,6 +50,10 @@ function App() {
 
   if (currentPage === "catalogue") {
     return <Catalogue onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+  }
+
+  if (currentPage === "redemption") {
+    return <Redemption onNavigate={handleNavigateTo} onLogout={handleLogout} />;
   }
 
   return <Dashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;

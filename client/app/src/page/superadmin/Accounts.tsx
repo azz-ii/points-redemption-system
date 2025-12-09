@@ -9,12 +9,14 @@ import {
   Sliders,
   UserPlus,
   Home,
-  LogOut,
   History as HistoryIcon,
   User,
   Pencil,
   Trash2,
   X,
+  Package,
+  LogOut,
+  ClipboardList,
 } from "lucide-react";
 
 interface Account {
@@ -26,13 +28,14 @@ interface Account {
 
 interface AccountsProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue"
+    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
   ) => void;
   onLogout?: () => void;
 }
 
 function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const { resolvedTheme } = useTheme();
+  const currentPage = "accounts";
   const [accounts] = useState<Account[]>([
     {
       id: 1,
@@ -95,6 +98,16 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               <Bell className="h-5 w-5" />
             </button>
             <ThemeToggle />
+            <button
+              onClick={onLogout}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 hover:bg-gray-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
@@ -362,28 +375,78 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       >
         <button
           onClick={() => onNavigate && onNavigate("dashboard")}
-          className="flex flex-col items-center gap-1"
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            currentPage === "dashboard"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
         >
           <Home className="h-6 w-6" />
           <span className="text-xs">Dashboard</span>
         </button>
         <button
           onClick={() => onNavigate && onNavigate("history")}
-          className="flex flex-col items-center gap-1"
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            currentPage === "history"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
         >
           <HistoryIcon className="h-6 w-6" />
           <span className="text-xs">History</span>
         </button>
         <button
           onClick={() => onNavigate && onNavigate("accounts")}
-          className="flex flex-col items-center gap-1"
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            currentPage === "accounts"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
         >
           <User className="h-6 w-6" />
           <span className="text-xs">Accounts</span>
         </button>
-        <button onClick={onLogout} className="flex flex-col items-center gap-1">
-          <LogOut className="h-6 w-6" />
-          <span className="text-xs">Logout</span>
+        <button
+          onClick={() => onNavigate && onNavigate("catalogue")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            currentPage === "catalogue"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <Package className="h-6 w-6" />
+          <span className="text-xs">Catalogue</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("redemption")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            currentPage === "redemption"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <ClipboardList className="h-6 w-6" />
+          <span className="text-xs">Redemption</span>
         </button>
       </div>
 

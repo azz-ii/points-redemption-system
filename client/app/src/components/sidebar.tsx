@@ -8,13 +8,19 @@ import {
   Menu,
   User,
   Package,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
-  currentPage: "dashboard" | "history" | "accounts" | "catalogue";
+  currentPage:
+    | "dashboard"
+    | "history"
+    | "accounts"
+    | "catalogue"
+    | "redemption";
   onNavigate: (
-    page: "dashboard" | "history" | "accounts" | "catalogue"
+    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
   ) => void;
   onLogout: () => void;
 }
@@ -28,6 +34,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
     { id: "history", label: "History", icon: History },
     { id: "accounts", label: "Accounts", icon: User },
     { id: "catalogue", label: "Catalogue", icon: Package },
+    { id: "redemption", label: "Redemption", icon: ClipboardList },
   ] as const;
 
   return (

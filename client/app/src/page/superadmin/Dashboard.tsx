@@ -12,8 +12,13 @@ import {
   X,
   Pencil,
   Home,
-  LogOut,
   History as HistoryIcon,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Package,
+  LogOut,
+  ClipboardList,
 } from "lucide-react";
 
 interface RequestItem {
@@ -26,13 +31,14 @@ interface RequestItem {
 
 interface DashboardProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue"
+    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
   ) => void;
   onLogout?: () => void;
 }
 
 function Dashboard({ onNavigate, onLogout }: DashboardProps) {
   const { resolvedTheme } = useTheme();
+  const activePage = "dashboard";
   const [requests] = useState<RequestItem[]>([
     {
       id: "SA220011",
@@ -48,14 +54,43 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
       quantity: 4,
       status: "Pending",
     },
+    {
+      id: "SA220013",
+      agent: "Maria Santos",
+      details: "Premium Jacket",
+      quantity: 8,
+      status: "Approved",
+    },
+    {
+      id: "SA220014",
+      agent: "Juan Cruz",
+      details: "Executive Shirt",
+      quantity: 6,
+      status: "Pending",
+    },
+    {
+      id: "SA220015",
+      agent: "Ana Garcia",
+      details: "Corporate Tie",
+      quantity: 10,
+      status: "Rejected",
+    },
   ]);
 
   const selectedFilter = "All Incoming Submission Request";
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const pendingCount = requests.filter((r) => r.status === "Pending").length;
   const approvedCount = requests.filter((r) => r.status === "Approved").length;
   const onBoardCount = 20;
+
+  // Pagination logic
+  const totalPages = Math.ceil(requests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRequests = requests.slice(startIndex, endIndex);
 
   return (
     <div
@@ -91,7 +126,19 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
             </div>
             <span className="font-medium text-sm">Welcome, Izza!</span>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={onLogout}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 hover:bg-gray-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -379,7 +426,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "divide-gray-200"
                 }`}
               >
-                {requests.map((request) => (
+                {paginatedRequests.map((request) => (
                   <tr
                     key={request.id}
                     className={`hover:${
@@ -428,6 +475,51 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-6">
+            <div
+              className={`text-sm ${
+                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`flex items-center gap-1 px-3 py-2 rounded transition-colors ${
+                  currentPage === 1
+                    ? resolvedTheme === "dark"
+                      ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : resolvedTheme === "dark"
+                    ? "bg-gray-800 text-white hover:bg-gray-700"
+                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className={`flex items-center gap-1 px-3 py-2 rounded transition-colors ${
+                  currentPage === totalPages
+                    ? resolvedTheme === "dark"
+                      ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : resolvedTheme === "dark"
+                    ? "bg-gray-800 text-white hover:bg-gray-700"
+                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -439,17 +531,80 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
             : "bg-white border-gray-200"
         }`}
       >
-        <button className="flex flex-col items-center gap-1">
+        <button
+          onClick={() => onNavigate && onNavigate("dashboard")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "dashboard"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
           <Home className="h-6 w-6" />
           <span className="text-xs">Dashboard</span>
         </button>
-        <button className="flex flex-col items-center gap-1">
+        <button
+          onClick={() => onNavigate && onNavigate("history")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "history"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
           <HistoryIcon className="h-6 w-6" />
           <span className="text-xs">History</span>
         </button>
-        <button className="flex flex-col items-center gap-1">
-          <LogOut className="h-6 w-6" />
-          <span className="text-xs">Logout</span>
+        <button
+          onClick={() => onNavigate && onNavigate("accounts")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "accounts"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <User className="h-6 w-6" />
+          <span className="text-xs">Accounts</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("catalogue")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "catalogue"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <Package className="h-6 w-6" />
+          <span className="text-xs">Catalogue</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("redemption")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "redemption"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <ClipboardList className="h-6 w-6" />
+          <span className="text-xs">Redemption</span>
         </button>
       </div>
     </div>

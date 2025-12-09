@@ -8,9 +8,12 @@ import {
   Search,
   Sliders,
   Home,
-  LogOut,
   History as HistoryIcon,
   X,
+  User,
+  Package,
+  LogOut,
+  ClipboardList,
 } from "lucide-react";
 
 interface HistoryItem {
@@ -23,13 +26,17 @@ interface HistoryItem {
 
 interface HistoryProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue"
+    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
   ) => void;
   onLogout?: () => void;
 }
 
 function History({ onNavigate, onLogout }: HistoryProps) {
   const { resolvedTheme } = useTheme();
+  const activePage = "history";
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   const [historyItems] = useState<HistoryItem[]>([
     {
       id: "MC0003C",
@@ -45,7 +52,61 @@ function History({ onNavigate, onLogout }: HistoryProps) {
       quantity: 5,
       status: "Approved",
     },
+    {
+      id: "SA220015",
+      type: "Tie",
+      details: "Corporate Tie",
+      quantity: 10,
+      status: "Rejected",
+    },
+    {
+      id: "SA220016",
+      type: "Shirt",
+      details: "Casual Shirt",
+      quantity: 10,
+      status: "Rejected",
+    },
+    {
+      id: "SA220017",
+      type: "Jacket",
+      details: "Wool Jacket",
+      quantity: 5,
+      status: "Approved",
+    },
+    {
+      id: "SA220018",
+      type: "Pants",
+      details: "Business Pants",
+      quantity: 3,
+      status: "Pending",
+    },
+    {
+      id: "SA220019",
+      type: "Shoes",
+      details: "Leather Shoes",
+      quantity: 7,
+      status: "Approved",
+    },
+    {
+      id: "SA220020",
+      type: "Belt",
+      details: "Leather Belt",
+      quantity: 4,
+      status: "Rejected",
+    },
+    {
+      id: "SA220020",
+      type: "Belt",
+      details: "Leather Belt",
+      quantity: 4,
+      status: "Rejected",
+    },
   ]);
+
+  const totalPages = Math.ceil(historyItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = historyItems.slice(startIndex, endIndex);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
@@ -95,6 +156,16 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               <Bell className="h-5 w-5" />
             </button>
             <ThemeToggle />
+            <button
+              onClick={onLogout}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 hover:bg-gray-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
@@ -196,8 +267,14 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {historyItems.map((item) => (
+              <tbody
+                className={`divide-y ${
+                  resolvedTheme === "dark"
+                    ? "divide-gray-700"
+                    : "divide-gray-200"
+                }`}
+              >
+                {paginatedItems.map((item) => (
                   <tr
                     key={item.id}
                     className={`hover:${
@@ -248,6 +325,49 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between mt-4 px-4">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                currentPage === 1
+                  ? resolvedTheme === "dark"
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : resolvedTheme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              Previous
+            </button>
+            <span
+              className={`text-sm font-medium ${
+                resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                currentPage === totalPages
+                  ? resolvedTheme === "dark"
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : resolvedTheme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -286,7 +406,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
 
           {/* Mobile Cards */}
           <div className="space-y-3">
-            {historyItems.map((item) => (
+            {paginatedItems.map((item) => (
               <div
                 key={item.id}
                 className={`p-4 rounded-lg border ${
@@ -355,6 +475,49 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               </div>
             ))}
           </div>
+
+          {/* Mobile Pagination Controls */}
+          <div className="flex items-center justify-between mt-6 gap-2">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`flex-1 px-3 py-2 rounded text-xs font-medium transition-colors ${
+                currentPage === 1
+                  ? resolvedTheme === "dark"
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : resolvedTheme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              Previous
+            </button>
+            <span
+              className={`text-xs font-medium px-2 ${
+                resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              {currentPage}/{totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+              className={`flex-1 px-3 py-2 rounded text-xs font-medium transition-colors ${
+                currentPage === totalPages
+                  ? resolvedTheme === "dark"
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : resolvedTheme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 
@@ -366,17 +529,80 @@ function History({ onNavigate, onLogout }: HistoryProps) {
             : "bg-white border-gray-200"
         }`}
       >
-        <button className="flex flex-col items-center gap-1">
+        <button
+          onClick={() => onNavigate && onNavigate("dashboard")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "dashboard"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
           <Home className="h-6 w-6" />
           <span className="text-xs">Dashboard</span>
         </button>
-        <button className="flex flex-col items-center gap-1">
+        <button
+          onClick={() => onNavigate && onNavigate("history")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "history"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
           <HistoryIcon className="h-6 w-6" />
           <span className="text-xs">History</span>
         </button>
-        <button className="flex flex-col items-center gap-1">
-          <LogOut className="h-6 w-6" />
-          <span className="text-xs">Logout</span>
+        <button
+          onClick={() => onNavigate && onNavigate("accounts")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "accounts"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <User className="h-6 w-6" />
+          <span className="text-xs">Accounts</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("catalogue")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "catalogue"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <Package className="h-6 w-6" />
+          <span className="text-xs">Catalogue</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("redemption")}
+          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+            activePage === "redemption"
+              ? resolvedTheme === "dark"
+                ? "bg-blue-600 text-white"
+                : "bg-blue-100 text-blue-700"
+              : resolvedTheme === "dark"
+              ? "text-gray-200 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <ClipboardList className="h-6 w-6" />
+          <span className="text-xs">Redemption</span>
         </button>
       </div>
 
