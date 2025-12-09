@@ -1,6 +1,9 @@
 import { useState } from "react";
 import Login from "./page/login/Login";
-import Dashboard from "./page/superadmin/Dashboard";
+import SuperAdminDashboard from "./page/superadmin/Dashboard";
+import SupportDashboard from "./page/support/Dashboard";
+import SalesDashboard from "./page/sales/Dashboard";
+import MarketingDashboard from "./page/marketing/Dashboard";
 import History from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts";
 import Catalogue from "./page/superadmin/Catalogue";
@@ -13,13 +16,16 @@ type PageType =
   | "accounts"
   | "catalogue"
   | "redemption";
+type UserPosition = "Admin" | "Support" | "Sales" | "Marketing";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userPosition, setUserPosition] = useState<UserPosition>("Admin");
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (position: string) => {
     setIsLoggedIn(true);
+    setUserPosition(position as UserPosition);
     setCurrentPage("dashboard");
   };
 
@@ -37,7 +43,17 @@ function App() {
   }
 
   if (currentPage === "dashboard") {
-    return <Dashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+    // Render dashboard based on user position
+    if (userPosition === "Support") {
+      return <SupportDashboard onLogout={handleLogout} />;
+    } else if (userPosition === "Sales") {
+      return <SalesDashboard onLogout={handleLogout} />;
+    } else if (userPosition === "Marketing") {
+      return <MarketingDashboard onLogout={handleLogout} />;
+    } else {
+      // Admin or any other role defaults to SuperAdmin dashboard
+      return <SuperAdminDashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+    }
   }
 
   if (currentPage === "history") {
@@ -56,7 +72,7 @@ function App() {
     return <Redemption onNavigate={handleNavigateTo} onLogout={handleLogout} />;
   }
 
-  return <Dashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+  return <SuperAdminDashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;
 }
 
 export default App;

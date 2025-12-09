@@ -26,6 +26,7 @@ from views import (
     ApproveRequestView,
     RejectRequestView,
 )
+from users.views import UserListCreateView, UserDetailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,6 +36,9 @@ urlpatterns = [
     path('accounts/', AccountsView.as_view(), name='accounts'),
     path('requests/<str:request_id>/approve/', ApproveRequestView.as_view(), name='approve_request'),
     path('requests/<str:request_id>/reject/', RejectRequestView.as_view(), name='reject_request'),
+    # User Management API
+    path('api/users/', UserListCreateView.as_view(), name='user_list_create'),
+    path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
 ]
 
 # Serve static files in development
