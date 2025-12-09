@@ -6,6 +6,7 @@ from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 
 # Serializer defined here
 class LoginSerializer(serializers.Serializer):
@@ -32,3 +33,121 @@ class LoginView(APIView):
                 return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DashboardView(APIView):
+    """Dashboard view to fetch user stats and redemption requests"""
+    
+    def get(self, request):
+        """Get dashboard data including stats and requests"""
+        return Response({
+            "username": "Izza",
+            "user_role": "Admin",
+            "stats": {
+                "pending_requests": 25,
+                "total_requests": 45,
+                "approved_requests": 20,
+                "on_board": 20
+            },
+            "requests": [
+                {
+                    "id": "SA220011",
+                    "agent": "Kim Molina",
+                    "details": "Platinum Polo",
+                    "quantity": 12,
+                    "status": "Pending"
+                },
+                {
+                    "id": "SA220012",
+                    "agent": "Jerald Napoles",
+                    "details": "Platinum Cap",
+                    "quantity": 4,
+                    "status": "Pending"
+                }
+            ]
+        }, status=status.HTTP_200_OK)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class HistoryView(APIView):
+    """History view to fetch user's redemption history"""
+    
+    def get(self, request):
+        """Get history of past redemptions"""
+        return Response({
+            "username": "Izza",
+            "user_role": "Admin",
+            "history": [
+                {
+                    "id": "MC0003C",
+                    "type": "T-shirt",
+                    "details": "Platinum Polo",
+                    "quantity": 8,
+                    "status": "Pending"
+                },
+                {
+                    "id": "MC0004C",
+                    "type": "Cap",
+                    "details": "Platinum Cap",
+                    "quantity": 5,
+                    "status": "Approved"
+                },
+                {
+                    "id": "MC0005C",
+                    "type": "Jacket",
+                    "details": "Company Jacket",
+                    "quantity": 3,
+                    "status": "Approved"
+                },
+                {
+                    "id": "MC0006C",
+                    "type": "Bag",
+                    "details": "Corporate Bag",
+                    "quantity": 2,
+                    "status": "Rejected"
+                }
+            ]
+        }, status=status.HTTP_200_OK)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AccountsView(APIView):
+    """Accounts view to fetch user accounts"""
+    
+    def get(self, request):
+        """Get list of user accounts"""
+        return Response({
+            "accounts": [
+                {
+                    "id": 1,
+                    "username": "Raham",
+                    "password": "Password",
+                    "position": "Marketing"
+                },
+                {
+                    "id": 2,
+                    "username": "testuser",
+                    "password": "testpass123",
+                    "position": "Admin"
+                }
+            ]
+        }, status=status.HTTP_200_OK)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApproveRequestView(APIView):
+    """Approve a redemption request"""
+    
+    def post(self, request, request_id):
+        """Approve a specific request by ID"""
+        return Response({
+            "message": f"Request {request_id} approved successfully"
+        }, status=status.HTTP_200_OK)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RejectRequestView(APIView):
+    """Reject a redemption request"""
+    
+    def post(self, request, request_id):
+        """Reject a specific request by ID"""
+        return Response({
+            "message": f"Request {request_id} rejected successfully"
+        }, status=status.HTTP_200_OK)
+

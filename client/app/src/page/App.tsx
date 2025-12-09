@@ -1,10 +1,9 @@
 import { useState } from "react";
-import Login from "./page/Login";
-import Dashboard from "./page/Dashboard";
-import History from "./page/History";
-import Accounts from "./page/Accounts";
+import Login from "./Login";
+import Dashboard from "./Dashboard";
+import History from "./History";
 
-type PageType = "login" | "dashboard" | "history" | "accounts" | "catalogue";
+type PageType = "login" | "dashboard" | "history";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
@@ -34,10 +33,6 @@ function App() {
 
   if (currentPage === "history") {
     return <History onNavigate={handleNavigateTo} onLogout={handleLogout} />;
-  }
-
-  if (currentPage === "accounts") {
-    return <Accounts onNavigate={handleNavigateTo} onLogout={handleLogout} />;
   }
 
   return <Dashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;
