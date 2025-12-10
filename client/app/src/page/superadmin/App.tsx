@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Login from "../login/Login";
+import Login from "../Login";
 import Dashboard from "./Dashboard";
 import History from "./History";
 import Accounts from "./Accounts";

@@ -25,16 +25,28 @@ from views import (
     AccountsView,
     ApproveRequestView,
     RejectRequestView,
+    ChangePasswordView,
+    ActivateAccountView,
 )
+from users.views import UserListCreateView, UserDetailView
+from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', LoginView.as_view(), name='login'),
+    path('api/change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('api/activate-account/', ActivateAccountView.as_view(), name='activate_account'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('history/', HistoryView.as_view(), name='history'),
     path('accounts/', AccountsView.as_view(), name='accounts'),
     path('requests/<str:request_id>/approve/', ApproveRequestView.as_view(), name='approve_request'),
     path('requests/<str:request_id>/reject/', RejectRequestView.as_view(), name='reject_request'),
+    # User Management API
+    path('api/users/', UserListCreateView.as_view(), name='user_list_create'),
+    path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
+    # Catalogue Management API
+    path('api/catalogue/', CatalogueItemListCreateView.as_view(), name='catalogue_list_create'),
+    path('api/catalogue/<int:item_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
 ]
 
 # Serve static files in development

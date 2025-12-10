@@ -125,18 +125,10 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
 
   const selectedFilter = "All Incoming Submission Request";
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
   const pendingCount = requests.filter((r) => r.status === "Pending").length;
   const approvedCount = requests.filter((r) => r.status === "Approved").length;
   const onBoardCount = 20;
-
-  // Pagination logic
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedRequests = requests.slice(startIndex, endIndex);
 
   return (
     <div
@@ -231,7 +223,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "bg-white border-gray-200"
                 } transition-colors`}
               >
-                <p className="text-xs text-gray-500 mb-2">Pending Request</p>
+                <p className="text-xs text-gray-500 mb-2">Pending Requests</p>
                 <p className="text-2xl font-bold">
                   {pendingCount}{" "}
                   <span className="text-xs text-gray-500">
@@ -414,7 +406,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
                   }`}
                 />
-                <p className="font-semibold">Approved</p>
+                <p className="font-semibold">Approved Requests</p>
               </div>
               <p className="text-4xl font-bold">{approvedCount}</p>
             </div>
@@ -517,7 +509,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "divide-gray-200"
                 }`}
               >
-                {paginatedRequests.map((request) => (
+                {requests.map((request) => (
                   <tr
                     key={request.id}
                     className={`hover:${
@@ -565,51 +557,6 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                 ))}
               </tbody>
             </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-6">
-            <div
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Page {currentPage} of {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className={`flex items-center gap-1 px-3 py-2 rounded transition-colors ${
-                  currentPage === 1
-                    ? resolvedTheme === "dark"
-                      ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : resolvedTheme === "dark"
-                    ? "bg-gray-800 text-white hover:bg-gray-700"
-                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className={`flex items-center gap-1 px-3 py-2 rounded transition-colors ${
-                  currentPage === totalPages
-                    ? resolvedTheme === "dark"
-                      ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : resolvedTheme === "dark"
-                    ? "bg-gray-800 text-white hover:bg-gray-700"
-                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-                }`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
           </div>
         </div>
       </div>

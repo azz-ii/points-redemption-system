@@ -1,0 +1,503 @@
+import { useState } from "react";
+import { useTheme } from "next-themes";
+import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Sidebar } from "@/components/sidebar";
+import {
+  Bell,
+  Search,
+  Sliders,
+  UserPlus,
+  Home,
+  LogOut,
+  History as HistoryIcon,
+  User,
+  Pencil,
+  Trash2,
+  X,
+} from "lucide-react";
+
+interface Account {
+  id: number;
+  username: string;
+  password: string;
+  position: string;
+}
+
+interface AccountsProps {
+  onNavigate?: (
+    page: "dashboard" | "history" | "accounts" | "catalogue"
+  ) => void;
+  onLogout?: () => void;
+}
+
+function Accounts({ onNavigate, onLogout }: AccountsProps) {
+  const { resolvedTheme } = useTheme();
+  const [accounts] = useState<Account[]>([
+    {
+      id: 1,
+      username: "Raham",
+      password: "Password",
+      position: "Marketing",
+    },
+  ]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newAccount, setNewAccount] = useState({
+    username: "",
+    password: "",
+    position: "",
+  });
+
+  return (
+    <div
+      className={`flex flex-col min-h-screen md:flex-row ${
+        resolvedTheme === "dark"
+          ? "bg-black text-white"
+          : "bg-gray-50 text-gray-900"
+      } transition-colors`}
+    >
+      <Sidebar
+        currentPage="accounts"
+        onNavigate={onNavigate || (() => {})}
+        onLogout={onLogout || (() => {})}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header */}
+        <div
+          className={`md:hidden sticky top-0 z-40 p-4 border-b flex justify-between items-center ${
+            resolvedTheme === "dark"
+              ? "bg-gray-900 border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-8 h-8 rounded-full ${
+                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+              } flex items-center justify-center`}
+            >
+              <span className="text-white font-semibold text-xs">I</span>
+            </div>
+            <span className="text-sm font-medium">Izza</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+            <ThemeToggle />
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-semibold">Accounts</h1>
+              <p
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                View and manage the complete history of point redemptions.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                className={`p-2 rounded-lg ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 hover:bg-gray-800"
+                    : "bg-gray-100 hover:bg-gray-200"
+                } transition-colors`}
+              >
+                <Bell className="h-6 w-6" />
+              </button>
+              <ThemeToggle />
+            </div>
+          </div>
+
+          {/* Search and Actions */}
+          <div className="flex justify-between items-center mb-6">
+            <div
+              className={`relative flex items-center ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border-gray-700"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
+              <Input
+                placeholder="Search by ID, Name......"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`pl-10 w-80 ${
+                  resolvedTheme === "dark"
+                    ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
+                    : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
+                }`}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                className={`p-2 rounded-lg border ${
+                  resolvedTheme === "dark"
+                    ? "border-gray-700 hover:bg-gray-900"
+                    : "border-gray-300 hover:bg-gray-100"
+                } transition-colors`}
+              >
+                <Sliders className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                  resolvedTheme === "dark"
+                    ? "bg-white text-black hover:bg-gray-200"
+                    : "bg-gray-900 text-white hover:bg-gray-700"
+                } transition-colors font-semibold`}
+              >
+                <UserPlus className="h-5 w-5" />
+                <span>Add User</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div
+            className={`border rounded-lg overflow-hidden ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 border-gray-700"
+                : "bg-white border-gray-200"
+            } transition-colors`}
+          >
+            <table className="w-full">
+              <thead
+                className={`${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 text-gray-300"
+                    : "bg-gray-50 text-gray-700"
+                }`}
+              >
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Username
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Password
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Position
+                  </th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-300">
+                {accounts.map((account) => (
+                  <tr
+                    key={account.id}
+                    className={`hover:${
+                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                    } transition-colors`}
+                  >
+                    <td className="px-6 py-4 text-sm">{account.id}</td>
+                    <td className="px-6 py-4 text-sm">{account.username}</td>
+                    <td className="px-6 py-4 text-sm">{account.password}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
+                        {account.position}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="px-4 py-2 rounded flex items-center gap-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="text-sm">Edit</span>
+                        </button>
+
+                        <button
+                          className="px-4 py-2 rounded flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+                          title="Reject"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="text-sm">Remove</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
+          <h2 className="text-2xl font-semibold mb-2">Accounts</h2>
+          <p
+            className={`text-xs mb-4 ${
+              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            Manage user accounts
+          </p>
+
+          {/* Mobile Search */}
+          <div className="mb-4">
+            <div
+              className={`relative flex items-center rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search....."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`pl-10 w-full text-sm ${
+                  resolvedTheme === "dark"
+                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
+                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Add Account Button */}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 ${
+              resolvedTheme === "dark"
+                ? "bg-white text-black hover:bg-gray-200"
+                : "bg-gray-900 text-white hover:bg-gray-700"
+            } transition-colors font-semibold text-sm`}
+          >
+            <UserPlus className="h-5 w-5" />
+            <span>Add Account</span>
+          </button>
+
+          {/* Mobile Cards */}
+          <div className="space-y-3">
+            {accounts.map((account) => (
+              <div
+                key={account.id}
+                className={`p-4 rounded-lg border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-200"
+                } transition-colors`}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <p
+                      className={`text-xs font-semibold mb-2 ${
+                        resolvedTheme === "dark"
+                          ? "text-gray-400"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      ID {account.id}
+                    </p>
+                    <p className="font-semibold text-sm mb-1">
+                      {account.username}
+                    </p>
+                    <p
+                      className={`text-xs ${
+                        resolvedTheme === "dark"
+                          ? "text-gray-400"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {account.password}
+                    </p>
+                  </div>
+                  <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-400 text-black ml-2">
+                    {account.position}
+                  </span>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    className={`p-2 rounded ${
+                      resolvedTheme === "dark"
+                        ? "bg-white hover:bg-gray-200"
+                        : "bg-gray-100 hover:bg-gray-200"
+                    } transition-colors`}
+                  >
+                    <Pencil className="h-4 w-4 text-gray-900" />
+                  </button>
+                  <button className="p-2 rounded bg-red-500 hover:bg-red-600 transition-colors">
+                    <Trash2 className="h-4 w-4 text-white" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div
+        className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 border-t ${
+          resolvedTheme === "dark"
+            ? "bg-gray-900 border-gray-800"
+            : "bg-white border-gray-200"
+        }`}
+      >
+        <button
+          onClick={() => onNavigate && onNavigate("dashboard")}
+          className="flex flex-col items-center gap-1"
+        >
+          <Home className="h-6 w-6" />
+          <span className="text-xs">Dashboard</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("history")}
+          className="flex flex-col items-center gap-1"
+        >
+          <HistoryIcon className="h-6 w-6" />
+          <span className="text-xs">History</span>
+        </button>
+        <button
+          onClick={() => onNavigate && onNavigate("accounts")}
+          className="flex flex-col items-center gap-1"
+        >
+          <User className="h-6 w-6" />
+          <span className="text-xs">Accounts</span>
+        </button>
+        <button onClick={onLogout} className="flex flex-col items-center gap-1">
+          <LogOut className="h-6 w-6" />
+          <span className="text-xs">Logout</span>
+        </button>
+      </div>
+
+      {/* Create Account Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+          <div
+            className={`${
+              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+            } rounded-lg shadow-2xl max-w-md w-full pointer-events-auto border ${
+              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <div>
+                <h2 className="text-lg font-semibold">Create New Account</h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Please fill in the details to create a new account
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="hover:opacity-70 transition-opacity"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={newAccount.username}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, username: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter username"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={newAccount.password}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, password: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter password"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">
+                  Position
+                </label>
+                <select
+                  value={newAccount.position}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, position: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                >
+                  <option value="">Select position</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Support">Support</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewAccount({ username: "", password: "", position: "" });
+                }}
+                className={`flex-1 px-4 py-2 rounded font-semibold transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-white hover:bg-gray-100 text-gray-900"
+                    : "bg-gray-900 hover:bg-gray-800 text-white"
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Accounts;

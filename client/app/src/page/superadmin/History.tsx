@@ -281,14 +281,8 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                   </th>
                 </tr>
               </thead>
-              <tbody
-                className={`divide-y ${
-                  resolvedTheme === "dark"
-                    ? "divide-gray-700"
-                    : "divide-gray-200"
-                }`}
-              >
-                {paginatedItems.map((item) => (
+              <tbody className="divide-y divide-gray-200">
+                {historyItems.map((item) => (
                   <tr
                     key={item.id}
                     className={`hover:${
@@ -342,49 +336,6 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-between mt-4 px-4">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                currentPage === 1
-                  ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : resolvedTheme === "dark"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-            >
-              Previous
-            </button>
-            <span
-              className={`text-sm font-medium ${
-                resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-                currentPage === totalPages
-                  ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : resolvedTheme === "dark"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-            >
-              Next
-            </button>
-          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -423,7 +374,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
 
           {/* Mobile Cards */}
           <div className="space-y-3">
-            {paginatedItems.map((item) => (
+            {historyItems.map((item) => (
               <div
                 key={item.id}
                 className={`p-4 rounded-lg border ${
@@ -492,49 +443,6 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Mobile Pagination Controls */}
-          <div className="flex items-center justify-between mt-6 gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className={`flex-1 px-3 py-2 rounded text-xs font-medium transition-colors ${
-                currentPage === 1
-                  ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : resolvedTheme === "dark"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-            >
-              Previous
-            </button>
-            <span
-              className={`text-xs font-medium px-2 ${
-                resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              {currentPage}/{totalPages}
-            </span>
-            <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-              className={`flex-1 px-3 py-2 rounded text-xs font-medium transition-colors ${
-                currentPage === totalPages
-                  ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : resolvedTheme === "dark"
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-blue-500 text-white hover:bg-blue-600"
-              }`}
-            >
-              Next
-            </button>
           </div>
         </div>
       </div>
