@@ -1,20 +1,11 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar } from "@/components/sidebar/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
-import {
-  Bell,
-  Search,
-  Sliders,
-  Filter,
-  Home,
-  History as HistoryIcon,
-  User,
-  Package,
-  ClipboardList,
-  LogOut,
-} from "lucide-react";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { NotificationPanel } from "@/components/notification-panel";
+import { Bell, Search, Sliders, Filter, Warehouse, LogOut } from "lucide-react";
 
 interface RedemptionItem {
   id: string;
@@ -25,7 +16,13 @@ interface RedemptionItem {
 
 interface RedemptionProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
+    page:
+      | "dashboard"
+      | "history"
+      | "accounts"
+      | "catalogue"
+      | "redemption"
+      | "inventory"
   ) => void;
   onLogout?: () => void;
 }
@@ -33,6 +30,7 @@ interface RedemptionProps {
 function Redemption({ onNavigate, onLogout }: RedemptionProps) {
   const { resolvedTheme } = useTheme();
   const currentPage = "redemption";
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [items] = useState<RedemptionItem[]>([
     { id: "MC3001", name: "Platinum Polo", type: "Apparel", points: 500 },
   ]);
@@ -74,6 +72,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsNotificationOpen(true)}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -81,6 +80,16 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
               } transition-colors`}
             >
               <Bell className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => onNavigate?.("inventory")}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <Warehouse className="h-5 w-5" />
             </button>
             <ThemeToggle />
             <button
@@ -102,6 +111,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
             <h1 className="text-3xl font-semibold">Redemption Request</h1>
             <div className="flex items-center gap-3">
               <button
+                onClick={() => setIsNotificationOpen(true)}
                 className={`p-2 rounded-lg ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 hover:bg-gray-800"
@@ -120,7 +130,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                 resolvedTheme === "dark"
                   ? "bg-gray-900 border-gray-700"
                   : "bg-white border-gray-300"
-              } w-full max-w-xl`}
+              } w-full max-w-xl flex-1`}
             >
               <Search className="absolute left-3 h-4 w-4 text-gray-500" />
               <Input
@@ -134,31 +144,26 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                 }`}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-auto">
               <button
-                className={`h-10 w-10 rounded-lg border flex items-center justify-center ${
+                className={`h-10 w-10 rounded-lg border flex items-center justify-center transition-colors ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 hover:bg-gray-800"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                } transition-colors`}
+                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                    : "bg-black border-black text-white hover:bg-gray-900"
+                }`}
               >
                 <Sliders className="h-4 w-4" />
               </button>
               <button
-                className={`h-10 w-10 rounded-lg border flex items-center justify-center ${
+                className={`px-4 py-2 rounded-lg border font-semibold inline-flex items-center gap-2 transition-colors ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 hover:bg-gray-800"
-                    : "bg-white border-gray-300 hover:bg-gray-100"
-                } transition-colors`}
+                    ? "bg-white text-gray-900 border-gray-300 hover:bg-gray-200"
+                    : "bg-black text-white border-black hover:bg-gray-900"
+                }`}
               >
-                <Filter className="h-4 w-4" />
+                New Request
               </button>
             </div>
-            <button
-              className={`ml-auto px-4 py-2 rounded bg-white text-black hover:bg-gray-200 font-semibold transition-colors`}
-            >
-              New Request
-            </button>
           </div>
 
           <div
@@ -254,7 +259,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
               className={`flex-1 p-3 rounded-lg border text-sm font-semibold ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
+                  : "bg-black border-black text-white"
               } transition-colors flex items-center justify-center gap-2`}
             >
               <Sliders className="h-4 w-4" />
@@ -272,11 +277,11 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
             </button>
           </div>
           <button
-            className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 ${
+            className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border transition-colors font-semibold text-sm ${
               resolvedTheme === "dark"
-                ? "bg-white text-black hover:bg-gray-200"
-                : "bg-gray-900 text-white hover:bg-gray-700"
-            } transition-colors font-semibold text-sm`}
+                ? "bg-white text-gray-900 border-gray-300 hover:bg-gray-200"
+                : "bg-black text-white border-black hover:bg-gray-900"
+            }`}
           >
             New Request
           </button>
@@ -323,90 +328,14 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div
-        className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 border-t ${
-          resolvedTheme === "dark"
-            ? "bg-gray-900 border-gray-800"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        <button
-          onClick={() => onNavigate?.("dashboard")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "dashboard"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-xs">Dashboard</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("history")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "history"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <HistoryIcon className="h-6 w-6" />
-          <span className="text-xs">History</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("accounts")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "accounts"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <User className="h-6 w-6" />
-          <span className="text-xs">Accounts</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("catalogue")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "catalogue"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Package className="h-6 w-6" />
-          <span className="text-xs">Catalogue</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("redemption")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "redemption"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <ClipboardList className="h-6 w-6" />
-          <span className="text-xs">Redemption</span>
-        </button>
-      </div>
+      <MobileBottomNav
+        currentPage={currentPage}
+        onNavigate={onNavigate || (() => {})}
+      />
+      <NotificationPanel
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </div>
   );
 }

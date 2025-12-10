@@ -2,19 +2,10 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar";
-import {
-  Bell,
-  Search,
-  Sliders,
-  Home,
-  History as HistoryIcon,
-  X,
-  User,
-  Package,
-  LogOut,
-  ClipboardList,
-} from "lucide-react";
+import { Sidebar } from "@/components/sidebar/sidebar";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { NotificationPanel } from "@/components/notification-panel";
+import { Bell, Eye, Search, Sliders, Warehouse, X, LogOut } from "lucide-react";
 
 interface HistoryItem {
   id: string;
@@ -26,7 +17,13 @@ interface HistoryItem {
 
 interface HistoryProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
+    page:
+      | "dashboard"
+      | "history"
+      | "accounts"
+      | "catalogue"
+      | "redemption"
+      | "inventory"
   ) => void;
   onLogout?: () => void;
 }
@@ -34,8 +31,9 @@ interface HistoryProps {
 function History({ onNavigate, onLogout }: HistoryProps) {
   const { resolvedTheme } = useTheme();
   const activePage = "history";
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 7;
 
   const [historyItems] = useState<HistoryItem[]>([
     {
@@ -94,13 +92,6 @@ function History({ onNavigate, onLogout }: HistoryProps) {
       quantity: 4,
       status: "Rejected",
     },
-    {
-      id: "SA220020",
-      type: "Belt",
-      details: "Leather Belt",
-      quantity: 4,
-      status: "Rejected",
-    },
   ]);
 
   const totalPages = Math.ceil(historyItems.length / itemsPerPage);
@@ -147,6 +138,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsNotificationOpen(true)}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -154,6 +146,16 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               } transition-colors`}
             >
               <Bell className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => onNavigate?.("inventory")}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <Warehouse className="h-5 w-5" />
             </button>
             <ThemeToggle />
             <button
@@ -184,15 +186,27 @@ function History({ onNavigate, onLogout }: HistoryProps) {
             </div>
             <div className="flex items-center gap-4">
               <button
+                onClick={() => setIsNotificationOpen(true)}
                 className={`p-2 rounded-lg ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 hover:bg-gray-800"
                     : "bg-gray-100 hover:bg-gray-200"
                 } transition-colors`}
               >
-                <Bell className="h-6 w-6" />
+                <Bell className="h-5 w-5" />
               </button>
+
               <ThemeToggle />
+              <button
+                onClick={onLogout}
+                className={`p-2 rounded-lg ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-gray-100 hover:bg-gray-200"
+                } transition-colors`}
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
             </div>
           </div>
 
@@ -262,7 +276,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                   <th className="px-6 py-4 text-left text-sm font-semibold">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-6 py-4 text-right text-sm font-semibold">
                     Action
                   </th>
                 </tr>
@@ -308,17 +322,20 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                         {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => setSelectedItem(item)}
-                        className={`px-3 py-1 rounded text-xs font-semibold underline ${
-                          resolvedTheme === "dark"
-                            ? "text-yellow-400 hover:text-yellow-300"
-                            : "text-yellow-600 hover:text-yellow-700"
-                        } transition-colors`}
-                      >
-                        View Details
-                      </button>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => setSelectedItem(item)}
+                          className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold shadow-sm transition-colors ${
+                            resolvedTheme === "dark"
+                              ? "bg-blue-600 text-white hover:bg-blue-700"
+                              : "bg-blue-500 text-white hover:bg-blue-600"
+                          }`}
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -440,7 +457,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                     {item.status}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
                   <div>
                     <span
                       className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -463,13 +480,14 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                   </div>
                   <button
                     onClick={() => setSelectedItem(item)}
-                    className={`px-2 py-1 rounded text-xs font-semibold underline ${
+                    className={`ml-auto inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold shadow-sm transition-colors ${
                       resolvedTheme === "dark"
-                        ? "text-yellow-400 hover:text-yellow-300"
-                        : "text-yellow-600 hover:text-yellow-700"
-                    } transition-colors`}
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
                   >
-                    View Details
+                    <Eye className="h-4 w-4" />
+                    View
                   </button>
                 </div>
               </div>
@@ -521,90 +539,14 @@ function History({ onNavigate, onLogout }: HistoryProps) {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div
-        className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 border-t ${
-          resolvedTheme === "dark"
-            ? "bg-gray-900 border-gray-800"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        <button
-          onClick={() => onNavigate && onNavigate("dashboard")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "dashboard"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-xs">Dashboard</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("history")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "history"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <HistoryIcon className="h-6 w-6" />
-          <span className="text-xs">History</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("accounts")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "accounts"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <User className="h-6 w-6" />
-          <span className="text-xs">Accounts</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("catalogue")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "catalogue"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Package className="h-6 w-6" />
-          <span className="text-xs">Catalogue</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("redemption")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "redemption"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <ClipboardList className="h-6 w-6" />
-          <span className="text-xs">Redemption</span>
-        </button>
-      </div>
+      <MobileBottomNav
+        currentPage={activePage}
+        onNavigate={onNavigate || (() => {})}
+      />
+      <NotificationPanel
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
 
       {/* Details Modal */}
       {selectedItem && (

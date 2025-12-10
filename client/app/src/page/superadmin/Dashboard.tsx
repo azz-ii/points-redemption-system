@@ -3,7 +3,9 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar } from "@/components/sidebar/sidebar";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
   Search,
@@ -11,14 +13,11 @@ import {
   Check,
   X,
   Pencil,
-  Home,
-  History as HistoryIcon,
   ChevronLeft,
   ChevronRight,
-  User,
-  Package,
+  RotateCcw,
+  Warehouse,
   LogOut,
-  ClipboardList,
 } from "lucide-react";
 
 interface RequestItem {
@@ -31,7 +30,13 @@ interface RequestItem {
 
 interface DashboardProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
+    page:
+      | "dashboard"
+      | "history"
+      | "accounts"
+      | "catalogue"
+      | "redemption"
+      | "inventory"
   ) => void;
   onLogout?: () => void;
 }
@@ -39,6 +44,10 @@ interface DashboardProps {
 function Dashboard({ onNavigate, onLogout }: DashboardProps) {
   const { resolvedTheme } = useTheme();
   const activePage = "dashboard";
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<string>("");
+  const [pointAmount, setPointAmount] = useState<string>("");
   const [requests] = useState<RequestItem[]>([
     {
       id: "SA220011",
@@ -75,7 +84,44 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
       quantity: 10,
       status: "Rejected",
     },
+    {
+      id: "SA220016",
+      agent: "Liza Dela Cruz",
+      details: "Leather Shoes",
+      quantity: 5,
+      status: "Approved",
+    },
+    {
+      id: "SA220017",
+      agent: "Carlos Reyes",
+      details: "Travel Backpack",
+      quantity: 7,
+      status: "Pending",
+    },
+    {
+      id: "SA220018",
+      agent: "Sofia Ramos",
+      details: "Sports Jacket",
+      quantity: 3,
+      status: "Approved",
+    },
+    {
+      id: "SA220019",
+      agent: "Miguel Torres",
+      details: "Corporate Mug",
+      quantity: 15,
+      status: "Pending",
+    },
+    {
+      id: "SA220020",
+      agent: "Luis Dela Cruz",
+      details: "Leather Belt",
+      quantity: 9,
+      status: "Approved",
+    },
   ]);
+
+  const clientOptions = Array.from(new Set(requests.map((r) => r.agent)));
 
   const selectedFilter = "All Incoming Submission Request";
   const [searchQuery, setSearchQuery] = useState("");
@@ -127,6 +173,38 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
             <span className="font-medium text-sm">Welcome, Izza!</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsResetModalOpen(true)}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+              title="Reset Points"
+            >
+              <RotateCcw className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setIsNotificationOpen(true)}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+              title="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => onNavigate?.("inventory")}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <Warehouse className="h-5 w-5" />
+            </button>
             <ThemeToggle />
             <button
               onClick={onLogout}
@@ -269,13 +347,26 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
             </div>
             <div className="flex items-center gap-4">
               <button
+                onClick={() => setIsResetModalOpen(true)}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                }`}
+                title="Reset Points"
+              >
+                <RotateCcw className="h-5 w-5" />
+                Reset Points
+              </button>
+              <button
+                onClick={() => setIsNotificationOpen(true)}
                 className={`p-2 rounded-lg ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 hover:bg-gray-800"
                     : "bg-gray-100 hover:bg-gray-200"
                 } transition-colors`}
               >
-                <Bell className="h-6 w-6" />
+                <Bell className="h-5 w-5" />
               </button>
               <ThemeToggle />
             </div>
@@ -523,90 +614,105 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div
-        className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 border-t ${
-          resolvedTheme === "dark"
-            ? "bg-gray-900 border-gray-800"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        <button
-          onClick={() => onNavigate && onNavigate("dashboard")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "dashboard"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-xs">Dashboard</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("history")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "history"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <HistoryIcon className="h-6 w-6" />
-          <span className="text-xs">History</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("accounts")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "accounts"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <User className="h-6 w-6" />
-          <span className="text-xs">Accounts</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("catalogue")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "catalogue"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Package className="h-6 w-6" />
-          <span className="text-xs">Catalogue</span>
-        </button>
-        <button
-          onClick={() => onNavigate && onNavigate("redemption")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            activePage === "redemption"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <ClipboardList className="h-6 w-6" />
-          <span className="text-xs">Redemption</span>
-        </button>
-      </div>
+      {isResetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setIsResetModalOpen(false)}
+          />
+          <div
+            className={`relative w-full max-w-md rounded-xl border shadow-2xl p-6 space-y-4 ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 border-gray-700 text-white"
+                : "bg-white border-gray-200 text-gray-900"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">Reset Points</h2>
+              </div>
+              <button
+                onClick={() => setIsResetModalOpen(false)}
+                className={`p-2 rounded-lg ${
+                  resolvedTheme === "dark"
+                    ? "hover:bg-gray-800"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium">Select Client</label>
+              <select
+                value={selectedClient}
+                onChange={(e) => setSelectedClient(e.target.value)}
+                className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-700 text-white focus:border-gray-500 focus:ring-0"
+                    : "bg-white border-gray-300 text-gray-900 focus:border-gray-500 focus:ring-0"
+                }`}
+              >
+                <option value="">Choose a client</option>
+                {clientOptions.map((client) => (
+                  <option key={client} value={client}>
+                    {client}
+                  </option>
+                ))}
+              </select>
+
+              <label className="block text-sm font-medium">
+                Points to reset
+              </label>
+              <Input
+                type="number"
+                min="0"
+                value={pointAmount}
+                onChange={(e) => setPointAmount(e.target.value)}
+                placeholder="Enter points"
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <button
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                }`}
+                onClick={() => {
+                  setSelectedClient("");
+                  setPointAmount("");
+                }}
+              >
+                Reset All Points
+              </button>
+              <button
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+                onClick={() => setIsResetModalOpen(false)}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <MobileBottomNav
+        currentPage={activePage}
+        onNavigate={onNavigate || (() => {})}
+      />
+      <NotificationPanel
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </div>
   );
 }

@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar } from "@/components/sidebar/sidebar";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
   Search,
@@ -11,14 +13,11 @@ import {
   Edit,
   Eye,
   Plus,
+  Warehouse,
   X,
-  Home,
-  History as HistoryIcon,
   Package,
-  User,
   ArrowLeft,
   LogOut,
-  ClipboardList,
 } from "lucide-react";
 
 interface CatalogueItem {
@@ -36,7 +35,13 @@ interface CatalogueItem {
 
 interface CatalogueProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
+    page:
+      | "dashboard"
+      | "history"
+      | "accounts"
+      | "catalogue"
+      | "redemption"
+      | "inventory"
   ) => void;
   onLogout?: () => void;
 }
@@ -44,6 +49,7 @@ interface CatalogueProps {
 function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const { resolvedTheme } = useTheme();
   const currentPage = "catalogue";
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [items] = useState<CatalogueItem[]>([
     {
       id: "MC3001",
@@ -117,6 +123,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsNotificationOpen(true)}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -124,6 +131,16 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
               } transition-colors`}
             >
               <Bell className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => onNavigate?.("inventory")}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <Warehouse className="h-5 w-5" />
             </button>
             <ThemeToggle />
             <button
@@ -154,6 +171,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
             </div>
             <div className="flex items-center gap-4">
               <button
+                onClick={() => setIsNotificationOpen(true)}
                 className={`p-2 rounded-lg ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 hover:bg-gray-800"
@@ -418,90 +436,14 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div
-        className={`md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 border-t ${
-          resolvedTheme === "dark"
-            ? "bg-gray-900 border-gray-800"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        <button
-          onClick={() => onNavigate?.("dashboard")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "dashboard"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-xs">Dashboard</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("history")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "history"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <HistoryIcon className="h-6 w-6" />
-          <span className="text-xs">History</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("accounts")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "accounts"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <User className="h-6 w-6" />
-          <span className="text-xs">Accounts</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("catalogue")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "catalogue"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <Package className="h-6 w-6" />
-          <span className="text-xs">Catalogue</span>
-        </button>
-        <button
-          onClick={() => onNavigate?.("redemption")}
-          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-            currentPage === "redemption"
-              ? resolvedTheme === "dark"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700"
-              : resolvedTheme === "dark"
-              ? "text-gray-200 hover:bg-gray-800"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          <ClipboardList className="h-6 w-6" />
-          <span className="text-xs">Redemption</span>
-        </button>
-      </div>
+      <MobileBottomNav
+        currentPage={currentPage}
+        onNavigate={onNavigate || (() => {})}
+      />
+      <NotificationPanel
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
 
       {/* Add Item Modal */}
       {showAddModal && (

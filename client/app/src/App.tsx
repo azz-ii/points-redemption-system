@@ -5,6 +5,7 @@ import History from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts";
 import Catalogue from "./page/superadmin/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
+import Inventory from "./page/superadmin/Inventory";
 
 type PageType =
   | "login"
@@ -12,7 +13,8 @@ type PageType =
   | "history"
   | "accounts"
   | "catalogue"
-  | "redemption";
+  | "redemption"
+  | "inventory";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
@@ -54,6 +56,10 @@ function App() {
 
   if (currentPage === "redemption") {
     return <Redemption onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+  }
+
+  if (currentPage === "inventory") {
+    return <Inventory onNavigate={handleNavigateTo} onLogout={handleLogout} />;
   }
 
   return <Dashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;

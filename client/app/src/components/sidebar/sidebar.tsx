@@ -9,6 +9,7 @@ import {
   User,
   Package,
   ClipboardList,
+  Warehouse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,9 +19,16 @@ interface SidebarProps {
     | "history"
     | "accounts"
     | "catalogue"
-    | "redemption";
+    | "redemption"
+    | "inventory";
   onNavigate: (
-    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
+    page:
+      | "dashboard"
+      | "history"
+      | "accounts"
+      | "catalogue"
+      | "redemption"
+      | "inventory"
   ) => void;
   onLogout: () => void;
 }
@@ -35,6 +43,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
     { id: "accounts", label: "Accounts", icon: User },
     { id: "catalogue", label: "Catalogue", icon: Package },
     { id: "redemption", label: "Redemption", icon: ClipboardList },
+    { id: "inventory", label: "Inventory", icon: Warehouse },
   ] as const;
 
   return (
@@ -55,7 +64,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain flex-shrink-0"
+              className="w-12 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -64,7 +73,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg flex-shrink-0 ${
+            className={`p-2 rounded-lg shrink-0 ${
               resolvedTheme === "dark"
                 ? "hover:bg-gray-800"
                 : "hover:bg-gray-100"
@@ -72,9 +81,9 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
-              <ChevronLeft className="h-5 w-5 flex-shrink-0" />
+              <ChevronLeft className="h-5 w-5 shrink-0" />
             ) : (
-              <Menu className="h-5 w-5 flex-shrink-0" />
+              <Menu className="h-5 w-5 shrink-0" />
             )}
           </button>
         </div>
@@ -98,7 +107,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
               } transition-colors`}
               title={label}
             >
-              <Icon className="h-5 w-5 flex-shrink-0" />
+              <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
                 <span className="transition-all duration-300 inline-block">
                   {label}
@@ -117,7 +126,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full flex-shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
             } flex items-center justify-center`}
           >
@@ -147,7 +156,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
           } transition-colors cursor-pointer`}
           title="Log Out"
         >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
+          <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
             <span className="transition-all duration-300 inline-block">
               Log Out
