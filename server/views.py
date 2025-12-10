@@ -32,7 +32,7 @@ class LoginView(APIView):
             if user:
                 # Fetch user position from UserProfile
                 try:
-                    from users.models import UserProfile
+                    from server.users.models import UserProfile
                     from datetime import datetime, timezone
                     profile = UserProfile.objects.get(user=user)
                     
@@ -252,7 +252,7 @@ class ActivateAccountView(APIView):
     def post(self, request):
         """Activate account and set new password"""
         from django.contrib.auth.models import User
-        from users.models import UserProfile
+        from server.users.models import UserProfile
         
         username = request.data.get('username')
         new_password = request.data.get('new_password')

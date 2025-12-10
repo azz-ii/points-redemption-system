@@ -15,13 +15,12 @@ import {
   Plus,
   Warehouse,
   X,
-  Package,
-  ArrowLeft,
   LogOut,
+  RotateCw,
 } from "lucide-react";
 
 interface CatalogueItem {
-  id: number;
+  id: string;
   reward: string | null;
   item_name: string;
   item_code: string;
@@ -29,8 +28,8 @@ interface CatalogueItem {
   purpose: string;
   specifications: string;
   options: string | null;
-  points: string;
-  price: string;
+  points: number;
+  price: number;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
 }
 
@@ -51,25 +50,25 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const { resolvedTheme } = useTheme();
   const currentPage = "catalogue";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [items] = useState<CatalogueItem[]>([
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [items, setItems] = useState<CatalogueItem[]>([
     {
       id: "MC3001",
-      itemName: "Platinum Polo",
-      type: "Apparel",
-      points: 500,
-      price: 1200,
+      reward: null,
+      item_name: "Platinum Polo",
+      item_code: "MC3001",
       description:
         "A high-quality polo shirt made from premium platinum fabric with lasting charm and style.",
       purpose:
         "Ideal for casual wear, company events, or as a stylish uniform piece.",
-      specifications: [
-        "Material: 100% Platinum Cotton",
-        "Fit: Modern Fit",
-        "Color: Ribbed Polo Collar",
-        "Sleeves: Short sleeves with ribbed armbands",
-      ],
+      specifications:
+        "Material: 100% Platinum Cotton, Fit: Modern Fit, Color: Ribbed Polo Collar, Sleeves: Short sleeves with ribbed armbands",
       options:
         "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
+      points: 500,
+      price: 1200,
+      legend: "ASSET",
     },
   ]);
 
@@ -84,7 +83,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     try {
       setLoading(true);
       const response = await fetch("http://localhost:8000/api/catalogue/");
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch catalogue items");
       }
@@ -138,8 +137,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     options: "",
-    points: "",
-    price: "",
+    points: 0,
+    price: 0,
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
   });
 
@@ -161,8 +160,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     options: "",
-    points: "",
-    price: "",
+    points: 0,
+    price: 0,
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
   });
 
@@ -179,12 +178,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       setCreateError("Item code is required");
       return;
     }
-    if (!newItem.points.trim()) {
-      setCreateError("Points is required");
+    if (newItem.points <= 0) {
+      setCreateError("Points must be greater than 0");
       return;
     }
-    if (!newItem.price.trim()) {
-      setCreateError("Price is required");
+    if (newItem.price <= 0) {
+      setCreateError("Price must be greater than 0");
       return;
     }
     if (!newItem.legend) {
@@ -500,7 +499,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     : "border-gray-300 hover:bg-gray-100"
                 } transition-colors disabled:opacity-50`}
               >
-                <RotateCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+                <RotateCw
+                  className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
+                />
               </button>
               <button
                 className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
@@ -604,7 +605,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       <tr
                         key={item.id}
                         className={`hover:${
-                          resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                          resolvedTheme === "dark"
+                            ? "bg-gray-800"
+                            : "bg-gray-50"
                         } transition-colors`}
                       >
                         <td className="px-6 py-4 text-sm font-mono">
@@ -622,7 +625,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                             {item.legend}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm">{item.options || "-"}</td>
+                        <td className="px-6 py-4 text-sm">
+                          {item.options || "-"}
+                        </td>
                         <td className="px-6 py-4 text-sm">{item.points}</td>
                         <td className="px-6 py-4 text-sm">{item.price}</td>
                         <td className="px-6 py-4">
@@ -740,7 +745,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <p className="font-semibold text-sm">{item.item_name}</p>
+                        <p className="font-semibold text-sm">
+                          {item.item_name}
+                        </p>
                         <p
                           className={`text-xs font-mono ${
                             resolvedTheme === "dark"
@@ -838,9 +845,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 <h2 className="text-xl font-semibold">Add Catalogue Item</h2>
                 <p
                   className={`text-sm ${
-                    resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-600"
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
                   Create a new redeemable item
@@ -1009,17 +1014,20 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Points Required *
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={newItem.points}
                   onChange={(e) =>
-                    setNewItem({ ...newItem, points: e.target.value })
+                    setNewItem({
+                      ...newItem,
+                      points: parseInt(e.target.value) || 0,
+                    })
                   }
                   className={`w-full px-3 py-2 rounded border ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 5000 or 1/inv amt"
+                  placeholder="e.g., 5000"
                 />
               </div>
 
@@ -1029,17 +1037,20 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Price *
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={newItem.price}
                   onChange={(e) =>
-                    setNewItem({ ...newItem, price: e.target.value })
+                    setNewItem({
+                      ...newItem,
+                      price: parseInt(e.target.value) || 0,
+                    })
                   }
                   className={`w-full px-3 py-2 rounded border ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., ₱2,500.00 or P0.50/inv amt"
+                  placeholder="e.g., 2500"
                 />
               </div>
 
@@ -1066,9 +1077,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
                 >
-                  <option value="COLLATERAL">
-                    Collateral (Red)
-                  </option>
+                  <option value="COLLATERAL">Collateral (Red)</option>
                   <option value="GIVEAWAY">Giveaway (Blue)</option>
                   <option value="ASSET">Asset (Yellow)</option>
                   <option value="BENEFIT">Benefit (Green)</option>
@@ -1116,9 +1125,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 <h2 className="text-xl font-semibold">Edit Catalogue Item</h2>
                 <p
                   className={`text-sm ${
-                    resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-600"
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
                   Update item details
@@ -1277,17 +1284,20 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Points Required *
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={editItem.points}
                   onChange={(e) =>
-                    setEditItem({ ...editItem, points: e.target.value })
+                    setEditItem({
+                      ...editItem,
+                      points: parseInt(e.target.value) || 0,
+                    })
                   }
                   className={`w-full px-3 py-2 rounded border ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 5000 or 1/inv amt"
+                  placeholder="e.g., 5000"
                 />
               </div>
 
@@ -1296,17 +1306,20 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Price *
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={editItem.price}
                   onChange={(e) =>
-                    setEditItem({ ...editItem, price: e.target.value })
+                    setEditItem({
+                      ...editItem,
+                      price: parseInt(e.target.value) || 0,
+                    })
                   }
                   className={`w-full px-3 py-2 rounded border ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., ₱2,500.00 or P0.50/inv amt"
+                  placeholder="e.g., 2500"
                 />
               </div>
 
@@ -1379,9 +1392,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 <h2 className="text-xl font-semibold">View Catalogue Item</h2>
                 <p
                   className={`text-sm ${
-                    resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-600"
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
                   Item details
@@ -1412,24 +1423,34 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="font-medium">Item Code:</span>
-                <span className="font-mono text-sm">{viewTarget.item_code}</span>
+                <span className="font-mono text-sm">
+                  {viewTarget.item_code}
+                </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="font-medium">Description:</span>
-                <span className="text-right max-w-md">{viewTarget.description}</span>
+                <span className="text-right max-w-md">
+                  {viewTarget.description}
+                </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="font-medium">Purpose:</span>
-                <span className="text-right max-w-md">{viewTarget.purpose}</span>
+                <span className="text-right max-w-md">
+                  {viewTarget.purpose}
+                </span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="font-medium">Specifications:</span>
-                <span className="text-right max-w-md">{viewTarget.specifications}</span>
+                <span className="text-right max-w-md">
+                  {viewTarget.specifications}
+                </span>
               </div>
               {viewTarget.options && (
                 <div className="flex justify-between py-2 border-b border-gray-700">
                   <span className="font-medium">Options:</span>
-                  <span className="text-right max-w-md">{viewTarget.options}</span>
+                  <span className="text-right max-w-md">
+                    {viewTarget.options}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between py-2 border-b border-gray-700">
@@ -1483,9 +1504,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 <h2 className="text-xl font-semibold">Delete Item</h2>
                 <p
                   className={`text-sm ${
-                    resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-600"
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
                   Confirm deletion
@@ -1501,7 +1520,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
             <div className="p-6 space-y-4">
               <p>
-                Are you sure you want to delete <strong>{deleteTarget.item_name}</strong>? This action cannot be undone.
+                Are you sure you want to delete{" "}
+                <strong>{deleteTarget.item_name}</strong>? This action cannot be
+                undone.
               </p>
             </div>
 

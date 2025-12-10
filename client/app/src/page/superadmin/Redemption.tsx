@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Sidebar } from "@/components/sidebar/sidebar";
+import { Sidebar } from "@/components/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
