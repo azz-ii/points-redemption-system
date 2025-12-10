@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import {
   LogOut,
@@ -28,6 +28,20 @@ interface SidebarProps {
 export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
   const { resolvedTheme } = useTheme();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [username, setUsername] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("username");
+    } catch {
+      return null;
+    }
+  });
+  const [role, setRole] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("position");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
@@ -36,6 +50,15 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
     { id: "catalogue", label: "Catalogue", icon: Package },
     { id: "redemption", label: "Redemption", icon: ClipboardList },
   ] as const;
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "username") setUsername(e.newValue);
+      if (e.key === "position") setRole(e.newValue);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   return (
     <div
@@ -121,17 +144,17 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
             } flex items-center justify-center`}
           >
-            <span className="text-white font-semibold text-sm">I</span>
+            <span className="text-white font-semibold text-sm">{(username || "I").charAt(0).toUpperCase()}</span>
           </div>
           {sidebarExpanded && (
             <div className="transition-all duration-300">
-              <p className="font-medium text-sm">Izza</p>
+              <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Admin
+                {role || "User"}
               </p>
             </div>
           )}

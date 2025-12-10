@@ -15,6 +15,9 @@ import {
   Pencil,
   Trash2,
   X,
+  Eye,
+  Ban,
+  RotateCw
 } from "lucide-react";
 
 interface Account {
@@ -29,7 +32,7 @@ interface Account {
 
 interface AccountsProps {
   onNavigate?: (
-    page: "dashboard" | "history" | "accounts" | "catalogue"
+    page: "dashboard" | "history" | "accounts" | "catalogue" | "redemption"
   ) => void;
   onLogout?: () => void;
 }
@@ -51,7 +54,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     full_name: "",
     email: "",
     position: "",
-    is_activated: true,
+    is_activated: false,
     is_banned: false,
   });
 
@@ -60,9 +63,19 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     full_name: "",
     email: "",
     position: "",
-    is_activated: true,
+    is_activated: false,
     is_banned: false,
   });
+
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banTarget, setBanTarget] = useState<Account | null>(null);
+  const [banReason, setBanReason] = useState("");
+  const [banMessage, setBanMessage] = useState("");
+  const [banDuration, setBanDuration] = useState<"1" | "7" | "30" | "permanent">("1");
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewTarget, setViewTarget] = useState<Account | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
 
   // Fetch accounts on component mount
   const fetchAccounts = async () => {
@@ -110,13 +123,13 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
 
       if (response.ok) {
         setShowCreateModal(false);
-        setNewAccount({ 
-          username: "", 
-          password: "", 
-          full_name: "", 
-          email: "", 
+        setNewAccount({
+          username: "",
+          password: "",
+          full_name: "",
+          email: "",
           position: "",
-          is_activated: true,
+          is_activated: false,
           is_banned: false,
         });
         setError("");
@@ -187,8 +200,8 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   };
 
   // Delete account
-  const handleDeleteAccount = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this user?")) {
+  const handleDeleteAccount = async (id: number, skipPrompt = false) => {
+    if (!skipPrompt && !confirm("Are you sure you want to delete this user?")) {
       return;
     }
 
@@ -199,6 +212,8 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       });
 
       if (response.ok) {
+        setShowDeleteModal(false);
+        setDeleteTarget(null);
         // Refresh accounts list
         fetchAccounts();
       } else {
@@ -207,6 +222,68 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     } catch (err) {
       setError("Error connecting to server");
       console.error("Error deleting account:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Open ban modal is handled inline when clicking Ban button
+
+  // Submit ban: compute ban_date and unban_date then send update
+  const handleBanSubmit = async () => {
+    if (!banTarget) return;
+    if (!banReason) {
+      setError("Ban reason is required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const ban_date = new Date().toISOString();
+      let unban_date: string | null = null;
+      let durationValue: number | null = null;
+
+      if (banDuration !== "permanent") {
+        durationValue = parseInt(banDuration, 10);
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() + durationValue);
+        unban_date = d.toISOString();
+      }
+
+      const payload = {
+        username: banTarget.username,
+        full_name: banTarget.full_name,
+        email: banTarget.email,
+        position: banTarget.position,
+        is_activated: banTarget.is_activated,
+        is_banned: true,
+        ban_reason: banReason,
+        ban_message: banMessage || null,
+        ban_duration: durationValue,
+        ban_date,
+        unban_date,
+      };
+
+      const response = await fetch(`http://127.0.0.1:8000/api/users/${banTarget.id}/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setShowBanModal(false);
+        setBanTarget(null);
+        setError("");
+        fetchAccounts();
+      } else {
+        setError(data.details?.username?.[0] || data.error || data.detail || "Failed to ban user");
+      }
+    } catch (err) {
+      setError("Error connecting to server");
+      console.error("Error banning user:", err);
     } finally {
       setLoading(false);
     }
@@ -319,15 +396,27 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               />
             </div>
             <div className="flex gap-2">
-              <button
-                className={`p-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors`}
-              >
-                <Sliders className="h-5 w-5" />
-              </button>
+                <button
+                  onClick={() => fetchAccounts()}
+                  title={loading ? "Refreshing..." : "Refresh"}
+                  disabled={loading}
+                  className={`p-2 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "border-gray-700 hover:bg-gray-900"
+                      : "border-gray-300 hover:bg-gray-100"
+                  } transition-colors disabled:opacity-50`}
+                >
+                  <RotateCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+                </button>
+                <button
+                  className={`p-2 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "border-gray-700 hover:bg-gray-900"
+                      : "border-gray-300 hover:bg-gray-100"
+                  } transition-colors`}
+                >
+                  <Sliders className="h-5 w-5" />
+                </button>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
@@ -403,13 +492,13 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                       resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
                     } transition-colors`}
                   >
-                    <td className="px-6 py-4 text-sm">{account.id}</td>
-                    <td className="px-6 py-4 text-sm">{account.username}</td>
-                    <td className="px-6 py-4 text-sm">{account.full_name}</td>
-                    <td className="px-6 py-4 text-sm">{account.email}</td>
+                    <td className="px-6 py-4 text-sm">{account.id ?? 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm">{account.username || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm">{account.full_name || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm">{account.email || 'N/A'}</td>
                     <td className="px-6 py-4">
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
-                        {account.position}
+                        {account.position || 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -433,23 +522,46 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
                         <button
+                          onClick={() => { setViewTarget(account); setShowViewModal(true); setError(""); }}
+                          className="px-4 py-2 rounded flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
+                          title="View"
+                          disabled={loading}
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setBanTarget(account);
+                            setBanReason("");
+                            setBanMessage("");
+                            setBanDuration("1");
+                            setShowBanModal(true);
+                            setError("");
+                          }}
+                          className="px-4 py-2 rounded flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors"
+                          title="Ban"
+                          disabled={loading}
+                        >
+                          <Ban className="h-4 w-4" />
+                        </button>
+
+                        <button
                           onClick={() => handleEditClick(account)}
                           className="px-4 py-2 rounded flex items-center gap-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-colors"
                           title="Edit"
                           disabled={loading}
                         >
                           <Pencil className="h-4 w-4" />
-                          <span className="text-sm">Edit</span>
                         </button>
 
                         <button
-                          onClick={() => handleDeleteAccount(account.id)}
+                          onClick={() => { setDeleteTarget(account); setShowDeleteModal(true); setError(""); }}
                           className="px-4 py-2 rounded flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
                           title="Delete"
                           disabled={loading}
                         >
                           <Trash2 className="h-4 w-4" />
-                          <span className="text-sm">Remove</span>
                         </button>
                       </div>
                     </td>
@@ -533,12 +645,12 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                           : "text-gray-600"
                       }`}
                     >
-                      ID {account.id}
+                      ID {account.id ?? 'N/A'}
                     </p>
                     <p className="font-semibold text-sm mb-1">
-                      {account.full_name}
+                      {account.full_name || 'N/A'}
                     </p>
-                    <p className="text-xs mb-1">{account.username}</p>
+                    <p className="text-xs mb-1">{account.username || 'N/A'}</p>
                     <p
                       className={`text-xs ${
                         resolvedTheme === "dark"
@@ -546,12 +658,12 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                           : "text-gray-600"
                       }`}
                     >
-                      {account.email}
+                      {account.email || 'N/A'}
                     </p>
                   </div>
                   <div className="flex flex-col gap-1 ml-2">
                     <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-400 text-black">
-                      {account.position}
+                      {account.position || 'N/A'}
                     </span>
                     {account.is_activated ? (
                       <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white text-center">
@@ -571,6 +683,34 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                 </div>
                 <div className="flex justify-end gap-2">
                   <button
+                    className={`p-2 rounded ${
+                      resolvedTheme === "dark"
+                        ? "bg-white hover:bg-gray-200"
+                        : "bg-gray-100 hover:bg-gray-200"
+                    } transition-colors`}
+                    disabled={loading}
+                    title="View"
+                  >
+                    <Eye className="h-4 w-4 text-gray-900" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setBanTarget(account);
+                      setBanReason("");
+                      setBanMessage("");
+                      setBanDuration("1");
+                      setShowBanModal(true);
+                      setError("");
+                    }}
+                    className="p-2 rounded bg-orange-500 hover:bg-orange-600 transition-colors"
+                    disabled={loading}
+                    title="Ban"
+                  >
+                    <span className="text-xs text-white">Ban</span>
+                  </button>
+
+                  <button
                     onClick={() => handleEditClick(account)}
                     className={`p-2 rounded ${
                       resolvedTheme === "dark"
@@ -582,7 +722,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                     <Pencil className="h-4 w-4 text-gray-900" />
                   </button>
                   <button 
-                    onClick={() => handleDeleteAccount(account.id)}
+                    onClick={() => { setDeleteTarget(account); setShowDeleteModal(true); setError(""); }}
                     className="p-2 rounded bg-red-500 hover:bg-red-600 transition-colors"
                     disabled={loading}
                   >
@@ -762,29 +902,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               </div>
 
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={newAccount.is_activated}
-                    onChange={(e) =>
-                      setNewAccount({ ...newAccount, is_activated: e.target.checked })
-                    }
-                    className="rounded"
-                  />
-                  <span className="text-sm">Is Activated</span>
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={newAccount.is_banned}
-                    onChange={(e) =>
-                      setNewAccount({ ...newAccount, is_banned: e.target.checked })
-                    }
-                    className="rounded"
-                  />
-                  <span className="text-sm">Is Banned</span>
-                </label>
+                {/* `is_activated` and `is_banned` default to false; inputs removed */}
               </div>
             </div>
 
@@ -806,6 +924,106 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               >
                 {loading ? "Creating..." : "Create Account"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ban Account Modal */}
+      {showBanModal && banTarget && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+          <div
+            className={`${resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"} rounded-lg shadow-2xl max-w-md w-full border ${resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <div>
+                <h2 className="text-lg font-semibold">Ban User</h2>
+                <p className="text-xs text-gray-500 mt-1">Ban user {banTarget.full_name} </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowBanModal(false);
+                  setBanTarget(null);
+                  setError("");
+                }}
+                className="hover:opacity-70 transition-opacity"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">Ban Reason *</label>
+                <textarea
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  className={`w-full px-3 py-2 rounded border ${
+                    resolvedTheme === "dark" ? "bg-gray-800 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Reason for ban"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">Ban Message</label>
+                <textarea
+                  value={banMessage}
+                  onChange={(e) => setBanMessage(e.target.value)}
+                  className={`w-full px-3 py-2 rounded border ${
+                    resolvedTheme === "dark" ? "bg-gray-800 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Optional message shown to user"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 mb-2 block">Ban Duration *</label>
+                <select
+                  value={banDuration}
+                  onChange={(e) => setBanDuration(e.target.value as "1" | "7" | "30" | "permanent")}
+                  className={`w-full px-3 py-2 rounded border ${
+                    resolvedTheme === "dark" ? "bg-gray-800 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                >
+                  <option value="1">1 day</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="permanent">Permanent</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-700">
+              {error && (
+                <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowBanModal(false);
+                    setBanTarget(null);
+                    setError("");
+                  }}
+                  className={`px-4 py-2 rounded font-semibold transition-colors ${
+                    resolvedTheme === "dark" ? "bg-white hover:bg-gray-100 text-gray-900" : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                  }`}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleBanSubmit}
+                  disabled={loading}
+                  className={`px-4 py-2 rounded font-semibold transition-colors ${
+                    resolvedTheme === "dark" ? "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50" : "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
+                  }`}
+                >
+                  {loading ? "Banning..." : "Ban User"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -924,29 +1142,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               </div>
 
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editAccount.is_activated}
-                    onChange={(e) =>
-                      setEditAccount({ ...editAccount, is_activated: e.target.checked })
-                    }
-                    className="rounded"
-                  />
-                  <span className="text-sm">Is Activated</span>
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={editAccount.is_banned}
-                    onChange={(e) =>
-                      setEditAccount({ ...editAccount, is_banned: e.target.checked })
-                    }
-                    className="rounded"
-                  />
-                  <span className="text-sm">Is Banned</span>
-                </label>
+                {/* `is_activated` and `is_banned` default to false; inputs removed */}
               </div>
             </div>
 
@@ -967,6 +1163,103 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                 }`}
               >
                 {loading ? "Updating..." : "Update Account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Account Modal */}
+      {showViewModal && viewTarget && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+          <div
+            className={`${resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"} rounded-lg shadow-2xl max-w-md w-full border ${resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <div>
+                <h2 className="text-lg font-semibold">View Account</h2>
+                <p className="text-xs text-gray-500 mt-1">Details for {viewTarget.full_name}</p>
+              </div>
+              <button
+                onClick={() => { setShowViewModal(false); setViewTarget(null); setError(""); }}
+                className="hover:opacity-70 transition-opacity"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
+              <div>
+                <p className="text-xs text-gray-500">Username</p>
+                <p className="font-medium">{viewTarget.username || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Full Name</p>
+                <p className="font-medium">{viewTarget.full_name || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Email</p>
+                <p className="font-medium">{viewTarget.email || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Position</p>
+                <p className="font-medium">{viewTarget.position || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Status</p>
+                <p className="font-medium">{viewTarget.is_activated ? 'Active' : 'Inactive'}{viewTarget.is_banned ? ' • Banned' : ''}</p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-700">
+              <button
+                onClick={() => { setShowViewModal(false); setViewTarget(null); setError(""); }}
+                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${resolvedTheme === "dark" ? "bg-white hover:bg-gray-100 text-gray-900" : "bg-gray-900 hover:bg-gray-800 text-white"}`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deleteTarget && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+          <div
+            className={`${resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"} rounded-lg shadow-2xl max-w-md w-full border ${resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"}`}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <div>
+                <h2 className="text-lg font-semibold">Delete User</h2>
+                <p className="text-xs text-gray-500 mt-1">This action cannot be undone.</p>
+              </div>
+              <button
+                onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); setError(""); }}
+                className="hover:opacity-70 transition-opacity"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p>Are you sure you want to delete <strong>{deleteTarget.full_name}</strong> ({deleteTarget.username})?</p>
+            </div>
+
+            <div className="p-6 border-t border-gray-700 flex gap-2">
+              <button
+                onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); setError(""); }}
+                className={`px-4 py-2 rounded font-semibold transition-colors ${resolvedTheme === "dark" ? "bg-white hover:bg-gray-100 text-gray-900" : "bg-gray-200 hover:bg-gray-300 text-gray-900"}`}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => deleteTarget && handleDeleteAccount(deleteTarget.id, true)}
+                disabled={loading}
+                className={`px-4 py-2 rounded font-semibold transition-colors ${resolvedTheme === "dark" ? "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50" : "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"}`}
+              >
+                {loading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

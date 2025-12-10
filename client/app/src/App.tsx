@@ -36,6 +36,12 @@ function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentPage("login");
+    try {
+      localStorage.removeItem("username");
+      localStorage.removeItem("position");
+    } catch {
+      // ignore
+    }
   };
 
   if (!isLoggedIn) {

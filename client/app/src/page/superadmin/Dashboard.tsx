@@ -106,7 +106,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "bg-white border-gray-200"
                 } transition-colors`}
               >
-                <p className="text-xs text-gray-500 mb-2">Pending Request</p>
+                <p className="text-xs text-gray-500 mb-2">Pending Requests</p>
                 <p className="text-2xl font-bold">
                   {pendingCount}{" "}
                   <span className="text-xs text-gray-500">
@@ -276,7 +276,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
                   }`}
                 />
-                <p className="font-semibold">Approved</p>
+                <p className="font-semibold">Approved Requests</p>
               </div>
               <p className="text-4xl font-bold">{approvedCount}</p>
             </div>

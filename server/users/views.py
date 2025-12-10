@@ -13,8 +13,8 @@ class UserListCreateView(APIView):
     """List all users or create a new user"""
     
     def get(self, request):
-        """Get list of all users with their profiles"""
-        users = User.objects.all().select_related('profile')
+        """Get list of all users with their profiles, excluding superusers"""
+        users = User.objects.filter(is_superuser=False).select_related('profile')
         serializer = UserListSerializer(users, many=True)
         return Response({"accounts": serializer.data}, status=status.HTTP_200_OK)
     

@@ -3,8 +3,11 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, ShieldAlert, XCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ForgotPassword from "./ForgotPassword";
+import ActivateAccount from "./ActivateAccount";
 
 interface LoginProps {
   onLoginSuccess?: (position: string) => void;
@@ -14,12 +17,19 @@ function Login({ onLoginSuccess }: LoginProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showActivateAccount, setShowActivateAccount] = useState(false);
+  const [activationUsername, setActivationUsername] = useState("");
+  const [message, setMessage] = useState<{
+    type: "success" | "error" | "ban";
+    title: string;
+    description: string;
+  } | null>(null);
   const { resolvedTheme } = useTheme();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage("");
+    setMessage(null);
 
     try {
       const response = await fetch("http://127.0.0.1:8000/login/", {
@@ -32,23 +42,89 @@ function Login({ onLoginSuccess }: LoginProps) {
 
       if (response.ok) {
         console.log("Login successful:", data);
-        setMessage(`✅ Access Granted: ${data.message || "Login successful"}`);
+        
+        // Check if user needs activation
+        if (data.needs_activation) {
+          setActivationUsername(data.username);
+          setShowActivateAccount(true);
+          return;
+        }
+        
+        const position = data.position || "Admin";
+        // persist username and position for sidebar display
+        try {
+          localStorage.setItem("username", username);
+          localStorage.setItem("position", position);
+        } catch {
+          // ignore storage errors
+        }
+        setMessage({
+          type: "success",
+          title: "Access Granted",
+          description: data.message || "Login successful"
+        });
         setUsername("");
         setPassword("");
-        const position = data.position || "Admin";
         setTimeout(() => onLoginSuccess?.(position), 1000);
       } else {
         console.error("Login failed:", data);
-        setMessage(`❌ Access Denied: ${data.error || "Invalid credentials"}`);
+        
+        // Check if user is banned
+        if (response.status === 403 && data.error && (data.error.includes("banned") || data.error.includes("activated"))) {
+          let description = "";
+          
+          if (data.error.includes("not activated")) {
+            description = data.detail || "Your account has not been activated.";
+          } else if (data.is_permanent) {
+            description = `Reason: ${data.ban_reason || "No reason provided"}\n\n${data.detail || "Your account has been permanently banned."}`;
+          } else {
+            const unbanDate = data.unban_date ? new Date(data.unban_date).toLocaleString() : "Unknown";
+            description = `Reason: ${data.ban_reason || "No reason provided"}\n${data.detail || "Your account is temporarily banned."}\n\nUnban Date: ${unbanDate}`;
+          }
+          
+          setMessage({
+            type: "ban",
+            title: data.error.includes("not activated") ? "Account Not Activated" : "Account Banned",
+            description
+          });
+        } else {
+          setMessage({
+            type: "error",
+            title: "Access Denied",
+            description: data.error || data.detail || "Invalid credentials"
+          });
+        }
       }
     } catch (err) {
       console.error("Error connecting to server:", err);
-      setMessage("❌ Server Error: Unable to connect to authentication server");
+      setMessage({
+        type: "error",
+        title: "Server Error",
+        description: "Unable to connect to authentication server"
+      });
     }
   };
 
   return (
-    <div className="flex min-h-screen">
+    <>
+      {showActivateAccount ? (
+        <ActivateAccount 
+          username={activationUsername} 
+          onActivationComplete={() => {
+            setShowActivateAccount(false);
+            setActivationUsername("");
+          }}
+          onAutoLogin={(position) => {
+            // Auto-login user after successful activation
+            setShowActivateAccount(false);
+            setActivationUsername("");
+            onLoginSuccess?.(position);
+          }}
+        />
+      ) : showForgotPassword ? (
+        <ForgotPassword onBackToLogin={() => setShowForgotPassword(false)} />
+      ) : (
+        <div className="flex min-h-screen">
       {/* Left side - Image section */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950 transition-colors">
         {/* Building backdrop with low opacity */}
@@ -114,15 +190,19 @@ function Login({ onLoginSuccess }: LoginProps) {
           </div>
 
           {message && (
-            <div
-              className={`p-4 rounded-lg text-sm font-medium ${
-                message.includes("✅")
-                  ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
-                  : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
-              }`}
-            >
-              {message}
-            </div>
+            <Alert variant={message.type === "success" ? "default" : "destructive"}>
+              {message.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : message.type === "ban" ? (
+                <ShieldAlert className="h-4 w-4" />
+              ) : (
+                <XCircle className="h-4 w-4" />
+              )}
+              <AlertTitle>{message.title}</AlertTitle>
+              <AlertDescription className="whitespace-pre-line">
+                {message.description}
+              </AlertDescription>
+            </Alert>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -178,12 +258,13 @@ function Login({ onLoginSuccess }: LoginProps) {
             </div>
 
             <div className="flex justify-end">
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
                 className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 transition-colors"
               >
-                Forget Password?
-              </a>
+                Forgot Password?
+              </button>
             </div>
 
             <Button
@@ -199,7 +280,9 @@ function Login({ onLoginSuccess }: LoginProps) {
           </form>
         </div>
       </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 
