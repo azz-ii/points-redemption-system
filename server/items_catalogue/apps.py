@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class ItemsCatalogueConfig(AppConfig):
-    name = 'items_catalogue'
+    name = 'server.items_catalogue'
