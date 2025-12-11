@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from .views import LoginView, DashboardView, HistoryView, AccountsView, ApproveRequestView, RejectRequestView, ChangePasswordView
+from .views import LoginView, DashboardView, HistoryView, AccountsView, ApproveRequestView, RejectRequestView, ChangePasswordView, ActivateAccountView
 from server.users.views import UserListCreateView, UserDetailView
 from server.items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView
 
@@ -11,6 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', LoginView.as_view(), name='login'),
     path('api/change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('api/activate-account/', ActivateAccountView.as_view(), name='activate_account'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('history/', HistoryView.as_view(), name='history'),
     path('accounts/', AccountsView.as_view(), name='accounts'),
