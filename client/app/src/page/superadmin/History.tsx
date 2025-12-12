@@ -5,7 +5,17 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import { Bell, Eye, Search, Sliders, Warehouse, X, LogOut } from "lucide-react";
+import {
+  Bell,
+  Eye,
+  Search,
+  Sliders,
+  Warehouse,
+  X,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface HistoryItem {
   id: string;
@@ -94,13 +104,28 @@ function History({ onNavigate, onLogout }: HistoryProps) {
     },
   ]);
 
-  const totalPages = Math.ceil(historyItems.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = historyItems.slice(startIndex, endIndex);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
+
+  const filteredItems = historyItems.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      item.id.toLowerCase().includes(q) ||
+      item.type.toLowerCase().includes(q) ||
+      item.details.toLowerCase().includes(q) ||
+      item.status.toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredItems.length / itemsPerPage)
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
   return (
     <div
@@ -223,7 +248,10 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               <Input
                 placeholder="Search by ID, Name....."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className={`pl-10 w-80 ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
@@ -281,8 +309,8 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {historyItems.map((item) => (
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                {paginatedItems.map((item) => (
                   <tr
                     key={item.id}
                     className={`hover:${
@@ -335,6 +363,35 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                 ))}
               </tbody>
             </table>
+            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -362,7 +419,10 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               <Input
                 placeholder="Search....."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className={`pl-10 w-full text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-0 text-white placeholder:text-gray-500"
@@ -374,7 +434,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
 
           {/* Mobile Cards */}
           <div className="space-y-3">
-            {historyItems.map((item) => (
+            {paginatedItems.map((item) => (
               <div
                 key={item.id}
                 className={`p-4 rounded-lg border ${
@@ -443,6 +503,34 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                  : "bg-white border border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4" /> Prev
+            </button>
+            <span className="text-xs font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                  : "bg-white border border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
