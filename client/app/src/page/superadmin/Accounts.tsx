@@ -564,7 +564,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-300">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {loading && accounts.length === 0 ? (
                   <tr>
                     <td
