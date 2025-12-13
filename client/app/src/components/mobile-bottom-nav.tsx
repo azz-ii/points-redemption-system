@@ -28,11 +28,13 @@ interface MobileBottomNavProps {
       | "redemption"
       | "inventory"
   ) => void;
+  isModalOpen?: boolean;
 }
 
 export function MobileBottomNav({
   currentPage,
   onNavigate,
+  isModalOpen = false,
 }: MobileBottomNavProps) {
   const { resolvedTheme } = useTheme();
   const [isVisible, setIsVisible] = useState(true);
@@ -82,8 +84,8 @@ export function MobileBottomNav({
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center p-4 border-t transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-full"
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center p-4 border-t transition-transform duration-300 ${
+        isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
       } ${
         resolvedTheme === "dark"
           ? "bg-gray-900 border-gray-800"
@@ -122,12 +124,14 @@ interface MobileBottomNavSalesProps {
     page: "dashboard" | "redemption-status" | "redeem-items"
   ) => void;
   onLogout: () => void;
+  isModalOpen?: boolean;
 }
 
 export function MobileBottomNavSales({
   currentPage,
   onNavigate,
   onLogout,
+  isModalOpen = false,
 }: MobileBottomNavSalesProps) {
   const { resolvedTheme } = useTheme();
   const [isVisible, setIsVisible] = useState(true);
@@ -176,8 +180,8 @@ export function MobileBottomNavSales({
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "translate-y-full"
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
+        isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
       } ${
         resolvedTheme === "dark"
           ? "bg-gray-900 border-gray-800"
