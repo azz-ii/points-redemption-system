@@ -5,96 +5,95 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
 import { MobileBottomNavApprover } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import {
-  Bell,
-  Search,
-  Check,
-  X,
-  Pencil,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Bell, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
-interface RequestItem {
+interface HistoryItem {
   id: string;
-  agent: string;
+  type: string;
   details: string;
   quantity: number;
   status: "Pending" | "Approved" | "Rejected";
 }
 
-interface DashboardProps {
+interface HistoryProps {
   onNavigate?: (page: "dashboard" | "history") => void;
   onLogout?: () => void;
 }
 
-function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
+function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests] = useState<RequestItem[]>([
+  const [historyItems] = useState<HistoryItem[]>([
     {
-      id: "SA220011",
-      agent: "Kim Molina",
+      id: "MC0003C",
+      type: "T-shirt",
       details: "Platinum Polo",
-      quantity: 12,
-      status: "Pending",
-    },
-    {
-      id: "SA220012",
-      agent: "Jerald Napoles",
-      details: "Platinum Cap",
-      quantity: 4,
-      status: "Pending",
-    },
-    {
-      id: "SA220013",
-      agent: "Maria Santos",
-      details: "Premium Jacket",
       quantity: 8,
+      status: "Pending",
+    },
+    {
+      id: "MC0004C",
+      type: "Cap",
+      details: "Platinum Cap",
+      quantity: 5,
       status: "Approved",
     },
     {
-      id: "SA220014",
-      agent: "Juan Cruz",
-      details: "Executive Shirt",
-      quantity: 6,
-      status: "Pending",
-    },
-    {
       id: "SA220015",
-      agent: "Ana Garcia",
+      type: "Tie",
       details: "Corporate Tie",
       quantity: 10,
       status: "Rejected",
     },
     {
       id: "SA220016",
-      agent: "Liza Dela Cruz",
-      details: "Leather Shoes",
+      type: "Shirt",
+      details: "Casual Shirt",
+      quantity: 10,
+      status: "Rejected",
+    },
+    {
+      id: "SA220017",
+      type: "Jacket",
+      details: "Wool Jacket",
       quantity: 5,
+      status: "Approved",
+    },
+    {
+      id: "SA220018",
+      type: "Pants",
+      details: "Business Pants",
+      quantity: 3,
+      status: "Pending",
+    },
+    {
+      id: "SA220019",
+      type: "Shoes",
+      details: "Leather Shoes",
+      quantity: 7,
       status: "Approved",
     },
   ]);
 
-  const pageSize = 5;
-  const filteredRequests = requests.filter((request) => {
+  const pageSize = 7;
+  const filteredItems = historyItems.filter((item) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
-      request.id.toLowerCase().includes(query) ||
-      request.agent.toLowerCase().includes(query) ||
-      request.details.toLowerCase().includes(query) ||
-      request.status.toLowerCase().includes(query)
+      item.id.toLowerCase().includes(query) ||
+      item.type.toLowerCase().includes(query) ||
+      item.details.toLowerCase().includes(query) ||
+      item.status.toLowerCase().includes(query)
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
   const handleNavigate = (page: "dashboard" | "history") => {
     if (page === "history") {
@@ -113,7 +112,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
       } transition-colors`}
     >
       <SidebarApprover
-        currentPage="dashboard"
+        currentPage="history"
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
       />
@@ -128,15 +127,15 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
               : "bg-white border-gray-200"
           }`}
         >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-blue-600" : "bg-blue-500"
-              } flex items-center justify-center`}
+          <div>
+            <h1 className="font-semibold text-lg">History</h1>
+            <p
+              className={`text-xs ${
+                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
             >
-              <span className="text-white font-semibold text-xs">A</span>
-            </div>
-            <span className="font-medium text-sm">Approver Dashboard</span>
+              View complete history
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -146,7 +145,6 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
                   ? "bg-gray-900 hover:bg-gray-800"
                   : "bg-gray-100 hover:bg-gray-200"
               } transition-colors`}
-              title="Notifications"
             >
               <Bell className="h-5 w-5" />
             </button>
@@ -159,15 +157,15 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
           <div className="p-4">
             {/* Search */}
             <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
               <Input
-                placeholder="Search requests..."
+                placeholder="Search by ID, Name....."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`pl-10 h-12 ${
+                className={`pl-10 ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
                     : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
@@ -175,11 +173,11 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
               />
             </div>
 
-            {/* Request Cards */}
+            {/* History Cards */}
             <div className="space-y-3">
-              {paginatedRequests.map((request) => (
+              {paginatedItems.map((item) => (
                 <div
-                  key={request.id}
+                  key={item.id}
                   className={`p-4 rounded-lg border ${
                     resolvedTheme === "dark"
                       ? "bg-gray-900 border-gray-700"
@@ -188,36 +186,32 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <p className="font-semibold text-sm">{request.id}</p>
-                      <p className="text-xs text-gray-500">{request.agent}</p>
+                      <p className="font-semibold text-sm">{item.id}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+                          {item.type}
+                        </span>
+                      </div>
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        request.status === "Pending"
+                        item.status === "Pending"
                           ? "bg-yellow-400 text-black"
-                          : request.status === "Approved"
+                          : item.status === "Approved"
                           ? "bg-green-500 text-white"
                           : "bg-red-500 text-white"
                       }`}
                     >
-                      {request.status}
+                      {item.status}
                     </span>
                   </div>
-                  <p className="text-sm font-medium mb-2">{request.details}</p>
+                  <p className="text-sm font-medium mb-1">{item.details}</p>
                   <p className="text-xs text-gray-500 mb-3">
-                    Qty: {request.quantity}
+                    Qty: {item.quantity}
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-green-500 text-white hover:bg-green-600 text-xs font-medium">
-                      <Check className="w-3 h-3" /> Confirm
-                    </button>
-                    <button className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-red-500 text-white hover:bg-red-600 text-xs font-medium">
-                      <X className="w-3 h-3" /> Reject
-                    </button>
-                    <button className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-gray-400 text-white hover:bg-gray-500 text-xs font-medium">
-                      <Pencil className="w-3 h-3" /> Edit
-                    </button>
-                  </div>
+                  <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">
+                    <Eye className="w-4 h-4" /> View
+                  </button>
                 </div>
               ))}
             </div>
@@ -234,7 +228,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
                 }`}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Prev
+                Previous
               </button>
               <span className="text-xs font-medium">
                 Page {safePage} of {totalPages}
@@ -261,13 +255,13 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold">Request Management</h1>
+              <h1 className="text-3xl font-semibold">History</h1>
               <p
                 className={`text-sm ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Review and approve incoming redemption requests
+                View and manage the complete history of point redemptions.
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -288,7 +282,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
           {/* Search */}
           <div className="mb-6">
             <div
-              className={`relative flex items-center h-12 ${
+              className={`relative flex items-center ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 border-gray-700"
                   : "bg-white border-gray-300"
@@ -296,13 +290,13 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
             >
               <Search className="absolute left-3 h-5 w-5 text-gray-500" />
               <Input
-                placeholder="Search by ID, Name, Details, or Status....."
+                placeholder="Search by ID, Name....."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`pl-10 w-full h-full ${
+                className={`pl-10 w-full ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
                     : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
@@ -332,7 +326,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
                     ID
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Agent
+                    Type
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
                     Details
@@ -344,7 +338,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
                     Status
                   </th>
                   <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -355,42 +349,37 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "divide-gray-200"
                 }`}
               >
-                {paginatedRequests.map((request) => (
+                {paginatedItems.map((item) => (
                   <tr
-                    key={request.id}
+                    key={item.id}
                     className={`hover:${
                       resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
                     } transition-colors`}
                   >
-                    <td className="px-6 py-4 text-sm">{request.id}</td>
-                    <td className="px-6 py-4 text-sm">{request.agent}</td>
-                    <td className="px-6 py-4 text-sm">{request.details}</td>
-                    <td className="px-6 py-4 text-sm">{request.quantity}</td>
+                    <td className="px-6 py-4 text-sm">{item.id}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
+                        {item.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm">{item.details}</td>
+                    <td className="px-6 py-4 text-sm">{item.quantity}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          request.status === "Pending"
+                          item.status === "Pending"
                             ? "bg-yellow-400 text-black"
-                            : request.status === "Approved"
+                            : item.status === "Approved"
                             ? "bg-green-500 text-white"
                             : "bg-red-500 text-white"
                         }`}
                       >
-                        {request.status}
+                        {item.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 flex justify-end gap-3">
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-medium"
-                        title="Confirm"
-                      >
-                        <Check className="w-4 h-4" /> Confirm
-                      </button>
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
-                        title="Reject"
-                      >
-                        <X className="w-4 h-4" /> Reject
+                    <td className="px-6 py-4 flex justify-end">
+                      <button className="flex items-center gap-2 px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium">
+                        <Eye className="w-4 h-4" /> View
                       </button>
                     </td>
                   </tr>
@@ -440,7 +429,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNavApprover
-        currentPage="dashboard"
+        currentPage="history"
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
       />
@@ -448,4 +437,4 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
   );
 }
 
-export default ApproverDashboard;
+export default ApproverHistory;

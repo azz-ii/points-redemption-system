@@ -16,26 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
-  currentPage:
-    | "dashboard"
-    | "history"
-    | "accounts"
-    | "catalogue"
-    | "redemption"
-    | "inventory"
-    | "redemption-status"
-    | "redeem-items";
-  onNavigate: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "redemption-status"
-      | "redeem-items"
-  ) => void;
+  currentPage: string;
+  onNavigate: (page: any) => void;
   onLogout: () => void;
 }
 
@@ -801,7 +783,7 @@ export function SidebarMarketing({
         >
           <div
             className={`w-10 h-10 rounded-full shrink-0 ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+              resolvedTheme === "dark" ? "bg-purple-600" : "bg-purple-500"
             } flex items-center justify-center`}
           >
             <span className="text-white font-semibold text-sm">

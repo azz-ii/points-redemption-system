@@ -1,1 +1,1 @@
-export { Sidebar } from "./sidebar";
+export { Sidebar, SidebarApprover, SidebarMarketing } from "./sidebar";
