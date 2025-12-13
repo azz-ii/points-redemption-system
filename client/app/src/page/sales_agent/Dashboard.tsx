@@ -4,8 +4,8 @@ import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import RedemptionStatus from "@/page/sales/Redemption-Status";
-import RedeemItem from "@/page/sales/Redeem-Item";
+import RedemptionStatus from "@/page/sales_agent/Redemption-Status";
+import RedeemItem from "@/page/sales_agent/Redeem-Item";
 import { Bell, Search, Truck, ShoppingCart } from "lucide-react";
 
 interface DashboardProps {
