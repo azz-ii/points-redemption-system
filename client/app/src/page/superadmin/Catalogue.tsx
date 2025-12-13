@@ -28,8 +28,8 @@ interface CatalogueItem {
   purpose: string;
   specifications: string;
   options: string | null;
-  points: number;
-  price: number;
+  points: string;
+  price: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
 }
 
@@ -66,8 +66,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         "Material: 100% Platinum Cotton, Fit: Modern Fit, Color: Ribbed Polo Collar, Sleeves: Short sleeves with ribbed armbands",
       options:
         "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
-      points: 500,
-      price: 1200,
+      points: "500",
+      price: "1200",
       legend: "ASSET",
     },
   ]);
@@ -137,8 +137,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     options: "",
-    points: 0,
-    price: 0,
+    points: "",
+    price: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
   });
 
@@ -160,8 +160,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     options: "",
-    points: 0,
-    price: 0,
+    points: "",
+    price: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
   });
 
@@ -178,12 +178,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       setCreateError("Item code is required");
       return;
     }
-    if (newItem.points <= 0) {
-      setCreateError("Points must be greater than 0");
+    if (!newItem.points.trim()) {
+      setCreateError("Points is required");
       return;
     }
-    if (newItem.price <= 0) {
-      setCreateError("Price must be greater than 0");
+    if (!newItem.price.trim()) {
+      setCreateError("Price is required");
       return;
     }
     if (!newItem.legend) {
@@ -1032,12 +1032,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Points Required *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={newItem.points}
                   onChange={(e) =>
                     setNewItem({
                       ...newItem,
-                      points: parseInt(e.target.value) || 0,
+                      points: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1045,7 +1045,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 5000"
+                  placeholder="e.g., 500 or 1/inv amt"
                 />
               </div>
 
@@ -1055,12 +1055,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Price *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={newItem.price}
                   onChange={(e) =>
                     setNewItem({
                       ...newItem,
-                      price: parseInt(e.target.value) || 0,
+                      price: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1068,7 +1068,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 2500"
+                  placeholder="e.g., ₱130.00 or P0.50/inv amt."
                 />
               </div>
 
@@ -1302,12 +1302,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Points Required *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={editItem.points}
                   onChange={(e) =>
                     setEditItem({
                       ...editItem,
-                      points: parseInt(e.target.value) || 0,
+                      points: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1315,7 +1315,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 5000"
+                  placeholder="e.g., 500 or 1/inv amt"
                 />
               </div>
 
@@ -1324,12 +1324,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Price *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={editItem.price}
                   onChange={(e) =>
                     setEditItem({
                       ...editItem,
-                      price: parseInt(e.target.value) || 0,
+                      price: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1337,7 +1337,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 2500"
+                  placeholder="e.g., ₱130.00 or P0.50/inv amt."
                 />
               </div>
 

@@ -1059,10 +1059,11 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   } focus:outline-none focus:border-blue-500`}
                 >
                   <option value="">Select position</option>
-                  <option value="Admin">Admin</option>
+                  <option value="Sales Agent">Sales Agent</option>
+                  <option value="Approver">Approver</option>
                   <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Support">Support</option>
+                  <option value="Reception">Reception</option>
+                  <option value="Executive Assistant">Executive Assistant</option>
                 </select>
               </div>
 
@@ -1328,10 +1329,11 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   } focus:outline-none focus:border-blue-500`}
                 >
                   <option value="">Select position</option>
-                  <option value="Admin">Admin</option>
+                  <option value="Sales Agent">Sales Agent</option>
+                  <option value="Approver">Approver</option>
                   <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Support">Support</option>
+                  <option value="Reception">Reception</option>
+                  <option value="Executive Assistant">Executive Assistant</option>
                 </select>
               </div>
 
