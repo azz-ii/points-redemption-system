@@ -5,7 +5,8 @@ import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import RedemptionStatus from "@/page/sales/Redemption-Status";
-import { Bell, Search, Truck } from "lucide-react";
+import RedeemItem from "@/page/sales/Redeem-Item";
+import { Bell, Search, Truck, ShoppingCart } from "lucide-react";
 
 interface DashboardProps {
   onLogout?: () => void;
@@ -79,6 +80,17 @@ function SalesDashboard({ onLogout }: DashboardProps) {
     );
   }
 
+  // Route to Redeem Items full-page when selected
+  if (currentPage === "redeem-items") {
+    return (
+      <RedeemItem
+        onNavigate={handleNavigate}
+        onLogout={onLogout}
+        currentPage={currentPage}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen">
       <SidebarSales
@@ -121,7 +133,14 @@ function SalesDashboard({ onLogout }: DashboardProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <ThemeToggle />
+              <button
+                className={`relative p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
+                aria-label="Cart"
+              >
+                <ShoppingCart className="h-6 w-6" />
+              </button>
               <button
                 onClick={() => setNotificationOpen(!notificationOpen)}
                 className={`p-2 rounded-lg transition-colors ${
@@ -131,6 +150,7 @@ function SalesDashboard({ onLogout }: DashboardProps) {
               >
                 <Bell className="h-6 w-6" />
               </button>
+              <ThemeToggle />
             </div>
           </div>
 

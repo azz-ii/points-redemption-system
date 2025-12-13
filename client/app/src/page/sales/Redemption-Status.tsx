@@ -4,7 +4,7 @@ import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Search, Filter, Eye, X } from "lucide-react";
+import { Bell, Search, Filter, Eye, X, ShoppingCart } from "lucide-react";
 
 interface StatusItem {
   id: string;
@@ -118,7 +118,14 @@ export default function RedemptionStatus({
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <ThemeToggle />
+              <button
+                className={`relative p-2 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
+                aria-label="Cart"
+              >
+                <ShoppingCart className="h-6 w-6" />
+              </button>
               <button
                 onClick={() => setNotificationOpen(!notificationOpen)}
                 className={`p-2 rounded-lg transition-colors ${
@@ -128,6 +135,7 @@ export default function RedemptionStatus({
               >
                 <Bell className="h-6 w-6" />
               </button>
+              <ThemeToggle />
             </div>
           </div>
 

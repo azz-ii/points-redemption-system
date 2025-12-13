@@ -1,4 +1,5 @@
 import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 import {
   Home,
   History as HistoryIcon,
@@ -34,6 +35,42 @@ export function MobileBottomNav({
   onNavigate,
 }: MobileBottomNavProps) {
   const { resolvedTheme } = useTheme();
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    // Find the scrollable container (parent with overflow-y-auto)
+    const scrollContainer =
+      document.querySelector('[class*="overflow-y-auto"]') || window;
+    let lastScrollYRef = 0;
+
+    const handleScroll = () => {
+      const currentScrollY =
+        scrollContainer === window
+          ? window.scrollY
+          : (scrollContainer as HTMLElement).scrollTop;
+
+      // Show nav when scrolling up, hide when scrolling down
+      if (currentScrollY < lastScrollYRef) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollYRef && currentScrollY > 100) {
+        setIsVisible(false);
+      }
+
+      lastScrollYRef = currentScrollY;
+    };
+
+    // Add scroll event listener
+    (scrollContainer as HTMLElement | Window).addEventListener(
+      "scroll",
+      handleScroll,
+      { passive: true }
+    );
+    return () =>
+      (scrollContainer as HTMLElement | Window).removeEventListener(
+        "scroll",
+        handleScroll
+      );
+  }, []);
 
   const navItems = [
     { id: "dashboard", icon: Home, label: "Dashboard" },
@@ -45,7 +82,9 @@ export function MobileBottomNav({
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center p-4 border-t ${
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center p-4 border-t transition-transform duration-300 ${
+        isVisible ? "translate-y-0" : "translate-y-full"
+      } ${
         resolvedTheme === "dark"
           ? "bg-gray-900 border-gray-800"
           : "bg-white border-gray-200"
@@ -91,6 +130,42 @@ export function MobileBottomNavSales({
   onLogout,
 }: MobileBottomNavSalesProps) {
   const { resolvedTheme } = useTheme();
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    // Find the scrollable container (parent with overflow-y-auto)
+    const scrollContainer =
+      document.querySelector('[class*="overflow-y-auto"]') || window;
+    let lastScrollYRef = 0;
+
+    const handleScroll = () => {
+      const currentScrollY =
+        scrollContainer === window
+          ? window.scrollY
+          : (scrollContainer as HTMLElement).scrollTop;
+
+      // Show nav when scrolling up, hide when scrolling down
+      if (currentScrollY < lastScrollYRef) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollYRef && currentScrollY > 100) {
+        setIsVisible(false);
+      }
+
+      lastScrollYRef = currentScrollY;
+    };
+
+    // Add scroll event listener
+    (scrollContainer as HTMLElement | Window).addEventListener(
+      "scroll",
+      handleScroll,
+      { passive: true }
+    );
+    return () =>
+      (scrollContainer as HTMLElement | Window).removeEventListener(
+        "scroll",
+        handleScroll
+      );
+  }, []);
 
   const navItems = [
     { id: "dashboard", icon: Home, label: "Distributors" },
@@ -101,7 +176,9 @@ export function MobileBottomNavSales({
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 py-3 border-t ${
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
+        isVisible ? "translate-y-0" : "translate-y-full"
+      } ${
         resolvedTheme === "dark"
           ? "bg-gray-900 border-gray-800"
           : "bg-white border-gray-200"
