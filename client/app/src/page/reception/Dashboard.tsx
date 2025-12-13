@@ -1,12 +1,12 @@
 import { useTheme } from "next-themes";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LogOut, TrendingUp } from "lucide-react";
+import { LogOut, Megaphone } from "lucide-react";
 
 interface DashboardProps {
   onLogout?: () => void;
 }
 
-function SalesDashboard({ onLogout }: DashboardProps) {
+function ReceptionDashboard({ onLogout }: DashboardProps) {
   const { resolvedTheme } = useTheme();
 
   return (
@@ -28,19 +28,19 @@ function SalesDashboard({ onLogout }: DashboardProps) {
             <div className="flex items-center gap-3">
               <div
                 className={`w-10 h-10 rounded-full ${
-                  resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+                  resolvedTheme === "dark" ? "bg-purple-600" : "bg-purple-500"
                 } flex items-center justify-center`}
               >
-                <TrendingUp className="h-6 w-6 text-white" />
+                <Megaphone className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold">Sales Dashboard</h1>
+                <h1 className="text-xl font-semibold">Reception Dashboard</h1>
                 <p
                   className={`text-sm ${
                     resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  Role: Sales
+                  Role: Reception
                 </p>
               </div>
             </div>
@@ -73,22 +73,22 @@ function SalesDashboard({ onLogout }: DashboardProps) {
         >
           <div
             className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 ${
-              resolvedTheme === "dark" ? "bg-green-600/20" : "bg-green-100"
+              resolvedTheme === "dark" ? "bg-purple-600/20" : "bg-purple-100"
             }`}
           >
-            <TrendingUp
+            <Megaphone
               className={`h-10 w-10 ${
-                resolvedTheme === "dark" ? "text-green-400" : "text-green-600"
+                resolvedTheme === "dark" ? "text-purple-400" : "text-purple-600"
               }`}
             />
           </div>
-          <h2 className="text-3xl font-bold mb-3">Welcome to Sales Dashboard</h2>
+          <h2 className="text-3xl font-bold mb-3">Welcome to Reception Dashboard</h2>
           <p
             className={`text-lg mb-8 ${
               resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            Your role: <span className="font-semibold text-green-500">Sales</span>
+            Your role: <span className="font-semibold text-purple-500">Reception</span>
           </p>
           <div
             className={`inline-block px-6 py-3 rounded-lg ${
@@ -105,4 +105,4 @@ function SalesDashboard({ onLogout }: DashboardProps) {
   );
 }
 
-export default SalesDashboard;
+export default ReceptionDashboard;

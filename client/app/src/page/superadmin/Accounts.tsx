@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
   Search,
@@ -17,6 +18,8 @@ import {
   Eye,
   Ban,
   RotateCw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface Account {
@@ -84,6 +87,8 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [viewTarget, setViewTarget] = useState<Account | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
 
   // Fetch accounts on component mount
   const fetchAccounts = async () => {
@@ -339,6 +344,15 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       account.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAccounts.length / itemsPerPage)
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
+
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -461,7 +475,10 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               <Input
                 placeholder="Search by ID, Name, Email......"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className={`pl-10 w-80 ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
@@ -547,7 +564,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-300">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {loading && accounts.length === 0 ? (
                   <tr>
                     <td
@@ -567,7 +584,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                     </td>
                   </tr>
                 ) : (
-                  filteredAccounts.map((account) => (
+                  paginatedAccounts.map((account) => (
                     <tr
                       key={account.id}
                       className={`hover:${
@@ -668,6 +685,35 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                 )}
               </tbody>
             </table>
+            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -696,7 +742,10 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                 <Input
                   placeholder="Search....."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className={`pl-10 w-full text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-transparent border-0 text-white placeholder:text-gray-500"
@@ -730,7 +779,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   No accounts found
                 </div>
               ) : (
-                filteredAccounts.map((account) => (
+                paginatedAccounts.map((account) => (
                   <div
                     key={account.id}
                     className={`p-4 rounded-lg border ${
@@ -842,6 +891,36 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                 ))
               )}
             </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Prev
+              </button>
+              <span className="text-xs font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -850,6 +929,11 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       <MobileBottomNav
         currentPage="accounts"
         onNavigate={onNavigate || (() => {})}
+      />
+
+      <NotificationPanel
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
       />
 
       {/* Create Account Modal */}
@@ -975,10 +1059,11 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   } focus:outline-none focus:border-blue-500`}
                 >
                   <option value="">Select position</option>
-                  <option value="Admin">Admin</option>
+                  <option value="Sales Agent">Sales Agent</option>
+                  <option value="Approver">Approver</option>
                   <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Support">Support</option>
+                  <option value="Reception">Reception</option>
+                  <option value="Executive Assistant">Executive Assistant</option>
                 </select>
               </div>
 
@@ -1244,10 +1329,11 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   } focus:outline-none focus:border-blue-500`}
                 >
                   <option value="">Select position</option>
-                  <option value="Admin">Admin</option>
+                  <option value="Sales Agent">Sales Agent</option>
+                  <option value="Approver">Approver</option>
                   <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Support">Support</option>
+                  <option value="Reception">Reception</option>
+                  <option value="Executive Assistant">Executive Assistant</option>
                 </select>
               </div>
 

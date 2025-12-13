@@ -15,6 +15,8 @@ import {
   Plus,
   X,
   LogOut,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface InventoryItem {
@@ -44,6 +46,8 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
   const { resolvedTheme } = useTheme();
   const currentPage = "inventory";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [currentPageIndex, setCurrentPageIndex] = useState(1);
+  const itemsPerPage = 7;
   const [items] = useState<InventoryItem[]>([
     {
       id: "INV001",
@@ -114,6 +118,26 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
         return "bg-gray-500 text-white";
     }
   };
+
+  const filteredItems = items.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      item.id.toLowerCase().includes(q) ||
+      item.itemName.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q) ||
+      item.status.toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredItems.length / itemsPerPage)
+  );
+  const safePage = Math.min(currentPageIndex, totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
   return (
     <div
@@ -215,7 +239,10 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
               <Input
                 placeholder="Search by ID, Name....."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPageIndex(1);
+                }}
                 className={`pl-10 w-80 ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
@@ -284,7 +311,7 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
                     : "bg-white text-gray-900"
                 }`}
               >
-                {items.map((item) => (
+                {paginatedItems.map((item) => (
                   <tr
                     key={item.id}
                     className={`border-t ${
@@ -338,6 +365,35 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
                 ))}
               </tbody>
             </table>
+            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setCurrentPageIndex(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPageIndex(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -357,7 +413,10 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
             <Input
               placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPageIndex(1);
+              }}
               className={`pl-10 w-full text-sm ${
                 resolvedTheme === "dark"
                   ? "bg-transparent border-0 text-white placeholder:text-gray-500"
@@ -381,7 +440,7 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
 
           {/* Mobile Cards */}
           <div className="space-y-3">
-            {items.map((item) => (
+            {paginatedItems.map((item) => (
               <div
                 key={item.id}
                 className={`p-4 rounded-lg border ${
@@ -436,6 +495,36 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={() => setCurrentPageIndex(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                  : "bg-white border border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              <ChevronLeft className="h-4 w-4" /> Prev
+            </button>
+            <span className="text-xs font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPageIndex(Math.min(totalPages, safePage + 1))
+              }
+              disabled={safePage === totalPages}
+              className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                  : "bg-white border border-gray-300 hover:bg-gray-100"
+              }`}
+            >
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>

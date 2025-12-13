@@ -1,9 +1,11 @@
 import { useState } from "react";
 import Login from "./page/login/Login";
 import SuperAdminDashboard from "./page/superadmin/Dashboard";
-import SupportDashboard from "./page/support/Dashboard";
-import SalesDashboard from "./page/sales/Dashboard";
+import ApproverDashboard from "./page/approver/Dashboard";
+import SalesDashboard from "./page/sales_agent/Dashboard";
 import MarketingDashboard from "./page/marketing/Dashboard";
+import ReceptionDashboard from "./page/reception/Dashboard";
+import ExecutiveAssistantDashboard from "./page/executive_assistant/Dashboard";
 import History from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts";
 import Catalogue from "./page/superadmin/Catalogue";
@@ -51,12 +53,16 @@ function App() {
 
   if (currentPage === "dashboard") {
     // Render dashboard based on user position
-    if (userPosition === "Support") {
-      return <SupportDashboard onLogout={handleLogout} />;
-    } else if (userPosition === "Sales") {
+    if (userPosition === "Sales Agent") {
       return <SalesDashboard onLogout={handleLogout} />;
+    } else if (userPosition === "Approver") {
+      return <ApproverDashboard onLogout={handleLogout} />;
     } else if (userPosition === "Marketing") {
       return <MarketingDashboard onLogout={handleLogout} />;
+    } else if (userPosition === "Reception") {
+      return <ReceptionDashboard onLogout={handleLogout} />;
+    } else if (userPosition === "Executive Assistant") {
+      return <ExecutiveAssistantDashboard onLogout={handleLogout} />;
     } else {
       // Admin or any other role defaults to SuperAdmin dashboard
       return <SuperAdminDashboard onNavigate={handleNavigateTo} onLogout={handleLogout} />;

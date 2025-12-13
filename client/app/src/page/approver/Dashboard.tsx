@@ -6,7 +6,7 @@ interface DashboardProps {
   onLogout?: () => void;
 }
 
-function SupportDashboard({ onLogout }: DashboardProps) {
+function ApproverDashboard({ onLogout }: DashboardProps) {
   const { resolvedTheme } = useTheme();
 
   return (
@@ -34,13 +34,13 @@ function SupportDashboard({ onLogout }: DashboardProps) {
                 <User className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold">Support Dashboard</h1>
+                <h1 className="text-xl font-semibold">Approver Dashboard</h1>
                 <p
                   className={`text-sm ${
                     resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  Role: Support
+                  Role: Approver
                 </p>
               </div>
             </div>
@@ -82,13 +82,13 @@ function SupportDashboard({ onLogout }: DashboardProps) {
               }`}
             />
           </div>
-          <h2 className="text-3xl font-bold mb-3">Welcome to Support Dashboard</h2>
+          <h2 className="text-3xl font-bold mb-3">Welcome to Approver Dashboard</h2>
           <p
             className={`text-lg mb-8 ${
               resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            Your role: <span className="font-semibold text-blue-500">Support</span>
+            Your role: <span className="font-semibold text-blue-500">Approver</span>
           </p>
           <div
             className={`inline-block px-6 py-3 rounded-lg ${
@@ -105,4 +105,4 @@ function SupportDashboard({ onLogout }: DashboardProps) {
   );
 }
 
-export default SupportDashboard;
+export default ApproverDashboard;

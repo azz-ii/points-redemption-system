@@ -48,6 +48,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [pointAmount, setPointAmount] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [requests] = useState<RequestItem[]>([
     {
       id: "SA220011",
@@ -91,34 +92,6 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
       quantity: 5,
       status: "Approved",
     },
-    {
-      id: "SA220017",
-      agent: "Carlos Reyes",
-      details: "Travel Backpack",
-      quantity: 7,
-      status: "Pending",
-    },
-    {
-      id: "SA220018",
-      agent: "Sofia Ramos",
-      details: "Sports Jacket",
-      quantity: 3,
-      status: "Approved",
-    },
-    {
-      id: "SA220019",
-      agent: "Miguel Torres",
-      details: "Corporate Mug",
-      quantity: 15,
-      status: "Pending",
-    },
-    {
-      id: "SA220020",
-      agent: "Luis Dela Cruz",
-      details: "Leather Belt",
-      quantity: 9,
-      status: "Approved",
-    },
   ]);
 
   const clientOptions = Array.from(new Set(requests.map((r) => r.agent)));
@@ -129,6 +102,25 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
   const pendingCount = requests.filter((r) => r.status === "Pending").length;
   const approvedCount = requests.filter((r) => r.status === "Approved").length;
   const onBoardCount = 20;
+
+  const pageSize = 5;
+
+  const filteredRequests = requests.filter((request) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      request.id.toLowerCase().includes(query) ||
+      request.agent.toLowerCase().includes(query) ||
+      request.details.toLowerCase().includes(query) ||
+      request.status.toLowerCase().includes(query)
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
   return (
     <div
@@ -255,7 +247,10 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
               <Input
                 placeholder="Search Distributors..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className={`pl-10 py-3 ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-0 text-white placeholder:text-gray-500"
@@ -276,7 +271,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
 
             {/* Request Cards */}
             <div className="space-y-3">
-              {requests.map((request) => (
+              {paginatedRequests.map((request) => (
                 <div
                   key={request.id}
                   className={`p-4 rounded-lg border ${
@@ -320,6 +315,39 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                   </Button>
                 </div>
               ))}
+            </div>
+
+            {/* Mobile Pagination */}
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </button>
+              <span className="text-xs font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -455,7 +483,10 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
               <Input
                 placeholder="Search....."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className={`pl-10 w-80 ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
@@ -509,7 +540,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "divide-gray-200"
                 }`}
               >
-                {requests.map((request) => (
+                {paginatedRequests.map((request) => (
                   <tr
                     key={request.id}
                     className={`hover:${
@@ -557,6 +588,37 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                 ))}
               </tbody>
             </table>
+
+            {/* Desktop Pagination */}
+            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

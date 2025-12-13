@@ -28,8 +28,8 @@ interface CatalogueItem {
   purpose: string;
   specifications: string;
   options: string | null;
-  points: number;
-  price: number;
+  points: string;
+  price: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
 }
 
@@ -66,8 +66,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         "Material: 100% Platinum Cotton, Fit: Modern Fit, Color: Ribbed Polo Collar, Sleeves: Short sleeves with ribbed armbands",
       options:
         "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
-      points: 500,
-      price: 1200,
+      points: "500",
+      price: "1200",
       legend: "ASSET",
     },
   ]);
@@ -137,8 +137,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     options: "",
-    points: 0,
-    price: 0,
+    points: "",
+    price: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
   });
 
@@ -160,8 +160,8 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     options: "",
-    points: 0,
-    price: 0,
+    points: "",
+    price: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
   });
 
@@ -178,12 +178,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       setCreateError("Item code is required");
       return;
     }
-    if (newItem.points <= 0) {
-      setCreateError("Points must be greater than 0");
+    if (!newItem.points.trim()) {
+      setCreateError("Points is required");
       return;
     }
-    if (newItem.price <= 0) {
-      setCreateError("Price must be greater than 0");
+    if (!newItem.price.trim()) {
+      setCreateError("Price is required");
       return;
     }
     if (!newItem.legend) {
@@ -515,7 +515,11 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2 transition-colors"
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors border ${
+                  resolvedTheme === "dark"
+                    ? "bg-white text-gray-900 border-gray-200 hover:bg-gray-200"
+                    : "bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
+                }`}
               >
                 <Plus className="h-5 w-5" />
                 <span>Add Item</span>
@@ -701,6 +705,20 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 }`}
               />
             </div>
+          </div>
+
+          <div className="mb-4">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
+                resolvedTheme === "dark"
+                  ? "bg-white text-gray-900 border-gray-200 hover:bg-gray-200"
+                  : "bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
+              }`}
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </button>
           </div>
 
           {/* Loading/Error States Mobile */}
@@ -1014,12 +1032,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Points Required *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={newItem.points}
                   onChange={(e) =>
                     setNewItem({
                       ...newItem,
-                      points: parseInt(e.target.value) || 0,
+                      points: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1027,7 +1045,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 5000"
+                  placeholder="e.g., 500 or 1/inv amt"
                 />
               </div>
 
@@ -1037,12 +1055,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Price *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={newItem.price}
                   onChange={(e) =>
                     setNewItem({
                       ...newItem,
-                      price: parseInt(e.target.value) || 0,
+                      price: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1050,7 +1068,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 2500"
+                  placeholder="e.g., ₱130.00 or P0.50/inv amt."
                 />
               </div>
 
@@ -1284,12 +1302,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Points Required *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={editItem.points}
                   onChange={(e) =>
                     setEditItem({
                       ...editItem,
-                      points: parseInt(e.target.value) || 0,
+                      points: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1297,7 +1315,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 5000"
+                  placeholder="e.g., 500 or 1/inv amt"
                 />
               </div>
 
@@ -1306,12 +1324,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   Price *
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={editItem.price}
                   onChange={(e) =>
                     setEditItem({
                       ...editItem,
-                      price: parseInt(e.target.value) || 0,
+                      price: e.target.value,
                     })
                   }
                   className={`w-full px-3 py-2 rounded border ${
@@ -1319,7 +1337,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
                   } focus:outline-none focus:border-blue-500`}
-                  placeholder="e.g., 2500"
+                  placeholder="e.g., ₱130.00 or P0.50/inv amt."
                 />
               </div>
 
@@ -1379,107 +1397,122 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
       {/* View Catalogue Item Modal */}
       {showViewModal && viewTarget && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/40 backdrop-blur-sm">
           <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-2xl w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+            className={`w-full max-w-3xl rounded-lg shadow-2xl border ${
+              resolvedTheme === "dark"
+                ? "bg-[#0f172a] border-gray-800"
+                : "bg-white border-gray-200"
             }`}
           >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+            <div className="flex justify-between items-start p-6 border-b border-gray-800">
               <div>
-                <h2 className="text-xl font-semibold">View Catalogue Item</h2>
+                <h2 className="text-2xl font-semibold">Catalogue Details</h2>
                 <p
                   className={`text-sm ${
                     resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  Item details
+                  Item breakdown
                 </p>
               </div>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="hover:opacity-70 transition-opacity"
+                className={`p-2 rounded-lg transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "hover:bg-gray-800 text-gray-300"
+                    : "hover:bg-gray-100 text-gray-600"
+                }`}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">ID:</span>
-                <span>{viewTarget.id}</span>
-              </div>
-              {viewTarget.reward && (
-                <div className="flex justify-between py-2 border-b border-gray-700">
-                  <span className="font-medium">Reward Category:</span>
-                  <span>{viewTarget.reward}</span>
+            <div className="p-6 space-y-6 max-h-[28rem] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">ID</p>
+                  <p className="font-semibold">{viewTarget.id}</p>
                 </div>
-              )}
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Item Name:</span>
-                <span>{viewTarget.item_name}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Item Code:</span>
-                <span className="font-mono text-sm">
-                  {viewTarget.item_code}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Description:</span>
-                <span className="text-right max-w-md">
-                  {viewTarget.description}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Purpose:</span>
-                <span className="text-right max-w-md">
-                  {viewTarget.purpose}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Specifications:</span>
-                <span className="text-right max-w-md">
-                  {viewTarget.specifications}
-                </span>
-              </div>
-              {viewTarget.options && (
-                <div className="flex justify-between py-2 border-b border-gray-700">
-                  <span className="font-medium">Options:</span>
-                  <span className="text-right max-w-md">
-                    {viewTarget.options}
+                {viewTarget.reward && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Reward Category
+                    </p>
+                    <p className="font-semibold uppercase">
+                      {viewTarget.reward}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Item Name</p>
+                  <p className="font-semibold">{viewTarget.item_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Item Code</p>
+                  <p className="font-mono font-semibold text-sm">
+                    {viewTarget.item_code}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Legend</p>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
+                      viewTarget.legend
+                    )}`}
+                  >
+                    {viewTarget.legend}
                   </span>
                 </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Points</p>
+                  <p className="font-semibold">{viewTarget.points}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Price</p>
+                  <p className="font-semibold">{viewTarget.price}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Purpose</p>
+                  <p className="font-semibold leading-relaxed text-gray-100">
+                    {viewTarget.purpose}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Description</p>
+                  <p className="font-semibold leading-relaxed text-gray-100">
+                    {viewTarget.description}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Specifications</p>
+                <p className="font-semibold leading-relaxed text-gray-100">
+                  {viewTarget.specifications}
+                </p>
+              </div>
+
+              {viewTarget.options && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Options</p>
+                  <p className="font-semibold leading-relaxed text-gray-100">
+                    {viewTarget.options}
+                  </p>
+                </div>
               )}
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Points:</span>
-                <span>{viewTarget.points}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Price:</span>
-                <span>{viewTarget.price}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="font-medium">Category:</span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
-                    viewTarget.legend
-                  )}`}
-                >
-                  {viewTarget.legend}
-                </span>
-              </div>
             </div>
 
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-gray-800 flex justify-end">
               <button
                 onClick={() => setShowViewModal(false)}
-                className={`w-full px-6 py-2 rounded-lg border transition-colors ${
+                className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "border-gray-600 hover:bg-gray-800"
-                    : "border-gray-300 hover:bg-gray-50"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-700"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-200"
                 }`}
               >
                 Close
