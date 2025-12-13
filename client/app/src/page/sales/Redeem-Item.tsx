@@ -398,6 +398,7 @@ export default function RedeemItem({
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
+        isModalOpen={cartOpen}
       />
     </div>
   );
