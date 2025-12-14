@@ -29,7 +29,7 @@ from views import (
     ActivateAccountView,
 )
 from users.views import UserListCreateView, UserDetailView
-from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView
+from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView, CatalogueItemUpdateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -46,6 +46,7 @@ urlpatterns = [
     path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     # Catalogue Management API
     path('api/catalogue/', CatalogueItemListCreateView.as_view(), name='catalogue_list_create'),
+    path('api/catalogue/item/<int:catalogue_item_id>/', CatalogueItemUpdateView.as_view(), name='catalogue_item_update'),
     path('api/catalogue/<int:item_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
 ]
 
