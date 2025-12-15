@@ -14,6 +14,8 @@ class UserProfile(models.Model):
     ban_duration = models.IntegerField(blank=True, null=True, help_text='Duration (in days)')
     ban_date = models.DateTimeField(blank=True, null=True)
     unban_date = models.DateTimeField(blank=True, null=True)
+    uses_points = models.BooleanField(default=False, help_text='Whether this user uses the points system')
+    points = models.PositiveIntegerField(default=0, help_text='Current points balance for the user')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

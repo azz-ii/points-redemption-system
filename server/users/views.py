@@ -5,6 +5,14 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Session authentication without CSRF checks for API endpoints"""
+    def enforce_csrf(self, request):
+        return  # Skip CSRF check
+
 from .models import UserProfile
 from .serializers import UserSerializer, UserListSerializer
 
@@ -79,3 +87,33 @@ class UserDetailView(APIView):
             return Response({
                 "error": "User not found"
             }, status=status.HTTP_404_NOT_FOUND)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CurrentUserView(APIView):
+    """Get current authenticated user's profile"""
+    authentication_classes = [CsrfExemptSessionAuthentication]  # Use session auth to load user
+    permission_classes = []  # No permission checks - we'll check manually
+    
+    def get(self, request):
+        """Get current user's profile details"""
+        # Manually check if user is authenticated via Django session
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Not authenticated",
+                "details": "User is not logged in. Please login first.",
+                "debug": {
+                    "user": str(request.user),
+                    "session_key": request.session.session_key,
+                    "has_sessionid_cookie": "sessionid" in request.COOKIES
+                }
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            user = request.user
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": "Failed to get user profile",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -20,6 +20,9 @@ import {
   ArchiveX,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  ChevronsRight,
+  ChevronsLeft
 } from "lucide-react";
 
 interface CatalogueItem {
@@ -109,6 +112,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState<number | "ALL">(15);
 
   // Fetch catalogue items from API
   useEffect(() => {
@@ -206,6 +213,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   }, {} as Record<number, { catalogueItem: { id: number; item_name: string; description: string; purpose: string; specifications: string; legend: string; reward: string | null; is_archived: boolean; date_added: string }; variants: CatalogueVariant[] }>);
 
   const groupedItemsArray = Object.values(groupedItems);
+
+  // Pagination logic
+  const totalPages = rowsPerPage === "ALL" ? 1 : Math.max(1, Math.ceil(groupedItemsArray.length / rowsPerPage));
+  const safePage = Math.min(page, totalPages);
+  const startIndex = rowsPerPage === "ALL" ? 0 : (safePage - 1) * rowsPerPage;
+  const endIndex = rowsPerPage === "ALL" ? groupedItemsArray.length : startIndex + rowsPerPage;
+  const paginatedGroupedItems = groupedItemsArray.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   // Toggle row expansion
   const toggleRow = (catalogueItemId: number) => {
@@ -887,13 +906,14 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
           {/* Table */}
           {!loading && !error && (
             <div
-              className={`border rounded-lg overflow-hidden ${
+              className={`border rounded-lg flex flex-col ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 border-gray-700"
                   : "bg-white border-gray-200"
               } transition-colors`}
             >
-              <table className="w-full">
+              <div className="overflow-auto max-h-[calc(100vh-295px)]">
+                <table className="w-full">
                 <thead
                   className={`${
                     resolvedTheme === "dark"
@@ -935,7 +955,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       : "divide-gray-200"
                   }`}
                 >
-                  {groupedItemsArray.length === 0 ? (
+                  {paginatedGroupedItems.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-12 text-center">
                         <p className="text-gray-500">
@@ -946,7 +966,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       </td>
                     </tr>
                   ) : (
-                    groupedItemsArray.map((group) => {
+                    paginatedGroupedItems.map((group) => {
                       const isExpanded = expandedRows.has(group.catalogueItem.id);
                       const firstVariant = group.variants[0];
                       
@@ -1102,6 +1122,90 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   )}
                 </tbody>
               </table>
+              </div>
+              
+              {/* Pagination Controls */}
+              <div className={`flex items-center justify-between p-4 border-t ${
+                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}>
+                {/* Left: Rows per page */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Rows per page:</span>
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      const value = e.target.value === "ALL" ? "ALL" : parseInt(e.target.value);
+                      setRowsPerPage(value);
+                      setPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded border text-sm ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:outline-none focus:border-blue-500`}
+                  >
+                    <option value="15">15</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="ALL">ALL</option>
+                  </select>
+                </div>
+
+                {/* Right: Page navigation */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setPage(1)}
+                    disabled={safePage === 1 || rowsPerPage === "ALL"}
+                    className={`p-1.5 rounded transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "hover:bg-gray-800 disabled:opacity-30"
+                        : "hover:bg-gray-100 disabled:opacity-30"
+                    } disabled:cursor-not-allowed`}
+                    title="First page"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setPage(Math.max(1, safePage - 1))}
+                    disabled={safePage === 1 || rowsPerPage === "ALL"}
+                    className={`p-1.5 rounded transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "hover:bg-gray-800 disabled:opacity-30"
+                        : "hover:bg-gray-100 disabled:opacity-30"
+                    } disabled:cursor-not-allowed`}
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-sm font-medium px-2">
+                    Page {safePage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+                    disabled={safePage === totalPages || rowsPerPage === "ALL"}
+                    className={`p-1.5 rounded transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "hover:bg-gray-800 disabled:opacity-30"
+                        : "hover:bg-gray-100 disabled:opacity-30"
+                    } disabled:cursor-not-allowed`}
+                    title="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setPage(totalPages)}
+                    disabled={safePage === totalPages || rowsPerPage === "ALL"}
+                    className={`p-1.5 rounded transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "hover:bg-gray-800 disabled:opacity-30"
+                        : "hover:bg-gray-100 disabled:opacity-30"
+                    } disabled:cursor-not-allowed`}
+                    title="Last page"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1175,17 +1279,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
           {/* Mobile Cards */}
           {!loading && !error && (
-            <div className="space-y-3">
-              {groupedItemsArray.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-sm">
-                    {searchQuery
-                      ? "No items match your search"
-                      : "No catalogue items found"}
-                  </p>
-                </div>
-              ) : (
-                groupedItemsArray.map((group) => {
+            <>
+              <div className="space-y-3">
+                {paginatedGroupedItems.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 text-sm">
+                      {searchQuery
+                        ? "No items match your search"
+                        : "No catalogue items found"}
+                    </p>
+                  </div>
+                ) : (
+                  paginatedGroupedItems.map((group) => {
                   const isExpanded = expandedRows.has(group.catalogueItem.id);
                   const firstVariant = group.variants[0];
                   
@@ -1353,7 +1458,87 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   );
                 })
               )}
-            </div>
+              </div>
+              
+              {/* Mobile Pagination */}
+              {paginatedGroupedItems.length > 0 && (
+                <div className={`mt-4 space-y-3 pb-2`}>
+                  {/* Rows per page */}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xs font-medium">Rows per page:</span>
+                    <select
+                      value={rowsPerPage}
+                      onChange={(e) => {
+                        const value = e.target.value === "ALL" ? "ALL" : parseInt(e.target.value);
+                        setRowsPerPage(value);
+                        setPage(1);
+                      }}
+                      className={`px-2 py-1 rounded border text-xs ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-800 border-gray-600 text-white"
+                          : "bg-white border-gray-300 text-gray-900"
+                      } focus:outline-none focus:border-blue-500`}
+                    >
+                      <option value="15">15</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                      <option value="ALL">ALL</option>
+                    </select>
+                  </div>
+
+                  {/* Page navigation */}
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setPage(1)}
+                      disabled={safePage === 1 || rowsPerPage === "ALL"}
+                      className={`p-1.5 rounded transition-colors ${
+                        resolvedTheme === "dark"
+                          ? "hover:bg-gray-700 disabled:opacity-30"
+                          : "hover:bg-gray-200 disabled:opacity-30"
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setPage(Math.max(1, safePage - 1))}
+                      disabled={safePage === 1 || rowsPerPage === "ALL"}
+                      className={`p-1.5 rounded transition-colors ${
+                        resolvedTheme === "dark"
+                          ? "hover:bg-gray-700 disabled:opacity-30"
+                          : "hover:bg-gray-200 disabled:opacity-30"
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-xs font-medium px-2">
+                      Page {safePage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+                      disabled={safePage === totalPages || rowsPerPage === "ALL"}
+                      className={`p-1.5 rounded transition-colors ${
+                        resolvedTheme === "dark"
+                          ? "hover:bg-gray-700 disabled:opacity-30"
+                          : "hover:bg-gray-200 disabled:opacity-30"
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setPage(totalPages)}
+                      disabled={safePage === totalPages || rowsPerPage === "ALL"}
+                      className={`p-1.5 rounded transition-colors ${
+                        resolvedTheme === "dark"
+                          ? "hover:bg-gray-700 disabled:opacity-30"
+                          : "hover:bg-gray-200 disabled:opacity-30"
+                      } disabled:cursor-not-allowed`}
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

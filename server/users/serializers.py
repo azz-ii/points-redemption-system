@@ -9,7 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'created_at', 'updated_at'
+            'uses_points', 'points', 'created_at', 'updated_at'
         ]
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,13 +25,15 @@ class UserSerializer(serializers.ModelSerializer):
     ban_duration = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     ban_date = serializers.DateTimeField(write_only=True, required=False, allow_null=True)
     unban_date = serializers.DateTimeField(write_only=True, required=False, allow_null=True)
+    uses_points = serializers.BooleanField(write_only=True, required=False, default=False)
+    points = serializers.IntegerField(write_only=True, required=False, default=0)
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'password', 'position', 'full_name', 'email',
             'is_activated', 'is_banned', 'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'profile', 'is_active', 'date_joined'
+            'uses_points', 'points', 'profile', 'is_active', 'date_joined'
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -53,6 +55,8 @@ class UserSerializer(serializers.ModelSerializer):
         ban_duration = validated_data.pop('ban_duration', None)
         ban_date = validated_data.pop('ban_date', None)
         unban_date = validated_data.pop('unban_date', None)
+        uses_points = validated_data.pop('uses_points', False)
+        points = validated_data.pop('points', 0)
         password = validated_data.pop('password')
         
         # Create user
@@ -73,6 +77,8 @@ class UserSerializer(serializers.ModelSerializer):
             ban_duration=ban_duration,
             ban_date=ban_date,
             unban_date=unban_date,
+            uses_points=uses_points,
+            points=points,
         )
         
         return user
@@ -89,6 +95,8 @@ class UserSerializer(serializers.ModelSerializer):
         ban_duration = validated_data.pop('ban_duration', None)
         ban_date = validated_data.pop('ban_date', None)
         unban_date = validated_data.pop('unban_date', None)
+        uses_points = validated_data.pop('uses_points', None)
+        points = validated_data.pop('points', None)
         password = validated_data.pop('password', None)
         
         # Update user fields
@@ -123,6 +131,10 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.profile.ban_date = ban_date
             if unban_date is not None:
                 instance.profile.unban_date = unban_date
+            if uses_points is not None:
+                instance.profile.uses_points = uses_points
+            if points is not None:
+                instance.profile.points = points
             instance.profile.save()
         elif any([position, full_name, email]):
             UserProfile.objects.create(
@@ -137,6 +149,8 @@ class UserSerializer(serializers.ModelSerializer):
                     ban_duration=ban_duration,
                     ban_date=ban_date,
                     unban_date=unban_date,
+                    uses_points=uses_points if uses_points is not None else False,
+                    points=points if points is not None else 0,
             )
         
         return instance
@@ -153,11 +167,13 @@ class UserListSerializer(serializers.ModelSerializer):
     ban_duration = serializers.IntegerField(source='profile.ban_duration', read_only=True)
     ban_date = serializers.DateTimeField(source='profile.ban_date', read_only=True)
     unban_date = serializers.DateTimeField(source='profile.unban_date', read_only=True)
+    uses_points = serializers.BooleanField(source='profile.uses_points', read_only=True)
+    points = serializers.IntegerField(source='profile.points', read_only=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'is_active', 'date_joined'
+            'uses_points', 'points', 'is_active', 'date_joined'
         ]
