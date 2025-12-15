@@ -25,6 +25,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [historyItems] = useState<HistoryItem[]>([
     {
       id: "MC0003C",
@@ -209,7 +210,10 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
                   <p className="text-xs text-gray-500 mb-3">
                     Qty: {item.quantity}
                   </p>
-                  <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">
+                  <button
+                    onClick={() => setSelectedItem(item)}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+                  >
                     <Eye className="w-4 h-4" /> View
                   </button>
                 </div>
@@ -378,7 +382,10 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
                       </span>
                     </td>
                     <td className="px-6 py-4 flex justify-end">
-                      <button className="flex items-center gap-2 px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium">
+                      <button
+                        onClick={() => setSelectedItem(item)}
+                        className="flex items-center gap-2 px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                      >
                         <Eye className="w-4 h-4" /> View
                       </button>
                     </td>
@@ -426,6 +433,79 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
       />
+
+      {/* View Account Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className={`relative w-full max-w-md rounded-lg shadow-xl ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 text-white"
+                : "bg-gray-50 text-gray-900"
+            }`}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold">View Account</h2>
+                  <p className="text-sm text-gray-400 mt-1">Details for Izza</p>
+                </div>
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="p-1 hover:bg-gray-800 rounded transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-5">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Username</p>
+                <p className="font-semibold">{selectedItem.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Full Name</p>
+                <p className="font-semibold">User Name</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Email</p>
+                <p className="font-semibold">
+                  {selectedItem.id.toLowerCase()}@email.com
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Position</p>
+                <p className="font-semibold">{selectedItem.type}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Status</p>
+                <p className="font-semibold">
+                  {selectedItem.status === "Approved"
+                    ? "Active"
+                    : selectedItem.status === "Rejected"
+                    ? "Inactive"
+                    : "Pending"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNavApprover

@@ -10,10 +10,8 @@ import {
   Search,
   Check,
   X,
-  Pencil,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
 } from "lucide-react";
 
 interface CampaignItem {
@@ -36,6 +34,7 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"incoming" | "handled">("incoming");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [editItem, setEditItem] = useState<CampaignItem | null>(null);
   const [campaigns] = useState<CampaignItem[]>([
     {
       id: "SA220011",
@@ -310,7 +309,10 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
                           2025-12-31
                         </span>
                       </div>
-                      <button className="w-full py-2.5 rounded bg-white text-gray-900 hover:bg-gray-50 border border-gray-300 text-sm font-semibold transition-colors">
+                      <button
+                        onClick={() => setEditItem(campaign)}
+                        className="w-full py-2.5 rounded bg-white text-gray-900 hover:bg-gray-50 border border-gray-300 text-sm font-semibold transition-colors"
+                      >
                         Edit Details
                       </button>
                     </>
@@ -614,7 +616,10 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
                       </td>
                     ) : (
                       <td className="px-6 py-4 text-right">
-                        <button className="px-3 py-1 rounded bg-yellow-500 text-black hover:bg-yellow-600 transition-colors text-sm font-semibold">
+                        <button
+                          onClick={() => setEditItem(campaign)}
+                          className="px-3 py-1 rounded bg-yellow-500 text-black hover:bg-yellow-600 transition-colors text-sm font-semibold"
+                        >
                           Edit Details
                         </button>
                       </td>
@@ -662,6 +667,125 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
             </div>
           </div>
         </div>
+
+        {/* Edit Account Modal */}
+        {editItem && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div
+              className={`relative w-full max-w-md rounded-lg shadow-xl ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-50 text-gray-900"
+              }`}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-gray-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-xl font-bold">Edit Item</h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Update item quantity for {editItem.details}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setEditItem(null)}
+                    className="p-1 hover:bg-gray-800 rounded transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Form Content */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">ID</label>
+                  <input
+                    type="text"
+                    value={editItem.id}
+                    disabled
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-500"
+                        : "bg-gray-100 border-gray-300 text-gray-500"
+                    } cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Item Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editItem.details}
+                    disabled
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-500"
+                        : "bg-gray-100 border-gray-300 text-gray-500"
+                    } cursor-not-allowed`}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Item Type
+                  </label>
+                  <input
+                    type="text"
+                    value="T-shirt"
+                    disabled
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-500"
+                        : "bg-gray-100 border-gray-300 text-gray-500"
+                    } cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Quantity <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue={editItem.quantity}
+                    min="1"
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+              </div>
+
+              {/* Footer Button */}
+              <div className="p-6 pt-0">
+                <button
+                  onClick={() => {
+                    // Handle update logic here
+                    setEditItem(null);
+                  }}
+                  className="w-full py-3 rounded-lg bg-white text-gray-900 hover:bg-gray-100 font-semibold transition-colors"
+                >
+                  Update Item
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <NotificationPanel
           isOpen={isNotificationOpen}

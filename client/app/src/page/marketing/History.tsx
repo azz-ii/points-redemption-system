@@ -29,6 +29,7 @@ export default function MarketingHistory({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
 
   const items: HistoryItem[] = [
     {
@@ -240,7 +241,10 @@ export default function MarketingHistory({
                 </span>
                 <span className="text-xs text-gray-500">2025-12-31</span>
               </div>
-              <button className="w-full py-2.5 rounded bg-white text-gray-900 hover:bg-gray-50 border border-gray-300 text-sm font-semibold transition-colors">
+              <button
+                onClick={() => setSelectedItem(item)}
+                className="w-full py-2.5 rounded bg-white text-gray-900 hover:bg-gray-50 border border-gray-300 text-sm font-semibold transition-colors"
+              >
                 View Details
               </button>
             </div>
@@ -300,7 +304,10 @@ export default function MarketingHistory({
                     </span>
                   </td>
                   <td className="p-4 text-right">
-                    <button className="inline-flex items-center gap-2 px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium">
+                    <button
+                      onClick={() => setSelectedItem(item)}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
                       View
                     </button>
                   </td>
@@ -341,6 +348,79 @@ export default function MarketingHistory({
           </button>
         </div>
       </div>
+
+      {/* View Account Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className={`relative w-full max-w-md rounded-lg shadow-xl ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 text-white"
+                : "bg-gray-50 text-gray-900"
+            }`}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold">View Account</h2>
+                  <p className="text-sm text-gray-400 mt-1">Details for Izza</p>
+                </div>
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="p-1 hover:bg-gray-800 rounded transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-5">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Username</p>
+                <p className="font-semibold">{selectedItem.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Full Name</p>
+                <p className="font-semibold">Izza</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Email</p>
+                <p className="font-semibold">
+                  {selectedItem.id.toLowerCase()}@email.com
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Position</p>
+                <p className="font-semibold">{selectedItem.campaign}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Status</p>
+                <p className="font-semibold">
+                  {selectedItem.status === "Approved"
+                    ? "Active"
+                    : selectedItem.status === "Rejected"
+                    ? "Inactive"
+                    : "Pending"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile nav */}
       <MobileBottomNavMarketing

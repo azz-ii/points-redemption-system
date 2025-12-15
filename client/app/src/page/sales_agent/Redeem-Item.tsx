@@ -352,19 +352,19 @@ export default function RedeemItem({
                           {item.category}
                         </p>
                       </div>
-                      {/* Add button */}
-                      <button
-                        onClick={() => handleAddToCart(item)}
-                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isDark
-                            ? "bg-yellow-400 text-black hover:bg-yellow-300"
-                            : "bg-yellow-400 text-black hover:bg-yellow-300"
-                        }`}
-                        aria-label={`Add ${item.name}`}
-                      >
-                        <Plus className="h-4 w-4 md:h-5 md:w-5" />
-                      </button>
                     </div>
+                    {/* Add button */}
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        isDark
+                          ? "bg-yellow-400 text-black hover:bg-yellow-300"
+                          : "bg-yellow-400 text-black hover:bg-yellow-300"
+                      }`}
+                      aria-label={`Add ${item.name}`}
+                    >
+                      <Plus className="h-4 w-4 md:h-5 md:w-5" />
+                    </button>
                   </div>
                 </div>
               ))}
