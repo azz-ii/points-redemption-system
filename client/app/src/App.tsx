@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Login from "./page/login/Login";
-import AdminDashboard from "./page/superadmin/Dashboard";
 import ApproverDashboard from "./page/approver/Dashboard";
 import ApproverHistory from "./page/approver/History";
 import SalesDashboard from "./page/sales_agent/Dashboard";
@@ -9,7 +8,8 @@ import MarketingHistory from "./page/marketing/History";
 import ReceptionDashboard from "./page/reception/Dashboard";
 import ReceptionHistory from "./page/reception/History";
 import ExecutiveAssistantDashboard from "./page/executive_assistant/Dashboard";
-import History from "./page/superadmin/History";
+import SuperAdminDashboard from "./page/superadmin/Dashboard";
+import SuperAdminHistory from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts";
 import Catalogue from "./page/superadmin/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
@@ -53,20 +53,11 @@ function App() {
     }
   };
 
-  // Show login if not authenticated
   if (!isLoggedIn) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Common props for all pages
-  const pageProps = {
-    onNavigate: handleNavigateTo,
-    onLogout: handleLogout,
-  };
-
-  // Render dashboard based on user position
   if (currentPage === "dashboard") {
-    // Render dashboard based on user position
     if (userPosition === "Sales Agent") {
       return <SalesDashboard onLogout={handleLogout} />;
     } else if (userPosition === "Approver") {
@@ -127,27 +118,34 @@ function App() {
         />
       );
     } else {
-      return <History onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+      return (
+        <SuperAdminHistory
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
     }
   }
 
-  if (currentPage === "approver-history") {
-    return <ApproverHistory {...pageProps} />;
-  }
-
-  // Admin-only pages
+  // Admin/SuperAdmin-only pages
   if (userPosition === "Admin") {
     switch (currentPage) {
-      case "history":
-        return <History {...pageProps} />;
       case "accounts":
-        return <Accounts {...pageProps} />;
+        return (
+          <Accounts onNavigate={handleNavigateTo} onLogout={handleLogout} />
+        );
       case "catalogue":
-        return <Catalogue {...pageProps} />;
+        return (
+          <Catalogue onNavigate={handleNavigateTo} onLogout={handleLogout} />
+        );
       case "redemption":
-        return <Redemption {...pageProps} />;
+        return (
+          <Redemption onNavigate={handleNavigateTo} onLogout={handleLogout} />
+        );
       case "inventory":
-        return <Inventory {...pageProps} />;
+        return (
+          <Inventory onNavigate={handleNavigateTo} onLogout={handleLogout} />
+        );
     }
   }
 
