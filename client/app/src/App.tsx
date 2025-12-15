@@ -8,6 +8,7 @@ import MarketingHistory from "./page/marketing/History";
 import ReceptionDashboard from "./page/reception/Dashboard";
 import ReceptionHistory from "./page/reception/History";
 import ExecutiveAssistantDashboard from "./page/executive_assistant/Dashboard";
+import ExecutiveAssistantHistory from "./page/executive_assistant/History";
 import SuperAdminDashboard from "./page/superadmin/Dashboard";
 import SuperAdminHistory from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts";
@@ -82,7 +83,12 @@ function App() {
         />
       );
     } else if (userPosition === "Executive Assistant") {
-      return <ExecutiveAssistantDashboard onLogout={handleLogout} />;
+      return (
+        <ExecutiveAssistantDashboard
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
     } else {
       // Admin or any other role defaults to SuperAdmin dashboard
       return (
@@ -113,6 +119,13 @@ function App() {
     } else if (userPosition === "Reception") {
       return (
         <ReceptionHistory
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
+    } else if (userPosition === "Executive Assistant") {
+      return (
+        <ExecutiveAssistantHistory
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />

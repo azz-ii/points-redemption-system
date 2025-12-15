@@ -107,7 +107,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
           <img
             src="/src/assets/oracle-logo.png"
             alt="Oracle Petroleum"
-            className="w-64 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
+            className="w-130 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
             onError={(e) => {
               e.currentTarget.src =
                 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="white" font-size="24" font-family="sans-serif">ORACLE PETROLEUM</text></svg>';

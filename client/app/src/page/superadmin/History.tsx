@@ -222,16 +222,6 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               </button>
 
               <ThemeToggle />
-              <button
-                onClick={onLogout}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
             </div>
           </div>
 
@@ -348,7 +338,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                       <div className="flex justify-end">
                         <button
                           onClick={() => setSelectedItem(item)}
-                          className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold shadow-sm transition-colors ${
+                          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-semibold shadow-sm transition-colors ${
                             resolvedTheme === "dark"
                               ? "bg-blue-600 text-white hover:bg-blue-700"
                               : "bg-blue-500 text-white hover:bg-blue-600"
@@ -367,7 +357,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
                     : "bg-white border border-gray-300 hover:bg-gray-100"
@@ -383,7 +373,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                   setCurrentPage(Math.min(totalPages, safePage + 1))
                 }
                 disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
                   resolvedTheme === "dark"
                     ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
                     : "bg-white border border-gray-300 hover:bg-gray-100"

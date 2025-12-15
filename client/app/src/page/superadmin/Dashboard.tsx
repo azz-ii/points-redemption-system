@@ -461,16 +461,14 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
           {/* Filter and Search */}
           <div className="flex justify-between items-center mb-6">
             <div className="relative">
-              <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 hover:bg-gray-800"
-                    : "bg-white border-gray-300 hover:bg-gray-50"
-                } transition-colors`}
+              <h3
+                className={`text-lg font-semibold ${
+                  resolvedTheme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+                aria-label="Current filter"
               >
                 {selectedFilter}
-                <ChevronDown className="h-4 w-4" />
-              </button>
+              </h3>
             </div>
             <div
               className={`relative flex items-center ${

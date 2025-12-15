@@ -14,6 +14,9 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  Edit,
+  Trash
 } from "lucide-react";
 
 interface RedemptionItem {
@@ -250,6 +253,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                           onClick={() => setSelectedItem(item)}
                           className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2"
                         >
+                          <Eye className="h-4 w-4" />
                           View
                         </button>
                         <button
@@ -260,9 +264,11 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                               : "bg-gray-300 hover:bg-gray-400 text-gray-900"
                           }`}
                         >
+                          <Edit className="h-4 w-4" />
                           Edit
                         </button>
                         <button className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold text-sm flex items-center gap-2">
+                          <Trash className="h-4 w-4" />
                           Delete
                         </button>
                       </div>

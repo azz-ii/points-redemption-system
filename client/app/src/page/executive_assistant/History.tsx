@@ -5,34 +5,93 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarExecutiveAssistant } from "@/components/sidebar";
 import { MobileBottomNavExecutiveAssistant } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import { Bell, Search, Check, X } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 
-interface ApprovalItem {
+interface ApprovalHistoryItem {
   id: string;
   submitter: string;
   date: string;
   category: string;
-  approvalStatus: "Pending" | "Approved" | "Rejected";
+  approvalStatus: "Approved" | "Rejected";
 }
 
-interface DashboardProps {
+interface HistoryProps {
   onNavigate?: (page: "dashboard" | "history") => void;
   onLogout?: () => void;
 }
 
-function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
+function ExecutiveAssistantHistory({ onNavigate, onLogout }: HistoryProps) {
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [approvalItems] = useState<ApprovalItem[]>([
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
+
+  const [historyItems] = useState<ApprovalHistoryItem[]>([
     {
       id: "101",
       submitter: "Celestine Quizon",
       date: "12-10-2025",
       category: "Client Meal",
-      approvalStatus: "Pending",
+      approvalStatus: "Approved",
+    },
+    {
+      id: "102",
+      submitter: "John Smith",
+      date: "12-09-2025",
+      category: "Travel",
+      approvalStatus: "Rejected",
+    },
+    {
+      id: "103",
+      submitter: "Maria Garcia",
+      date: "12-08-2025",
+      category: "Equipment",
+      approvalStatus: "Approved",
+    },
+    {
+      id: "104",
+      submitter: "David Lee",
+      date: "12-07-2025",
+      category: "Training",
+      approvalStatus: "Approved",
+    },
+    {
+      id: "105",
+      submitter: "Sarah Johnson",
+      date: "12-06-2025",
+      category: "Conference",
+      approvalStatus: "Rejected",
+    },
+    {
+      id: "106",
+      submitter: "Michael Chen",
+      date: "12-05-2025",
+      category: "Office Supplies",
+      approvalStatus: "Approved",
+    },
+    {
+      id: "107",
+      submitter: "Emma Wilson",
+      date: "12-04-2025",
+      category: "Client Meal",
+      approvalStatus: "Approved",
     },
   ]);
+
+  const filteredItems = historyItems.filter(
+    (item) =>
+      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.submitter.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   const handleNavigate = (page: "dashboard" | "history") => {
     onNavigate?.(page);
@@ -47,7 +106,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
       } transition-colors`}
     >
       <SidebarExecutiveAssistant
-        currentPage="dashboard"
+        currentPage="history"
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
       />
@@ -70,7 +129,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
             >
               <span className="text-white font-semibold text-xs">J</span>
             </div>
-            <span className="text-sm font-medium">Edit Approval Requests</span>
+            <span className="text-sm font-medium">History</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -91,13 +150,13 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold">Welcome, Jane</h1>
+              <h1 className="text-3xl font-semibold">Approval History</h1>
               <p
                 className={`text-sm ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Manage approval requests and redemptions
+                View all approved and rejected requests
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -126,9 +185,12 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
             >
               <Search className="absolute left-3 h-5 w-5 text-gray-500" />
               <Input
-                placeholder="Search by ID, Name....."
+                placeholder="Search by ID, Name, or Category..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className={`pl-10 w-full h-12 text-base ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-0 text-white placeholder:text-gray-500"
@@ -138,7 +200,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
             </div>
           </div>
 
-          {/* Edit Approval Requests Table */}
+          {/* History Table */}
           <div
             className={`border rounded-lg overflow-hidden ${
               resolvedTheme === "dark"
@@ -151,7 +213,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                 resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
               }`}
             >
-              <h2 className="text-xl font-semibold">Edit Approval Requests</h2>
+              <h2 className="text-xl font-semibold">Approval Requests</h2>
             </div>
             <table className="w-full">
               <thead
@@ -162,9 +224,6 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                 }`}
               >
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    <input type="checkbox" className="rounded" />
-                  </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
                     ID
                   </th>
@@ -178,10 +237,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                     Category
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Approval Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
+                    Status
                   </th>
                 </tr>
               </thead>
@@ -192,16 +248,13 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                     : "divide-gray-200"
                 }`}
               >
-                {approvalItems.map((item) => (
+                {paginatedItems.map((item) => (
                   <tr
                     key={item.id}
                     className={`hover:${
                       resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
                     } transition-colors`}
                   >
-                    <td className="px-6 py-4">
-                      <input type="checkbox" className="rounded" />
-                    </td>
                     <td className="px-6 py-4 text-sm">{item.id}</td>
                     <td className="px-6 py-4 text-sm">{item.submitter}</td>
                     <td className="px-6 py-4 text-sm">{item.date}</td>
@@ -209,9 +262,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          item.approvalStatus === "Pending"
-                            ? "bg-yellow-400 text-black"
-                            : item.approvalStatus === "Approved"
+                          item.approvalStatus === "Approved"
                             ? "bg-green-500 text-white"
                             : "bg-red-500 text-white"
                         }`}
@@ -219,36 +270,72 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                         {item.approvalStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          className="flex items-center gap-1 px-3 py-1 rounded text-sm font-medium bg-green-500 hover:bg-green-600 text-white transition-colors"
-                          onClick={() => console.log("Confirm", item.id)}
-                        >
-                          <Check className="h-4 w-4" />
-                          Confirm
-                        </button>
-                        <button
-                          className="flex items-center gap-1 px-3 py-1 rounded text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
-                          onClick={() => console.log("Reject", item.id)}
-                        >
-                          <X className="h-4 w-4" />
-                          Reject
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            <div
+              className={`px-6 py-4 border-t flex justify-between items-center ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-gray-50 border-gray-200"
+              }`}
+            >
+              <span
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Showing{" "}
+                {paginatedItems.length > 0
+                  ? (currentPage - 1) * itemsPerPage + 1
+                  : 0}{" "}
+                to {Math.min(currentPage * itemsPerPage, filteredItems.length)}{" "}
+                of {filteredItems.length}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded text-sm font-medium ${
+                    currentPage === 1
+                      ? resolvedTheme === "dark"
+                        ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : resolvedTheme === "dark"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
+                  } transition-colors`}
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded text-sm font-medium ${
+                    currentPage === totalPages
+                      ? resolvedTheme === "dark"
+                        ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : resolvedTheme === "dark"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
+                  } transition-colors`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto pb-20 p-4">
-          <h2 className="text-2xl font-semibold mb-4">
-            Edit Approval Requests
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4">Approval History</h2>
           <div
             className={`relative flex items-center rounded-lg border mb-4 ${
               resolvedTheme === "dark"
@@ -260,7 +347,10 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
             <Input
               placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className={`pl-10 w-full text-sm ${
                 resolvedTheme === "dark"
                   ? "bg-transparent border-0 text-white placeholder:text-gray-500"
@@ -271,7 +361,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
 
           {/* Mobile Cards */}
           <div className="space-y-3">
-            {approvalItems.map((item) => (
+            {paginatedItems.map((item) => (
               <div
                 key={item.id}
                 className={`p-4 rounded-lg border ${
@@ -287,9 +377,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                   </div>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      item.approvalStatus === "Pending"
-                        ? "bg-yellow-400 text-black"
-                        : item.approvalStatus === "Approved"
+                      item.approvalStatus === "Approved"
                         ? "bg-green-500 text-white"
                         : "bg-red-500 text-white"
                     }`}
@@ -297,35 +385,64 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
                     {item.approvalStatus}
                   </span>
                 </div>
-                <div className="flex justify-between mb-3 text-sm">
+                <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="text-gray-500 text-xs">Date</p>
                     <p className="font-semibold">{item.date}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-gray-500 text-xs">Category</p>
-                    <p className="font-semibold">{item.category}</p>
+                  <div>
+                    <p className="text-gray-500 text-xs text-right">Category</p>
+                    <p className="font-semibold text-right">{item.category}</p>
                   </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded text-sm font-medium bg-green-500 hover:bg-green-600 text-white transition-colors"
-                    onClick={() => console.log("Confirm", item.id)}
-                  >
-                    <Check className="h-4 w-4" />
-                    Confirm
-                  </button>
-                  <button
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
-                    onClick={() => console.log("Reject", item.id)}
-                  >
-                    <X className="h-4 w-4" />
-                    Reject
-                  </button>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Mobile Pagination */}
+          {filteredItems.length > itemsPerPage && (
+            <div className="flex justify-between gap-2 mt-6">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className={`flex-1 px-3 py-2 rounded text-sm font-medium ${
+                  currentPage === 1
+                    ? resolvedTheme === "dark"
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : resolvedTheme === "dark"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                } transition-colors`}
+              >
+                Previous
+              </button>
+              <span
+                className={`px-3 py-2 text-xs text-center ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
+                disabled={currentPage === totalPages}
+                className={`flex-1 px-3 py-2 rounded text-sm font-medium ${
+                  currentPage === totalPages
+                    ? resolvedTheme === "dark"
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : resolvedTheme === "dark"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                } transition-colors`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         <NotificationPanel
@@ -335,7 +452,7 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
       </div>
 
       <MobileBottomNavExecutiveAssistant
-        currentPage="dashboard"
+        currentPage="history"
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
         isModalOpen={isNotificationOpen}
@@ -344,4 +461,4 @@ function ExecutiveAssistantDashboard({ onNavigate, onLogout }: DashboardProps) {
   );
 }
 
-export default ExecutiveAssistantDashboard;
+export default ExecutiveAssistantHistory;
