@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
@@ -8,7 +8,6 @@ import CartModal, { type CartItem } from "@/components/cart-modal";
 import { Image } from "@/components/ui/image";
 import { Bell, Search, ShoppingCart, Plus, Loader2, AlertCircle } from "lucide-react";
 import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser, type UserProfile } from "@/lib/api";
-import Fuse from 'fuse.js';
 
 // RedeemItemData type is now imported from api.ts
 
@@ -39,7 +38,6 @@ export default function RedeemItem({
   const [error, setError] = useState<string | null>(null);
   const [userPoints, setUserPoints] = useState<number>(0);
   const [userLoading, setUserLoading] = useState(true);
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const itemsPerPage = 6;
 
   // Fetch items and user profile on component mount
@@ -94,24 +92,16 @@ export default function RedeemItem({
     loadData();
   }, []);
 
-  // Debounce search query
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
   // Extract unique categories from items
   const categories = ["All", ...Array.from(new Set(items.map(item => item.category)))];
 
-  const fuse = useMemo(() => new Fuse(items, {
-    keys: ['name'],
-    threshold: 0.3,
-  }), [items]);
-
-  const filtered = useMemo(() => {
-    const searchResults = debouncedSearchQuery ? fuse.search(debouncedSearchQuery).map(result => result.item) : items;
-    return searchResults.filter(item => activeCategory === "All" || item.category === activeCategory);
-  }, [fuse, debouncedSearchQuery, activeCategory]);
+  const filtered = items.filter((item) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = item.name.toLowerCase().includes(q);
+    const matchesCategory =
+      activeCategory === "All" || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedItems = filtered.slice(
@@ -233,7 +223,7 @@ export default function RedeemItem({
               />
               <input
                 type="text"
-                placeholder="Search by Name..."
+                placeholder="Search by ID, Name......"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`flex-1 bg-transparent outline-none ${
@@ -352,19 +342,19 @@ export default function RedeemItem({
                           {item.category}
                         </p>
                       </div>
+                      {/* Add button */}
+                      <button
+                        onClick={() => handleAddToCart(item)}
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isDark
+                            ? "bg-yellow-400 text-black hover:bg-yellow-300"
+                            : "bg-yellow-400 text-black hover:bg-yellow-300"
+                        }`}
+                        aria-label={`Add ${item.name}`}
+                      >
+                        <Plus className="h-4 w-4 md:h-5 md:w-5" />
+                      </button>
                     </div>
-                    {/* Add button */}
-                    <button
-                      onClick={() => handleAddToCart(item)}
-                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        isDark
-                          ? "bg-yellow-400 text-black hover:bg-yellow-300"
-                          : "bg-yellow-400 text-black hover:bg-yellow-300"
-                      }`}
-                      aria-label={`Add ${item.name}`}
-                    >
-                      <Plus className="h-4 w-4 md:h-5 md:w-5" />
-                    </button>
                   </div>
                 </div>
               ))}
