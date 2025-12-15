@@ -439,68 +439,36 @@ function History({ onNavigate, onLogout }: HistoryProps) {
                 key={item.id}
                 className={`p-4 rounded-lg border ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-700"
+                    ? "bg-gray-900 border-gray-700"
                     : "bg-white border-gray-200"
-                } transition-colors`}
+                }`}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="font-semibold text-sm">{item.id}</p>
-                    <p
-                      className={`text-xs ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {item.details}
-                    </p>
-                  </div>
+                <div className="mb-3">
+                  <p className="text-xs text-gray-400">{item.id}</p>
+                  <p className="font-semibold text-base mt-1">{item.type}</p>
+                  <p className="text-sm text-gray-500">{item.details}</p>
+                </div>
+                <div className="flex items-center justify-between mb-3">
                   <span
-                    className={`px-2 py-1 rounded text-xs font-semibold ${
+                    className={`flex items-center gap-2 text-xs font-semibold ${
                       item.status === "Pending"
-                        ? "bg-yellow-400 text-black"
+                        ? "text-yellow-400"
                         : item.status === "Approved"
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
+                        ? "text-green-400"
+                        : "text-red-400"
                     }`}
                   >
+                    <span className="w-2 h-2 rounded-full bg-current"></span>
                     {item.status}
                   </span>
+                  <span className="text-xs text-gray-500">2025-12-31</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        resolvedTheme === "dark"
-                          ? "bg-green-700 text-green-200"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {item.type}
-                    </span>
-                    <p
-                      className={`text-xs mt-2 ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      Qty: {item.quantity}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedItem(item)}
-                    className={`ml-auto inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold shadow-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
-                    }`}
-                  >
-                    <Eye className="h-4 w-4" />
-                    View
-                  </button>
-                </div>
+                <button
+                  onClick={() => setSelectedItem(item)}
+                  className="w-full py-2.5 rounded bg-white text-gray-900 hover:bg-gray-50 border border-gray-300 text-sm font-semibold transition-colors"
+                >
+                  View Details
+                </button>
               </div>
             ))}
           </div>

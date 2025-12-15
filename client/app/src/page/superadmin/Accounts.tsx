@@ -1420,22 +1420,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-700">
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  setViewTarget(null);
-                  setError("");
-                }}
-                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-white hover:bg-gray-100 text-gray-900"
-                    : "bg-gray-900 hover:bg-gray-800 text-white"
-                }`}
-              >
-                Close
-              </button>
-            </div>
+           
           </div>
         </div>
       )}

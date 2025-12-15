@@ -490,7 +490,7 @@ export default function CartModal({
             </div>
 
             {/* Items List */}
-            <div className="p-4 space-y-3 overflow-y-auto max-h-[320px]">
+            <div className="p-4 space-y-3 overflow-y-auto max-h-80">
               {items.length > 0 ? (
                 items.map((item) => (
                   <div

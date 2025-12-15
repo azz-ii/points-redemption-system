@@ -42,6 +42,8 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const itemsPerPage = 7;
+  const [selectedItem, setSelectedItem] = useState<RedemptionItem | null>(null);
+  const [editItem, setEditItem] = useState<RedemptionItem | null>(null);
   const [items] = useState<RedemptionItem[]>([
     { id: "MC3001", name: "Platinum Polo", type: "Apparel", points: 500 },
   ]);
@@ -244,10 +246,14 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                     <td className="px-5 py-4 align-middle">{item.points}</td>
                     <td className="px-5 py-4 align-middle">
                       <div className="flex gap-2 justify-end">
-                        <button className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedItem(item)}
+                          className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2"
+                        >
                           View
                         </button>
                         <button
+                          onClick={() => setEditItem(item)}
                           className={`px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 ${
                             resolvedTheme === "dark"
                               ? "bg-gray-600 hover:bg-gray-700 text-white"
@@ -381,6 +387,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                     <p className="text-xs text-gray-400">{item.name}</p>
                   </div>
                   <button
+                    onClick={() => setSelectedItem(item)}
                     className={`text-xs font-semibold underline ${
                       resolvedTheme === "dark"
                         ? "text-yellow-400 hover:text-yellow-300"
@@ -434,6 +441,208 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
       />
+
+      {/* View Account Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className={`relative w-full max-w-md rounded-lg shadow-xl ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 text-white"
+                : "bg-gray-50 text-gray-900"
+            }`}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold">View Account</h2>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Details for {selectedItem.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="p-1 hover:bg-gray-800 rounded transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-5">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Username</p>
+                <p className="font-semibold">{selectedItem.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Full Name</p>
+                <p className="font-semibold">{selectedItem.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Email</p>
+                <p className="font-semibold">
+                  {selectedItem.id.toLowerCase()}@email.com
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Position</p>
+                <p className="font-semibold">{selectedItem.type}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Status</p>
+                <p className="font-semibold">Active</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Account Modal */}
+      {editItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className={`relative w-full max-w-md rounded-lg shadow-xl ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 text-white"
+                : "bg-gray-50 text-gray-900"
+            }`}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold">Edit Account</h2>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Update account details for {editItem.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditItem(null)}
+                  className="p-1 hover:bg-gray-800 rounded transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">ID</label>
+                <input
+                  type="text"
+                  value={editItem.id}
+                  disabled
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-gray-500"
+                      : "bg-gray-100 border-gray-300 text-gray-500"
+                  } cursor-not-allowed`}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">
+                  Item Name
+                </label>
+                <input
+                  type="text"
+                  value={editItem.name}
+                  disabled
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-gray-500"
+                      : "bg-gray-100 border-gray-300 text-gray-500"
+                  } cursor-not-allowed`}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={`${editItem.id.toLowerCase()}@email.com`}
+                  disabled
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-gray-500"
+                      : "bg-gray-100 border-gray-300 text-gray-500"
+                  } cursor-not-allowed`}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">
+                  Item Type
+                </label>
+                <input
+                  type="text"
+                  value={editItem.type}
+                  disabled
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-gray-500"
+                      : "bg-gray-100 border-gray-300 text-gray-500"
+                  } cursor-not-allowed`}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-2 block">
+                  Quantity <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  defaultValue={editItem.points}
+                  min="1"
+                  className={`w-full px-4 py-3 rounded-lg border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+            </div>
+
+            {/* Footer Button */}
+            <div className="p-6 pt-0">
+              <button
+                onClick={() => {
+                  // Handle update logic here
+                  setEditItem(null);
+                }}
+                className="w-full py-3 rounded-lg bg-white text-gray-900 hover:bg-gray-100 font-semibold transition-colors"
+              >
+                Update Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

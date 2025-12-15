@@ -7,6 +7,7 @@ import SalesDashboard from "./page/sales_agent/Dashboard";
 import MarketingDashboard from "./page/marketing/Dashboard";
 import MarketingHistory from "./page/marketing/History";
 import ReceptionDashboard from "./page/reception/Dashboard";
+import ReceptionHistory from "./page/reception/History";
 import ExecutiveAssistantDashboard from "./page/executive_assistant/Dashboard";
 import History from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts";
@@ -87,7 +88,12 @@ function App() {
         />
       );
     } else if (userPosition === "Reception") {
-      return <ReceptionDashboard onLogout={handleLogout} />;
+      return (
+        <ReceptionDashboard
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
     } else if (userPosition === "Executive Assistant") {
       return <ExecutiveAssistantDashboard onLogout={handleLogout} />;
     } else {
@@ -102,7 +108,31 @@ function App() {
   }
 
   if (currentPage === "history") {
-    return <History onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+    // Render history based on user position
+    if (userPosition === "Approver") {
+      return (
+        <ApproverHistory
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
+    } else if (userPosition === "Marketing") {
+      return (
+        <MarketingHistory
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
+    } else if (userPosition === "Reception") {
+      return (
+        <ReceptionHistory
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
+    } else {
+      return <History onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+    }
   }
 
   if (currentPage === "approver-history") {
