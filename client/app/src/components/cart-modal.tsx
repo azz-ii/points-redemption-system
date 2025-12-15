@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import { Trash2, X } from "lucide-react";
+import { Trash2, X, Search } from "lucide-react";
+import { distributorsApi, type Distributor } from "@/lib/distributors-api";
+import { redemptionRequestsApi, type CreateRedemptionRequestData } from "@/lib/api";
+import { toast } from "sonner";
 
 export interface CartItem {
   id: string;
@@ -35,6 +38,62 @@ export default function CartModal({
   const [svcDate, setSvcDate] = useState<string>("");
   const [svcTime, setSvcTime] = useState<string>("");
   const [svcDriver, setSvcDriver] = useState<string>("");
+  
+  // Distributor search state
+  const [distributorSearch, setDistributorSearch] = useState("");
+  const [distributors, setDistributors] = useState<Distributor[]>([]);
+  const [showDistributorDropdown, setShowDistributorDropdown] = useState(false);
+  const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
+  const [loadingDistributors, setLoadingDistributors] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Points deduction and submission state
+  const [pointsDeductedFrom, setPointsDeductedFrom] = useState<'SELF' | 'DISTRIBUTOR'>('SELF');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Search distributors with debounce
+  useEffect(() => {
+    if (distributorSearch.length < 2) {
+      setDistributors([]);
+      return;
+    }
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setLoadingDistributors(true);
+        const results = await distributorsApi.getDistributors(distributorSearch);
+        setDistributors(results);
+      } catch (error) {
+        console.error("Error searching distributors:", error);
+        setDistributors([]);
+      } finally {
+        setLoadingDistributors(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [distributorSearch]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDistributorDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -43,6 +102,73 @@ export default function CartModal({
     0
   );
   const remainingPoints = availablePoints - totalPoints;
+
+  const handleSelectDistributor = (distributor: Distributor) => {
+    setSelectedDistributor(distributor);
+    setCustomerName(distributor.name);
+    setDistributorSearch(distributor.name);
+    setShowDistributorDropdown(false);
+  };
+
+  const handleDistributorSearchChange = (value: string) => {
+    setDistributorSearch(value);
+    setCustomerName(value);
+    setSelectedDistributor(null);
+    setShowDistributorDropdown(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedDistributor) {
+      toast.error("Please select a distributor");
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      
+      const requestData: CreateRedemptionRequestData = {
+        requested_for: selectedDistributor.id,
+        points_deducted_from: pointsDeductedFrom,
+        remarks: remarks || undefined,
+        items: items.map(item => ({
+          variant_id: item.id,
+          quantity: item.quantity
+        }))
+      };
+
+      const response = await redemptionRequestsApi.createRequest(requestData);
+      
+      toast.success("Redemption request submitted!", {
+        description: `Request #${response.id} has been created successfully`
+      });
+      
+      // Clear cart and close modal
+      items.forEach(item => onRemoveItem(item.id));
+      setStep("cart");
+      setCustomerName("");
+      setRemarks("");
+      setDistributorSearch("");
+      setSelectedDistributor(null);
+      setSvcDate("");
+      setSvcTime("");
+      setSvcDriver("");
+      setPointsDeductedFrom('SELF');
+      onClose();
+      
+    } catch (error) {
+      console.error("Error submitting redemption request:", error);
+      toast.error("Failed to submit request", {
+        description: error instanceof Error ? error.message : "Please try again"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -308,27 +434,85 @@ export default function CartModal({
                 }`}
               >
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold">Customer Details</h3>
+                  <h3 className="text-lg font-semibold">Customer/Distributor Details</h3>
                   <div className="mt-4 space-y-4">
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative" ref={dropdownRef}>
                       <label
                         className={`text-sm ${
                           isDark ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        Customer Name
+                        Customer/Distributor Name
                       </label>
-                      <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Enter Customer Name"
-                        className={`w-full px-3 py-2 rounded-md outline-none ${
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={distributorSearch}
+                          onChange={(e) => handleDistributorSearchChange(e.target.value)}
+                          onFocus={() => setShowDistributorDropdown(true)}
+                          placeholder="Search for a distributor..."
+                          className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                        <Search className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                          isDark ? "text-gray-500" : "text-gray-400"
+                        }`} />
+                      </div>
+                      
+                      {/* Dropdown */}
+                      {showDistributorDropdown && distributorSearch.length >= 2 && (
+                        <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-60 overflow-y-auto ${
                           isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      />
+                            ? "bg-gray-800 border-gray-700"
+                            : "bg-white border-gray-200"
+                        }`}>
+                          {loadingDistributors ? (
+                            <div className="px-3 py-2 text-sm text-center">
+                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                Searching...
+                              </span>
+                            </div>
+                          ) : distributors.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-center">
+                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                No distributors found
+                              </span>
+                            </div>
+                          ) : (
+                            distributors.map((distributor) => (
+                              <button
+                                key={distributor.id}
+                                onClick={() => handleSelectDistributor(distributor)}
+                                className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
+                                  isDark
+                                    ? "hover:bg-white"
+                                    : "hover:bg-gray-900"
+                                } border-b last:border-b-0 ${
+                                  isDark ? "border-gray-700" : "border-gray-200"
+                                }`}
+                              >
+                                <div className="font-medium">{distributor.name}</div>
+                                <div className={`text-xs ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  {distributor.location} • {distributor.region}
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                      
+                      {selectedDistributor && (
+                        <div className={`text-xs mt-1 ${
+                          isDark ? "text-green-400" : "text-green-600"
+                        }`}>
+                          ✓ Selected: {selectedDistributor.name} ({selectedDistributor.location})
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label
@@ -350,6 +534,45 @@ export default function CartModal({
                         }`}
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Points Deduction */}
+              <div
+                className={`rounded-lg border ${
+                  isDark ? "border-gray-800" : "border-gray-200"
+                }`}
+              >
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold">Points Deduction</h3>
+                  <div className="mt-4 space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="points_deduction"
+                        value="SELF"
+                        checked={pointsDeductedFrom === 'SELF'}
+                        onChange={() => setPointsDeductedFrom('SELF')}
+                        className="w-4 h-4"
+                      />
+                      <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                        Deduct from my points
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="points_deduction"
+                        value="DISTRIBUTOR"
+                        checked={pointsDeductedFrom === 'DISTRIBUTOR'}
+                        onChange={() => setPointsDeductedFrom('DISTRIBUTOR')}
+                        className="w-4 h-4"
+                      />
+                      <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                        Deduct from distributor's points
+                      </span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -451,8 +674,12 @@ export default function CartModal({
               >
                 Back
               </button>
-              <button className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700">
-                Submit Details
+              <button 
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Submitting..." : "Submit Details"}
               </button>
             </div>
           </>
@@ -614,27 +841,85 @@ export default function CartModal({
                 }`}
               >
                 <div className="p-3">
-                  <h3 className="text-sm font-semibold">Customer Details</h3>
+                  <h3 className="text-sm font-semibold">Customer/Distributor Details</h3>
                   <div className="mt-3 space-y-3">
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative">
                       <label
                         className={`text-xs ${
                           isDark ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        Customer Name
+                        Customer/Distributor Name
                       </label>
-                      <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Enter Customer Name"
-                        className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={distributorSearch}
+                          onChange={(e) => handleDistributorSearchChange(e.target.value)}
+                          onFocus={() => setShowDistributorDropdown(true)}
+                          placeholder="Search for a distributor..."
+                          className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                        <Search className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                          isDark ? "text-gray-500" : "text-gray-400"
+                        }`} />
+                      </div>
+                      
+                      {/* Dropdown */}
+                      {showDistributorDropdown && distributorSearch.length >= 2 && (
+                        <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
                           isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      />
+                            ? "bg-gray-800 border-gray-700"
+                            : "bg-white border-gray-200"
+                        }`}>
+                          {loadingDistributors ? (
+                            <div className="px-3 py-2 text-xs text-center">
+                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                Searching...
+                              </span>
+                            </div>
+                          ) : distributors.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-center">
+                              <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                No distributors found
+                              </span>
+                            </div>
+                          ) : (
+                            distributors.map((distributor) => (
+                              <button
+                                key={distributor.id}
+                                onClick={() => handleSelectDistributor(distributor)}
+                                className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
+                                  isDark
+                                    ? "hover:bg-white"
+                                    : "hover:bg-gray-900"
+                                } border-b last:border-b-0 ${
+                                  isDark ? "border-gray-700" : "border-gray-200"
+                                }`}
+                              >
+                                <div className="font-medium">{distributor.name}</div>
+                                <div className={`text-xs mt-0.5 ${
+                                  isDark ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                  {distributor.location} • {distributor.region}
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                      
+                      {selectedDistributor && (
+                        <div className={`text-xs mt-1 ${
+                          isDark ? "text-green-400" : "text-green-600"
+                        }`}>
+                          ✓ {selectedDistributor.name}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label
@@ -656,6 +941,45 @@ export default function CartModal({
                         }`}
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Points Deduction */}
+              <div
+                className={`rounded-lg border ${
+                  isDark ? "border-gray-800" : "border-gray-200"
+                }`}
+              >
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold">Points Deduction</h3>
+                  <div className="mt-3 space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="points_deduction_mobile"
+                        value="SELF"
+                        checked={pointsDeductedFrom === 'SELF'}
+                        onChange={() => setPointsDeductedFrom('SELF')}
+                        className="w-4 h-4"
+                      />
+                      <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                        Deduct from my points
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="points_deduction_mobile"
+                        value="DISTRIBUTOR"
+                        checked={pointsDeductedFrom === 'DISTRIBUTOR'}
+                        onChange={() => setPointsDeductedFrom('DISTRIBUTOR')}
+                        className="w-4 h-4"
+                      />
+                      <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                        Deduct from distributor's points
+                      </span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -784,8 +1108,12 @@ export default function CartModal({
             >
               Back
             </button>
-            <button className="w-full px-4 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700">
-              Submit Details
+            <button 
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full px-4 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Submitting..." : "Submit Details"}
             </button>
           </div>
         )}

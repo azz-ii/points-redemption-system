@@ -16,6 +16,7 @@ import Catalogue from "./page/superadmin/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
 import Inventory from "./page/superadmin/Inventory";
 import Distributors from "./page/superadmin/Distributors";
+import { Toaster } from "sonner";
 
 type PageType =
   | "login"
@@ -56,36 +57,36 @@ function App() {
     }
   };
 
-  if (!isLoggedIn) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
+  let content;
 
-  if (currentPage === "dashboard") {
+  if (!isLoggedIn) {
+    content = <Login onLoginSuccess={handleLoginSuccess} />;
+  } else if (currentPage === "dashboard") {
     if (userPosition === "Sales Agent") {
-      return <SalesDashboard onLogout={handleLogout} />;
+      content = <SalesDashboard onLogout={handleLogout} />;
     } else if (userPosition === "Approver") {
-      return (
+      content = (
         <ApproverDashboard
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else if (userPosition === "Marketing") {
-      return (
+      content = (
         <MarketingDashboard
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else if (userPosition === "Reception") {
-      return (
+      content = (
         <ReceptionDashboard
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else if (userPosition === "Executive Assistant") {
-      return (
+      content = (
         <ExecutiveAssistantDashboard
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
@@ -93,94 +94,115 @@ function App() {
       );
     } else {
       // Admin or any other role defaults to SuperAdmin dashboard
-      return (
+      content = (
         <SuperAdminDashboard
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     }
-  }
-
-  if (currentPage === "history") {
+  } else if (currentPage === "history") {
     // Render history based on user position
     if (userPosition === "Approver") {
-      return (
+      content = (
         <ApproverHistory
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else if (userPosition === "Marketing") {
-      return (
+      content = (
         <MarketingHistory
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else if (userPosition === "Reception") {
-      return (
+      content = (
         <ReceptionHistory
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else if (userPosition === "Executive Assistant") {
-      return (
+      content = (
         <ExecutiveAssistantHistory
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     } else {
-      return (
+      content = (
         <SuperAdminHistory
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
       );
     }
-  }
-
-  // Admin/SuperAdmin-only pages
-  if (userPosition === "Admin") {
+  } else if (userPosition === "Admin") {
     switch (currentPage) {
       case "accounts":
-        return (
+        content = (
           <Accounts onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
+        break;
       case "catalogue":
-        return (
+        content = (
           <Catalogue onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
+        break;
       case "redemption":
-        return (
+        content = (
           <Redemption onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
+        break;
       case "inventory":
-        return (
+        content = (
           <Inventory onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
+        break;
       case "distributors":
-        return (
+        content = (
           <Distributors onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
+        break;
+      default:
+        content = (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+              <button
+                onClick={() => setCurrentPage("dashboard")}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        );
     }
+  } else {
+    // Fallback for invalid page state
+    content = (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+          <button
+            onClick={() => setCurrentPage("dashboard")}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  // Fallback for invalid page state
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
-        <button
-          onClick={() => setCurrentPage("dashboard")}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Go to Dashboard
-        </button>
-      </div>
-    </div>
+    <>
+      {content}
+      <Toaster />
+    </>
   );
 }
 

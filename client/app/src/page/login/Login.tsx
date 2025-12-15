@@ -3,11 +3,11 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, CheckCircle2, ShieldAlert, XCircle } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ForgotPassword from "./ForgotPassword";
 import ActivateAccount from "./ActivateAccount";
+import { toast } from "sonner";
 
 interface LoginProps {
   onLoginSuccess?: (position: string) => void;
@@ -20,16 +20,10 @@ function Login({ onLoginSuccess }: LoginProps) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showActivateAccount, setShowActivateAccount] = useState(false);
   const [activationUsername, setActivationUsername] = useState("");
-  const [message, setMessage] = useState<{
-    type: "success" | "error" | "ban";
-    title: string;
-    description: string;
-  } | null>(null);
   const { resolvedTheme } = useTheme();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage(null);
 
     try {
       const response = await fetch("/login/", {
@@ -59,13 +53,11 @@ function Login({ onLoginSuccess }: LoginProps) {
         } catch {
           // ignore storage errors
         }
-        setMessage({
-          type: "success",
-          title: "Access Granted",
-          description: data.message || "Login successful"
-        });
         setUsername("");
         setPassword("");
+        toast.success("Login successful", {
+          description: data.message || "Welcome back!"
+        });
         setTimeout(() => onLoginSuccess?.(position), 1000);
       } else {
         console.error("Login failed:", data);
@@ -83,24 +75,18 @@ function Login({ onLoginSuccess }: LoginProps) {
             description = `Reason: ${data.ban_reason || "No reason provided"}\n${data.detail || "Your account is temporarily banned."}\n\nUnban Date: ${unbanDate}`;
           }
           
-          setMessage({
-            type: "ban",
-            title: data.error.includes("not activated") ? "Account Not Activated" : "Account Banned",
+          toast.error(data.error.includes("not activated") ? "Account Not Activated" : "Account Banned", {
             description
           });
         } else {
-          setMessage({
-            type: "error",
-            title: "Access Denied",
+          toast.error("Access Denied", {
             description: data.error || data.detail || "Invalid credentials"
           });
         }
       }
     } catch (err) {
       console.error("Error connecting to server:", err);
-      setMessage({
-        type: "error",
-        title: "Server Error",
+      toast.error("Server Error", {
         description: "Unable to connect to authentication server"
       });
     }
@@ -189,22 +175,6 @@ function Login({ onLoginSuccess }: LoginProps) {
               redeem.
             </p>
           </div>
-
-          {message && (
-            <Alert variant={message.type === "success" ? "default" : "destructive"}>
-              {message.type === "success" ? (
-                <CheckCircle2 className="h-4 w-4" />
-              ) : message.type === "ban" ? (
-                <ShieldAlert className="h-4 w-4" />
-              ) : (
-                <XCircle className="h-4 w-4" />
-              )}
-              <AlertTitle>{message.title}</AlertTitle>
-              <AlertDescription className="whitespace-pre-line">
-                {message.description}
-              </AlertDescription>
-            </Alert>
-          )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">

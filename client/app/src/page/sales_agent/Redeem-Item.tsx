@@ -7,7 +7,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import CartModal, { type CartItem } from "@/components/cart-modal";
 import { Image } from "@/components/ui/image";
 import { Bell, Search, ShoppingCart, Plus, Loader2, AlertCircle } from "lucide-react";
-import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser, type UserProfile } from "@/lib/api";
+import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser } from "@/lib/api";
+import { toast } from "sonner";
 
 // RedeemItemData type is now imported from api.ts
 
@@ -129,6 +130,9 @@ export default function RedeemItem({
           quantity: 1,
         },
       ];
+    });
+    toast("Item added to cart", {
+      description: item.name,
     });
   };
 

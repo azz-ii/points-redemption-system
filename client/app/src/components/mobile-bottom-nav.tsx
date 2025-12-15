@@ -554,7 +554,8 @@ interface MobileBottomNavProps {
     | "accounts"
     | "catalogue"
     | "redemption"
-    | "inventory";
+    | "inventory"
+    | "distributors";
   onNavigate: (
     page:
       | "dashboard"
@@ -563,6 +564,7 @@ interface MobileBottomNavProps {
       | "catalogue"
       | "redemption"
       | "inventory"
+      | "distributors"
   ) => void;
   isModalOpen?: boolean;
 }

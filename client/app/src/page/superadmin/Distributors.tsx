@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -24,16 +24,7 @@ import {
   ChevronsLeft
 } from "lucide-react";
 
-interface Distributor {
-  id: number;
-  name: string;
-  contact_email: string;
-  phone: string;
-  location: string;
-  region: string;
-  date_added: string;
-  status: "Active" | "Inactive";
-}
+import { distributorsApi, type Distributor } from "@/lib/distributors-api";
 
 interface DistributorsProps {
   onNavigate?: (
@@ -55,38 +46,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [distributors, setDistributors] = useState<Distributor[]>([
-    {
-      id: 1,
-      name: "ABC Distributors",
-      contact_email: "contact@abc.com",
-      phone: "+1234567890",
-      location: "Metro Manila",
-      region: "NCR",
-      date_added: new Date().toISOString().split('T')[0],
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "XYZ Supplies",
-      contact_email: "info@xyz.com",
-      phone: "+0987654321",
-      location: "Cebu City",
-      region: "Visayas",
-      date_added: new Date().toISOString().split('T')[0],
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Global Traders",
-      contact_email: "sales@global.com",
-      phone: "+1122334455",
-      location: "Davao City",
-      region: "Mindanao",
-      date_added: new Date().toISOString().split('T')[0],
-      status: "Inactive",
-    },
-  ]);
+  const [distributors, setDistributors] = useState<Distributor[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -94,17 +54,11 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState<number | "ALL">(15);
 
-  // Fetch distributors (dummy data for now)
-  useEffect(() => {
-    fetchDistributors();
-  }, []);
-
-  const fetchDistributors = async () => {
+  const fetchDistributors = useCallback(async () => {
     try {
       setLoading(true);
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // For now, just use the dummy data already in state
+      const data = await distributorsApi.getDistributors(searchQuery);
+      setDistributors(data);
       setError(null);
     } catch (err) {
       console.error("Error fetching distributors:", err);
@@ -112,7 +66,12 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery]);
+
+  // Fetch distributors on mount
+  useEffect(() => {
+    fetchDistributors();
+  }, [fetchDistributors]);
 
   // Filter distributors based on search query
   const filteredDistributors = distributors.filter((distributor) => {
@@ -135,7 +94,8 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
   // Reset to page 1 when search query changes
   useEffect(() => {
     setPage(1);
-  }, [searchQuery]);
+    fetchDistributors();
+  }, [searchQuery, fetchDistributors]);
 
   // Modal and form state for creating new distributor
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -147,7 +107,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
     phone: "",
     location: "",
     region: "",
-    status: "Active" as "Active" | "Inactive",
   });
 
   const [editDistributor, setEditDistributor] = useState({
@@ -156,7 +115,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
     phone: "",
     location: "",
     region: "",
-    status: "Active" as "Active" | "Inactive",
   });
 
   // Modal state for edit/view/delete
@@ -197,35 +155,20 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
 
     try {
       setCreating(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newId = Math.max(...distributors.map(d => d.id)) + 1;
-      const distributor: Distributor = {
-        id: newId,
-        name: newDistributor.name,
-        contact_email: newDistributor.contact_email,
-        phone: newDistributor.phone,
-        location: newDistributor.location,
-        region: newDistributor.region,
-        date_added: new Date().toISOString().split('T')[0],
-        status: newDistributor.status,
-      };
-
-      setDistributors(prev => [...prev, distributor]);
+      const createdDistributor = await distributorsApi.createDistributor(newDistributor);
+      setDistributors(prev => [...prev, createdDistributor]);
       setNewDistributor({
         name: "",
         contact_email: "",
         phone: "",
         location: "",
         region: "",
-        status: "Active",
       });
       setShowCreateModal(false);
       setCreateError(null);
     } catch (err) {
       console.error("Error creating distributor:", err);
-      setCreateError("Failed to create distributor");
+      setCreateError("Failed to create distributor. Please try again.");
     } finally {
       setCreating(false);
     }
@@ -240,7 +183,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
       phone: distributor.phone,
       location: distributor.location,
       region: distributor.region,
-      status: distributor.status,
     });
     setShowEditModal(true);
     setEditError(null);
@@ -276,21 +218,16 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
 
     try {
       setUpdating(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-
+      const updatedDistributor = await distributorsApi.updateDistributor(editingDistributorId, editDistributor);
       setDistributors(prev => prev.map(d => 
-        d.id === editingDistributorId 
-          ? { ...d, ...editDistributor }
-          : d
+        d.id === editingDistributorId ? updatedDistributor : d
       ));
-
       setShowEditModal(false);
       setEditingDistributorId(null);
       setEditError(null);
     } catch (err) {
       console.error("Error updating distributor:", err);
-      setEditError("Failed to update distributor");
+      setEditError("Failed to update distributor. Please try again.");
     } finally {
       setUpdating(false);
     }
@@ -312,9 +249,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
     if (!deleteTarget) return;
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-
+      await distributorsApi.deleteDistributor(deleteTarget.id);
       setDistributors(prev => prev.filter(d => d.id !== deleteTarget.id));
       setShowDeleteModal(false);
       setDeleteTarget(null);
@@ -537,9 +472,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                       <th className="px-6 py-4 text-left text-sm font-semibold">
                         Date Added
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold">
-                        Status
-                      </th>
                       <th className="px-6 py-4 text-right text-sm font-semibold">
                         Actions
                       </th>
@@ -554,7 +486,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                   >
                     {paginatedDistributors.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-6 py-12 text-center">
+                        <td colSpan={7} className="px-6 py-12 text-center">
                           <p className="text-gray-500">
                             {searchQuery
                               ? "No distributors match your search"
@@ -589,17 +521,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {new Date(distributor.date_added).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                distributor.status === "Active"
-                                  ? "bg-green-500 text-white"
-                                  : "bg-red-500 text-white"
-                              }`}
-                            >
-                              {distributor.status}
-                            </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex justify-end gap-2">
@@ -839,18 +760,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                       <div>
                         <span className="text-gray-500">Date Added:</span>
                         <p className="font-medium">{new Date(distributor.date_added).toLocaleDateString()}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-gray-500">Status:</span>
-                        <span
-                          className={`ml-2 px-1 py-0.5 rounded-full text-xs font-semibold ${
-                            distributor.status === "Active"
-                              ? "bg-green-500 text-white"
-                              : "bg-red-500 text-white"
-                          }`}
-                        >
-                          {distributor.status}
-                        </span>
                       </div>
                     </div>
 
@@ -1118,30 +1027,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                     <option value="Mindanao">Mindanao</option>
                   </select>
                 </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Status *
-                  </label>
-                  <select
-                    value={newDistributor.status}
-                    onChange={(e) =>
-                      setNewDistributor({
-                        ...newDistributor,
-                        status: e.target.value as "Active" | "Inactive",
-                      })
-                    }
-                    className={`w-full px-3 py-2 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -1310,30 +1195,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                     <option value="Mindanao">Mindanao</option>
                   </select>
                 </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Status *
-                  </label>
-                  <select
-                    value={editDistributor.status}
-                    onChange={(e) =>
-                      setEditDistributor({
-                        ...editDistributor,
-                        status: e.target.value as "Active" | "Inactive",
-                      })
-                    }
-                    className={`w-full px-3 py-2 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -1432,20 +1293,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Date Added</p>
                   <p className="font-semibold">{new Date(viewTarget.date_added).toLocaleDateString()}</p>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Status</p>
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                      viewTarget.status === "Active"
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                    }`}
-                  >
-                    {viewTarget.status}
-                  </span>
                 </div>
               </div>
             </div>

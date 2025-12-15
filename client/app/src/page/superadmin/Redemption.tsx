@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sidebar } from "@/components/sidebar";
+import { redemptionRequestsApi, type RedemptionRequestResponse } from "@/lib/api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -19,12 +20,8 @@ import {
   Trash
 } from "lucide-react";
 
-interface RedemptionItem {
-  id: string;
-  name: string;
-  type: string;
-  points: number;
-}
+// Using the API response type directly
+type RedemptionItem = RedemptionRequestResponse;
 
 interface RedemptionProps {
   onNavigate?: (
@@ -47,18 +44,38 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
   const itemsPerPage = 7;
   const [selectedItem, setSelectedItem] = useState<RedemptionItem | null>(null);
   const [editItem, setEditItem] = useState<RedemptionItem | null>(null);
-  const [items] = useState<RedemptionItem[]>([
-    { id: "MC3001", name: "Platinum Polo", type: "Apparel", points: 500 },
-  ]);
+  const [items, setItems] = useState<RedemptionItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch redemption requests on mount
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const requests = await redemptionRequestsApi.getRequests();
+        setItems(requests);
+      } catch (err) {
+        console.error("Error fetching redemption requests:", err);
+        setError(err instanceof Error ? err.message : "Failed to load redemption requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
 
   const filteredItems = items.filter((item) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      item.id.toLowerCase().includes(q) ||
-      item.name.toLowerCase().includes(q) ||
-      item.type.toLowerCase().includes(q)
+      item.id.toString().includes(q) ||
+      item.requested_for_name.toLowerCase().includes(q) ||
+      item.requested_by_name.toLowerCase().includes(q) ||
+      item.status.toLowerCase().includes(q)
     );
   });
 
@@ -220,12 +237,14 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                 }`}
               >
                 <tr>
-                  <th className="px-5 py-3 text-left font-semibold">ID</th>
+                  <th className="px-5 py-3 text-left font-semibold">Request ID</th>
                   <th className="px-5 py-3 text-left font-semibold">
-                    Item Name
+                    Requested By
                   </th>
-                  <th className="px-5 py-3 text-left font-semibold">Type</th>
-                  <th className="px-5 py-3 text-left font-semibold">Points</th>
+                  <th className="px-5 py-3 text-left font-semibold">Distributor</th>
+                  <th className="px-5 py-3 text-left font-semibold">Total Points</th>
+                  <th className="px-5 py-3 text-left font-semibold">Status</th>
+                  <th className="px-5 py-3 text-left font-semibold">Date</th>
                   <th className="px-5 py-3 text-right font-semibold">
                     Actions
                   </th>
@@ -238,43 +257,60 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                     : "bg-white text-gray-900"
                 }`}
               >
-                {paginatedItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-gray-200 dark:border-slate-800"
-                  >
-                    <td className="px-5 py-4 align-middle">{item.id}</td>
-                    <td className="px-5 py-4 align-middle">{item.name}</td>
-                    <td className="px-5 py-4 align-middle">{item.type}</td>
-                    <td className="px-5 py-4 align-middle">{item.points}</td>
-                    <td className="px-5 py-4 align-middle">
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => setSelectedItem(item)}
-                          className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => setEditItem(item)}
-                          className={`px-4 py-2 rounded font-semibold text-sm flex items-center gap-2 ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-600 hover:bg-gray-700 text-white"
-                              : "bg-gray-300 hover:bg-gray-400 text-gray-900"
-                          }`}
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit
-                        </button>
-                        <button className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold text-sm flex items-center gap-2">
-                          <Trash className="h-4 w-4" />
-                          Delete
-                        </button>
-                      </div>
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-8 text-center text-gray-500">
+                      Loading redemption requests...
                     </td>
                   </tr>
-                ))}
+                ) : error ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-8 text-center text-red-500">
+                      {error}
+                    </td>
+                  </tr>
+                ) : paginatedItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-5 py-8 text-center text-gray-500">
+                      No redemption requests found
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedItems.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-t border-gray-200 dark:border-slate-800"
+                    >
+                      <td className="px-5 py-4 align-middle">#{item.id}</td>
+                      <td className="px-5 py-4 align-middle">{item.requested_by_name}</td>
+                      <td className="px-5 py-4 align-middle">{item.requested_for_name}</td>
+                      <td className="px-5 py-4 align-middle">{item.total_points.toLocaleString()}</td>
+                      <td className="px-5 py-4 align-middle">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                          item.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {item.status_display}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 align-middle">
+                        {new Date(item.date_requested).toLocaleDateString()}
+                      </td>
+                      <td className="px-5 py-4 align-middle">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => setSelectedItem(item)}
+                            className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2"
+                          >
+                            <Eye className="h-4 w-4" />
+                            View
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
             <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
@@ -383,27 +419,50 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
               HISTORY
             </div>
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between px-4 py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold">{item.id}</p>
-                    <p className="text-xs text-gray-400">{item.name}</p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedItem(item)}
-                    className={`text-xs font-semibold underline ${
-                      resolvedTheme === "dark"
-                        ? "text-yellow-400 hover:text-yellow-300"
-                        : "text-yellow-700 hover:text-yellow-800"
-                    } transition-colors self-center`}
-                  >
-                    View details
-                  </button>
+              {loading ? (
+                <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  Loading requests...
                 </div>
-              ))}
+              ) : error ? (
+                <div className="px-4 py-8 text-center text-red-500 text-sm">
+                  {error}
+                </div>
+              ) : paginatedItems.length === 0 ? (
+                <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  No requests found
+                </div>
+              ) : (
+                paginatedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between px-4 py-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-semibold">Request #{item.id}</p>
+                      <p className="text-xs text-gray-400">{item.requested_for_name}</p>
+                      <p className="text-xs mt-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                          item.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {item.status_display}
+                        </span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedItem(item)}
+                      className={`text-xs font-semibold underline ${
+                        resolvedTheme === "dark"
+                          ? "text-yellow-400 hover:text-yellow-300"
+                          : "text-yellow-700 hover:text-yellow-800"
+                      } transition-colors self-center`}
+                    >
+                      View details
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -462,9 +521,9 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
             <div className="p-6 border-b border-gray-700">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-xl font-bold">View Account</h2>
+                  <h2 className="text-xl font-bold">View Request</h2>
                   <p className="text-sm text-gray-400 mt-1">
-                    Details for {selectedItem.name}
+                    Request #{selectedItem.id}
                   </p>
                 </div>
                 <button
@@ -491,26 +550,76 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
             {/* Content */}
             <div className="p-6 space-y-5">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Username</p>
-                <p className="font-semibold">{selectedItem.id}</p>
+                <p className="text-sm text-gray-400 mb-1">Requested By</p>
+                <p className="font-semibold">{selectedItem.requested_by_name}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Full Name</p>
-                <p className="font-semibold">{selectedItem.name}</p>
+                <p className="text-sm text-gray-400 mb-1">Distributor</p>
+                <p className="font-semibold">{selectedItem.requested_for_name}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Email</p>
-                <p className="font-semibold">
-                  {selectedItem.id.toLowerCase()}@email.com
-                </p>
+                <p className="text-sm text-gray-400 mb-1">Total Points</p>
+                <p className="font-semibold">{selectedItem.total_points.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Position</p>
-                <p className="font-semibold">{selectedItem.type}</p>
+                <p className="text-sm text-gray-400 mb-1">Points Deducted From</p>
+                <p className="font-semibold">{selectedItem.points_deducted_from_display}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Status</p>
-                <p className="font-semibold">Active</p>
+                <p className="font-semibold">
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    selectedItem.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                    selectedItem.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  }`}>
+                    {selectedItem.status_display}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Date Requested</p>
+                <p className="font-semibold">{new Date(selectedItem.date_requested).toLocaleString()}</p>
+              </div>
+              {selectedItem.reviewed_by_name && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Reviewed By</p>
+                  <p className="font-semibold">{selectedItem.reviewed_by_name}</p>
+                </div>
+              )}
+              {selectedItem.date_reviewed && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Date Reviewed</p>
+                  <p className="font-semibold">{new Date(selectedItem.date_reviewed).toLocaleString()}</p>
+                </div>
+              )}
+              {selectedItem.remarks && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Remarks</p>
+                  <p className="font-semibold">{selectedItem.remarks}</p>
+                </div>
+              )}
+              {selectedItem.rejection_reason && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Rejection Reason</p>
+                  <p className="font-semibold text-red-500">{selectedItem.rejection_reason}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Items ({selectedItem.items.length})</p>
+                <div className="space-y-2">
+                  {selectedItem.items.map((reqItem, idx) => (
+                    <div key={idx} className={`p-3 rounded border ${
+                      resolvedTheme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-50"
+                    }`}>
+                      <p className="font-semibold text-sm">{reqItem.variant_name}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Code: {reqItem.variant_code} • Qty: {reqItem.quantity} • {reqItem.points_per_item} pts each
+                      </p>
+                      <p className="text-xs font-semibold mt-1">Total: {reqItem.total_points.toLocaleString()} pts</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
