@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Login from "./page/login/Login";
-import SuperAdminDashboard from "./page/superadmin/Dashboard";
+import AdminDashboard from "./page/superadmin/Dashboard";
 import ApproverDashboard from "./page/approver/Dashboard";
 import ApproverHistory from "./page/approver/History";
 import SalesDashboard from "./page/sales_agent/Dashboard";
@@ -29,7 +29,7 @@ type PageType =
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userPosition, setUserPosition] = useState<string>("Admin");
+  const [userPosition, setUserPosition] = useState<string>("");
 
   const handleLoginSuccess = (position: string) => {
     setIsLoggedIn(true);
@@ -43,32 +43,28 @@ function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setUserPosition("");
     setCurrentPage("login");
     try {
       localStorage.removeItem("username");
       localStorage.removeItem("position");
     } catch {
-      // ignore
+      // ignore storage errors
     }
   };
 
-  // Debug: confirm React is mounting
-  console.log(
-    "App rendering - isLoggedIn:",
-    isLoggedIn,
-    "currentPage:",
-    currentPage
-  );
-
+  // Show login if not authenticated
   if (!isLoggedIn) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (currentPage === "marketing-history") {
-    return (
-      <MarketingHistory onNavigate={handleNavigateTo} onLogout={handleLogout} />
-    );
-  }
+  // Common props for all pages
+  const pageProps = {
+    onNavigate: handleNavigateTo,
+    onLogout: handleLogout,
+  };
+
+  // Render dashboard based on user position
   if (currentPage === "dashboard") {
     // Render dashboard based on user position
     if (userPosition === "Sales Agent") {
@@ -136,33 +132,38 @@ function App() {
   }
 
   if (currentPage === "approver-history") {
-    return (
-      <ApproverHistory onNavigate={handleNavigateTo} onLogout={handleLogout} />
-    );
+    return <ApproverHistory {...pageProps} />;
   }
 
-  if (currentPage === "accounts") {
-    return <Accounts onNavigate={handleNavigateTo} onLogout={handleLogout} />;
+  // Admin-only pages
+  if (userPosition === "Admin") {
+    switch (currentPage) {
+      case "history":
+        return <History {...pageProps} />;
+      case "accounts":
+        return <Accounts {...pageProps} />;
+      case "catalogue":
+        return <Catalogue {...pageProps} />;
+      case "redemption":
+        return <Redemption {...pageProps} />;
+      case "inventory":
+        return <Inventory {...pageProps} />;
+    }
   }
 
-  if (currentPage === "catalogue") {
-    return <Catalogue onNavigate={handleNavigateTo} onLogout={handleLogout} />;
-  }
-
-  if (currentPage === "redemption") {
-    return <Redemption onNavigate={handleNavigateTo} onLogout={handleLogout} />;
-  }
-
-  if (currentPage === "inventory") {
-    return <Inventory onNavigate={handleNavigateTo} onLogout={handleLogout} />;
-  }
-
-  // Fallback: default to SuperAdmin dashboard
+  // Fallback for invalid page state
   return (
-    <SuperAdminDashboard
-      onNavigate={handleNavigateTo}
-      onLogout={handleLogout}
-    />
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+        <button
+          onClick={() => setCurrentPage("dashboard")}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
   );
 }
 

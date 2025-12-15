@@ -1,5 +1,5 @@
 # server/views.py
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import serializers
@@ -15,6 +15,9 @@ class LoginSerializer(serializers.Serializer):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
+    authentication_classes = []
+    permission_classes = []
+    
     # Allow GET requests for testing or API info
     def get(self, request):
         return Response(
@@ -84,11 +87,27 @@ class LoginView(APIView):
                 except UserProfile.DoesNotExist:
                     position = "Admin"  # Default position if profile doesn't exist
                 
-                return Response({
+                # Log the user in to create a session so `request.user` is populated
+                login(request, user)
+
+                response = Response({
                     "message": "Login successful",
                     "position": position,
                     "username": username
                 }, status=status.HTTP_200_OK)
+                
+                # Manually set the session cookie in the response
+                if request.session.session_key:
+                    response.set_cookie(
+                        key='sessionid',
+                        value=request.session.session_key,
+                        max_age=1209600,  # 2 weeks
+                        httponly=True,  # Secure: prevent JavaScript access
+                        secure=False,  # Set to True in production with HTTPS
+                        samesite='Lax'
+                    )
+                
+                return response
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -4,18 +4,21 @@ from .models import CatalogueItem
 
 @admin.register(CatalogueItem)
 class CatalogueItemAdmin(admin.ModelAdmin):
-    list_display = ['item_code', 'item_name', 'legend', 'points', 'price']
-    list_filter = ['legend']
-    search_fields = ['item_name', 'item_code', 'description', 'reward']
+    list_display = ['item_name', 'legend', 'date_added', 'is_archived']
+    list_filter = ['legend', 'is_archived']
+    search_fields = ['item_name', 'description', 'reward']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('reward', 'item_name', 'item_code')
+            'fields': ('reward', 'item_name')
         }),
         ('Details', {
-            'fields': ('description', 'purpose', 'specifications', 'options')
+            'fields': ('description', 'purpose', 'specifications')
         }),
-        ('Pricing & Category', {
-            'fields': ('points', 'price', 'legend')
+        ('Category', {
+            'fields': ('legend',)
+        }),
+        ('Archiving', {
+            'fields': ('is_archived', 'date_archived', 'archived_by')
         }),
     )
