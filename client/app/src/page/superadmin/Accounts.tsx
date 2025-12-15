@@ -41,6 +41,7 @@ interface AccountsProps {
       | "catalogue"
       | "redemption"
       | "inventory"
+      | "distributors"
   ) => void;
   onLogout?: () => void;
 }

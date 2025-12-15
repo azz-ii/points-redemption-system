@@ -12,6 +12,7 @@ import {
   Warehouse,
   CheckCircle,
   Gift,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -44,6 +45,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
     { id: "history", label: "History", icon: History },
     { id: "accounts", label: "Accounts", icon: User },
     { id: "catalogue", label: "Catalogue", icon: Package },
+    { id: "distributors", label: "Distributors", icon: Store },
     { id: "redemption", label: "Redemption", icon: ClipboardList },
     { id: "inventory", label: "Inventory", icon: Warehouse },
   ] as const;
@@ -208,6 +210,7 @@ export function SidebarSuperAdmin({
     { id: "history", label: "History", icon: History },
     { id: "accounts", label: "Accounts", icon: User },
     { id: "catalogue", label: "Catalogue", icon: Package },
+    { id: "distributors", label: "Distributors", icon: Store },
     { id: "redemption", label: "Redemption", icon: ClipboardList },
     { id: "inventory", label: "Inventory", icon: Warehouse },
   ] as const;

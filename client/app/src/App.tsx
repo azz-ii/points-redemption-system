@@ -15,6 +15,7 @@ import Accounts from "./page/superadmin/Accounts";
 import Catalogue from "./page/superadmin/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
 import Inventory from "./page/superadmin/Inventory";
+import Distributors from "./page/superadmin/Distributors";
 
 type PageType =
   | "login"
@@ -25,7 +26,8 @@ type PageType =
   | "accounts"
   | "catalogue"
   | "redemption"
-  | "inventory";
+  | "inventory"
+  | "distributors";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
@@ -158,6 +160,10 @@ function App() {
       case "inventory":
         return (
           <Inventory onNavigate={handleNavigateTo} onLogout={handleLogout} />
+        );
+      case "distributors":
+        return (
+          <Distributors onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
     }
   }
