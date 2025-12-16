@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from django.db import transaction
 from .models import RedemptionRequest, RedemptionRequestItem
 from .serializers import (
     RedemptionRequestSerializer, 
@@ -46,7 +47,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
-        """Approve a redemption request"""
+        """Approve a redemption request and deduct points"""
         redemption_request = self.get_object()
         
         if redemption_request.status != 'PENDING':
@@ -55,16 +56,59 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Update request status
-        redemption_request.status = 'APPROVED'
-        redemption_request.reviewed_by = request.user
-        redemption_request.date_reviewed = timezone.now()
+        # Check if sufficient points are available
+        if redemption_request.points_deducted_from == 'SELF':
+            # Check sales agent's points
+            user_profile = redemption_request.requested_by.profile
+            if user_profile.points < redemption_request.total_points:
+                return Response(
+                    {
+                        'error': 'Insufficient points',
+                        'detail': f'Sales agent has {user_profile.points} points but needs {redemption_request.total_points} points'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:  # DISTRIBUTOR
+            # Check distributor's points
+            distributor = redemption_request.requested_for
+            if distributor.points < redemption_request.total_points:
+                return Response(
+                    {
+                        'error': 'Insufficient points',
+                        'detail': f'Distributor has {distributor.points} points but needs {redemption_request.total_points} points'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
-        # Get remarks if provided
-        if 'remarks' in request.data:
-            redemption_request.remarks = request.data['remarks']
+        # Use transaction to ensure atomicity
+        try:
+            with transaction.atomic():
+                # Deduct points from the appropriate account
+                if redemption_request.points_deducted_from == 'SELF':
+                    user_profile = redemption_request.requested_by.profile
+                    user_profile.points -= redemption_request.total_points
+                    user_profile.save()
+                else:  # DISTRIBUTOR
+                    distributor = redemption_request.requested_for
+                    distributor.points -= redemption_request.total_points
+                    distributor.save()
+                
+                # Update request status
+                redemption_request.status = 'APPROVED'
+                redemption_request.reviewed_by = request.user
+                redemption_request.date_reviewed = timezone.now()
+                
+                # Get remarks if provided
+                if 'remarks' in request.data:
+                    redemption_request.remarks = request.data['remarks']
+                
+                redemption_request.save()
         
-        redemption_request.save()
+        except Exception as e:
+            return Response(
+                {'error': 'Failed to process approval', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)

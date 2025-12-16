@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Gift,
   LogOut,
+  FileBox,
 } from "lucide-react";
 
 interface MobileBottomNavMarketingProps {
@@ -441,8 +442,8 @@ export function MobileBottomNavSales({
 
 // Mobile Bottom Navigation for Approver Role
 interface MobileBottomNavApproverProps {
-  currentPage: "dashboard" | "history";
-  onNavigate: (page: "dashboard" | "history") => void;
+  currentPage: "dashboard" | "requests" | "history";
+  onNavigate: (page: "dashboard" | "requests" | "history") => void;
   onLogout: () => void;
   isModalOpen?: boolean;
 }

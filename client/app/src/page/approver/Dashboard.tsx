@@ -24,7 +24,7 @@ interface RequestItem {
 }
 
 interface DashboardProps {
-  onNavigate?: (page: "dashboard" | "history") => void;
+  onNavigate?: (page: "dashboard" | "requests" | "history") => void;
   onLogout?: () => void;
 }
 
@@ -96,9 +96,11 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
   const endIndex = startIndex + pageSize;
   const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "history") => {
+  const handleNavigate = (page: "dashboard" | "requests" | "history") => {
     if (page === "history") {
       onNavigate?.("approver-history" as any);
+    } else if (page === "requests") {
+      onNavigate?.("approver-requests" as any);
     } else {
       onNavigate?.(page as any);
     }

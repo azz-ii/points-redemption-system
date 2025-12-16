@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Gift,
   Store,
+  FileBox,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -533,6 +534,7 @@ export function SidebarApprover({
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "requests", label: "Requests", icon: FileBox },
     { id: "history", label: "History", icon: History },
   ] as const;
 

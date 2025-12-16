@@ -2,15 +2,24 @@ from django.shortcuts import render
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.pagination import PageNumberPagination
 from .models import CatalogueItem, Variant
 from .serializers import CatalogueItemSerializer, VariantSerializer
 
 logger = logging.getLogger(__name__)
+
+
+class CataloguePagination(PageNumberPagination):
+    """Pagination for catalogue items"""
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -25,10 +34,32 @@ class CatalogueItemListCreateView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     
     def get(self, request):
-        """Get list of all catalogue variants with nested catalogue_item"""
+        """Get paginated list of catalogue variants with nested catalogue_item"""
+        # Get query parameters
+        search = request.query_params.get('search', '').strip()
+        
+        # Start with all variants
         variants = Variant.objects.select_related('catalogue_item').all()
-        serializer = VariantSerializer(variants, many=True)
-        return Response({"items": serializer.data}, status=status.HTTP_200_OK)
+        
+        # Apply search filter if provided
+        if search:
+            variants = variants.filter(
+                Q(catalogue_item__item_name__icontains=search) |
+                Q(item_code__icontains=search) |
+                Q(catalogue_item__legend__icontains=search) |
+                Q(catalogue_item__reward__icontains=search)
+            )
+        
+        # Order by catalogue_item and then by variant id for consistent pagination
+        variants = variants.order_by('catalogue_item__id', 'id')
+        
+        # Apply pagination
+        paginator = CataloguePagination()
+        paginated_variants = paginator.paginate_queryset(variants, request)
+        serializer = VariantSerializer(paginated_variants, many=True)
+        
+        # Return paginated response
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Create a new catalogue item and multiple variants"""

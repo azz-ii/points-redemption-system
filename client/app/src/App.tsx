@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Login from "./page/login/Login";
 import ApproverDashboard from "./page/approver/Dashboard";
+import ApproverRequests from "./page/approver/Requests";
 import ApproverHistory from "./page/approver/History";
 import SalesDashboard from "./page/sales_agent/Dashboard";
 import MarketingDashboard from "./page/marketing/Dashboard";
@@ -24,6 +25,7 @@ type PageType =
   | "history"
   | "marketing-history"
   | "approver-history"
+  | "approver-requests"
   | "accounts"
   | "catalogue"
   | "redemption"
@@ -96,6 +98,15 @@ function App() {
       // Admin or any other role defaults to SuperAdmin dashboard
       content = (
         <SuperAdminDashboard
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
+    }
+  } else if (currentPage === "approver-requests") {
+    if (userPosition === "Approver") {
+      content = (
+        <ApproverRequests
           onNavigate={handleNavigateTo}
           onLogout={handleLogout}
         />
