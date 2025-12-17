@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .email-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px 20px;
+            background-color: #fff;
+        }
+        .content p {
+            margin: 15px 0;
+        }
+        .test-info {
+            background-color: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .success-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🎉 Test Email</h1>
+            <p style="margin: 10px 0 0 0; font-size: 14px;">Oracle Points Redemption System</p>
+        </div>
+        
+        <div class="content">
+            <div class="success-badge">✓ Email System Working</div>
+            
+            <p><strong>Hello!</strong></p>
+            
+            <p>This is a test email from your Points Redemption System. If you're reading this, it means the email configuration is working correctly! 🚀</p>
+            
+            <div class="test-info">
+                <p style="margin: 5px 0;"><strong>Email Configuration Details:</strong></p>
+                <ul style="margin: 10px 0;">
+                    <li>SMTP Host: Gmail (smtp.gmail.com)</li>
+                    <li>Sender: oracle.points@gmail.com</li>
+                    <li>Status: ✓ Connected</li>
+                    <li>Template Engine: Django Templates</li>
+                </ul>
+            </div>
+            
+            <p>You can now send notifications for:</p>
+            <ul>
+                <li>✅ Redemption request approvals</li>
+                <li>❌ Redemption request rejections</li>
+                <li>📧 Custom notifications</li>
+            </ul>
+            
+            <p>This email was sent automatically by the system. Please do not reply to this email.</p>
+            
+            <p>Best regards,<br>
+            <strong>Points Redemption System</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Oracle Points Redemption System</p>
+            <p style="margin: 5px 0;">This is an automated email from the system.</p>
+        </div>
+    </div>
+</body>
+</html>
