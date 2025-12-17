@@ -6,7 +6,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import RedemptionStatus from "@/page/sales_agent/Redemption-Status";
 import RedeemItem from "@/page/sales_agent/Redeem-Item";
-import { Bell, Search, Truck, ShoppingCart } from "lucide-react";
+import { Bell, Search, Truck, ShoppingCart, X } from "lucide-react";
 
 interface DashboardProps {
   onLogout?: () => void;
@@ -28,6 +28,13 @@ function SalesDashboard({ onLogout }: DashboardProps) {
   >("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [deliveryForm, setDeliveryForm] = useState({
+    vehicle: "",
+    date: "",
+    time: "",
+    withDriver: "yes" as "yes" | "no",
+  });
 
   // Sample distributor data
   const distributors: Distributor[] = [
@@ -181,6 +188,7 @@ function SalesDashboard({ onLogout }: DashboardProps) {
               />
             </div>
             <button
+              onClick={() => setIsDeliveryModalOpen(true)}
               className={`hidden md:flex items-center gap-2 px-6 py-3 rounded-lg transition-colors font-medium ${
                 isDark
                   ? "bg-white text-black hover:bg-gray-200"
@@ -195,6 +203,7 @@ function SalesDashboard({ onLogout }: DashboardProps) {
           {/* Mobile Delivery Button */}
           <div className="md:hidden mb-4">
             <button
+              onClick={() => setIsDeliveryModalOpen(true)}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium ${
                 isDark
                   ? "bg-white text-black hover:bg-gray-200"
@@ -336,6 +345,183 @@ function SalesDashboard({ onLogout }: DashboardProps) {
           </div>
         </div>
       </div>
+
+      {/* Delivery Request Modal */}
+      {isDeliveryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            className={`w-full max-w-md rounded-lg shadow-xl ${
+              isDark ? "bg-gray-900" : "bg-white"
+            }`}
+          >
+            {/* Modal Header */}
+            <div
+              className={`flex items-center justify-between p-4 border-b ${
+                isDark ? "border-gray-800" : "border-gray-200"
+              }`}
+            >
+              <h2 className="text-lg font-semibold">
+                Request Vehicle Delivery
+              </h2>
+              <button
+                onClick={() => setIsDeliveryModalOpen(false)}
+                className={`p-1 rounded-lg transition-colors ${
+                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                }`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 space-y-4">
+              {/* Vehicle Selection */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Vehicle
+                </label>
+                <select
+                  value={deliveryForm.vehicle}
+                  onChange={(e) =>
+                    setDeliveryForm({
+                      ...deliveryForm,
+                      vehicle: e.target.value,
+                    })
+                  }
+                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                  }`}
+                >
+                  <option value="">Select a vehicle</option>
+                  <option value="L-3000">L-3000</option>
+                  <option value="L-3001">L-3001</option>
+                  <option value="L-3002">L-3002</option>
+                  <option value="L-3003">L-3003</option>
+                </select>
+              </div>
+
+              {/* Date */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={deliveryForm.date}
+                  onChange={(e) =>
+                    setDeliveryForm({ ...deliveryForm, date: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                  }`}
+                />
+              </div>
+
+              {/* Time */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={deliveryForm.time}
+                  onChange={(e) =>
+                    setDeliveryForm({ ...deliveryForm, time: e.target.value })
+                  }
+                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                  }`}
+                />
+              </div>
+
+              {/* Driver Selection */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    isDark ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Driver
+                </label>
+                <select
+                  value={deliveryForm.withDriver}
+                  onChange={(e) =>
+                    setDeliveryForm({
+                      ...deliveryForm,
+                      withDriver: e.target.value as "yes" | "no",
+                    })
+                  }
+                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
+                    isDark
+                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
+                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
+                  }`}
+                >
+                  <option value="yes">With Driver</option>
+                  <option value="no">Without Driver</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              className={`flex gap-2 p-4 border-t ${
+                isDark ? "border-gray-800" : "border-gray-200"
+              }`}
+            >
+              <button
+                onClick={() => setIsDeliveryModalOpen(false)}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Handle form submission
+                  console.log("Delivery request:", deliveryForm);
+                  setIsDeliveryModalOpen(false);
+                  // Reset form
+                  setDeliveryForm({
+                    vehicle: "",
+                    date: "",
+                    time: "",
+                    withDriver: "yes",
+                  });
+                }}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                Submit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notification Panel */}
       <NotificationPanel

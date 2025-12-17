@@ -12,11 +12,11 @@ interface HistoryItem {
   campaign: string;
   details: string;
   quantity: number;
-  status: "Pending" | "Approved" | "Rejected";
+  status: "Approved" | "Rejected";
 }
 
 interface HistoryProps {
-  onNavigate?: (page: "dashboard" | "history") => void;
+  onNavigate?: (page: "dashboard" | "history" | "marketing-history") => void;
   onLogout?: () => void;
 }
 
@@ -37,7 +37,7 @@ export default function MarketingHistory({
       campaign: "Holiday Promo",
       details: "Facebook Ads",
       quantity: 12,
-      status: "Pending",
+      status: "Approved",
     },
     {
       id: "MK1002",
@@ -65,7 +65,7 @@ export default function MarketingHistory({
       campaign: "Loyalty Push",
       details: "Email Campaign",
       quantity: 10,
-      status: "Pending",
+      status: "Rejected",
     },
     {
       id: "MK1006",
@@ -106,7 +106,7 @@ export default function MarketingHistory({
         .toLowerCase()
         .includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, items]);
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -116,7 +116,7 @@ export default function MarketingHistory({
 
   const handleNavigate = (page: "dashboard" | "history") => {
     if (page === "history") {
-      onNavigate?.("marketing-history" as any);
+      onNavigate?.("marketing-history");
     } else {
       onNavigate?.(page);
     }

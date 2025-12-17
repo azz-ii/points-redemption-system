@@ -14,11 +14,14 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { redemptionRequestsApi, type RedemptionRequestResponse } from "@/lib/api";
+import {
+  redemptionRequestsApi,
+  type RedemptionRequestResponse,
+} from "@/lib/api";
 import { toast } from "sonner";
 
 interface RequestsProps {
-  onNavigate?: (page: "dashboard" | "requests" | "history") => void;
+  onNavigate?: (page: "dashboard" | "approver-requests" | "history") => void;
   onLogout?: () => void;
 }
 
@@ -30,12 +33,13 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
   const [requests, setRequests] = useState<RedemptionRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Modal states
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<RedemptionRequestResponse | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<RedemptionRequestResponse | null>(null);
   const [approveRemarks, setApproveRemarks] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [rejectRemarks, setRejectRemarks] = useState("");
@@ -79,13 +83,15 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
   const endIndex = startIndex + pageSize;
   const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "requests" | "history") => {
+  const handleNavigate = (
+    page: "dashboard" | "approver-requests" | "history" | "requests"
+  ) => {
     if (page === "history") {
-      onNavigate?.("approver-history" as any);
-    } else if (page === "requests") {
-      onNavigate?.("approver-requests" as any);
+      onNavigate?.("history");
+    } else if (page === "approver-requests" || page === "requests") {
+      onNavigate?.("approver-requests");
     } else {
-      onNavigate?.(page as any);
+      onNavigate?.(page);
     }
   };
 
@@ -109,10 +115,13 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
   const handleApproveConfirm = async () => {
     if (!selectedRequest) return;
-    
+
     try {
       setProcessing(true);
-      await redemptionRequestsApi.approveRequest(selectedRequest.id, approveRemarks);
+      await redemptionRequestsApi.approveRequest(
+        selectedRequest.id,
+        approveRemarks
+      );
       toast.success("Request approved successfully");
       setShowApproveModal(false);
       setSelectedRequest(null);
@@ -120,7 +129,9 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       await fetchRequests(); // Refresh the list
     } catch (err) {
       console.error("Error approving request:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to approve request");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to approve request"
+      );
     } finally {
       setProcessing(false);
     }
@@ -128,15 +139,19 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
   const handleRejectConfirm = async () => {
     if (!selectedRequest) return;
-    
+
     if (!rejectReason.trim()) {
       toast.error("Rejection reason is required");
       return;
     }
-    
+
     try {
       setProcessing(true);
-      await redemptionRequestsApi.rejectRequest(selectedRequest.id, rejectReason, rejectRemarks);
+      await redemptionRequestsApi.rejectRequest(
+        selectedRequest.id,
+        rejectReason,
+        rejectRemarks
+      );
       toast.success("Request rejected successfully");
       setShowRejectModal(false);
       setSelectedRequest(null);
@@ -145,7 +160,9 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       await fetchRequests(); // Refresh the list
     } catch (err) {
       console.error("Error rejecting request:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to reject request");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to reject request"
+      );
     } finally {
       setProcessing(false);
     }
@@ -237,7 +254,11 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
             {loading ? (
               <div className="flex justify-center items-center py-8">
-                <p className={resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"}>
+                <p
+                  className={
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }
+                >
                   Loading requests...
                 </p>
               </div>
@@ -260,18 +281,24 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <p className="font-semibold text-sm">Request #{request.id}</p>
-                          <p className="text-xs text-gray-500">{request.requested_by_name}</p>
+                          <p className="font-semibold text-sm">
+                            Request #{request.id}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {request.requested_by_name}
+                          </p>
                         </div>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            getStatusBadgeColor(request.status)
-                          }`}
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+                            request.status
+                          )}`}
                         >
                           {request.status_display}
                         </span>
                       </div>
-                      <p className="text-sm font-medium mb-2">For: {request.requested_for_name}</p>
+                      <p className="text-sm font-medium mb-2">
+                        For: {request.requested_for_name}
+                      </p>
                       <p className="text-xs text-gray-500 mb-3">
                         Points: {request.total_points}
                       </p>
@@ -309,8 +336,8 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
               </>
             )}
 
-                {/* Mobile Pagination */}
-                <div className="flex items-center justify-between mt-6">
+            {/* Mobile Pagination */}
+            <div className="flex items-center justify-between mt-6">
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
@@ -400,7 +427,11 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <p className={resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              <p
+                className={
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }
+              >
                 Loading requests...
               </p>
             </div>
@@ -460,24 +491,34 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
                       <tr
                         key={request.id}
                         className={`hover:${
-                          resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                          resolvedTheme === "dark"
+                            ? "bg-gray-800"
+                            : "bg-gray-50"
                         } transition-colors`}
                       >
                         <td className="px-6 py-4 text-sm">#{request.id}</td>
-                        <td className="px-6 py-4 text-sm">{request.requested_by_name}</td>
-                        <td className="px-6 py-4 text-sm">{request.requested_for_name}</td>
-                        <td className="px-6 py-4 text-sm">{request.total_points}</td>
+                        <td className="px-6 py-4 text-sm">
+                          {request.requested_by_name}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {request.requested_for_name}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {request.total_points}
+                        </td>
                         <td className="px-6 py-4">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              getStatusBadgeColor(request.status)
-                            }`}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+                              request.status
+                            )}`}
                           >
                             {request.status_display}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {new Date(request.date_requested).toLocaleDateString()}
+                          {new Date(
+                            request.date_requested
+                          ).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 flex justify-end gap-2">
                           <button
@@ -560,9 +601,13 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       {/* View Details Modal */}
       {showViewModal && selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-lg shadow-lg max-w-lg w-full max-h-96 overflow-y-auto ${
-            resolvedTheme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-white"
-          }`}>
+          <div
+            className={`rounded-lg shadow-lg max-w-lg w-full max-h-96 overflow-y-auto ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 border border-gray-700"
+                : "bg-white"
+            }`}
+          >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-xl font-semibold">Request Details</h2>
@@ -576,55 +621,111 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
               <div className="space-y-4 text-sm">
                 <div>
-                  <p className={`font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>Request ID</p>
+                  <p
+                    className={`font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Request ID
+                  </p>
                   <p className="font-semibold">#{selectedRequest.id}</p>
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>Requested By</p>
-                  <p className="font-semibold">{selectedRequest.requested_by_name}</p>
+                  <p
+                    className={`font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Requested By
+                  </p>
+                  <p className="font-semibold">
+                    {selectedRequest.requested_by_name}
+                  </p>
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>Requested For</p>
-                  <p className="font-semibold">{selectedRequest.requested_for_name}</p>
+                  <p
+                    className={`font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Requested For
+                  </p>
+                  <p className="font-semibold">
+                    {selectedRequest.requested_for_name}
+                  </p>
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>Total Points</p>
-                  <p className="font-semibold">{selectedRequest.total_points}</p>
+                  <p
+                    className={`font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Total Points
+                  </p>
+                  <p className="font-semibold">
+                    {selectedRequest.total_points}
+                  </p>
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>Status</p>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
-                    getStatusBadgeColor(selectedRequest.status)
-                  }`}>
+                  <p
+                    className={`font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Status
+                  </p>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${getStatusBadgeColor(
+                      selectedRequest.status
+                    )}`}
+                  >
                     {selectedRequest.status_display}
                   </span>
                 </div>
                 <div>
-                  <p className={`font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}>Date Requested</p>
-                  <p className="font-semibold">{new Date(selectedRequest.date_requested).toLocaleDateString()}</p>
+                  <p
+                    className={`font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Date Requested
+                  </p>
+                  <p className="font-semibold">
+                    {new Date(
+                      selectedRequest.date_requested
+                    ).toLocaleDateString()}
+                  </p>
                 </div>
                 {selectedRequest.items && selectedRequest.items.length > 0 && (
                   <div>
-                    <p className={`font-medium mb-2 ${
-                      resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                    }`}>Items</p>
+                    <p
+                      className={`font-medium mb-2 ${
+                        resolvedTheme === "dark"
+                          ? "text-gray-400"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      Items
+                    </p>
                     <ul className="space-y-1 text-xs">
                       {selectedRequest.items.map((item, idx) => (
                         <li key={idx} className="flex justify-between">
                           <span>{item.catalogue_item_name}</span>
-                          <span className="font-semibold">{item.quantity} x {item.points_per_item}pts</span>
+                          <span className="font-semibold">
+                            {item.quantity} x {item.points_per_item}pts
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -652,19 +753,26 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       {/* Approve Modal */}
       {showApproveModal && selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-lg shadow-lg max-w-sm w-full ${
-            resolvedTheme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-white"
-          }`}>
+          <div
+            className={`rounded-lg shadow-lg max-w-sm w-full ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 border border-gray-700"
+                : "bg-white"
+            }`}
+          >
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Approve Request</h2>
               <p className="text-sm mb-4">
-                Are you sure you want to approve this request for <strong>{selectedRequest.requested_for_name}</strong>?
+                Are you sure you want to approve this request for{" "}
+                <strong>{selectedRequest.requested_for_name}</strong>?
               </p>
-              
+
               <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2 ${
-                  resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Remarks (Optional)
                 </label>
                 <textarea
@@ -711,19 +819,26 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       {/* Reject Modal */}
       {showRejectModal && selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-lg shadow-lg max-w-sm w-full ${
-            resolvedTheme === "dark" ? "bg-gray-900 border border-gray-700" : "bg-white"
-          }`}>
+          <div
+            className={`rounded-lg shadow-lg max-w-sm w-full ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 border border-gray-700"
+                : "bg-white"
+            }`}
+          >
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Reject Request</h2>
               <p className="text-sm mb-4">
-                Are you sure you want to reject this request for <strong>{selectedRequest.requested_for_name}</strong>?
+                Are you sure you want to reject this request for{" "}
+                <strong>{selectedRequest.requested_for_name}</strong>?
               </p>
-              
+
               <div className="mb-4">
-                <label className={`block text-sm font-medium mb-2 ${
-                  resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}>
+                <label
+                  className={`block text-sm font-medium mb-2 ${
+                    resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
                   Rejection Reason *
                 </label>
                 <textarea

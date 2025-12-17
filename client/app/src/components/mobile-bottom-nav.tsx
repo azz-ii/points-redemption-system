@@ -500,6 +500,12 @@ export function MobileBottomNavApprover({
       action: undefined,
     },
     {
+      id: "requests" as const,
+      icon: ClipboardList,
+      label: "Requests",
+      action: undefined,
+    },
+    {
       id: "history" as const,
       icon: HistoryIcon,
       label: "History",

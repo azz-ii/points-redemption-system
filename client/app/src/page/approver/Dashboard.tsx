@@ -24,7 +24,7 @@ interface RequestItem {
 }
 
 interface DashboardProps {
-  onNavigate?: (page: "dashboard" | "requests" | "history") => void;
+  onNavigate?: (page: "dashboard" | "approver-requests" | "history") => void;
   onLogout?: () => void;
 }
 

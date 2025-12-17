@@ -111,6 +111,13 @@ function App() {
           onLogout={handleLogout}
         />
       );
+    } else {
+      content = (
+        <ApproverDashboard
+          onNavigate={handleNavigateTo}
+          onLogout={handleLogout}
+        />
+      );
     }
   } else if (currentPage === "history") {
     // Render history based on user position
@@ -150,7 +157,21 @@ function App() {
         />
       );
     }
-  } else if (userPosition === "Admin") {
+  } else if (currentPage === "marketing-history") {
+    // Handle marketing-history page type
+    content = (
+      <MarketingHistory onNavigate={handleNavigateTo} onLogout={handleLogout} />
+    );
+  } else if (currentPage === "approver-history") {
+    // Handle approver-history page type
+    content = (
+      <ApproverHistory onNavigate={handleNavigateTo} onLogout={handleLogout} />
+    );
+  } else if (
+    userPosition === "Admin" ||
+    userPosition === "SuperAdmin" ||
+    userPosition === "admin"
+  ) {
     switch (currentPage) {
       case "accounts":
         content = (

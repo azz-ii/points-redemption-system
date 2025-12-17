@@ -4,7 +4,16 @@ import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Search, Filter, Eye, X, ShoppingCart } from "lucide-react";
+import {
+  Bell,
+  Search,
+  Filter,
+  Eye,
+  X,
+  ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface StatusItem {
   id: string;
@@ -35,6 +44,8 @@ export default function RedemptionStatus({
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StatusItem | null>(null);
+  const [currentPageIndex, setCurrentPageIndex] = useState(1);
+  const itemsPerPage = 7;
 
   const history: StatusItem[] = [
     {
@@ -58,6 +69,41 @@ export default function RedemptionStatus({
       status: "Rejected",
       date: "2025-12-31",
     },
+    {
+      id: "MC0003C",
+      type: "T-shirt",
+      details: "Platinum Polo",
+      status: "Rejected",
+      date: "2025-12-31",
+    },
+    {
+      id: "MC0003C",
+      type: "T-shirt",
+      details: "Platinum Polo",
+      status: "Rejected",
+      date: "2025-12-31",
+    },
+    {
+      id: "MC0003C",
+      type: "T-shirt",
+      details: "Platinum Polo",
+      status: "Rejected",
+      date: "2025-12-31",
+    },
+    {
+      id: "MC0003C",
+      type: "T-shirt",
+      details: "Platinum Polo",
+      status: "Rejected",
+      date: "2025-12-31",
+    },
+    {
+      id: "MC0003C",
+      type: "T-shirt",
+      details: "Platinum Polo",
+      status: "Rejected",
+      date: "2025-12-31",
+    },
   ];
 
   const filtered = history.filter((item) => {
@@ -68,6 +114,12 @@ export default function RedemptionStatus({
       item.details.toLowerCase().includes(q)
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const safePage = Math.min(currentPageIndex, totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filtered.slice(startIndex, endIndex);
 
   const handleNavigate = (page: SalesPages) => onNavigate(page);
 
@@ -222,7 +274,7 @@ export default function RedemptionStatus({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item, idx) => (
+                {paginatedItems.map((item, idx) => (
                   <tr
                     key={idx}
                     className={`border-t ${
@@ -272,6 +324,39 @@ export default function RedemptionStatus({
                 ))}
               </tbody>
             </table>
+            <div
+              className={`flex items-center justify-between p-4 border-t ${
+                isDark ? "border-gray-800" : "border-gray-200"
+              }`}
+            >
+              <button
+                onClick={() => setCurrentPageIndex(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  isDark
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPageIndex(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  isDark
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Mobile Cards: Request History */}
@@ -282,69 +367,89 @@ export default function RedemptionStatus({
                 isDark ? "text-gray-400" : "text-gray-600"
               } text-xs mb-4`}
             >
-              Showing {filtered.length} processed
+              Showing {paginatedItems.length} of {filtered.length} processed
             </p>
 
             <div className="space-y-3">
-              {filtered.map((item, idx) => (
+              {paginatedItems.map((item, idx) => (
                 <div
                   key={idx}
-                  className={`rounded-lg border ${
-                    isDark
-                      ? "bg-gray-900 border-gray-800"
-                      : "bg-white border-gray-200"
+                  className={`p-4 rounded-lg ${
+                    isDark ? "bg-gray-800/50" : "bg-gray-50"
                   }`}
                 >
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-1">
-                      <div>
-                        <p
-                          className={`text-xs ${
-                            isDark ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          {item.id}
-                        </p>
-                        <h3 className="text-lg font-bold">{item.type}</h3>
-                        <p
-                          className={`text-sm ${
-                            isDark ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          {item.details}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className={statusChip(item.status)}>
-                          {item.status}
-                        </span>
-                        <p
-                          className={`text-xs mt-2 ${
-                            isDark ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          {item.date}
-                        </p>
-                        <div className="mt-3">
-                          <button
-                            onClick={() => openDetails(item)}
-                            className={
-                              `inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ` +
-                              (isDark
-                                ? "bg-blue-600 text-white hover:bg-blue-500"
-                                : "bg-blue-600 text-white hover:bg-blue-700")
-                            }
-                            aria-label={`View details for ${item.details}`}
-                          >
-                            <Eye className="h-4 w-4" />
-                            View Details
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                  <p
+                    className={`text-xs mb-1 ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {item.id}
+                  </p>
+                  <h3 className="text-base font-semibold mb-0.5">
+                    {item.type}
+                  </h3>
+                  <p
+                    className={`text-sm mb-3 ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {item.details}
+                  </p>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className={statusChip(item.status)}>
+                      {item.status}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      {item.date}
+                    </span>
                   </div>
+                  <button
+                    onClick={() => openDetails(item)}
+                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                      isDark
+                        ? "bg-white text-gray-900 hover:bg-gray-200"
+                        : "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
+                    }`}
+                    aria-label={`View details for ${item.details}`}
+                  >
+                    View Details
+                  </button>
                 </div>
               ))}
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentPageIndex(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  isDark
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Prev
+              </button>
+              <span className="text-xs font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPageIndex(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  isDark
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>

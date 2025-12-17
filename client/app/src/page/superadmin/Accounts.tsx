@@ -20,6 +20,7 @@ import {
   RotateCw,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
 } from "lucide-react";
 
 interface Account {
@@ -90,6 +91,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   // Fetch accounts on component mount
   const fetchAccounts = async () => {
@@ -820,73 +822,127 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-400 text-black">
                           {account.position || "N/A"}
                         </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-1">
                         {account.is_activated ? (
-                          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white text-center">
+                          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
                             Active
                           </span>
                         ) : (
-                          <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white text-center">
+                          <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
                             Inactive
                           </span>
                         )}
                         {account.is_banned && (
-                          <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white text-center">
+                          <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
                             Banned
                           </span>
                         )}
                       </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        className={`p-2 rounded ${
-                          resolvedTheme === "dark"
-                            ? "bg-white hover:bg-gray-200"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        } transition-colors`}
-                        disabled={loading}
-                        title="View"
-                      >
-                        <Eye className="h-4 w-4 text-gray-900" />
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setOpenMenuId(
+                              openMenuId === account.id ? null : account.id
+                            )
+                          }
+                          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                            resolvedTheme === "dark"
+                              ? "bg-gray-800 hover:bg-gray-700 text-white"
+                              : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                          } transition-colors`}
+                          disabled={loading}
+                        >
+                          Actions
+                        </button>
 
-                      <button
-                        onClick={() => {
-                          setBanTarget(account);
-                          setBanReason("");
-                          setBanMessage("");
-                          setBanDuration("1");
-                          setShowBanModal(true);
-                          setError("");
-                        }}
-                        className="p-2 rounded bg-orange-500 hover:bg-orange-600 transition-colors"
-                        disabled={loading}
-                        title="Ban"
-                      >
-                        <span className="text-xs text-white">Ban</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleEditClick(account)}
-                        className={`p-2 rounded ${
-                          resolvedTheme === "dark"
-                            ? "bg-white hover:bg-gray-200"
-                            : "bg-gray-100 hover:bg-gray-200"
-                        } transition-colors`}
-                        disabled={loading}
-                      >
-                        <Pencil className="h-4 w-4 text-gray-900" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setDeleteTarget(account);
-                          setShowDeleteModal(true);
-                          setError("");
-                        }}
-                        className="p-2 rounded bg-red-500 hover:bg-red-600 transition-colors"
-                        disabled={loading}
-                      >
-                        <Trash2 className="h-4 w-4 text-white" />
-                      </button>
+                        {openMenuId === account.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div
+                              className={`absolute right-0 top-10 z-20 w-40 rounded-lg border shadow-lg py-1 ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-900 border-gray-700"
+                                  : "bg-white border-gray-200"
+                              }`}
+                            >
+                              <button
+                                onClick={() => {
+                                  setViewTarget(account);
+                                  setShowViewModal(true);
+                                  setOpenMenuId(null);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
+                                  resolvedTheme === "dark"
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
+                                }`}
+                                disabled={loading}
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleEditClick(account);
+                                  setOpenMenuId(null);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
+                                  resolvedTheme === "dark"
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
+                                }`}
+                                disabled={loading}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setBanTarget(account);
+                                  setBanReason("");
+                                  setBanMessage("");
+                                  setBanDuration("1");
+                                  setShowBanModal(true);
+                                  setError("");
+                                  setOpenMenuId(null);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-orange-500 ${
+                                  resolvedTheme === "dark"
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
+                                }`}
+                                disabled={loading}
+                              >
+                                <Ban className="h-4 w-4" />
+                                Ban
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setDeleteTarget(account);
+                                  setShowDeleteModal(true);
+                                  setError("");
+                                  setOpenMenuId(null);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-500 ${
+                                  resolvedTheme === "dark"
+                                    ? "hover:bg-gray-800"
+                                    : "hover:bg-gray-100"
+                                }`}
+                                disabled={loading}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -1064,7 +1120,9 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   <option value="Approver">Approver</option>
                   <option value="Marketing">Marketing</option>
                   <option value="Reception">Reception</option>
-                  <option value="Executive Assistant">Executive Assistant</option>
+                  <option value="Executive Assistant">
+                    Executive Assistant
+                  </option>
                 </select>
               </div>
 
@@ -1334,7 +1392,9 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                   <option value="Approver">Approver</option>
                   <option value="Marketing">Marketing</option>
                   <option value="Reception">Reception</option>
-                  <option value="Executive Assistant">Executive Assistant</option>
+                  <option value="Executive Assistant">
+                    Executive Assistant
+                  </option>
                 </select>
               </div>
 
@@ -1420,8 +1480,6 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
                 </p>
               </div>
             </div>
-
-           
           </div>
         </div>
       )}
