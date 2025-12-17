@@ -115,7 +115,7 @@ class Command(BaseCommand):
                         'points_deducted_from': 'DISTRIBUTOR',
                     }
                     template_path = 'emails/request_approved.html'
-                    subject = 'Request #12345 Approved - Test Distributor Inc.'
+                    subject = 'Test Email. Please Reply if Working'
                     
                 elif template == 'request_rejected':
                     context = {
@@ -144,7 +144,7 @@ class Command(BaseCommand):
                         'requested_by': 'test_user',
                     }
                     template_path = 'emails/request_rejected.html'
-                    subject = 'Request #12345 Rejected - Test Distributor Inc.'
+                    subject = 'Test Email. Please Reply if Working'
                 else:
                     raise CommandError(f'Unknown template: {template}')
                 

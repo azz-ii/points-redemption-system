@@ -28,7 +28,7 @@ def test_plain_email():
                f'Sender: {settings.DEFAULT_FROM_EMAIL}\n'
                f'SMTP Host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}\n\n'
                'Best regards,\nPoints Redemption System',
-        recipient_list=['oracle.points@gmail.com'],
+        recipient_list=['jemaicamorente@gmail.com'],
     )
     
     if success:
@@ -48,7 +48,7 @@ def test_html_email():
         subject='Test Email - Points Redemption System',
         template_name='emails/test.html',
         context={},
-        recipient_list=['oracle.points@gmail.com']
+        recipient_list=['jemaicamorente@gmail.com']
     )
     
     if success:
@@ -92,10 +92,10 @@ def test_approval_email():
     }
     
     success = send_html_email(
-        subject='Request #12345 Approved - Test Distributor Inc.',
+        subject='Test Email. Please Reply if Working',
         template_name='emails/request_approved.html',
         context=context,
-        recipient_list=['oracle.points@gmail.com']
+        recipient_list=['jemaicamorente@gmail.com']
     )
     
     if success:
@@ -131,16 +131,43 @@ def test_rejection_email():
     }
     
     success = send_html_email(
-        subject='Request #12345 Rejected - Test Distributor Inc.',
+        subject='Test Email. Please Reply if Working',
         template_name='emails/request_rejected.html',
         context=context,
-        recipient_list=['oracle.points@gmail.com']
+        recipient_list=['jemaicamorente@gmail.com']
     )
     
     if success:
         print("\n✓ Rejection email sent successfully!")
     else:
         print("\n✗ Failed to send rejection email")
+    
+    return success
+
+def test_account_created_email():
+    """Test account creation email template"""
+    print("\n" + "=" * 60)
+    print("Testing Account Creation Email Template")
+    print("=" * 60)
+    
+    context = {
+        'username': 'testuser123',
+        'password': 'SecurePass123!',
+        'full_name': 'Test User',
+        'position': 'Sales Agent',
+    }
+    
+    success = send_html_email(
+        subject='Welcome to Points Redemption System - Your Account Details',
+        template_name='emails/account_created.html',
+        context=context,
+        recipient_list=['oracle.points@gmail.com']
+    )
+    
+    if success:
+        print("\n✓ Account creation email sent successfully!")
+    else:
+        print("\n✗ Failed to send account creation email")
     
     return success
 
@@ -163,6 +190,7 @@ if __name__ == '__main__':
         results.append(('HTML Template Email', test_html_email()))
         results.append(('Approval Email', test_approval_email()))
         results.append(('Rejection Email', test_rejection_email()))
+        results.append(('Account Created Email', test_account_created_email()))
     except Exception as e:
         print(f"\n✗ Error during tests: {e}")
         import traceback

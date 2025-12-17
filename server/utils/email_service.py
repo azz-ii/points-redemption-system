@@ -237,3 +237,40 @@ def send_request_rejected_email(request_obj, distributor, rejected_by):
         logger.error(f"Error sending rejection email for request #{request_obj.id}: {str(e)}")
         logger.exception("Full traceback:")
         return False
+
+
+def send_account_created_email(username, password, full_name, email, position):
+    """
+    Send email notification when a new account is created
+    
+    Args:
+        username (str): User's username
+        password (str): User's plain text password
+        full_name (str): User's full name
+        email (str): User's email address
+        position (str): User's position/role
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        logger.debug(f"Preparing account creation email for {username} ({email})")
+        
+        context = {
+            'username': username,
+            'password': password,
+            'full_name': full_name,
+            'position': position,
+        }
+        
+        return send_html_email(
+            subject=f"Welcome to Points Redemption System - Your Account Details",
+            template_name='emails/account_created.html',
+            context=context,
+            recipient_list=[email]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending account creation email to {email}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False

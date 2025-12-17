@@ -7,6 +7,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
+import logging
+from utils.email_service import send_account_created_email
+
+# Configure logger for user operations
+logger = logging.getLogger('email')
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     """Session authentication without CSRF checks for API endpoints"""
@@ -30,10 +35,35 @@ class UserListCreateView(APIView):
         """Create a new user with profile"""
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            # Save the password before hashing for email
+            plain_password = request.data.get('password', '')
+            username = request.data.get('username', '')
+            full_name = request.data.get('full_name', '')
+            email = request.data.get('email', '')
+            position = request.data.get('position', '')
+            
+            # Create the user
+            user = serializer.save()
+            
+            # Send welcome email with credentials
+            logger.info(f"New account created for {username}, sending welcome email...")
+            email_sent = send_account_created_email(
+                username=username,
+                password=plain_password,
+                full_name=full_name,
+                email=email,
+                position=position
+            )
+            
+            if email_sent:
+                logger.info(f"✓ Welcome email sent to {email}")
+            else:
+                logger.warning(f"⚠ Failed to send welcome email to {email}")
+            
             return Response({
                 "message": "User created successfully",
-                "user": serializer.data
+                "user": serializer.data,
+                "email_sent": email_sent
             }, status=status.HTTP_201_CREATED)
         return Response({
             "error": "Failed to create user",
