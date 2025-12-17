@@ -4,12 +4,17 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.db import transaction
+import logging
 from .models import RedemptionRequest, RedemptionRequestItem
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
     RedemptionRequestItemSerializer
 )
+from utils.email_service import send_request_approved_email, send_request_rejected_email
+
+# Configure logger for request operations
+logger = logging.getLogger('email')
 
 
 class RedemptionRequestViewSet(viewsets.ModelViewSet):
@@ -103,8 +108,22 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     redemption_request.remarks = request.data['remarks']
                 
                 redemption_request.save()
+                
+                # Send approval email notification
+                logger.info(f"Request #{redemption_request.id} approved, sending email notification...")
+                email_sent = send_request_approved_email(
+                    request_obj=redemption_request,
+                    distributor=redemption_request.requested_for,
+                    approved_by=request.user
+                )
+                
+                if email_sent:
+                    logger.info(f"✓ Approval email sent for request #{redemption_request.id}")
+                else:
+                    logger.warning(f"⚠ Failed to send approval email for request #{redemption_request.id}")
         
         except Exception as e:
+            logger.error(f"Failed to process approval for request #{redemption_request.id}: {str(e)}")
             return Response(
                 {'error': 'Failed to process approval', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -143,6 +162,19 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             redemption_request.remarks = request.data['remarks']
         
         redemption_request.save()
+        
+        # Send rejection email notification
+        logger.info(f"Request #{redemption_request.id} rejected, sending email notification...")
+        email_sent = send_request_rejected_email(
+            request_obj=redemption_request,
+            distributor=redemption_request.requested_for,
+            rejected_by=request.user
+        )
+        
+        if email_sent:
+            logger.info(f"✓ Rejection email sent for request #{redemption_request.id}")
+        else:
+            logger.warning(f"⚠ Failed to send rejection email for request #{redemption_request.id}")
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
