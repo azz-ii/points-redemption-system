@@ -6,161 +6,314 @@
     <title>Request Rejected</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
             line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
         }
         .email-container {
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            max-width: 650px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .header {
+        .email-header {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
         }
-        .header h1 {
+        .email-header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 600;
         }
-        .status-badge {
-            display: inline-block;
-            background-color: rgba(255, 255, 255, 0.3);
-            padding: 5px 15px;
-            border-radius: 20px;
-            margin-top: 10px;
-            font-size: 14px;
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.95;
         }
-        .content {
-            padding: 30px 20px;
-            background-color: #fff;
+        .email-body {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 15px;
+            color: #4b5563;
+            margin-bottom: 25px;
+        }
+        .rejection-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 25px 0;
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
         }
         .info-box {
-            background-color: #fef2f2;
+            background: #fef2f2;
             border-left: 4px solid #ef4444;
-            padding: 15px;
-            margin: 20px 0;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
         }
-        .info-box p {
-            margin: 8px 0;
+        .info-box h3 {
+            margin: 0 0 15px 0;
+            color: #991b1b;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #fee2e2;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #991b1b;
+            min-width: 180px;
+        }
+        .info-value {
+            color: #374151;
+            flex: 1;
+        }
+        .rejection-reason-box {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .rejection-reason-box h3 {
+            color: #991b1b;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+        }
+        .rejection-reason-box p {
+            color: #7f1d1d;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.6;
         }
         .items-table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .items-table thead {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
         }
         .items-table th {
-            background-color: #f3f4f6;
-            padding: 12px;
+            padding: 12px 15px;
             text-align: left;
-            border-bottom: 2px solid #e5e7eb;
             font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .items-table td {
-            padding: 12px;
+            padding: 12px 15px;
             border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+            font-size: 14px;
         }
-        .items-table tr:last-child td {
+        .items-table tbody tr:last-child td {
             border-bottom: none;
         }
-        .total-row {
+        .items-table tbody tr:hover {
             background-color: #f9fafb;
-            font-weight: bold;
         }
-        .points {
-            color: #6b7280;
+        .items-table .text-right {
+            text-align: right;
+        }
+        .items-table .text-center {
+            text-align: center;
+        }
+        .total-box {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .total-label {
+            color: #991b1b;
+            font-size: 16px;
             font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .total-value {
+            color: #7f1d1d;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .remarks-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .remarks-box strong {
+            color: #92400e;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .remarks-box p {
+            color: #78350f;
+            margin: 0;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s;
+        }
+        .action-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 8px rgba(59, 130, 246, 0.4);
         }
         .footer {
-            background-color: #f8f9fa;
-            padding: 20px;
+            background: #f9fafb;
+            padding: 25px;
             text-align: center;
-            font-size: 12px;
-            color: #666;
+            color: #6b7280;
+            font-size: 13px;
+            border-top: 1px solid #e5e7eb;
         }
-        .notice {
-            background-color: #fef3c7;
-            border: 1px solid #fbbf24;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 6px;
-            font-size: 14px;
+        .footer p {
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <div class="email-container">
-        <div class="header">
+        <div class="email-header">
             <h1>❌ Request Rejected</h1>
-            <div class="status-badge">Request #{{ request_id }}</div>
+            <p>Your redemption request has been rejected</p>
         </div>
         
-        <div class="content">
-            <p><strong>Hello {{ requested_by }},</strong></p>
-            
-            <p>We regret to inform you that your redemption request has been <strong style="color: #ef4444;">REJECTED</strong>.</p>
-            
-            <div class="info-box">
-                <p><strong>📦 Distributor Information</strong></p>
-                <p><strong>Name:</strong> {{ distributor_name }}</p>
-                <p><strong>Code:</strong> {{ distributor_code }}</p>
-                <p><strong>Region:</strong> {{ distributor_region }}</p>
+        <div class="email-body">
+            <div class="greeting">
+                Hello {{ requested_by }},
             </div>
             
-            <h3>Requested Items</h3>
+            <div class="rejection-badge">
+                Request #{{ request_id }} has been rejected
+            </div>
+            
+            <div class="message">
+                We regret to inform you that your redemption request #{{ request_id }} for <strong>{{ distributor_name }}</strong> has been rejected. Please review the reason below and make necessary adjustments before resubmitting.
+            </div>
+            
+            <div class="rejection-reason-box">
+                <h3>🚫 Rejection Reason</h3>
+                <p>{{ rejection_reason }}</p>
+            </div>
+            
+            <div class="info-box">
+                <h3>Request Details</h3>
+                <div class="info-row">
+                    <span class="info-label">Request ID:</span>
+                    <span class="info-value">#{{ request_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Rejected By:</span>
+                    <span class="info-value">{{ rejected_by }}</span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3>Distributor Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Distributor Name:</span>
+                    <span class="info-value">{{ distributor_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{ distributor_location }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Region:</span>
+                    <span class="info-value">{{ distributor_region }}</span>
+                </div>
+            </div>
+            
+            <h3 style="color: #991b1b; margin-top: 30px; margin-bottom: 15px;">Rejected Items</h3>
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th>Item</th>
+                        <th>Item Name</th>
                         <th>SKU</th>
-                        <th style="text-align: center;">Qty</th>
-                        <th style="text-align: right;">Points/Unit</th>
-                        <th style="text-align: right;">Total</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-right">Points/Unit</th>
+                        <th class="text-right">Total Points</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
                     <tr>
                         <td>{{ item.name }}</td>
-                        <td><code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">{{ item.sku }}</code></td>
-                        <td style="text-align: center;">{{ item.quantity }}</td>
-                        <td style="text-align: right;">{{ item.points_per_unit }}</td>
-                        <td style="text-align: right;" class="points">{{ item.total_points }}</td>
+                        <td>{{ item.sku }}</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-right">{{ item.points_per_unit }}</td>
+                        <td class="text-right"><strong>{{ item.total_points }}</strong></td>
                     </tr>
                     {% endfor %}
-                    <tr class="total-row">
-                        <td colspan="4" style="text-align: right;">Total Points:</td>
-                        <td style="text-align: right;" class="points">{{ total_points }}</td>
-                    </tr>
                 </tbody>
             </table>
             
-            <div class="notice">
-                <strong>ℹ️ Important Note:</strong> No points have been deducted from your account or the distributor account for this request.
+            <div class="total-box">
+                <div class="total-label">Total Points (Not Deducted)</div>
+                <div class="total-value">{{ total_points }} points</div>
             </div>
             
-            <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                <strong>Rejected by:</strong> {{ rejected_by }}<br>
-                <strong>Request ID:</strong> #{{ request_id }}
-            </p>
+            {% if remarks %}
+            <div class="remarks-box">
+                <strong>Your Original Remarks:</strong>
+                <p>{{ remarks }}</p>
+            </div>
+            {% endif %}
             
-            <p>If you believe this rejection was made in error or need clarification, please contact your administrator or the person who rejected this request.</p>
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="http://127.0.0.1:5173/requests" class="action-button">Submit New Request</a>
+            </div>
             
-            <p>You may submit a new request if the issues have been resolved.</p>
-            
-            <p>Best regards,<br>
-            <strong>Points Redemption System</strong></p>
+            <div class="message" style="margin-top: 30px; font-size: 14px;">
+                Please address the issues mentioned in the rejection reason and submit a new request. If you have questions about the rejection, please contact your supervisor or the approver.
+            </div>
         </div>
         
         <div class="footer">
-            <p>© 2025 Oracle Points Redemption System</p>
-            <p style="margin: 5px 0;">This is an automated notification. Please do not reply to this email.</p>
+            <p><strong>Points Redemption System</strong></p>
+            <p>This is an automated notification. Please do not reply to this email.</p>
+            <p>© 2025 All rights reserved.</p>
         </div>
     </div>
 </body>

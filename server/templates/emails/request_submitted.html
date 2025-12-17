@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request Approved</title>
+    <title>New Redemption Request</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,7 +21,7 @@
             overflow: hidden;
         }
         .email-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
@@ -49,41 +49,30 @@
             color: #4b5563;
             margin-bottom: 25px;
         }
-        .success-badge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: 600;
-            margin: 25px 0;
-            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
-        }
         .info-box {
-            background: #f0fdf4;
-            border-left: 4px solid #10b981;
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
             padding: 20px;
             margin: 25px 0;
             border-radius: 4px;
         }
         .info-box h3 {
             margin: 0 0 15px 0;
-            color: #065f46;
+            color: #1e40af;
             font-size: 16px;
             font-weight: 600;
         }
         .info-row {
             display: flex;
             padding: 8px 0;
-            border-bottom: 1px solid #d1fae5;
+            border-bottom: 1px solid #e0f2fe;
         }
         .info-row:last-child {
             border-bottom: none;
         }
         .info-label {
             font-weight: 600;
-            color: #065f46;
+            color: #1e40af;
             min-width: 180px;
         }
         .info-value {
@@ -100,7 +89,7 @@
             overflow: hidden;
         }
         .items-table thead {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
         }
         .items-table th {
@@ -130,21 +119,21 @@
             text-align: center;
         }
         .total-box {
-            background: #f0fdf4;
-            border: 2px solid #10b981;
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
             border-radius: 8px;
             padding: 20px;
             margin: 25px 0;
             text-align: center;
         }
         .total-label {
-            color: #065f46;
+            color: #1e40af;
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 8px;
         }
         .total-value {
-            color: #064e3b;
+            color: #1e3a8a;
             font-size: 32px;
             font-weight: 700;
         }
@@ -166,7 +155,7 @@
         }
         .action-button {
             display: inline-block;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             padding: 14px 32px;
             text-decoration: none;
@@ -174,12 +163,12 @@
             font-weight: 600;
             font-size: 15px;
             margin: 20px 0;
-            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
             transition: all 0.3s;
         }
         .action-button:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 8px rgba(59, 130, 246, 0.4);
         }
         .footer {
             background: #f9fafb;
@@ -197,32 +186,32 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1>✅ Request Approved!</h1>
-            <p>Your redemption request has been approved</p>
+            <h1>📋 New Redemption Request</h1>
+            <p>A sales agent has submitted a redemption request for your review</p>
         </div>
         
         <div class="email-body">
             <div class="greeting">
-                Hello {{ requested_by }},
-            </div>
-            
-            <div class="success-badge">
-                🎉 Congratulations! Your request has been approved
+                Hello Approver,
             </div>
             
             <div class="message">
-                Great news! Your redemption request #{{ request_id }} for <strong>{{ distributor_name }}</strong> has been approved and the points have been deducted.
+                A new redemption request has been submitted and requires your review and approval.
             </div>
             
             <div class="info-box">
-                <h3>Approval Details</h3>
+                <h3>Request Details</h3>
                 <div class="info-row">
                     <span class="info-label">Request ID:</span>
                     <span class="info-value">#{{ request_id }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Approved By:</span>
-                    <span class="info-value">{{ approved_by }}</span>
+                    <span class="info-label">Submitted By:</span>
+                    <span class="info-value">{{ sales_agent_name }} (@{{ sales_agent_username }})</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Submitted:</span>
+                    <span class="info-value">{{ date_requested }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Points Deducted From:</span>
@@ -246,7 +235,7 @@
                 </div>
             </div>
             
-            <h3 style="color: #065f46; margin-top: 30px; margin-bottom: 15px;">Approved Items</h3>
+            <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Requested Items</h3>
             <table class="items-table">
                 <thead>
                     <tr>
@@ -271,23 +260,23 @@
             </table>
             
             <div class="total-box">
-                <div class="total-label">Total Points Deducted</div>
+                <div class="total-label">Total Points Required</div>
                 <div class="total-value">{{ total_points }} points</div>
             </div>
             
             {% if remarks %}
             <div class="remarks-box">
-                <strong>Remarks from Approver:</strong>
+                <strong>Remarks:</strong>
                 <p>{{ remarks }}</p>
             </div>
             {% endif %}
             
             <div style="text-align: center; margin-top: 30px;">
-                <a href="http://127.0.0.1:5173/requests" class="action-button">View Request Details</a>
+                <a href="http://127.0.0.1:5173/requests" class="action-button">Review Request</a>
             </div>
             
             <div class="message" style="margin-top: 30px; font-size: 14px;">
-                The requested items will be processed and delivered according to standard procedures. If you have any questions, please contact your supervisor.
+                Please log in to the Points Redemption System to review and approve or reject this request.
             </div>
         </div>
         

@@ -53,6 +53,8 @@ urlpatterns = [
     path('', include('distributers.urls')),
     # Redemption Requests API
     path('api/', include('requests.urls')),
+    # OTP/Password Reset API
+    path('api/otp/', include('otp.urls')),
 ]
 
 # Serve static files in development

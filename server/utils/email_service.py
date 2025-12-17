@@ -147,24 +147,25 @@ def send_request_approved_email(request_obj, distributor, approved_by):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.item.name,
+                'name': item.variant.catalogue_item.item_name,
                 'sku': item.variant.item_code,
                 'quantity': item.quantity,
-                'points_per_unit': item.points_snapshot,
-                'total_points': item.quantity * item.points_snapshot
+                'points_per_unit': item.points_per_item,
+                'total_points': item.total_points
             })
-            total_points += item.quantity * item.points_snapshot
+            total_points += item.total_points
         
         context = {
             'request_id': request_obj.id,
             'distributor_name': distributor.name,
-            'distributor_code': distributor.code,
+            'distributor_location': distributor.location,
             'distributor_region': distributor.region,
             'items': items_list,
             'total_points': total_points,
             'approved_by': approved_by.username,
             'requested_by': request_obj.requested_by.username,
             'points_deducted_from': request_obj.points_deducted_from,
+            'remarks': request_obj.remarks or '',
         }
         
         return send_html_email(
@@ -207,23 +208,25 @@ def send_request_rejected_email(request_obj, distributor, rejected_by):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.item.name,
+                'name': item.variant.catalogue_item.item_name,
                 'sku': item.variant.item_code,
                 'quantity': item.quantity,
-                'points_per_unit': item.points_snapshot,
-                'total_points': item.quantity * item.points_snapshot
+                'points_per_unit': item.points_per_item,
+                'total_points': item.total_points
             })
-            total_points += item.quantity * item.points_snapshot
+            total_points += item.total_points
         
         context = {
             'request_id': request_obj.id,
             'distributor_name': distributor.name,
-            'distributor_code': distributor.code,
+            'distributor_location': distributor.location,
             'distributor_region': distributor.region,
             'items': items_list,
             'total_points': total_points,
             'rejected_by': rejected_by.username,
             'requested_by': request_obj.requested_by.username,
+            'rejection_reason': request_obj.rejection_reason or 'No reason provided',
+            'remarks': request_obj.remarks or '',
         }
         
         return send_html_email(
@@ -272,5 +275,137 @@ def send_account_created_email(username, password, full_name, email, position):
         
     except Exception as e:
         logger.error(f"Error sending account creation email to {email}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False
+
+
+def send_otp_email(email, full_name, username, otp_code):
+    """
+    Send OTP email for password reset
+    
+    Args:
+        email (str): User's email address
+        full_name (str): User's full name
+        username (str): User's username
+        otp_code (str): Generated OTP code
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        logger.debug(f"Preparing OTP email for {username} ({email})")
+        
+        context = {
+            'full_name': full_name,
+            'username': username,
+            'otp_code': otp_code,
+        }
+        
+        return send_html_email(
+            subject=f"Password Reset OTP - Points Redemption System",
+            template_name='emails/forgot_password_otp.html',
+            context=context,
+            recipient_list=[email]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending OTP email to {email}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False
+
+
+def send_password_changed_email(email, full_name, username):
+    """
+    Send confirmation email after password change
+    
+    Args:
+        email (str): User's email address
+        full_name (str): User's full name
+        username (str): User's username
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        logger.debug(f"Preparing password changed confirmation email for {username} ({email})")
+        
+        context = {
+            'full_name': full_name,
+            'username': username,
+        }
+        
+        return send_html_email(
+            subject=f"Password Changed Successfully - Points Redemption System",
+            template_name='emails/password_changed.html',
+            context=context,
+            recipient_list=[email]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending password changed email to {email}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False
+
+
+def send_request_submitted_email(request_obj, distributor, approvers_emails):
+    """
+    Send email notification to approvers when a redemption request is submitted
+    
+    Args:
+        request_obj: RedemptionRequest model instance
+        distributor: Distributor model instance
+        approvers_emails: List of approver email addresses
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        if not approvers_emails:
+            logger.warning(f"No approver emails provided for request #{request_obj.id}")
+            return False
+        
+        logger.debug(f"Preparing submission notification email for request #{request_obj.id}")
+        logger.debug(f"Sending to {len(approvers_emails)} approvers: {', '.join(approvers_emails)}")
+        
+        # Get sales agent profile details
+        sales_agent_profile = request_obj.requested_by.profile
+        
+        # Calculate total items and points
+        items_list = []
+        total_points = 0
+        
+        for item in request_obj.items.all():
+            items_list.append({
+                'name': item.variant.catalogue_item.item_name,
+                'sku': item.variant.item_code,
+                'quantity': item.quantity,
+                'points_per_unit': item.points_per_item,
+                'total_points': item.total_points
+            })
+            total_points += item.total_points
+        
+        context = {
+            'request_id': request_obj.id,
+            'sales_agent_name': sales_agent_profile.full_name,
+            'sales_agent_username': request_obj.requested_by.username,
+            'date_requested': request_obj.date_requested.strftime('%B %d, %Y at %I:%M %p'),
+            'distributor_name': distributor.name,
+            'distributor_location': distributor.location,
+            'distributor_region': distributor.region,
+            'items': items_list,
+            'total_points': total_points,
+            'points_deducted_from': request_obj.points_deducted_from,
+            'remarks': request_obj.remarks or '',
+        }
+        
+        return send_html_email(
+            subject=f"New Redemption Request #{request_obj.id} - {distributor.name}",
+            template_name='emails/request_submitted.html',
+            context=context,
+            recipient_list=approvers_emails
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending submission email for request #{request_obj.id}: {str(e)}")
         logger.exception("Full traceback:")
         return False

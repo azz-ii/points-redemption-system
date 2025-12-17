@@ -11,7 +11,12 @@ from .serializers import (
     CreateRedemptionRequestSerializer,
     RedemptionRequestItemSerializer
 )
-from utils.email_service import send_request_approved_email, send_request_rejected_email
+from utils.email_service import (
+    send_request_approved_email, 
+    send_request_rejected_email,
+    send_request_submitted_email
+)
+from users.models import UserProfile
 
 # Configure logger for request operations
 logger = logging.getLogger('email')
@@ -39,12 +44,32 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         return RedemptionRequestSerializer
 
     def create(self, request, *args, **kwargs):
-        """Create a new redemption request"""
+        """Create a new redemption request and notify approvers"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         # Create the request
         redemption_request = serializer.save()
+        
+        # Get approvers (all users who are NOT Sales Agents)
+        approvers = UserProfile.objects.exclude(position='Sales Agent').exclude(email__isnull=True).exclude(email='')
+        approvers_emails = list(approvers.values_list('email', flat=True))
+        
+        # Send email notification to approvers
+        if approvers_emails:
+            logger.info(f"New request #{redemption_request.id} created, sending notification to {len(approvers_emails)} approvers...")
+            email_sent = send_request_submitted_email(
+                request_obj=redemption_request,
+                distributor=redemption_request.requested_for,
+                approvers_emails=approvers_emails
+            )
+            
+            if email_sent:
+                logger.info(f"✓ Submission notification sent for request #{redemption_request.id}")
+            else:
+                logger.warning(f"⚠ Failed to send submission notification for request #{redemption_request.id}")
+        else:
+            logger.warning(f"⚠ No approvers found to notify for request #{redemption_request.id}")
         
         # Return the created request with full details
         response_serializer = RedemptionRequestSerializer(redemption_request)

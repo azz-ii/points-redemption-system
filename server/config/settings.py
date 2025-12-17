@@ -49,7 +49,9 @@ INSTALLED_APPS = [
     'users',
     'items_catalogue',
     'distributers',
-    'requests'
+    'requests',
+    'otp',
+    'utils'
 ]
 
 MIDDLEWARE = [
