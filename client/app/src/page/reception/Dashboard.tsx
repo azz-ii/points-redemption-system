@@ -346,17 +346,11 @@ function ReceptionDashboard({ onNavigate, onLogout }: DashboardProps) {
                     {item.approvalStatus}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
-                  <div>
-                    <p className="text-gray-500 text-xs">Date</p>
-                    <p className="font-semibold">{item.date}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">Vehicle</p>
-                    <p className="font-semibold">{item.vehicle}</p>
-                  </div>
-                </div>
-                <div className="mb-3">
+
+                <p className="text-base font-semibold mb-1">{item.vehicle}</p>
+                <p className="text-sm text-gray-500 mb-3">Date: {item.date}</p>
+
+                <div className="mb-4">
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       item.driverStatus === "With Driver"
@@ -369,6 +363,29 @@ function ReceptionDashboard({ onNavigate, onLogout }: DashboardProps) {
                     {item.driverStatus}
                   </span>
                 </div>
+
+                {item.approvalStatus === "Pending" && (
+                  <div className="space-y-2">
+                    <button
+                      className="w-full py-1.5 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors"
+                      onClick={() => {
+                        // Handle accept
+                        console.log("Accepted:", item.id);
+                      }}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="w-full py-1.5 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                      onClick={() => {
+                        // Handle reject
+                        console.log("Rejected:", item.id);
+                      }}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

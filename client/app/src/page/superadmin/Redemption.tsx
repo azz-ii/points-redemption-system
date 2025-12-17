@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Sidebar } from "@/components/sidebar";
-import { redemptionRequestsApi, type RedemptionRequestResponse } from "@/lib/api";
+import {
+  redemptionRequestsApi,
+  type RedemptionRequestResponse,
+} from "@/lib/api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -17,7 +20,7 @@ import {
   ChevronRight,
   Eye,
   Edit,
-  Trash
+  Trash,
 } from "lucide-react";
 
 // Using the API response type directly
@@ -59,7 +62,11 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
         setItems(requests);
       } catch (err) {
         console.error("Error fetching redemption requests:", err);
-        setError(err instanceof Error ? err.message : "Failed to load redemption requests");
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load redemption requests"
+        );
       } finally {
         setLoading(false);
       }
@@ -237,12 +244,18 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                 }`}
               >
                 <tr>
-                  <th className="px-5 py-3 text-left font-semibold">Request ID</th>
+                  <th className="px-5 py-3 text-left font-semibold">
+                    Request ID
+                  </th>
                   <th className="px-5 py-3 text-left font-semibold">
                     Requested By
                   </th>
-                  <th className="px-5 py-3 text-left font-semibold">Distributor</th>
-                  <th className="px-5 py-3 text-left font-semibold">Total Points</th>
+                  <th className="px-5 py-3 text-left font-semibold">
+                    Distributor
+                  </th>
+                  <th className="px-5 py-3 text-left font-semibold">
+                    Total Points
+                  </th>
                   <th className="px-5 py-3 text-left font-semibold">Status</th>
                   <th className="px-5 py-3 text-left font-semibold">Date</th>
                   <th className="px-5 py-3 text-right font-semibold">
@@ -259,19 +272,28 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
               >
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={7}
+                      className="px-5 py-8 text-center text-gray-500"
+                    >
                       Loading redemption requests...
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-red-500">
+                    <td
+                      colSpan={7}
+                      className="px-5 py-8 text-center text-red-500"
+                    >
                       {error}
                     </td>
                   </tr>
                 ) : paginatedItems.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-gray-500">
+                    <td
+                      colSpan={7}
+                      className="px-5 py-8 text-center text-gray-500"
+                    >
                       No redemption requests found
                     </td>
                   </tr>
@@ -282,15 +304,25 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                       className="border-t border-gray-200 dark:border-slate-800"
                     >
                       <td className="px-5 py-4 align-middle">#{item.id}</td>
-                      <td className="px-5 py-4 align-middle">{item.requested_by_name}</td>
-                      <td className="px-5 py-4 align-middle">{item.requested_for_name}</td>
-                      <td className="px-5 py-4 align-middle">{item.total_points.toLocaleString()}</td>
                       <td className="px-5 py-4 align-middle">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          item.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                        }`}>
+                        {item.requested_by_name}
+                      </td>
+                      <td className="px-5 py-4 align-middle">
+                        {item.requested_for_name}
+                      </td>
+                      <td className="px-5 py-4 align-middle">
+                        {item.total_points.toLocaleString()}
+                      </td>
+                      <td className="px-5 py-4 align-middle">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            item.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : item.status === "APPROVED"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
+                        >
                           {item.status_display}
                         </span>
                       </td>
@@ -409,16 +441,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                 : "bg-white border-gray-200"
             } transition-colors`}
           >
-            <div
-              className={`px-4 py-2 text-xs font-semibold border-b ${
-                resolvedTheme === "dark"
-                  ? "text-gray-400 border-gray-700"
-                  : "text-gray-600 border-gray-200"
-              }`}
-            >
-              HISTORY
-            </div>
-            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="space-y-3 p-4">
               {loading ? (
                 <div className="px-4 py-8 text-center text-gray-500 text-sm">
                   Loading requests...
@@ -435,30 +458,42 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
                 paginatedItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex justify-between px-4 py-3 text-sm"
+                    className={`p-4 ${
+                      resolvedTheme === "dark" ? "bg-gray-800/50" : "bg-gray-50"
+                    } rounded-lg`}
                   >
-                    <div>
-                      <p className="font-semibold">Request #{item.id}</p>
-                      <p className="text-xs text-gray-400">{item.requested_for_name}</p>
-                      <p className="text-xs mt-1">
-                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                          item.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          item.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                        }`}>
-                          {item.status_display}
-                        </span>
-                      </p>
+                    <p className="text-xs text-gray-400 mb-1">#{item.id}</p>
+                    <p className="font-semibold text-base mb-0.5">
+                      {item.requested_by_name}
+                    </p>
+                    <p className="text-sm text-gray-400 mb-3">
+                      {item.requested_for_name}
+                    </p>
+                    <div className="flex justify-between items-center mb-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          item.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            : item.status === "APPROVED"
+                            ? "bg-green-500 text-white"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}
+                      >
+                        {item.status_display}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(item.date_requested).toLocaleDateString()}
+                      </span>
                     </div>
                     <button
                       onClick={() => setSelectedItem(item)}
-                      className={`text-xs font-semibold underline ${
+                      className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                         resolvedTheme === "dark"
-                          ? "text-yellow-400 hover:text-yellow-300"
-                          : "text-yellow-700 hover:text-yellow-800"
-                      } transition-colors self-center`}
+                          ? "bg-white text-gray-900 hover:bg-gray-200"
+                          : "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
+                      }`}
                     >
-                      View details
+                      View Details
                     </button>
                   </div>
                 ))
@@ -548,49 +583,69 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
               <div>
                 <p className="text-sm text-gray-400 mb-1">Requested By</p>
-                <p className="font-semibold">{selectedItem.requested_by_name}</p>
+                <p className="font-semibold">
+                  {selectedItem.requested_by_name}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Distributor</p>
-                <p className="font-semibold">{selectedItem.requested_for_name}</p>
+                <p className="font-semibold">
+                  {selectedItem.requested_for_name}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Total Points</p>
-                <p className="font-semibold">{selectedItem.total_points.toLocaleString()}</p>
+                <p className="font-semibold">
+                  {selectedItem.total_points.toLocaleString()}
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Points Deducted From</p>
-                <p className="font-semibold">{selectedItem.points_deducted_from_display}</p>
+                <p className="text-sm text-gray-400 mb-1">
+                  Points Deducted From
+                </p>
+                <p className="font-semibold">
+                  {selectedItem.points_deducted_from_display}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Status</p>
                 <p className="font-semibold">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    selectedItem.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                    selectedItem.status === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      selectedItem.status === "PENDING"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                        : selectedItem.status === "APPROVED"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                    }`}
+                  >
                     {selectedItem.status_display}
                   </span>
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Date Requested</p>
-                <p className="font-semibold">{new Date(selectedItem.date_requested).toLocaleString()}</p>
+                <p className="font-semibold">
+                  {new Date(selectedItem.date_requested).toLocaleString()}
+                </p>
               </div>
               {selectedItem.reviewed_by_name && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Reviewed By</p>
-                  <p className="font-semibold">{selectedItem.reviewed_by_name}</p>
+                  <p className="font-semibold">
+                    {selectedItem.reviewed_by_name}
+                  </p>
                 </div>
               )}
               {selectedItem.date_reviewed && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Date Reviewed</p>
-                  <p className="font-semibold">{new Date(selectedItem.date_reviewed).toLocaleString()}</p>
+                  <p className="font-semibold">
+                    {new Date(selectedItem.date_reviewed).toLocaleString()}
+                  </p>
                 </div>
               )}
               {selectedItem.remarks && (
@@ -602,21 +657,35 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
               {selectedItem.rejection_reason && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Rejection Reason</p>
-                  <p className="font-semibold text-red-500">{selectedItem.rejection_reason}</p>
+                  <p className="font-semibold text-red-500">
+                    {selectedItem.rejection_reason}
+                  </p>
                 </div>
               )}
               <div>
-                <p className="text-sm text-gray-400 mb-2">Items ({selectedItem.items.length})</p>
+                <p className="text-sm text-gray-400 mb-2">
+                  Items ({selectedItem.items.length})
+                </p>
                 <div className="space-y-2">
                   {selectedItem.items.map((reqItem, idx) => (
-                    <div key={idx} className={`p-3 rounded border ${
-                      resolvedTheme === "dark" ? "border-gray-700 bg-gray-800" : "border-gray-300 bg-gray-50"
-                    }`}>
-                      <p className="font-semibold text-sm">{reqItem.variant_name}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Code: {reqItem.variant_code} • Qty: {reqItem.quantity} • {reqItem.points_per_item} pts each
+                    <div
+                      key={idx}
+                      className={`p-3 rounded border ${
+                        resolvedTheme === "dark"
+                          ? "border-gray-700 bg-gray-800"
+                          : "border-gray-300 bg-gray-50"
+                      }`}
+                    >
+                      <p className="font-semibold text-sm">
+                        {reqItem.variant_name}
                       </p>
-                      <p className="text-xs font-semibold mt-1">Total: {reqItem.total_points.toLocaleString()} pts</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Code: {reqItem.variant_code} • Qty: {reqItem.quantity} •{" "}
+                        {reqItem.points_per_item} pts each
+                      </p>
+                      <p className="text-xs font-semibold mt-1">
+                        Total: {reqItem.total_points.toLocaleString()} pts
+                      </p>
                     </div>
                   ))}
                 </div>

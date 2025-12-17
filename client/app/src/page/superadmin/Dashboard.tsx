@@ -9,7 +9,6 @@ import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
   Search,
-  ChevronDown,
   Check,
   X,
   Pencil,
@@ -37,6 +36,7 @@ interface DashboardProps {
       | "catalogue"
       | "redemption"
       | "inventory"
+      | "distributors"
   ) => void;
   onLogout?: () => void;
 }
@@ -49,6 +49,10 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [pointAmount, setPointAmount] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null
+  );
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [requests] = useState<RequestItem[]>([
     {
       id: "SA220011",
@@ -305,6 +309,10 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                     </span>
                   </div>
                   <Button
+                    onClick={() => {
+                      setSelectedRequest(request);
+                      setShowDetailsModal(true);
+                    }}
                     className={`w-full py-2 text-xs font-medium rounded-lg ${
                       resolvedTheme === "dark"
                         ? "bg-white text-black hover:bg-gray-200"
@@ -706,6 +714,128 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
                 onClick={() => setIsResetModalOpen(false)}
               >
                 Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Details Modal */}
+      {showDetailsModal && selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowDetailsModal(false)}
+          />
+          <div
+            className={`relative w-full max-w-md rounded-xl border shadow-2xl p-6 space-y-4 ${
+              resolvedTheme === "dark"
+                ? "bg-gray-900 border-gray-700 text-white"
+                : "bg-white border-gray-200 text-gray-900"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Request Details</h2>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className={`p-2 rounded-lg ${
+                  resolvedTheme === "dark"
+                    ? "hover:bg-gray-800"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Details */}
+            <div className="space-y-3 text-sm">
+              <div>
+                <p
+                  className={`text-xs font-medium ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Request ID
+                </p>
+                <p className="font-semibold">{selectedRequest.id}</p>
+              </div>
+
+              <div>
+                <p
+                  className={`text-xs font-medium ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Agent
+                </p>
+                <p className="font-semibold">{selectedRequest.agent}</p>
+              </div>
+
+              <div>
+                <p
+                  className={`text-xs font-medium ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Details
+                </p>
+                <p className="font-semibold">{selectedRequest.details}</p>
+              </div>
+
+              <div>
+                <p
+                  className={`text-xs font-medium ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Quantity
+                </p>
+                <p className="font-semibold">{selectedRequest.quantity}</p>
+              </div>
+
+              <div>
+                <p
+                  className={`text-xs font-medium ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
+                  Status
+                </p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    selectedRequest.status === "Pending"
+                      ? "bg-yellow-400 text-black"
+                      : selectedRequest.status === "Approved"
+                      ? "bg-green-500 text-white"
+                      : "bg-red-500 text-white"
+                  }`}
+                >
+                  {selectedRequest.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons - Vertical Stack */}
+            <div className="flex flex-col gap-2 pt-4">
+              <button
+                className="w-full px-4 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors"
+                onClick={() => {
+                  console.log("Approve request:", selectedRequest.id);
+                  setShowDetailsModal(false);
+                }}
+              >
+                Approve
+              </button>
+              <button
+                className="w-full px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors"
+                onClick={() => {
+                  console.log("Reject request:", selectedRequest.id);
+                  setShowDetailsModal(false);
+                }}
+              >
+                Reject
               </button>
             </div>
           </div>

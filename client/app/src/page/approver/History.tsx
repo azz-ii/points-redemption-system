@@ -12,11 +12,11 @@ interface HistoryItem {
   type: string;
   details: string;
   quantity: number;
-  status: "Pending" | "Approved" | "Rejected";
+  status: "Approved" | "Rejected";
 }
 
 interface HistoryProps {
-  onNavigate?: (page: "dashboard" | "requests" | "history") => void;
+  onNavigate?: (page: "dashboard" | "approver-requests" | "history") => void;
   onLogout?: () => void;
 }
 
@@ -32,7 +32,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
       type: "T-shirt",
       details: "Platinum Polo",
       quantity: 8,
-      status: "Pending",
+      status: "Approved",
     },
     {
       id: "MC0004C",
@@ -67,7 +67,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
       type: "Pants",
       details: "Business Pants",
       quantity: 3,
-      status: "Pending",
+      status: "Rejected",
     },
     {
       id: "SA220019",
@@ -96,13 +96,15 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
   const endIndex = startIndex + pageSize;
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "requests" | "history") => {
-    if (page === "history") {
-      onNavigate?.("approver-history" as any);
-    } else if (page === "requests") {
-      onNavigate?.("approver-requests" as any);
+  const handleNavigate = (
+    page: "dashboard" | "approver-requests" | "history" | "requests"
+  ) => {
+    if (page === "approver-requests" || page === "requests") {
+      onNavigate?.("approver-requests");
+    } else if (page === "history") {
+      onNavigate?.("history");
     } else {
-      onNavigate?.(page as any);
+      onNavigate?.("dashboard");
     }
   };
 
@@ -198,9 +200,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        item.status === "Pending"
-                          ? "bg-yellow-400 text-black"
-                          : item.status === "Approved"
+                        item.status === "Approved"
                           ? "bg-green-500 text-white"
                           : "bg-red-500 text-white"
                       }`}
@@ -373,9 +373,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
                     <td className="px-6 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          item.status === "Pending"
-                            ? "bg-yellow-400 text-black"
-                            : item.status === "Approved"
+                          item.status === "Approved"
                             ? "bg-green-500 text-white"
                             : "bg-red-500 text-white"
                         }`}
@@ -497,11 +495,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
               <div>
                 <p className="text-sm text-gray-400 mb-1">Status</p>
                 <p className="font-semibold">
-                  {selectedItem.status === "Approved"
-                    ? "Active"
-                    : selectedItem.status === "Rejected"
-                    ? "Inactive"
-                    : "Pending"}
+                  {selectedItem.status === "Approved" ? "Active" : "Inactive"}
                 </p>
               </div>
             </div>

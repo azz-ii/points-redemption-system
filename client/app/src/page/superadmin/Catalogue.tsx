@@ -23,7 +23,7 @@ import {
   ChevronRight,
   ChevronLeft,
   ChevronsRight,
-  ChevronsLeft
+  ChevronsLeft,
 } from "lucide-react";
 
 interface CatalogueItem {
@@ -101,19 +101,20 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         "Ideal for casual wear, company events, or as a stylish uniform piece.",
       specifications:
         "Material: 100% Platinum Cotton, Fit: Modern Fit, Color: Ribbed Polo Collar, Sleeves: Short sleeves with ribbed armbands",
-      option_description: "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
+      option_description:
+        "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
       points: "500",
       price: "1200",
       legend: "ASSET",
       image_url: null,
       is_archived: false,
-      date_added: new Date().toISOString().split('T')[0], // Add this
+      date_added: new Date().toISOString().split("T")[0], // Add this
     },
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  
+
   // Pagination state
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState<number | "ALL">(15);
@@ -127,25 +128,25 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const fetchCatalogueItems = async () => {
     try {
       setLoading(true);
-      
+
       // Build query params
       const params = new URLSearchParams();
-      params.append('page', page.toString());
+      params.append("page", page.toString());
       if (rowsPerPage !== "ALL") {
-        params.append('page_size', rowsPerPage.toString());
+        params.append("page_size", rowsPerPage.toString());
       } else {
-        params.append('page_size', '1000'); // Large number for "ALL"
+        params.append("page_size", "1000"); // Large number for "ALL"
       }
       if (searchQuery.trim()) {
-        params.append('search', searchQuery.trim());
+        params.append("search", searchQuery.trim());
       }
-      
+
       const url = `/api/catalogue/?${params.toString()}`;
       console.log("[Catalogue] Fetching catalogue items (GET) -> url=", url);
       const response = await fetch(url, {
-        credentials: 'include',
+        credentials: "include",
       });
-      console.log('[Catalogue] GET response status:', response.status);
+      console.log("[Catalogue] GET response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to fetch catalogue items");
@@ -155,24 +156,26 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       // Handle paginated response format: { count, next, previous, results }
       const variants = data.results || [];
       setTotalCount(data.count || 0);
-      
-      const flattenedItems: CatalogueVariant[] = variants.map((variant: Variant) => ({
-        id: variant.id.toString(),
-        catalogue_item_id: variant.catalogue_item.id,
-        reward: variant.catalogue_item.reward,
-        item_name: variant.catalogue_item.item_name,
-        item_code: variant.item_code,
-        description: variant.catalogue_item.description,
-        purpose: variant.catalogue_item.purpose,
-        specifications: variant.catalogue_item.specifications,
-        option_description: variant.option_description,
-        points: variant.points,
-        price: variant.price,
-        legend: variant.catalogue_item.legend,
-        image_url: variant.image_url,
-        is_archived: variant.catalogue_item.is_archived,
-        date_added: variant.catalogue_item.date_added,
-      }));
+
+      const flattenedItems: CatalogueVariant[] = variants.map(
+        (variant: Variant) => ({
+          id: variant.id.toString(),
+          catalogue_item_id: variant.catalogue_item.id,
+          reward: variant.catalogue_item.reward,
+          item_name: variant.catalogue_item.item_name,
+          item_code: variant.item_code,
+          description: variant.catalogue_item.description,
+          purpose: variant.catalogue_item.purpose,
+          specifications: variant.catalogue_item.specifications,
+          option_description: variant.option_description,
+          points: variant.points,
+          price: variant.price,
+          legend: variant.catalogue_item.legend,
+          image_url: variant.image_url,
+          is_archived: variant.catalogue_item.is_archived,
+          date_added: variant.catalogue_item.date_added,
+        })
+      );
       setItems(flattenedItems);
       setError(null);
     } catch (err) {
@@ -225,7 +228,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
   // Pagination logic using server-side count
   // Note: We're paginating at variant level on server, but displaying grouped items
-  const totalPages = rowsPerPage === "ALL" ? 1 : Math.max(1, Math.ceil(totalCount / (rowsPerPage as number)));
+  const totalPages =
+    rowsPerPage === "ALL"
+      ? 1
+      : Math.max(1, Math.ceil(totalCount / (rowsPerPage as number)));
   const safePage = Math.min(page, totalPages);
   const paginatedGroupedItems = groupedItemsArray;
 
@@ -258,7 +264,15 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
-    variants: [{ item_code: "", option_description: "", points: "", price: "", image_url: "" }],
+    variants: [
+      {
+        item_code: "",
+        option_description: "",
+        points: "",
+        price: "",
+        image_url: "",
+      },
+    ],
   });
 
   const [editItem, setEditItem] = useState({
@@ -268,16 +282,29 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
-    variants: [{ id: null as number | null, item_code: "", option_description: "", points: "", price: "", image_url: "" }],
+    variants: [
+      {
+        id: null as number | null,
+        item_code: "",
+        option_description: "",
+        points: "",
+        price: "",
+        image_url: "",
+      },
+    ],
   });
 
   // Modal state for edit/view/delete
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingCatalogueItemId, setEditingCatalogueItemId] = useState<number | null>(null);
+  const [editingCatalogueItemId, setEditingCatalogueItemId] = useState<
+    number | null
+  >(null);
   const [viewTarget, setViewTarget] = useState<CatalogueVariant | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CatalogueVariant | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CatalogueVariant | null>(
+    null
+  );
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [loadingVariants, setLoadingVariants] = useState(false);
@@ -285,11 +312,14 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const [viewVariants, setViewVariants] = useState<Variant[]>([]);
 
   const [showViewVariantModal, setShowViewVariantModal] = useState(false);
-  const [viewVariantTarget, setViewVariantTarget] = useState<CatalogueVariant | null>(null);
+  const [viewVariantTarget, setViewVariantTarget] =
+    useState<CatalogueVariant | null>(null);
   const [showEditVariantModal, setShowEditVariantModal] = useState(false);
-  const [editVariantTarget, setEditVariantTarget] = useState<CatalogueVariant | null>(null);
+  const [editVariantTarget, setEditVariantTarget] =
+    useState<CatalogueVariant | null>(null);
   const [showDeleteVariantModal, setShowDeleteVariantModal] = useState(false);
-  const [deleteVariantTarget, setDeleteVariantTarget] = useState<CatalogueVariant | null>(null);
+  const [deleteVariantTarget, setDeleteVariantTarget] =
+    useState<CatalogueVariant | null>(null);
   const [editVariantError, setEditVariantError] = useState<string | null>(null);
   const [updatingVariant, setUpdatingVariant] = useState(false);
   const [editVariantData, setEditVariantData] = useState({
@@ -342,7 +372,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         purpose: newItem.purpose,
         specifications: newItem.specifications,
         legend: newItem.legend,
-        variants: newItem.variants.map(v => ({
+        variants: newItem.variants.map((v) => ({
           item_code: v.item_code,
           option_description: v.option_description || null,
           points: v.points,
@@ -350,16 +380,16 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
           image_url: v.image_url || null,
         })),
       };
-      console.log('[Catalogue] Creating item (POST) payload:', payload);
+      console.log("[Catalogue] Creating item (POST) payload:", payload);
       const response = await fetch("/api/catalogue/", {
         method: "POST",
-        credentials: 'include',
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
-      console.log('[Catalogue] POST response status:', response.status);
+      console.log("[Catalogue] POST response status:", response.status);
 
       if (!response.ok) {
         const data = await response.json();
@@ -379,7 +409,15 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         purpose: "",
         specifications: "",
         legend: "GIVEAWAY",
-        variants: [{ item_code: "", option_description: "", points: "", price: "", image_url: "" }],
+        variants: [
+          {
+            item_code: "",
+            option_description: "",
+            points: "",
+            price: "",
+            image_url: "",
+          },
+        ],
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -406,9 +444,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     try {
       // Fetch all variants for this catalogue item (use large page_size to get all)
       const response = await fetch(`/api/catalogue/?page_size=1000`, {
-        credentials: 'include',
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch catalogue items");
       }
@@ -489,7 +527,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         purpose: editItem.purpose,
         specifications: editItem.specifications,
         legend: editItem.legend,
-        variants: editItem.variants.map(v => ({
+        variants: editItem.variants.map((v) => ({
           id: v.id,
           item_code: v.item_code,
           option_description: v.option_description || null,
@@ -498,19 +536,24 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
           image_url: v.image_url || null,
         })),
       };
-      console.log('[Catalogue] Updating item (PUT) id=', editingCatalogueItemId, ' payload:', updatePayload);
+      console.log(
+        "[Catalogue] Updating item (PUT) id=",
+        editingCatalogueItemId,
+        " payload:",
+        updatePayload
+      );
       const response = await fetch(
         `/api/catalogue/item/${editingCatalogueItemId}/`,
         {
           method: "PUT",
-          credentials: 'include',
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(updatePayload),
         }
       );
-      console.log('[Catalogue] PUT response status:', response.status);
+      console.log("[Catalogue] PUT response status:", response.status);
 
       if (!response.ok) {
         const data = await response.json();
@@ -545,9 +588,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     try {
       // Fetch all variants for this catalogue item (use large page_size to get all)
       const response = await fetch(`/api/catalogue/?page_size=1000`, {
-        credentials: 'include',
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch catalogue items");
       }
@@ -575,7 +618,17 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const addEditVariant = () => {
     setEditItem({
       ...editItem,
-      variants: [...editItem.variants, { id: null, item_code: "", option_description: "", points: "", price: "", image_url: "" }],
+      variants: [
+        ...editItem.variants,
+        {
+          id: null,
+          item_code: "",
+          option_description: "",
+          points: "",
+          price: "",
+          image_url: "",
+        },
+      ],
     });
   };
 
@@ -599,15 +652,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
     if (!deleteTarget) return;
 
     try {
-      console.log('[Catalogue] Deleting item (DELETE) id=', deleteTarget.id);
-      const response = await fetch(
-        `/api/catalogue/${deleteTarget.id}/`,
-        {
-          method: "DELETE",
-          credentials: 'include',
-        }
-      );
-      console.log('[Catalogue] DELETE response status:', response.status);
+      console.log("[Catalogue] Deleting item (DELETE) id=", deleteTarget.id);
+      const response = await fetch(`/api/catalogue/${deleteTarget.id}/`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      console.log("[Catalogue] DELETE response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to delete item");
@@ -665,7 +715,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       setUpdatingVariant(true);
       const response = await fetch(`/api/catalogue/${editVariantTarget.id}/`, {
         method: "PUT",
-        credentials: 'include',
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -686,7 +736,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       fetchCatalogueItems();
     } catch (err) {
       console.error("Error updating variant:", err);
-      setEditVariantError(err instanceof Error ? err.message : "Failed to update variant");
+      setEditVariantError(
+        err instanceof Error ? err.message : "Failed to update variant"
+      );
     } finally {
       setUpdatingVariant(false);
     }
@@ -695,10 +747,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const confirmDeleteVariant = async () => {
     if (!deleteVariantTarget) return;
     try {
-      const response = await fetch(`/api/catalogue/${deleteVariantTarget.id}/`, {
-        method: "DELETE",
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `/api/catalogue/${deleteVariantTarget.id}/`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
       if (!response.ok) {
         throw new Error("Failed to delete variant");
       }
@@ -715,7 +770,16 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   const addVariant = () => {
     setNewItem({
       ...newItem,
-      variants: [...newItem.variants, { item_code: "", option_description: "", points: "", price: "", image_url: "" }],
+      variants: [
+        ...newItem.variants,
+        {
+          item_code: "",
+          option_description: "",
+          points: "",
+          price: "",
+          image_url: "",
+        },
+      ],
     });
   };
 
@@ -902,250 +966,298 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
           >
             <div className="overflow-auto max-h-[calc(100vh-295px)]">
               <table className="w-full">
-              <thead
-                className={`${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-50 text-gray-700"
-                }`}
-              >
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Item Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Category
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Reward
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Description
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Date Added
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Variants
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className={`divide-y ${
-                  resolvedTheme === "dark"
-                    ? "divide-gray-700"
-                    : "divide-gray-200"
-                }`}
-              >
-                {loading ? (
+                <thead
+                  className={`${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 text-gray-300"
+                      : "bg-gray-50 text-gray-700"
+                  }`}
+                >
                   <tr>
-                    <td colSpan={8} className="px-6 py-32 text-center">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                        <p className="text-gray-500">Loading catalogue items...</p>
-                      </div>
-                    </td>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Item Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Category
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Reward
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Description
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Date Added
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      Variants
+                    </th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold">
+                      Actions
+                    </th>
                   </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-32 text-center">
-                      <div className="flex flex-col items-center justify-center gap-4">
-                        <p className="text-red-500">{error}</p>
-                        <button
-                          onClick={fetchCatalogueItems}
-                          className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-                        >
-                          Retry
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ) : paginatedGroupedItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-32 text-center">
-                      <p className="text-gray-500">
-                        {searchQuery
-                          ? "No items match your search"
-                          : "No catalogue items found"}
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedGroupedItems.map((group) => {
-                    const isExpanded = expandedRows.has(group.catalogueItem.id);
-                    const firstVariant = group.variants[0];
-                    
-                    return (
-                      <>
-                        {/* Main Row */}
-                        <tr
-                          key={`main-${group.catalogueItem.id}`}
-                          className={`hover:${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800"
-                              : "bg-gray-50"
-                          } transition-colors`}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => toggleRow(group.catalogueItem.id)}
-                                className="hover:opacity-70 transition-opacity"
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </button>
-                              <span className="text-sm font-medium">
-                                {group.catalogueItem.item_name}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
-                                group.catalogueItem.legend
-                              )}`}
-                            >
-                              {group.catalogueItem.legend}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {group.catalogueItem.reward || "-"}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {group.catalogueItem.description.length > 50
-                              ? group.catalogueItem.description.substring(0, 50) + "..."
-                              : group.catalogueItem.description}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {new Date(group.catalogueItem.date_added).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                group.catalogueItem.is_archived
-                                  ? "bg-red-500 text-white"
-                                  : "bg-green-500 text-white"
-                              }`}
-                            >
-                              {group.catalogueItem.is_archived ? "Archived" : "Active"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {group.variants.length} variant{group.variants.length !== 1 ? 's' : ''}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex justify-end gap-2">
-                              <button
-                                onClick={() => handleViewClick(firstVariant)}
-                                className="px-4 py-2 rounded flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
-                                title="View"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-
-                              <button
-                                onClick={() => handleEditClick(firstVariant)}
-                                className="px-4 py-2 rounded flex items-center bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-colors"
-                                title="Edit"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteClick(firstVariant)}
-                                className="px-4 py-2 rounded flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-
-                        {/* Expanded Variant Rows */}
-                        {isExpanded && group.variants.map((variant, index) => (
-                          <tr
-                            key={`variant-${variant.id}`}
-                            className={`${
-                              resolvedTheme === "dark"
-                                ? "bg-gray-800/50"
-                                : "bg-gray-50/50"
-                            }`}
+                </thead>
+                <tbody
+                  className={`divide-y ${
+                    resolvedTheme === "dark"
+                      ? "divide-gray-700"
+                      : "divide-gray-200"
+                  }`}
+                >
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-32 text-center">
+                        <div className="flex flex-col items-center justify-center gap-4">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                          <p className="text-gray-500">
+                            Loading catalogue items...
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-32 text-center">
+                        <div className="flex flex-col items-center justify-center gap-4">
+                          <p className="text-red-500">{error}</p>
+                          <button
+                            onClick={fetchCatalogueItems}
+                            className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
                           >
-                            <td className="px-6 py-3" colSpan={8}>
-                              <div className="pl-8 grid grid-cols-5 gap-4 text-sm">
-                                <div>
-                                  <span className="text-gray-500 text-xs">Item Code:</span>
-                                  <p className="font-mono font-medium">{variant.item_code}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 text-xs">Variant:</span>
-                                  <p className="font-medium">{variant.option_description || "-"}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 text-xs">Points:</span>
-                                  <p className="font-medium">{variant.points}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 text-xs">Price:</span>
-                                  <p className="font-medium">{variant.price}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleViewVariantClick(variant)}
-                                    className="px-4 py-2 rounded flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
-                                    title="View Variant"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleEditVariantClick(variant)}
-                                    className={`px-4 py-2 rounded flex items-center ${resolvedTheme === "dark" ? "bg-gray-600 hover:bg-gray-500 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-900"} font-semibold transition-colors`}
-                                    title="Edit Variant"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteVariantClick(variant)}
-                                    className="px-4 py-2 rounded flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
-                                    title="Delete Variant"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
-                                </div>
+                            Retry
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : paginatedGroupedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-32 text-center">
+                        <p className="text-gray-500">
+                          {searchQuery
+                            ? "No items match your search"
+                            : "No catalogue items found"}
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedGroupedItems.map((group) => {
+                      const isExpanded = expandedRows.has(
+                        group.catalogueItem.id
+                      );
+                      const firstVariant = group.variants[0];
+
+                      return (
+                        <>
+                          {/* Main Row */}
+                          <tr
+                            key={`main-${group.catalogueItem.id}`}
+                            className={`hover:${
+                              resolvedTheme === "dark"
+                                ? "bg-gray-800"
+                                : "bg-gray-50"
+                            } transition-colors`}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    toggleRow(group.catalogueItem.id)
+                                  }
+                                  className="hover:opacity-70 transition-opacity"
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </button>
+                                <span className="text-sm font-medium">
+                                  {group.catalogueItem.item_name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
+                                  group.catalogueItem.legend
+                                )}`}
+                              >
+                                {group.catalogueItem.legend}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {group.catalogueItem.reward || "-"}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {group.catalogueItem.description.length > 50
+                                ? group.catalogueItem.description.substring(
+                                    0,
+                                    50
+                                  ) + "..."
+                                : group.catalogueItem.description}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {new Date(
+                                group.catalogueItem.date_added
+                              ).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  group.catalogueItem.is_archived
+                                    ? "bg-red-500 text-white"
+                                    : "bg-green-500 text-white"
+                                }`}
+                              >
+                                {group.catalogueItem.is_archived
+                                  ? "Archived"
+                                  : "Active"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              {group.variants.length} variant
+                              {group.variants.length !== 1 ? "s" : ""}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => handleViewClick(firstVariant)}
+                                  className="px-4 py-2 rounded flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
+                                  title="View"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleEditClick(firstVariant)}
+                                  className="px-4 py-2 rounded flex items-center bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-colors"
+                                  title="Edit"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+
+                                <button
+                                  onClick={() =>
+                                    handleDeleteClick(firstVariant)
+                                  }
+                                  className="px-4 py-2 rounded flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
                               </div>
                             </td>
                           </tr>
-                        ))}
-                      </>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+
+                          {/* Expanded Variant Rows */}
+                          {isExpanded &&
+                            group.variants.map((variant, index) => (
+                              <tr
+                                key={`variant-${variant.id}`}
+                                className={`${
+                                  resolvedTheme === "dark"
+                                    ? "bg-gray-800/50"
+                                    : "bg-gray-50/50"
+                                }`}
+                              >
+                                <td className="px-6 py-3" colSpan={8}>
+                                  <div className="pl-8 grid grid-cols-5 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-gray-500 text-xs">
+                                        Item Code:
+                                      </span>
+                                      <p className="font-mono font-medium">
+                                        {variant.item_code}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 text-xs">
+                                        Variant:
+                                      </span>
+                                      <p className="font-medium">
+                                        {variant.option_description || "-"}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 text-xs">
+                                        Points:
+                                      </span>
+                                      <p className="font-medium">
+                                        {variant.points}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 text-xs">
+                                        Price:
+                                      </span>
+                                      <p className="font-medium">
+                                        {variant.price}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() =>
+                                          handleViewVariantClick(variant)
+                                        }
+                                        className="px-4 py-2 rounded flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
+                                        title="View Variant"
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleEditVariantClick(variant)
+                                        }
+                                        className={`px-4 py-2 rounded flex items-center ${
+                                          resolvedTheme === "dark"
+                                            ? "bg-gray-600 hover:bg-gray-500 text-white"
+                                            : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                                        } font-semibold transition-colors`}
+                                        title="Edit Variant"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteVariantClick(variant)
+                                        }
+                                        className="px-4 py-2 rounded flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+                                        title="Delete Variant"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                        </>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-            
+
             {/* Pagination Controls */}
-            <div className={`flex items-center justify-between p-4 border-t ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}>
+            <div
+              className={`flex items-center justify-between p-4 border-t ${
+                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
               {/* Left: Rows per page */}
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Rows per page:</span>
                 <select
                   value={rowsPerPage}
                   onChange={(e) => {
-                    const value = e.target.value === "ALL" ? "ALL" : parseInt(e.target.value);
+                    const value =
+                      e.target.value === "ALL"
+                        ? "ALL"
+                        : parseInt(e.target.value);
                     setRowsPerPage(value);
                     setPage(1);
                   }}
@@ -1306,175 +1418,211 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   </div>
                 ) : (
                   paginatedGroupedItems.map((group) => {
-                  const isExpanded = expandedRows.has(group.catalogueItem.id);
-                  const firstVariant = group.variants[0];
-                  
-                  return (
-                    <div
-                      key={`mobile-${group.catalogueItem.id}`}
-                      className={`p-4 rounded-lg border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-700"
-                          : "bg-white border-gray-200"
-                      } transition-colors`}
-                    >
-                      {/* Main Item Info */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1 flex items-start gap-2">
-                          <button
-                            onClick={() => toggleRow(group.catalogueItem.id)}
-                            className="mt-0.5 hover:opacity-70 transition-opacity"
+                    const isExpanded = expandedRows.has(group.catalogueItem.id);
+                    const firstVariant = group.variants[0];
+
+                    return (
+                      <div
+                        key={`mobile-${group.catalogueItem.id}`}
+                        className={`p-4 rounded-lg border ${
+                          resolvedTheme === "dark"
+                            ? "bg-gray-800 border-gray-700"
+                            : "bg-white border-gray-200"
+                        } transition-colors`}
+                      >
+                        {/* Main Item Info */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1 flex items-start gap-2">
+                            <button
+                              onClick={() => toggleRow(group.catalogueItem.id)}
+                              className="mt-0.5 hover:opacity-70 transition-opacity"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </button>
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {group.catalogueItem.item_name}
+                              </p>
+                              <p
+                                className={`text-xs ${
+                                  resolvedTheme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                {group.variants.length} variant
+                                {group.variants.length !== 1 ? "s" : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${getLegendColor(
+                              group.catalogueItem.legend
+                            )}`}
                           >
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                          </button>
+                            {group.catalogueItem.legend}
+                          </span>
+                        </div>
+                        {/* New Info Grid */}
+                        <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                           <div>
-                            <p className="font-semibold text-sm">
-                              {group.catalogueItem.item_name}
+                            <span className="text-gray-500">Reward:</span>
+                            <p className="font-medium">
+                              {group.catalogueItem.reward || "-"}
                             </p>
-                            <p
-                              className={`text-xs ${
-                                resolvedTheme === "dark"
-                                  ? "text-gray-400"
-                                  : "text-gray-600"
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Date Added:</span>
+                            <p className="font-medium">
+                              {new Date(
+                                group.catalogueItem.date_added
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Status:</span>
+                            <span
+                              className={`px-1 py-0.5 rounded-full text-xs font-semibold ${
+                                group.catalogueItem.is_archived
+                                  ? "bg-red-500 text-white"
+                                  : "bg-green-500 text-white"
                               }`}
                             >
-                              {group.variants.length} variant{group.variants.length !== 1 ? 's' : ''}
+                              {group.catalogueItem.is_archived
+                                ? "Archived"
+                                : "Active"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Description:</span>
+                            <p className="font-medium">
+                              {group.catalogueItem.description.length > 30
+                                ? group.catalogueItem.description.substring(
+                                    0,
+                                    30
+                                  ) + "..."
+                                : group.catalogueItem.description}
                             </p>
                           </div>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${getLegendColor(
-                            group.catalogueItem.legend
-                          )}`}
-                        >
-                          {group.catalogueItem.legend}
-                        </span>
-                      </div>
-                      {/* New Info Grid */}
-                      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                        <div>
-                          <span className="text-gray-500">Reward:</span>
-                          <p className="font-medium">{group.catalogueItem.reward || "-"}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Date Added:</span>
-                          <p className="font-medium">{new Date(group.catalogueItem.date_added).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Status:</span>
-                          <span
-                            className={`px-1 py-0.5 rounded-full text-xs font-semibold ${
-                              group.catalogueItem.is_archived
-                                ? "bg-red-500 text-white"
-                                : "bg-green-500 text-white"
-                            }`}
-                          >
-                            {group.catalogueItem.is_archived ? "Archived" : "Active"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Description:</span>
-                          <p className="font-medium">
-                            {group.catalogueItem.description.length > 30
-                              ? group.catalogueItem.description.substring(0, 30) + "..."
-                              : group.catalogueItem.description}
-                          </p>
-                        </div>
-                      </div>
-                      {isExpanded && (
-                        <div className="mb-3 space-y-2 pl-6">
-                          {group.variants.map((variant, index) => (
-                            <div
-                              key={`mobile-variant-${variant.id}`}
-                              className={`p-3 rounded border ${
-                                resolvedTheme === "dark"
-                                  ? "bg-gray-700/50 border-gray-600"
-                                  : "bg-gray-50 border-gray-200"
-                              }`}
-                            >
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                  <span className="text-gray-500">Code:</span>
-                                  <p className="font-mono font-medium">{variant.item_code}</p>
+                        {isExpanded && (
+                          <div className="mb-3 space-y-2 pl-6 max-h-[400px] overflow-y-auto">
+                            {group.variants.map((variant, index) => (
+                              <div
+                                key={`mobile-variant-${variant.id}`}
+                                className={`p-3 rounded border ${
+                                  resolvedTheme === "dark"
+                                    ? "bg-gray-700/50 border-gray-600"
+                                    : "bg-gray-50 border-gray-200"
+                                }`}
+                              >
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <div>
+                                    <span className="text-gray-500">Code:</span>
+                                    <p className="font-mono font-medium">
+                                      {variant.item_code}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">
+                                      Variant:
+                                    </span>
+                                    <p className="font-medium">
+                                      {variant.option_description || "-"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">
+                                      Points:
+                                    </span>
+                                    <p className="font-medium">
+                                      {variant.points}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">
+                                      Price:
+                                    </span>
+                                    <p className="font-medium">
+                                      {variant.price}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">Variant:</span>
-                                  <p className="font-medium">{variant.option_description || "-"}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">Points:</span>
-                                  <p className="font-medium">{variant.points}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">Price:</span>
-                                  <p className="font-medium">{variant.price}</p>
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    onClick={() =>
+                                      handleViewVariantClick(variant)
+                                    }
+                                    className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white transition-colors font-semibold text-sm"
+                                    title="View"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleEditVariantClick(variant)
+                                    }
+                                    className={`flex-1 px-3 py-2 rounded flex items-center justify-center text-sm ${
+                                      resolvedTheme === "dark"
+                                        ? "bg-gray-600 hover:bg-gray-500 text-white"
+                                        : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                                    } transition-colors font-semibold`}
+                                    title="Edit"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteVariantClick(variant)
+                                    }
+                                    className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold text-sm"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
                                 </div>
                               </div>
-                              <div className="flex gap-2 mt-2">
-                                <button
-                                  onClick={() => handleViewVariantClick(variant)}
-                                  className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white transition-colors font-semibold text-sm"
-                                  title="View"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleEditVariantClick(variant)}
-                                  className={`flex-1 px-3 py-2 rounded flex items-center justify-center text-sm ${resolvedTheme === "dark" ? "bg-gray-600 hover:bg-gray-500 text-white" : "bg-gray-200 hover:bg-gray-300 text-gray-900"} transition-colors font-semibold`}
-                                  title="Edit"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteVariantClick(variant)}
-                                  className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold text-sm"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                            ))}
+                          </div>
+                        )}
 
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleViewClick(firstVariant)}
-                          className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white transition-colors font-semibold text-sm"
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleEditClick(firstVariant)}
-                          className={`flex-1 px-3 py-2 rounded flex items-center justify-center ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-700 hover:bg-gray-600 text-white"
-                              : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                          } transition-colors font-semibold text-sm`}
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(firstVariant)}
-                          className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold text-sm"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleViewClick(firstVariant)}
+                            className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white transition-colors font-semibold text-sm"
+                            title="View"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEditClick(firstVariant)}
+                            className={`flex-1 px-3 py-2 rounded flex items-center justify-center ${
+                              resolvedTheme === "dark"
+                                ? "bg-gray-700 hover:bg-gray-600 text-white"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                            } transition-colors font-semibold text-sm`}
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(firstVariant)}
+                            className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold text-sm"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
               </div>
-              
+
               {/* Mobile Pagination */}
               {paginatedGroupedItems.length > 0 && (
                 <div className={`mt-4 space-y-3 pb-2`}>
@@ -1484,7 +1632,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     <select
                       value={rowsPerPage}
                       onChange={(e) => {
-                        const value = e.target.value === "ALL" ? "ALL" : parseInt(e.target.value);
+                        const value =
+                          e.target.value === "ALL"
+                            ? "ALL"
+                            : parseInt(e.target.value);
                         setRowsPerPage(value);
                         setPage(1);
                       }}
@@ -1529,8 +1680,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       Page {safePage} of {totalPages}
                     </span>
                     <button
-                      onClick={() => setPage(Math.min(totalPages, safePage + 1))}
-                      disabled={safePage === totalPages || rowsPerPage === "ALL"}
+                      onClick={() =>
+                        setPage(Math.min(totalPages, safePage + 1))
+                      }
+                      disabled={
+                        safePage === totalPages || rowsPerPage === "ALL"
+                      }
                       className={`p-1.5 rounded transition-colors ${
                         resolvedTheme === "dark"
                           ? "hover:bg-gray-700 disabled:opacity-30"
@@ -1541,7 +1696,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     </button>
                     <button
                       onClick={() => setPage(totalPages)}
-                      disabled={safePage === totalPages || rowsPerPage === "ALL"}
+                      disabled={
+                        safePage === totalPages || rowsPerPage === "ALL"
+                      }
                       className={`p-1.5 rounded transition-colors ${
                         resolvedTheme === "dark"
                           ? "hover:bg-gray-700 disabled:opacity-30"
@@ -1758,7 +1915,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 {newItem.variants.map((variant, index) => (
                   <div key={index} className="border rounded p-4 space-y-4">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-md font-medium">Variant {index + 1}</h4>
+                      <h4 className="text-md font-medium">
+                        Variant {index + 1}
+                      </h4>
                       {newItem.variants.length > 1 && (
                         <button
                           type="button"
@@ -1779,7 +1938,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                         <input
                           type="text"
                           value={variant.item_code}
-                          onChange={(e) => updateVariant(index, 'item_code', e.target.value)}
+                          onChange={(e) =>
+                            updateVariant(index, "item_code", e.target.value)
+                          }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
@@ -1797,7 +1958,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                         <input
                           type="text"
                           value={variant.option_description}
-                          onChange={(e) => updateVariant(index, 'option_description', e.target.value)}
+                          onChange={(e) =>
+                            updateVariant(
+                              index,
+                              "option_description",
+                              e.target.value
+                            )
+                          }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
@@ -1815,7 +1982,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                         <input
                           type="text"
                           value={variant.points}
-                          onChange={(e) => updateVariant(index, 'points', e.target.value)}
+                          onChange={(e) =>
+                            updateVariant(index, "points", e.target.value)
+                          }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
@@ -1833,7 +2002,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                         <input
                           type="text"
                           value={variant.price}
-                          onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                          onChange={(e) =>
+                            updateVariant(index, "price", e.target.value)
+                          }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
@@ -1851,7 +2022,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                         <input
                           type="url"
                           value={variant.image_url}
-                          onChange={(e) => updateVariant(index, 'image_url', e.target.value)}
+                          onChange={(e) =>
+                            updateVariant(index, "image_url", e.target.value)
+                          }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
@@ -1970,7 +2143,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                         type="text"
                         value={editItem.item_name}
                         onChange={(e) =>
-                          setEditItem({ ...editItem, item_name: e.target.value })
+                          setEditItem({
+                            ...editItem,
+                            item_name: e.target.value,
+                          })
                         }
                         className={`w-full px-3 py-2 rounded border ${
                           resolvedTheme === "dark"
@@ -1989,7 +2165,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       <textarea
                         value={editItem.description}
                         onChange={(e) =>
-                          setEditItem({ ...editItem, description: e.target.value })
+                          setEditItem({
+                            ...editItem,
+                            description: e.target.value,
+                          })
                         }
                         className={`w-full px-3 py-2 rounded border ${
                           resolvedTheme === "dark"
@@ -2029,7 +2208,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       <textarea
                         value={editItem.specifications}
                         onChange={(e) =>
-                          setEditItem({ ...editItem, specifications: e.target.value })
+                          setEditItem({
+                            ...editItem,
+                            specifications: e.target.value,
+                          })
                         }
                         className={`w-full px-3 py-2 rounded border ${
                           resolvedTheme === "dark"
@@ -2089,7 +2271,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     {editItem.variants.map((variant, index) => (
                       <div key={index} className="border rounded p-4 space-y-4">
                         <div className="flex justify-between items-center">
-                          <h4 className="text-md font-medium">Variant {index + 1}</h4>
+                          <h4 className="text-md font-medium">
+                            Variant {index + 1}
+                          </h4>
                           {editItem.variants.length > 1 && (
                             <button
                               type="button"
@@ -2110,7 +2294,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                             <input
                               type="text"
                               value={variant.item_code}
-                              onChange={(e) => updateEditVariant(index, 'item_code', e.target.value)}
+                              onChange={(e) =>
+                                updateEditVariant(
+                                  index,
+                                  "item_code",
+                                  e.target.value
+                                )
+                              }
                               className={`w-full px-3 py-2 rounded border ${
                                 resolvedTheme === "dark"
                                   ? "bg-gray-800 border-gray-600 text-white"
@@ -2128,7 +2318,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                             <input
                               type="text"
                               value={variant.option_description}
-                              onChange={(e) => updateEditVariant(index, 'option_description', e.target.value)}
+                              onChange={(e) =>
+                                updateEditVariant(
+                                  index,
+                                  "option_description",
+                                  e.target.value
+                                )
+                              }
                               className={`w-full px-3 py-2 rounded border ${
                                 resolvedTheme === "dark"
                                   ? "bg-gray-800 border-gray-600 text-white"
@@ -2146,7 +2342,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                             <input
                               type="text"
                               value={variant.points}
-                              onChange={(e) => updateEditVariant(index, 'points', e.target.value)}
+                              onChange={(e) =>
+                                updateEditVariant(
+                                  index,
+                                  "points",
+                                  e.target.value
+                                )
+                              }
                               className={`w-full px-3 py-2 rounded border ${
                                 resolvedTheme === "dark"
                                   ? "bg-gray-800 border-gray-600 text-white"
@@ -2164,7 +2366,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                             <input
                               type="text"
                               value={variant.price}
-                              onChange={(e) => updateEditVariant(index, 'price', e.target.value)}
+                              onChange={(e) =>
+                                updateEditVariant(
+                                  index,
+                                  "price",
+                                  e.target.value
+                                )
+                              }
                               className={`w-full px-3 py-2 rounded border ${
                                 resolvedTheme === "dark"
                                   ? "bg-gray-800 border-gray-600 text-white"
@@ -2182,7 +2390,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                             <input
                               type="url"
                               value={variant.image_url}
-                              onChange={(e) => updateEditVariant(index, 'image_url', e.target.value)}
+                              onChange={(e) =>
+                                updateEditVariant(
+                                  index,
+                                  "image_url",
+                                  e.target.value
+                                )
+                              }
                               className={`w-full px-3 py-2 rounded border ${
                                 resolvedTheme === "dark"
                                   ? "bg-gray-800 border-gray-600 text-white"
@@ -2269,8 +2483,12 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* ID */}
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Catalogue Item ID</p>
-                        <p className="font-semibold">{viewVariants[0].catalogue_item.id}</p>
+                        <p className="text-xs text-gray-500 mb-1">
+                          Catalogue Item ID
+                        </p>
+                        <p className="font-semibold">
+                          {viewVariants[0].catalogue_item.id}
+                        </p>
                       </div>
 
                       {/* Reward */}
@@ -2288,7 +2506,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                       {/* Item Name */}
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Item Name</p>
-                        <p className="font-semibold">{viewVariants[0].catalogue_item.item_name}</p>
+                        <p className="font-semibold">
+                          {viewVariants[0].catalogue_item.item_name}
+                        </p>
                       </div>
 
                       {/* Legend */}
@@ -2307,7 +2527,13 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     {/* Description */}
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Description</p>
-                      <p className={`leading-relaxed ${resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                      <p
+                        className={`leading-relaxed ${
+                          resolvedTheme === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-700"
+                        }`}
+                      >
                         {viewVariants[0].catalogue_item.description}
                       </p>
                     </div>
@@ -2315,15 +2541,29 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                     {/* Purpose */}
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Purpose</p>
-                      <p className={`leading-relaxed ${resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                      <p
+                        className={`leading-relaxed ${
+                          resolvedTheme === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-700"
+                        }`}
+                      >
                         {viewVariants[0].catalogue_item.purpose}
                       </p>
                     </div>
 
                     {/* Specifications */}
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Specifications</p>
-                      <p className={`leading-relaxed ${resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className="text-xs text-gray-500 mb-1">
+                        Specifications
+                      </p>
+                      <p
+                        className={`leading-relaxed ${
+                          resolvedTheme === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-700"
+                        }`}
+                      >
                         {viewVariants[0].catalogue_item.specifications}
                       </p>
                     </div>
@@ -2332,16 +2572,27 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                   {/* Variants */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium">Variants ({viewVariants.length})</h3>
+                      <h3 className="text-lg font-medium">
+                        Variants ({viewVariants.length})
+                      </h3>
                     </div>
 
                     {viewVariants.map((variant, index) => (
-                      <div key={variant.id} className={`border rounded p-4 space-y-4 ${
-                        resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-                      }`}>
+                      <div
+                        key={variant.id}
+                        className={`border rounded p-4 space-y-4 ${
+                          resolvedTheme === "dark"
+                            ? "border-gray-700"
+                            : "border-gray-200"
+                        }`}
+                      >
                         <div className="flex justify-between items-center">
-                          <h4 className="text-md font-medium">Variant {index + 1}</h4>
-                          <span className="text-xs text-gray-500">ID: {variant.id}</span>
+                          <h4 className="text-md font-medium">
+                            Variant {index + 1}
+                          </h4>
+                          <span className="text-xs text-gray-500">
+                            ID: {variant.id}
+                          </span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2375,21 +2626,19 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
                           {/* Price */}
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">
-                              Price
-                            </p>
+                            <p className="text-xs text-gray-500 mb-1">Price</p>
                             <p className="font-semibold">{variant.price}</p>
                           </div>
 
                           {/* Image */}
                           <div className="md:col-span-2">
-                            <p className="text-xs text-gray-500 mb-1">
-                              Image
-                            </p>
+                            <p className="text-xs text-gray-500 mb-1">Image</p>
                             <div className="bg-gray-300 aspect-video overflow-hidden rounded">
                               <Image
                                 src={variant.image_url || ""}
-                                alt={`${variant.item_code} - ${variant.option_description || 'Variant'}`}
+                                alt={`${variant.item_code} - ${
+                                  variant.option_description || "Variant"
+                                }`}
                                 fallback="/images/tshirt.png"
                                 className="w-full h-full object-cover"
                               />
@@ -2519,13 +2768,19 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
                 {/* Item Code */}
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Item Code</p>
-                  <p className="font-mono font-semibold">{viewVariantTarget.item_code}</p>
+                  <p className="font-mono font-semibold">
+                    {viewVariantTarget.item_code}
+                  </p>
                 </div>
 
                 {/* Option Description */}
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Variant Description</p>
-                  <p className="font-semibold">{viewVariantTarget.option_description || "-"}</p>
+                  <p className="text-xs text-gray-500 mb-1">
+                    Variant Description
+                  </p>
+                  <p className="font-semibold">
+                    {viewVariantTarget.option_description || "-"}
+                  </p>
                 </div>
 
                 {/* Points */}
@@ -2619,11 +2874,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Item Code */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Item Code *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Item Code *
+                  </label>
                   <input
                     type="text"
                     value={editVariantData.item_code}
-                    onChange={(e) => setEditVariantData({ ...editVariantData, item_code: e.target.value })}
+                    onChange={(e) =>
+                      setEditVariantData({
+                        ...editVariantData,
+                        item_code: e.target.value,
+                      })
+                    }
                     className={`w-full px-3 py-2 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
@@ -2635,11 +2897,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
                 {/* Option Description */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Variant Description (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Variant Description (Optional)
+                  </label>
                   <input
                     type="text"
                     value={editVariantData.option_description}
-                    onChange={(e) => setEditVariantData({ ...editVariantData, option_description: e.target.value })}
+                    onChange={(e) =>
+                      setEditVariantData({
+                        ...editVariantData,
+                        option_description: e.target.value,
+                      })
+                    }
                     className={`w-full px-3 py-2 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
@@ -2651,11 +2920,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
                 {/* Points */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Points Required *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Points Required *
+                  </label>
                   <input
                     type="text"
                     value={editVariantData.points}
-                    onChange={(e) => setEditVariantData({ ...editVariantData, points: e.target.value })}
+                    onChange={(e) =>
+                      setEditVariantData({
+                        ...editVariantData,
+                        points: e.target.value,
+                      })
+                    }
                     className={`w-full px-3 py-2 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
@@ -2667,11 +2943,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
                 {/* Price */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Price *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Price *
+                  </label>
                   <input
                     type="text"
                     value={editVariantData.price}
-                    onChange={(e) => setEditVariantData({ ...editVariantData, price: e.target.value })}
+                    onChange={(e) =>
+                      setEditVariantData({
+                        ...editVariantData,
+                        price: e.target.value,
+                      })
+                    }
                     className={`w-full px-3 py-2 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
@@ -2683,11 +2966,18 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
                 {/* Image URL */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Image URL (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Image URL (Optional)
+                  </label>
                   <input
                     type="url"
                     value={editVariantData.image_url}
-                    onChange={(e) => setEditVariantData({ ...editVariantData, image_url: e.target.value })}
+                    onChange={(e) =>
+                      setEditVariantData({
+                        ...editVariantData,
+                        image_url: e.target.value,
+                      })
+                    }
                     className={`w-full px-3 py-2 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
@@ -2755,7 +3045,9 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
             <div className="p-6 space-y-4">
               <p>
                 Are you sure you want to delete variant{" "}
-                <strong>{deleteVariantTarget.item_code}</strong> ({deleteVariantTarget.option_description || "No description"})? This action cannot be undone.
+                <strong>{deleteVariantTarget.item_code}</strong> (
+                {deleteVariantTarget.option_description || "No description"})?
+                This action cannot be undone.
               </p>
             </div>
 

@@ -22,7 +22,7 @@ interface HistoryItem {
   type: string;
   details: string;
   quantity: number;
-  status: "Pending" | "Approved" | "Rejected";
+  status: "Approved" | "Rejected";
 }
 
 interface HistoryProps {
@@ -34,6 +34,7 @@ interface HistoryProps {
       | "catalogue"
       | "redemption"
       | "inventory"
+      | "distributors"
   ) => void;
   onLogout?: () => void;
 }
@@ -51,7 +52,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
       type: "T-shirt",
       details: "Platinum Polo",
       quantity: 8,
-      status: "Pending",
+      status: "Approved",
     },
     {
       id: "MC0004C",
@@ -86,7 +87,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
       type: "Pants",
       details: "Business Pants",
       quantity: 3,
-      status: "Pending",
+      status: "Rejected",
     },
     {
       id: "SA220019",
