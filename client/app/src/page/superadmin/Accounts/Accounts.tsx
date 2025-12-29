@@ -11,16 +11,9 @@ import {
   Sliders,
   UserPlus,
   LogOut,
-  Pencil,
   Warehouse,
-  Trash2,
   X,
-  Eye,
-  Ban,
   RotateCw,
-  ChevronLeft,
-  ChevronRight,
-  MoreVertical,
 } from "lucide-react";
 import {
   ViewAccountModal,
@@ -30,6 +23,7 @@ import {
   DeleteAccountModal,
   type Account,
 } from "./modals";
+import { AccountsTable, AccountsMobileCards } from "./components";
 
 interface AccountsProps {
   onNavigate?: (
@@ -41,6 +35,7 @@ interface AccountsProps {
       | "redemption"
       | "inventory"
       | "distributors"
+      | "teams"
   ) => void;
   onLogout?: () => void;
 }
@@ -89,7 +84,6 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Fetch accounts on component mount
@@ -546,196 +540,34 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
           </div>
 
           {/* Table */}
-          <div
-            className={`border rounded-lg overflow-hidden ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
-          >
-            <table className="w-full">
-              <thead
-                className={`${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-50 text-gray-700"
-                }`}
-              >
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Username
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Full Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Email
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Position
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {loading && accounts.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-8 text-center text-gray-500"
-                    >
-                      Loading accounts...
-                    </td>
-                  </tr>
-                ) : filteredAccounts.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-8 text-center text-gray-500"
-                    >
-                      No accounts found
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedAccounts.map((account) => (
-                    <tr
-                      key={account.id}
-                      className={`hover:${
-                        resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                      } transition-colors`}
-                    >
-                      <td className="px-6 py-4 text-sm">
-                        {account.id ?? "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {account.username || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {account.full_name || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {account.email || "N/A"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
-                          {account.position || "N/A"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-1">
-                          {account.is_activated ? (
-                            <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
-                              Inactive
-                            </span>
-                          )}
-                          {account.is_banned && (
-                            <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
-                              Banned
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setViewTarget(account);
-                              setShowViewModal(true);
-                              setError("");
-                            }}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
-                            title="View"
-                            disabled={loading}
-                          >
-                            <Eye className="h-5 w-5" />
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setBanTarget(account);
-                              setBanReason("");
-                              setBanMessage("");
-                              setBanDuration("1");
-                              setShowBanModal(true);
-                              setError("");
-                            }}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors"
-                            title="Ban"
-                            disabled={loading}
-                          >
-                            <Ban className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            onClick={() => handleEditClick(account)}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold transition-colors"
-                            title="Edit"
-                            disabled={loading}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setDeleteTarget(account);
-                              setShowDeleteModal(true);
-                              setError("");
-                            }}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
-                            title="Delete"
-                            disabled={loading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <span className="text-sm font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <AccountsTable
+            accounts={accounts}
+            paginatedAccounts={paginatedAccounts}
+            filteredAccounts={filteredAccounts}
+            loading={loading}
+            resolvedTheme={resolvedTheme}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            onViewAccount={(account) => {
+              setViewTarget(account);
+              setShowViewModal(true);
+              setError("");
+            }}
+            onEditAccount={handleEditClick}
+            onBanAccount={(account) => {
+              setBanTarget(account);
+              setBanReason("");
+              setBanMessage("");
+              setBanDuration("1");
+              setShowBanModal(true);
+              setError("");
+            }}
+            onDeleteAccount={(account) => {
+              setDeleteTarget(account);
+              setShowDeleteModal(true);
+              setError("");
+            }}
+          />
         </div>
 
         {/* Mobile Layout */}
@@ -790,212 +622,33 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
             </button>
 
             {/* Mobile Cards */}
-            <div className="space-y-3">
-              {loading && accounts.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  Loading accounts...
-                </div>
-              ) : filteredAccounts.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  No accounts found
-                </div>
-              ) : (
-                paginatedAccounts.map((account) => (
-                  <div
-                    key={account.id}
-                    className={`p-4 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-900 border-gray-700"
-                        : "bg-white border-gray-200"
-                    } transition-colors`}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <p
-                          className={`text-xs font-semibold mb-2 ${
-                            resolvedTheme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          ID {account.id ?? "N/A"}
-                        </p>
-                        <p className="font-semibold text-sm mb-1">
-                          {account.full_name || "N/A"}
-                        </p>
-                        <p className="text-xs mb-1">
-                          {account.username || "N/A"}
-                        </p>
-                        <p
-                          className={`text-xs ${
-                            resolvedTheme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {account.email || "N/A"}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1 ml-2">
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-400 text-black">
-                          {account.position || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-1">
-                        {account.is_activated ? (
-                          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
-                            Inactive
-                          </span>
-                        )}
-                        {account.is_banned && (
-                          <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
-                            Banned
-                          </span>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setOpenMenuId(
-                              openMenuId === account.id ? null : account.id
-                            )
-                          }
-                          className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 hover:bg-gray-700 text-white"
-                              : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                          } transition-colors`}
-                          disabled={loading}
-                        >
-                          Actions
-                        </button>
-
-                        {openMenuId === account.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setOpenMenuId(null)}
-                            />
-                            <div
-                              className={`absolute right-0 top-10 z-20 w-40 rounded-lg border shadow-lg py-1 ${
-                                resolvedTheme === "dark"
-                                  ? "bg-gray-900 border-gray-700"
-                                  : "bg-white border-gray-200"
-                              }`}
-                            >
-                              <button
-                                onClick={() => {
-                                  setViewTarget(account);
-                                  setShowViewModal(true);
-                                  setOpenMenuId(null);
-                                }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-800"
-                                    : "hover:bg-gray-100"
-                                }`}
-                                disabled={loading}
-                              >
-                                <Eye className="h-4 w-4" />
-                                View
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleEditClick(account);
-                                  setOpenMenuId(null);
-                                }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-800"
-                                    : "hover:bg-gray-100"
-                                }`}
-                                disabled={loading}
-                              >
-                                <Pencil className="h-4 w-4" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setBanTarget(account);
-                                  setBanReason("");
-                                  setBanMessage("");
-                                  setBanDuration("1");
-                                  setShowBanModal(true);
-                                  setError("");
-                                  setOpenMenuId(null);
-                                }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-orange-500 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-800"
-                                    : "hover:bg-gray-100"
-                                }`}
-                                disabled={loading}
-                              >
-                                <Ban className="h-4 w-4" />
-                                Ban
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setDeleteTarget(account);
-                                  setShowDeleteModal(true);
-                                  setError("");
-                                  setOpenMenuId(null);
-                                }}
-                                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-500 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-800"
-                                    : "hover:bg-gray-100"
-                                }`}
-                                disabled={loading}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Prev
-              </button>
-              <span className="text-xs font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            <AccountsMobileCards
+              accounts={accounts}
+              paginatedAccounts={paginatedAccounts}
+              filteredAccounts={filteredAccounts}
+              loading={loading}
+              resolvedTheme={resolvedTheme}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              onViewAccount={(account) => {
+                setViewTarget(account);
+                setShowViewModal(true);
+              }}
+              onEditAccount={handleEditClick}
+              onBanAccount={(account) => {
+                setBanTarget(account);
+                setBanReason("");
+                setBanMessage("");
+                setBanDuration("1");
+                setShowBanModal(true);
+                setError("");
+              }}
+              onDeleteAccount={(account) => {
+                setDeleteTarget(account);
+                setShowDeleteModal(true);
+                setError("");
+              }}
+            />
           </div>
         </div>
       </div>

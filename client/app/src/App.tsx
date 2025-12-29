@@ -13,7 +13,7 @@ import ExecutiveAssistantHistory from "./page/executive_assistant/History";
 import SuperAdminDashboard from "./page/superadmin/Dashboard";
 import SuperAdminHistory from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts/Accounts";
-import Catalogue from "./page/superadmin/Catalogue";
+import Catalogue from "./page/superadmin/Catalogue/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
 import Inventory from "./page/superadmin/Inventory";
 import Distributors from "./page/superadmin/Distributors";
