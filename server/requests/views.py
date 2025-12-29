@@ -27,16 +27,53 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
     serializer_class = RedemptionRequestSerializer
 
     def get_queryset(self):
-        """Filter requests based on user role"""
+        """Filter requests based on user role and team"""
+        from django.db.models import Q
+        from teams.models import TeamMembership, Team
+        
         user = self.request.user
         profile = getattr(user, 'profile', None)
         
-        if profile and profile.position == 'Sales Agent':
-            # Sales agents only see their own requests
-            return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__variant')
-        else:
-            # Approvers and admins see all requests
+        if not profile:
+            # Super admin without profile sees all
             return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+        
+        # Admin - highest ranking employee, manages all teams
+        if profile.position == 'Admin':
+            return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+        
+        # Sales Agent - team-scoped access
+        elif profile.position == 'Sales Agent':
+            # Sales agents see only their team's requests
+            membership = TeamMembership.objects.filter(user=user).first()
+            if membership:
+                # Show requests by team members OR for team's distributors
+                return RedemptionRequest.objects.filter(
+                    Q(requested_by__team_memberships__team=membership.team) |
+                    Q(requested_for__team=membership.team)
+                ).distinct().prefetch_related('items', 'items__variant')
+            # If not in a team, only see own requests
+            return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__variant')
+        
+        # Approver - team-scoped access
+        elif profile.position == 'Approver':
+            # Approvers see only their managed team's requests
+            managed_teams = Team.objects.filter(approver=user)
+            if managed_teams.exists():
+                return RedemptionRequest.objects.filter(
+                    Q(requested_by__team_memberships__team__in=managed_teams) |
+                    Q(requested_for__team__in=managed_teams)
+                ).distinct().prefetch_related('items', 'items__variant')
+            # If not managing any team, see no requests
+            return RedemptionRequest.objects.none()
+        
+        # Administrative support positions - global access
+        elif profile.position in ['Marketing', 'Reception', 'Executive Assistant']:
+            return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+        
+        # Unspecified positions - no access
+        else:
+            return RedemptionRequest.objects.none()
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -44,32 +81,49 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         return RedemptionRequestSerializer
 
     def create(self, request, *args, **kwargs):
-        """Create a new redemption request and notify approvers"""
+        """Create a new redemption request and notify team approver"""
+        from teams.models import TeamMembership
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         # Create the request
         redemption_request = serializer.save()
         
-        # Get approvers (all users who are NOT Sales Agents)
-        approvers = UserProfile.objects.exclude(position='Sales Agent').exclude(email__isnull=True).exclude(email='')
-        approvers_emails = list(approvers.values_list('email', flat=True))
+        # Get the team approver for notification
+        user = request.user
+        membership = TeamMembership.objects.filter(user=user).first()
         
-        # Send email notification to approvers
-        if approvers_emails:
-            logger.info(f"New request #{redemption_request.id} created, sending notification to {len(approvers_emails)} approvers...")
-            email_sent = send_request_submitted_email(
-                request_obj=redemption_request,
-                distributor=redemption_request.requested_for,
-                approvers_emails=approvers_emails
-            )
-            
-            if email_sent:
-                logger.info(f"✓ Submission notification sent for request #{redemption_request.id}")
+        if membership and membership.team.approver:
+            # Send notification to the team's approver
+            team_approver = membership.team.approver
+            if hasattr(team_approver, 'profile') and team_approver.profile.email:
+                approver_email = team_approver.profile.email
+                logger.info(f"New request #{redemption_request.id} created, sending notification to team approver...")
+                email_sent = send_request_submitted_email(
+                    request_obj=redemption_request,
+                    distributor=redemption_request.requested_for,
+                    approvers_emails=[approver_email]
+                )
+                
+                if email_sent:
+                    logger.info(f"✓ Submission notification sent to team approver for request #{redemption_request.id}")
+                else:
+                    logger.warning(f"⚠ Failed to send notification to team approver for request #{redemption_request.id}")
             else:
-                logger.warning(f"⚠ Failed to send submission notification for request #{redemption_request.id}")
+                logger.warning(f"⚠ Team approver has no email for request #{redemption_request.id}")
         else:
-            logger.warning(f"⚠ No approvers found to notify for request #{redemption_request.id}")
+            # Fallback: notify all non-Sales Agent users if no team approver
+            logger.warning(f"⚠ No team approver found, falling back to all approvers for request #{redemption_request.id}")
+            approvers = UserProfile.objects.exclude(position='Sales Agent').exclude(email__isnull=True).exclude(email='')
+            approvers_emails = list(approvers.values_list('email', flat=True))
+            
+            if approvers_emails:
+                send_request_submitted_email(
+                    request_obj=redemption_request,
+                    distributor=redemption_request.requested_for,
+                    approvers_emails=approvers_emails
+                )
         
         # Return the created request with full details
         response_serializer = RedemptionRequestSerializer(redemption_request)

@@ -128,46 +128,48 @@ export default function CartModal({
       return;
     }
 
-    try {
-      setSubmitting(true);
-      
-      const requestData: CreateRedemptionRequestData = {
-        requested_for: selectedDistributor.id,
-        points_deducted_from: pointsDeductedFrom,
-        remarks: remarks || undefined,
-        items: items.map(item => ({
-          variant_id: item.id,
-          quantity: item.quantity
-        }))
-      };
+    // Prepare request data
+    const requestData: CreateRedemptionRequestData = {
+      requested_for: selectedDistributor.id,
+      points_deducted_from: pointsDeductedFrom,
+      remarks: remarks || undefined,
+      items: items.map(item => ({
+        variant_id: item.id,
+        quantity: item.quantity
+      }))
+    };
 
-      const response = await redemptionRequestsApi.createRequest(requestData);
-      
-      toast.success("Redemption request submitted!", {
-        description: `Request #${response.id} has been created successfully`
+    // Close modal and reset form immediately
+    items.forEach(item => onRemoveItem(item.id));
+    setStep("cart");
+    setCustomerName("");
+    setRemarks("");
+    setDistributorSearch("");
+    setSelectedDistributor(null);
+    setSvcDate("");
+    setSvcTime("");
+    setSvcDriver("");
+    setPointsDeductedFrom('SELF');
+    onClose();
+
+    // Show optimistic success message
+    toast.success("Redemption request submitted!", {
+      description: `Request for ${selectedDistributor.name} has been created successfully`
+    });
+
+    // Execute API call in background without blocking
+    redemptionRequestsApi.createRequest(requestData)
+      .then((response) => {
+        // Silently succeed - user already sees success toast
+        console.log("Redemption request created:", response);
+      })
+      .catch((error) => {
+        console.error("Error submitting redemption request:", error);
+        // Show error toast if submission failed
+        toast.error("Failed to submit request", {
+          description: error instanceof Error ? error.message : "Please try again"
+        });
       });
-      
-      // Clear cart and close modal
-      items.forEach(item => onRemoveItem(item.id));
-      setStep("cart");
-      setCustomerName("");
-      setRemarks("");
-      setDistributorSearch("");
-      setSelectedDistributor(null);
-      setSvcDate("");
-      setSvcTime("");
-      setSvcDriver("");
-      setPointsDeductedFrom('SELF');
-      onClose();
-      
-    } catch (error) {
-      console.error("Error submitting redemption request:", error);
-      toast.error("Failed to submit request", {
-        description: error instanceof Error ? error.message : "Please try again"
-      });
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   return (

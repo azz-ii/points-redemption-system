@@ -14,6 +14,7 @@ import {
   Gift,
   Store,
   FileBox,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -47,6 +48,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
     { id: "accounts", label: "Accounts", icon: User },
     { id: "catalogue", label: "Catalogue", icon: Package },
     { id: "distributors", label: "Distributors", icon: Store },
+    { id: "teams", label: "Teams", icon: Users },
     { id: "redemption", label: "Redemption", icon: ClipboardList },
     { id: "inventory", label: "Inventory", icon: Warehouse },
   ] as const;
@@ -212,6 +214,7 @@ export function SidebarSuperAdmin({
     { id: "accounts", label: "Accounts", icon: User },
     { id: "catalogue", label: "Catalogue", icon: Package },
     { id: "distributors", label: "Distributors", icon: Store },
+    { id: "teams", label: "Teams", icon: Users },
     { id: "redemption", label: "Redemption", icon: ClipboardList },
     { id: "inventory", label: "Inventory", icon: Warehouse },
   ] as const;

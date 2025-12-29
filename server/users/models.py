@@ -3,8 +3,17 @@ from django.utils import timezone
 from django.conf import settings
 
 class UserProfile(models.Model):
+    POSITION_CHOICES = [
+        ('Admin', 'Admin'),
+        ('Sales Agent', 'Sales Agent'),
+        ('Approver', 'Approver'),
+        ('Marketing', 'Marketing'),
+        ('Reception', 'Reception'),
+        ('Executive Assistant', 'Executive Assistant'),
+    ]
+    
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
-    position = models.CharField(max_length=100)
+    position = models.CharField(max_length=100, choices=POSITION_CHOICES)
     full_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(max_length=254, unique=True)
     is_activated = models.BooleanField(default=True)

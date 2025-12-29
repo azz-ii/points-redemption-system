@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'distributers',
     'requests',
     'otp',
+    'teams',
     'utils'
 ]
 

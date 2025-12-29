@@ -116,25 +116,33 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
   const handleApproveConfirm = async () => {
     if (!selectedRequest) return;
 
-    try {
-      setProcessing(true);
-      await redemptionRequestsApi.approveRequest(
-        selectedRequest.id,
-        approveRemarks
-      );
-      toast.success("Request approved successfully");
-      setShowApproveModal(false);
-      setSelectedRequest(null);
-      setApproveRemarks("");
-      await fetchRequests(); // Refresh the list
-    } catch (err) {
-      console.error("Error approving request:", err);
-      toast.error(
-        err instanceof Error ? err.message : "Failed to approve request"
-      );
-    } finally {
-      setProcessing(false);
-    }
+    // Close modal and reset form immediately
+    setShowApproveModal(false);
+    setSelectedRequest(null);
+    setApproveRemarks("");
+
+    // Show optimistic success message
+    toast.success("Request approved successfully");
+
+    // Execute API call in background without blocking
+    redemptionRequestsApi.approveRequest(
+      selectedRequest.id,
+      approveRemarks
+    )
+      .then(() => {
+        // Silently succeed - user already sees success toast
+        // Refresh the list in background
+        fetchRequests();
+      })
+      .catch((err) => {
+        console.error("Error approving request:", err);
+        // Show error toast if approval failed
+        toast.error(
+          err instanceof Error ? err.message : "Failed to approve request"
+        );
+        // Refresh to show current state
+        fetchRequests();
+      });
   };
 
   const handleRejectConfirm = async () => {
@@ -145,27 +153,35 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       return;
     }
 
-    try {
-      setProcessing(true);
-      await redemptionRequestsApi.rejectRequest(
-        selectedRequest.id,
-        rejectReason,
-        rejectRemarks
-      );
-      toast.success("Request rejected successfully");
-      setShowRejectModal(false);
-      setSelectedRequest(null);
-      setRejectReason("");
-      setRejectRemarks("");
-      await fetchRequests(); // Refresh the list
-    } catch (err) {
-      console.error("Error rejecting request:", err);
-      toast.error(
-        err instanceof Error ? err.message : "Failed to reject request"
-      );
-    } finally {
-      setProcessing(false);
-    }
+    // Close modal and reset form immediately
+    setShowRejectModal(false);
+    setSelectedRequest(null);
+    setRejectReason("");
+    setRejectRemarks("");
+
+    // Show optimistic success message
+    toast.success("Request rejected successfully");
+
+    // Execute API call in background without blocking
+    redemptionRequestsApi.rejectRequest(
+      selectedRequest.id,
+      rejectReason,
+      rejectRemarks
+    )
+      .then(() => {
+        // Silently succeed - user already sees success toast
+        // Refresh the list in background
+        fetchRequests();
+      })
+      .catch((err) => {
+        console.error("Error rejecting request:", err);
+        // Show error toast if rejection failed
+        toast.error(
+          err instanceof Error ? err.message : "Failed to reject request"
+        );
+        // Refresh to show current state
+        fetchRequests();
+      });
   };
 
   const getStatusBadgeColor = (status: string) => {
@@ -600,13 +616,9 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
       {/* View Details Modal */}
       {showViewModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
           <div
-            className={`rounded-lg shadow-lg max-w-lg w-full max-h-96 overflow-y-auto ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border border-gray-700"
-                : "bg-white"
-            }`}
+            className={`${resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"} rounded-lg shadow-2xl max-w-lg w-full max-h-96 overflow-y-auto border ${resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"}`}
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
@@ -752,13 +764,9 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
       {/* Approve Modal */}
       {showApproveModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
           <div
-            className={`rounded-lg shadow-lg max-w-sm w-full ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border border-gray-700"
-                : "bg-white"
-            }`}
+            className={`${resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"} rounded-lg shadow-2xl max-w-sm w-full border ${resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"}`}
           >
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Approve Request</h2>
@@ -818,13 +826,9 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
 
       {/* Reject Modal */}
       {showRejectModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
           <div
-            className={`rounded-lg shadow-lg max-w-sm w-full ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border border-gray-700"
-                : "bg-white"
-            }`}
+            className={`${resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"} rounded-lg shadow-2xl max-w-sm w-full border ${resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"}`}
           >
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">Reject Request</h2>

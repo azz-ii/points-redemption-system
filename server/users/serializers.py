@@ -39,6 +39,16 @@ class UserSerializer(serializers.ModelSerializer):
             'password': {'write_only': True, 'required': False},
         }
     
+    def validate(self, data):
+        """Validate team membership for Sales Agents"""
+        position = data.get('position')
+        
+        # Note: Team validation is enforced at the team assignment level
+        # Sales Agents should be assigned to a team after creation
+        # The TeamMembership model enforces single team membership
+        
+        return data
+    
     def create(self, validated_data):
         """Create user with profile"""
         position = validated_data.pop('position', None)
@@ -170,10 +180,36 @@ class UserListSerializer(serializers.ModelSerializer):
     uses_points = serializers.BooleanField(source='profile.uses_points', read_only=True)
     points = serializers.IntegerField(source='profile.points', read_only=True)
     
+    # Team information
+    team_id = serializers.SerializerMethodField()
+    team_name = serializers.SerializerMethodField()
+    is_team_approver = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = [
             'id', 'username', 'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'uses_points', 'points', 'is_active', 'date_joined'
+            'uses_points', 'points', 'is_active', 'date_joined',
+            'team_id', 'team_name', 'is_team_approver'
         ]
+    
+    def get_team_id(self, obj):
+        """Get team ID if user is a Sales Agent"""
+        if hasattr(obj, 'profile') and obj.profile.position == 'Sales Agent':
+            membership = obj.team_memberships.first()
+            return membership.team.id if membership else None
+        return None
+    
+    def get_team_name(self, obj):
+        """Get team name if user is a Sales Agent"""
+        if hasattr(obj, 'profile') and obj.profile.position == 'Sales Agent':
+            membership = obj.team_memberships.first()
+            return membership.team.name if membership else None
+        return None
+    
+    def get_is_team_approver(self, obj):
+        """Check if user is an approver of any team"""
+        if hasattr(obj, 'profile') and obj.profile.position == 'Approver':
+            return obj.managed_teams.exists()
+        return False

@@ -55,6 +55,8 @@ urlpatterns = [
     path('api/', include('requests.urls')),
     # OTP/Password Reset API
     path('api/otp/', include('otp.urls')),
+    # Teams Management API
+    path('api/', include('teams.urls')),
 ]
 
 # Serve static files in development

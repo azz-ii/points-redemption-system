@@ -12,11 +12,12 @@ import ExecutiveAssistantDashboard from "./page/executive_assistant/Dashboard";
 import ExecutiveAssistantHistory from "./page/executive_assistant/History";
 import SuperAdminDashboard from "./page/superadmin/Dashboard";
 import SuperAdminHistory from "./page/superadmin/History";
-import Accounts from "./page/superadmin/Accounts";
+import Accounts from "./page/superadmin/Accounts/Accounts";
 import Catalogue from "./page/superadmin/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
 import Inventory from "./page/superadmin/Inventory";
 import Distributors from "./page/superadmin/Distributors";
+import Teams from "./page/superadmin/Teams/Teams";
 import { Toaster } from "sonner";
 
 type PageType =
@@ -30,7 +31,8 @@ type PageType =
   | "catalogue"
   | "redemption"
   | "inventory"
-  | "distributors";
+  | "distributors"
+  | "teams";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
@@ -196,6 +198,11 @@ function App() {
       case "distributors":
         content = (
           <Distributors onNavigate={handleNavigateTo} onLogout={handleLogout} />
+        );
+        break;
+      case "teams":
+        content = (
+          <Teams onNavigate={handleNavigateTo} onLogout={handleLogout} />
         );
         break;
       default:

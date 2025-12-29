@@ -22,16 +22,14 @@ import {
   ChevronRight,
   MoreVertical,
 } from "lucide-react";
-
-interface Account {
-  id: number;
-  username: string;
-  full_name: string;
-  email: string;
-  position: string;
-  is_activated: boolean;
-  is_banned: boolean;
-}
+import {
+  ViewAccountModal,
+  CreateAccountModal,
+  EditAccountModal,
+  BanAccountModal,
+  DeleteAccountModal,
+  type Account,
+} from "./modals";
 
 interface AccountsProps {
   onNavigate?: (
@@ -92,6 +90,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Fetch accounts on component mount
   const fetchAccounts = async () => {
@@ -118,7 +117,15 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     fetchAccounts();
   }, []);
 
-  // Create new account
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // Create new account (non-blocking)
   const handleCreateAccount = async () => {
     if (
       !newAccount.username ||
@@ -131,46 +138,57 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       return;
     }
 
-    try {
-      setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/api/users/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newAccount),
-      });
+    // Close modal and reset form immediately
+    setShowCreateModal(false);
+    setNewAccount({
+      username: "",
+      password: "",
+      full_name: "",
+      email: "",
+      position: "",
+      is_activated: false,
+      is_banned: false,
+    });
+    setError("");
 
-      const data = await response.json();
+    // Show optimistic success message
+    setToast({
+      message: `Account for ${newAccount.full_name} created successfully!`,
+      type: "success",
+    });
 
-      if (response.ok) {
-        setShowCreateModal(false);
-        setNewAccount({
-          username: "",
-          password: "",
-          full_name: "",
-          email: "",
-          position: "",
-          is_activated: false,
-          is_banned: false,
+    // Execute API call in background without blocking
+    fetch("http://127.0.0.1:8000/api/users/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newAccount),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.error) {
+          // Silently refresh accounts list in background
+          fetchAccounts();
+        } else {
+          // Show error toast if creation failed
+          setToast({
+            message:
+              data.details?.username?.[0] ||
+              data.details?.email?.[0] ||
+              data.error ||
+              "Failed to create account",
+            type: "error",
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Error creating account:", err);
+        setToast({
+          message: "Error connecting to server",
+          type: "error",
         });
-        setError("");
-        // Refresh accounts list
-        fetchAccounts();
-      } else {
-        setError(
-          data.details?.username?.[0] ||
-            data.details?.email?.[0] ||
-            data.error ||
-            "Failed to create account"
-        );
-      }
-    } catch (err) {
-      setError("Error connecting to server");
-      console.error("Error creating account:", err);
-    } finally {
-      setLoading(false);
-    }
+      });
   };
 
   // Open edit modal
@@ -993,565 +1011,87 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
         onClose={() => setIsNotificationOpen(false)}
       />
 
-      {/* Create Account Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-          <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
+      <CreateAccountModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        newAccount={newAccount}
+        setNewAccount={setNewAccount}
+        loading={loading}
+        error={error}
+        setError={setError}
+        onSubmit={handleCreateAccount}
+      />
+
+      <BanAccountModal
+        isOpen={showBanModal}
+        onClose={() => {
+          setShowBanModal(false);
+          setBanTarget(null);
+        }}
+        account={banTarget}
+        banReason={banReason}
+        setBanReason={setBanReason}
+        banMessage={banMessage}
+        setBanMessage={setBanMessage}
+        banDuration={banDuration}
+        setBanDuration={setBanDuration}
+        loading={loading}
+        error={error}
+        setError={setError}
+        onSubmit={handleBanSubmit}
+      />
+
+      <EditAccountModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingAccount(null);
+        }}
+        account={editingAccount}
+        editAccount={editAccount}
+        setEditAccount={setEditAccount}
+        loading={loading}
+        error={error}
+        setError={setError}
+        onSubmit={handleUpdateAccount}
+      />
+
+      <ViewAccountModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewTarget(null);
+        }}
+        account={viewTarget}
+      />
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeleteTarget(null);
+        }}
+        account={deleteTarget}
+        loading={loading}
+        onConfirm={(id) => handleDeleteAccount(id, true)}
+      />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg animation-fade-in ${
+            toast.type === "success"
+              ? "bg-green-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          <div className="flex-1">{toast.message}</div>
+          <button
+            onClick={() => setToast(null)}
+            className="hover:opacity-70 transition-opacity"
           >
-            {/* Header */}
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <div>
-                <h2 className="text-lg font-semibold">Create New Account</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Please fill in the details to create a new account
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setError("");
-                }}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  value={newAccount.username}
-                  onChange={(e) =>
-                    setNewAccount({ ...newAccount, username: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter username"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Password *
-                </label>
-                <input
-                  type="password"
-                  value={newAccount.password}
-                  onChange={(e) =>
-                    setNewAccount({ ...newAccount, password: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter password"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={newAccount.full_name}
-                  onChange={(e) =>
-                    setNewAccount({ ...newAccount, full_name: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter full name"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={newAccount.email}
-                  onChange={(e) =>
-                    setNewAccount({ ...newAccount, email: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter email address"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Position *
-                </label>
-                <select
-                  value={newAccount.position}
-                  onChange={(e) =>
-                    setNewAccount({ ...newAccount, position: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                >
-                  <option value="">Select position</option>
-                  <option value="Sales Agent">Sales Agent</option>
-                  <option value="Approver">Approver</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Reception">Reception</option>
-                  <option value="Executive Assistant">
-                    Executive Assistant
-                  </option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-4">
-                {/* `is_activated` and `is_banned` default to false; inputs removed */}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-gray-700">
-              {error && (
-                <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
-                  {error}
-                </div>
-              )}
-              <button
-                onClick={handleCreateAccount}
-                disabled={loading}
-                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                    : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-                }`}
-              >
-                {loading ? "Creating..." : "Create Account"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Ban Account Modal */}
-      {showBanModal && banTarget && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-          <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <div>
-                <h2 className="text-lg font-semibold">Ban User</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Ban user {banTarget.full_name}{" "}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowBanModal(false);
-                  setBanTarget(null);
-                  setError("");
-                }}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Ban Reason *
-                </label>
-                <textarea
-                  value={banReason}
-                  onChange={(e) => setBanReason(e.target.value)}
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Reason for ban"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Ban Message
-                </label>
-                <textarea
-                  value={banMessage}
-                  onChange={(e) => setBanMessage(e.target.value)}
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Optional message shown to user"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Ban Duration *
-                </label>
-                <select
-                  value={banDuration}
-                  onChange={(e) =>
-                    setBanDuration(
-                      e.target.value as "1" | "7" | "30" | "permanent"
-                    )
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                >
-                  <option value="1">1 day</option>
-                  <option value="7">7 days</option>
-                  <option value="30">30 days</option>
-                  <option value="permanent">Permanent</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-700">
-              {error && (
-                <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
-                  {error}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setShowBanModal(false);
-                    setBanTarget(null);
-                    setError("");
-                  }}
-                  className={`px-4 py-2 rounded font-semibold transition-colors ${
-                    resolvedTheme === "dark"
-                      ? "bg-white hover:bg-gray-100 text-gray-900"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-                  }`}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={handleBanSubmit}
-                  disabled={loading}
-                  className={`px-4 py-2 rounded font-semibold transition-colors ${
-                    resolvedTheme === "dark"
-                      ? "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                      : "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                  }`}
-                >
-                  {loading ? "Banning..." : "Ban User"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Account Modal */}
-      {showEditModal && editingAccount && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-          <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <div>
-                <h2 className="text-lg font-semibold">Edit Account</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Update account details for {editingAccount.full_name}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditingAccount(null);
-                  setError("");
-                }}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  value={editAccount.username}
-                  onChange={(e) =>
-                    setEditAccount({ ...editAccount, username: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter username"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={editAccount.full_name}
-                  onChange={(e) =>
-                    setEditAccount({
-                      ...editAccount,
-                      full_name: e.target.value,
-                    })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter full name"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={editAccount.email}
-                  onChange={(e) =>
-                    setEditAccount({ ...editAccount, email: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                  placeholder="Enter email address"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Position *
-                </label>
-                <select
-                  value={editAccount.position}
-                  onChange={(e) =>
-                    setEditAccount({ ...editAccount, position: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
-                >
-                  <option value="">Select position</option>
-                  <option value="Sales Agent">Sales Agent</option>
-                  <option value="Approver">Approver</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Reception">Reception</option>
-                  <option value="Executive Assistant">
-                    Executive Assistant
-                  </option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-4">
-                {/* `is_activated` and `is_banned` default to false; inputs removed */}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-gray-700">
-              {error && (
-                <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
-                  {error}
-                </div>
-              )}
-              <button
-                onClick={handleUpdateAccount}
-                disabled={loading}
-                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                    : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-                }`}
-              >
-                {loading ? "Updating..." : "Update Account"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Account Modal */}
-      {showViewModal && viewTarget && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-          <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <div>
-                <h2 className="text-lg font-semibold">View Account</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Details for {viewTarget.full_name}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  setViewTarget(null);
-                  setError("");
-                }}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
-              <div>
-                <p className="text-xs text-gray-500">Username</p>
-                <p className="font-medium">{viewTarget.username || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Full Name</p>
-                <p className="font-medium">{viewTarget.full_name || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Email</p>
-                <p className="font-medium">{viewTarget.email || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Position</p>
-                <p className="font-medium">{viewTarget.position || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Status</p>
-                <p className="font-medium">
-                  {viewTarget.is_activated ? "Active" : "Inactive"}
-                  {viewTarget.is_banned ? " • Banned" : ""}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && deleteTarget && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-          <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <div>
-                <h2 className="text-lg font-semibold">Delete User</h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  This action cannot be undone.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteTarget(null);
-                  setError("");
-                }}
-                className="hover:opacity-70 transition-opacity"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <p>
-                Are you sure you want to delete{" "}
-                <strong>{deleteTarget.full_name}</strong> (
-                {deleteTarget.username})?
-              </p>
-            </div>
-
-            <div className="p-6 border-t border-gray-700 flex gap-2">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteTarget(null);
-                  setError("");
-                }}
-                className={`px-4 py-2 rounded font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-white hover:bg-gray-100 text-gray-900"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-                }`}
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={() =>
-                  deleteTarget && handleDeleteAccount(deleteTarget.id, true)
-                }
-                disabled={loading}
-                className={`px-4 py-2 rounded font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                    : "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                }`}
-              >
-                {loading ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
+            <X className="h-5 w-5" />
+          </button>
         </div>
       )}
     </div>

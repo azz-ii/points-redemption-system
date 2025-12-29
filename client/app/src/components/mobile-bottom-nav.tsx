@@ -10,6 +10,7 @@ import {
   Gift,
   LogOut,
   FileBox,
+  Users,
 } from "lucide-react";
 
 interface MobileBottomNavMarketingProps {
@@ -562,7 +563,8 @@ interface MobileBottomNavProps {
     | "catalogue"
     | "redemption"
     | "inventory"
-    | "distributors";
+    | "distributors"
+    | "teams";
   onNavigate: (
     page:
       | "dashboard"
@@ -572,6 +574,7 @@ interface MobileBottomNavProps {
       | "redemption"
       | "inventory"
       | "distributors"
+      | "teams"
   ) => void;
   isModalOpen?: boolean;
 }
@@ -621,7 +624,7 @@ export function MobileBottomNav({
     { id: "history", icon: HistoryIcon, label: "History" },
     { id: "accounts", icon: User, label: "Accounts" },
     { id: "catalogue", icon: Package, label: "Catalogue" },
-    { id: "redemption", icon: ClipboardList, label: "Redemption" },
+    { id: "teams", icon: Users, label: "Teams" },
   ] as const;
 
   return (

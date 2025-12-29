@@ -27,9 +27,52 @@ class DistributorViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Optionally filter distributors based on query parameters.
+        Filter distributors based on user's team and role.
+        Optionally filter based on query parameters.
         """
+        from teams.models import TeamMembership, Team
+        
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        
+        # Start with base queryset
         queryset = Distributor.objects.all()
+        
+        # Apply team-based filtering
+        if profile:
+            # Admin - highest ranking employee, manages all teams
+            if profile.position == 'Admin':
+                queryset = Distributor.objects.all()
+            
+            # Sales Agent - team-scoped access
+            elif profile.position == 'Sales Agent':
+                # Sales agents see only their team's distributors
+                membership = TeamMembership.objects.filter(user=user).first()
+                if membership:
+                    queryset = queryset.filter(team=membership.team)
+                else:
+                    # If not in a team, see no distributors
+                    queryset = Distributor.objects.none()
+            
+            # Approver - team-scoped access
+            elif profile.position == 'Approver':
+                # Approvers see their managed team's distributors
+                managed_teams = Team.objects.filter(approver=user)
+                if managed_teams.exists():
+                    queryset = queryset.filter(team__in=managed_teams)
+                else:
+                    # If not managing any team, see no distributors
+                    queryset = Distributor.objects.none()
+            
+            # Administrative support positions - global access
+            elif profile.position in ['Marketing', 'Reception', 'Executive Assistant']:
+                queryset = Distributor.objects.all()
+            
+            # Unspecified positions - no access
+            else:
+                queryset = Distributor.objects.none()
+        
+        # Apply search filter if provided
         search = self.request.query_params.get('search', None)
         
         if search:
