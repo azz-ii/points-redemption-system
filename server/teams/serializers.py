@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Team, TeamMembership
 from users.models import UserProfile
+from distributers.serializers import DistributorSerializer
 
 
 class ApproverSerializer(serializers.ModelSerializer):
@@ -93,12 +94,13 @@ class TeamDetailSerializer(serializers.ModelSerializer):
     members = serializers.SerializerMethodField()
     member_count = serializers.IntegerField(read_only=True)
     distributor_count = serializers.SerializerMethodField()
+    distributors = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
         fields = [
             'id', 'name', 'approver', 'approver_details', 'region',
-            'members', 'member_count', 'distributor_count',
+            'members', 'member_count', 'distributor_count', 'distributors',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -111,6 +113,11 @@ class TeamDetailSerializer(serializers.ModelSerializer):
     def get_distributor_count(self, obj):
         """Get count of distributors assigned to this team"""
         return obj.distributors.count()
+    
+    def get_distributors(self, obj):
+        """Get all distributors assigned to this team"""
+        distributors = obj.distributors.all()
+        return DistributorSerializer(distributors, many=True).data
 
 
 class AssignMemberSerializer(serializers.Serializer):
@@ -151,4 +158,32 @@ class RemoveMemberSerializer(serializers.Serializer):
             User.objects.get(id=value)
         except User.DoesNotExist:
             raise serializers.ValidationError('User not found.')
+        return value
+
+
+class AssignDistributorSerializer(serializers.Serializer):
+    """Serializer for assigning a distributor to a team"""
+    distributor_id = serializers.IntegerField()
+    
+    def validate_distributor_id(self, value):
+        """Validate distributor exists"""
+        from distributers.models import Distributor
+        try:
+            Distributor.objects.get(id=value)
+        except Distributor.DoesNotExist:
+            raise serializers.ValidationError('Distributor not found.')
+        return value
+
+
+class RemoveDistributorSerializer(serializers.Serializer):
+    """Serializer for removing a distributor from a team"""
+    distributor_id = serializers.IntegerField()
+    
+    def validate_distributor_id(self, value):
+        """Validate distributor exists"""
+        from distributers.models import Distributor
+        try:
+            Distributor.objects.get(id=value)
+        except Distributor.DoesNotExist:
+            raise serializers.ValidationError('Distributor not found.')
         return value

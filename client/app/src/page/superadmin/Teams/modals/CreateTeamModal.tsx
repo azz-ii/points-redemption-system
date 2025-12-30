@@ -1,0 +1,795 @@
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
+import { useTheme } from "next-themes";
+import { X, AlertTriangle, UserPlus, Trash2, AlertCircle, Store } from "lucide-react";
+import type { ModalBaseProps, NewTeamData, ApproverOption, Team, SalesAgentOption, DistributorOption } from "./types";
+
+interface CreateTeamModalProps extends ModalBaseProps {
+  newTeam: NewTeamData;
+  setNewTeam: Dispatch<SetStateAction<NewTeamData>>;
+  approvers: ApproverOption[];
+  teams: Team[];
+  loading: boolean;
+  error: string;
+  setError: Dispatch<SetStateAction<string>>;
+  onSubmit: (memberIds?: number[], distributorIds?: number[]) => void;
+}
+
+export function CreateTeamModal({
+  isOpen,
+  onClose,
+  newTeam,
+  setNewTeam,
+  approvers,
+  teams,
+  loading,
+  error,
+  setError,
+  onSubmit,
+}: CreateTeamModalProps) {
+  const { resolvedTheme } = useTheme();
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingApproverId, setPendingApproverId] = useState<number | null>(null);
+  const [availableSalesAgents, setAvailableSalesAgents] = useState<SalesAgentOption[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<SalesAgentOption[]>([]);
+  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [allUsers, setAllUsers] = useState<Array<{ id: number; team: number | null }>>([]);
+  const [availableDistributors, setAvailableDistributors] = useState<DistributorOption[]>([]);
+  const [selectedDistributors, setSelectedDistributors] = useState<DistributorOption[]>([]);
+  const [selectedDistributor, setSelectedDistributor] = useState<number | null>(null);
+  const [showAddDistributor, setShowAddDistributor] = useState(false);
+  const [allDistributors, setAllDistributors] = useState<Array<{ id: number; team: number | null }>>([]);
+  const [errorDialog, setErrorDialog] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+  }>({
+    show: false,
+    title: "",
+    message: "",
+  });
+
+  const fetchAvailableSalesAgents = async () => {
+    try {
+      console.log("DEBUG CreateTeamModal: Fetching available sales agents");
+      
+      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      const data = await response.json();
+      console.log("DEBUG CreateTeamModal: Users fetched", {
+        status: response.status,
+        totalUsers: data.accounts?.length || 0,
+      });
+
+      if (response.ok && data.accounts) {
+        // Store all users for team membership checking
+        setAllUsers(data.accounts.map((u: { id: number; team: number | null }) => ({ id: u.id, team: u.team })));
+        
+        // Filter for Sales Agents only
+        const salesAgents = data.accounts.filter(
+          (user: { position: string }) => user.position === "Sales Agent"
+        );
+        
+        console.log("DEBUG CreateTeamModal: Sales agents filtered", {
+          total: salesAgents.length,
+        });
+        
+        setAvailableSalesAgents(salesAgents);
+      }
+    } catch (err) {
+      console.error("DEBUG CreateTeamModal: Error fetching sales agents", err);
+    }
+  };
+
+  const fetchAvailableDistributors = async () => {
+    try {
+      console.log("DEBUG CreateTeamModal: Fetching available distributors");
+      
+      const response = await fetch("http://127.0.0.1:8000/api/distributors/", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      const data = await response.json();
+      console.log("DEBUG CreateTeamModal: Distributors fetched", {
+        status: response.status,
+        isPaginated: !!data.results,
+        totalDistributors: data.results?.length || data.length || 0,
+      });
+
+      if (response.ok) {
+        // Handle paginated response - API returns {results: [...]} or plain array
+        const distributors = data.results || data;
+        
+        if (Array.isArray(distributors)) {
+          // Store all distributors for team checking
+          setAllDistributors(distributors.map((d: { id: number; team: number | null }) => ({ id: d.id, team: d.team })));
+          setAvailableDistributors(distributors);
+          console.log("DEBUG CreateTeamModal: Distributors loaded:", distributors.length);
+        }
+      }
+    } catch (err) {
+      console.error("DEBUG CreateTeamModal: Error fetching distributors", err);
+    }
+  };
+
+  // Fetch available sales agents and distributors when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchAvailableSalesAgents();
+      fetchAvailableDistributors();
+    } else {
+      // Reset state when modal closes
+      setSelectedMembers([]);
+      setShowAddMember(false);
+      setSelectedSalesAgent(null);
+      setSelectedDistributors([]);
+      setShowAddDistributor(false);
+      setSelectedDistributor(null);
+      setErrorDialog({ show: false, title: "", message: "" });
+    }
+  }, [isOpen]);
+
+  const handleAddMember = () => {
+    if (!selectedSalesAgent) {
+      console.warn("DEBUG CreateTeamModal: No sales agent selected");
+      return;
+    }
+
+    const agent = availableSalesAgents.find(a => a.id === selectedSalesAgent);
+    if (!agent) {
+      console.warn("DEBUG CreateTeamModal: Agent not found", selectedSalesAgent);
+      return;
+    }
+
+    // Check if this user is already in a team
+    const userInTeam = allUsers.find(u => u.id === selectedSalesAgent && u.team !== null);
+    if (userInTeam) {
+      const teamName = teams.find(t => t.id === userInTeam.team)?.name || "another team";
+      console.log("DEBUG CreateTeamModal: User already in team", {
+        userId: selectedSalesAgent,
+        userName: agent.full_name,
+        teamId: userInTeam.team,
+        teamName,
+      });
+      
+      setErrorDialog({
+        show: true,
+        title: "Cannot Add Member",
+        message: `${agent.full_name} is already a member of ${teamName}. A user can only belong to one team at a time.`,
+      });
+      return;
+    }
+
+    // Check if already selected
+    if (selectedMembers.find(m => m.id === agent.id)) {
+      console.warn("DEBUG CreateTeamModal: Agent already selected", agent.id);
+      return;
+    }
+
+    console.log("DEBUG CreateTeamModal: Adding member to list", agent.full_name);
+    setSelectedMembers([...selectedMembers, agent]);
+    setSelectedSalesAgent(null);
+    setShowAddMember(false);
+  };
+
+  const handleRemoveMember = (memberId: number) => {
+    console.log("DEBUG CreateTeamModal: Removing member from list", memberId);
+    setSelectedMembers(selectedMembers.filter(m => m.id !== memberId));
+  };
+
+  const handleAddDistributor = () => {
+    if (!selectedDistributor) {
+      console.warn("DEBUG CreateTeamModal: No distributor selected");
+      return;
+    }
+
+    const distributor = availableDistributors.find(d => d.id === selectedDistributor);
+    if (!distributor) {
+      console.warn("DEBUG CreateTeamModal: Distributor not found", selectedDistributor);
+      return;
+    }
+
+    // Check if this distributor is already in a team
+    const distributorInTeam = allDistributors.find(d => d.id === selectedDistributor && d.team !== null);
+    if (distributorInTeam) {
+      const teamName = teams.find(t => t.id === distributorInTeam.team)?.name || "another team";
+      console.log("DEBUG CreateTeamModal: Distributor already in team", {
+        distributorId: selectedDistributor,
+        distributorName: distributor.name,
+        teamId: distributorInTeam.team,
+        teamName,
+      });
+      
+      setErrorDialog({
+        show: true,
+        title: "Cannot Add Distributor",
+        message: `${distributor.name} is already assigned to ${teamName}. A distributor can only belong to one team at a time.`,
+      });
+      return;
+    }
+
+    // Check if already selected
+    if (selectedDistributors.find(d => d.id === distributor.id)) {
+      console.warn("DEBUG CreateTeamModal: Distributor already selected", distributor.id);
+      return;
+    }
+
+    console.log("DEBUG CreateTeamModal: Adding distributor to list", distributor.name);
+    setSelectedDistributors([...selectedDistributors, distributor]);
+    setSelectedDistributor(null);
+    setShowAddDistributor(false);
+  };
+
+  const handleRemoveDistributor = (distributorId: number) => {
+    console.log("DEBUG CreateTeamModal: Removing distributor from list", distributorId);
+    setSelectedDistributors(selectedDistributors.filter(d => d.id !== distributorId));
+  };
+
+  // Filter out already selected members
+  const selectedMemberIds = selectedMembers.map(m => m.id);
+  const filteredSalesAgents = availableSalesAgents.filter(
+    agent => !selectedMemberIds.includes(agent.id)
+  );
+
+  // Filter out already selected distributors
+  const selectedDistributorIds = selectedDistributors.map(d => d.id);
+  const filteredDistributors = availableDistributors.filter(
+    distributor => !selectedDistributorIds.includes(distributor.id)
+  );
+
+  if (!isOpen) return null;
+
+  const handleClose = () => {
+    console.log("DEBUG CreateTeamModal: Closing modal");
+    onClose();
+    setError("");
+    setErrorDialog({ show: false, title: "", message: "" });
+  };
+
+  const handleSubmit = () => {
+    console.log("DEBUG CreateTeamModal: Submit clicked", {
+      newTeam,
+      approversAvailable: approvers.length,
+      membersToAdd: selectedMembers.length,
+      distributorsToAdd: selectedDistributors.length,
+    });
+    // Pass selected member IDs and distributor IDs to parent
+    onSubmit(
+      selectedMembers.map(m => m.id),
+      selectedDistributors.map(d => d.id)
+    );
+  };
+
+  console.log("DEBUG CreateTeamModal: Rendering", {
+    isOpen,
+    newTeam,
+    approversCount: approvers.length,
+    loading,
+    error,
+  });
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+      <div
+        className={`${
+          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+        } rounded-lg shadow-2xl max-w-2xl w-full border ${
+          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+          <div>
+            <h2 className="text-lg font-semibold">Create New Team</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Fill in the details to create a new team
+            </p>
+          </div>
+          <button
+            onClick={handleClose}
+            className="hover:opacity-70 transition-opacity"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Team Name *
+            </label>
+            <input
+              type="text"
+              value={newTeam.name}
+              onChange={(e) => {
+                console.log("DEBUG CreateTeamModal: Team name changed", e.target.value);
+                setNewTeam({ ...newTeam, name: e.target.value });
+              }}
+              className={`w-full px-3 py-2 rounded border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:outline-none focus:border-blue-500`}
+              placeholder="Enter team name"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Approver (Optional)
+            </label>
+            <select
+              value={newTeam.approver ?? ""}
+              onChange={(e) => {
+                const value = e.target.value ? Number(e.target.value) : null;
+                console.log("DEBUG CreateTeamModal: Approver changed", {
+                  rawValue: e.target.value,
+                  parsedValue: value,
+                });
+                
+                // Check if this approver is already assigned to other teams
+                if (value) {
+                  const existingTeams = teams.filter(team => team.approver === value);
+                  if (existingTeams.length > 0) {
+                    console.log("DEBUG CreateTeamModal: Approver already assigned to", existingTeams.length, "team(s)");
+                    setPendingApproverId(value);
+                    setShowConfirmation(true);
+                    return;
+                  }
+                }
+                
+                setNewTeam({ ...newTeam, approver: value });
+              }}
+              className={`w-full px-3 py-2 rounded border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:outline-none focus:border-blue-500`}
+            >
+              <option value="">No Approver</option>
+              {approvers.map((approver) => (
+                <option key={approver.id} value={approver.id}>
+                  {approver.full_name} ({approver.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Region (Optional)
+            </label>
+            <input
+              type="text"
+              value={newTeam.region}
+              onChange={(e) => {
+                console.log("DEBUG CreateTeamModal: Region changed", e.target.value);
+                setNewTeam({ ...newTeam, region: e.target.value });
+              }}
+              className={`w-full px-3 py-2 rounded border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:outline-none focus:border-blue-500`}
+              placeholder="Enter region (optional)"
+            />
+          </div>
+
+          {/* Members Section */}
+          <div className="pt-4 border-t border-gray-700">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-semibold text-gray-500">
+                Team Members ({selectedMembers.length})
+              </h3>
+              <button
+                onClick={() => setShowAddMember(!showAddMember)}
+                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                  resolvedTheme === "dark"
+                    ? "bg-white text-black hover:bg-gray-100"
+                    : "bg-gray-900 text-white hover:bg-gray-800"
+                } transition-colors`}
+              >
+                <UserPlus className="h-3 w-3" />
+                {showAddMember ? "Cancel" : "Add Member"}
+              </button>
+            </div>
+
+            {/* Add Member Form */}
+            {showAddMember && (
+              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+                <label className="text-xs text-gray-500 mb-2 block">
+                  Select Sales Agent
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedSalesAgent ?? ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? Number(e.target.value) : null;
+                      console.log("DEBUG CreateTeamModal: Sales agent selected", value);
+                      setSelectedSalesAgent(value);
+                    }}
+                    className={`flex-1 px-3 py-2 rounded border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:outline-none focus:border-blue-500 text-sm`}
+                  >
+                    <option value="">Select an agent...</option>
+                    {filteredSalesAgents.map((agent) => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.full_name} ({agent.email}) - {agent.points} pts
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAddMember}
+                    disabled={!selectedSalesAgent}
+                    className={`px-4 py-2 rounded text-sm font-semibold ${
+                      resolvedTheme === "dark"
+                        ? "bg-white text-black hover:bg-gray-100"
+                        : "bg-gray-900 text-white hover:bg-gray-800"
+                    } transition-colors disabled:opacity-50`}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Members List */}
+            <div
+              className={`border rounded-lg overflow-hidden ${
+                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
+              {selectedMembers.length === 0 ? (
+                <div className="text-center text-gray-500 py-8 text-sm">
+                  No members added yet
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead
+                    className={`${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 text-gray-300"
+                        : "bg-gray-50 text-gray-700"
+                    }`}
+                  >
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">
+                        Full Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">
+                        Points
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                    {selectedMembers.map((member) => (
+                      <tr
+                        key={member.id}
+                        className={`hover:${
+                          resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                        } transition-colors`}
+                      >
+                        <td className="px-4 py-3 text-sm">{member.full_name}</td>
+                        <td className="px-4 py-3 text-sm">{member.email}</td>
+                        <td className="px-4 py-3 text-sm">{member.points}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleRemoveMember(member.id)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Distributors Section */}
+          <div className="pt-4 border-t border-gray-700">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-semibold text-gray-500">
+                Distributors ({selectedDistributors.length})
+              </h3>
+              <button
+                onClick={() => setShowAddDistributor(!showAddDistributor)}
+                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                  resolvedTheme === "dark"
+                    ? "bg-white text-black hover:bg-gray-100"
+                    : "bg-gray-900 text-white hover:bg-gray-800"
+                } transition-colors`}
+              >
+                <Store className="h-3 w-3" />
+                {showAddDistributor ? "Cancel" : "Add Distributor"}
+              </button>
+            </div>
+
+            {/* Add Distributor Form */}
+            {showAddDistributor && (
+              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+                <label className="text-xs text-gray-500 mb-2 block">
+                  Select Distributor
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedDistributor ?? ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? Number(e.target.value) : null;
+                      console.log("DEBUG CreateTeamModal: Distributor selected", value);
+                      setSelectedDistributor(value);
+                    }}
+                    className={`flex-1 px-3 py-2 rounded border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:outline-none focus:border-blue-500 text-sm`}
+                  >
+                    <option value="">Select a distributor...</option>
+                    {filteredDistributors.map((distributor) => (
+                      <option key={distributor.id} value={distributor.id}>
+                        {distributor.name} - {distributor.region} ({distributor.location})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAddDistributor}
+                    disabled={!selectedDistributor}
+                    className={`px-4 py-2 rounded text-sm font-semibold ${
+                      resolvedTheme === "dark"
+                        ? "bg-white text-black hover:bg-gray-100"
+                        : "bg-gray-900 text-white hover:bg-gray-800"
+                    } transition-colors disabled:opacity-50`}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Distributors List */}
+            <div
+              className={`border rounded-lg overflow-hidden ${
+                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
+              {selectedDistributors.length === 0 ? (
+                <div className="text-center text-gray-500 py-8 text-sm">
+                  No distributors added yet
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead
+                    className={`${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 text-gray-300"
+                        : "bg-gray-50 text-gray-700"
+                    }`}
+                  >
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">
+                        Region
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold">
+                        Location
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                    {selectedDistributors.map((distributor) => (
+                      <tr
+                        key={distributor.id}
+                        className={`hover:${
+                          resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
+                        } transition-colors`}
+                      >
+                        <td className="px-4 py-3 text-sm">{distributor.name}</td>
+                        <td className="px-4 py-3 text-sm">{distributor.region}</td>
+                        <td className="px-4 py-3 text-sm">{distributor.location}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleRemoveDistributor(distributor.id)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-gray-700">
+          {error && (
+            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
+              resolvedTheme === "dark"
+                ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
+                : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
+            }`}
+          >
+            {loading ? "Creating..." : "Create Team"}
+          </button>
+        </div>
+      </div>
+
+      {/* Approver Reassignment Confirmation Dialog */}
+      {showConfirmation && pendingApproverId && (
+        <div className="fixed inset-0 flex items-center justify-center z-60 p-4 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`${
+              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+            } rounded-lg shadow-2xl max-w-md w-full border ${
+              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-start gap-3 p-6 border-b border-gray-700">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold">Approver Already Assigned</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  This approver is already managing{" "}
+                  {teams.filter(t => t.approver === pendingApproverId).length} other team(s)
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <p className={resolvedTheme === "dark" ? "text-gray-300" : "text-gray-600"}>
+                {(() => {
+                  const approver = approvers.find(a => a.id === pendingApproverId);
+                  const assignedTeams = teams.filter(t => t.approver === pendingApproverId);
+                  return (
+                    <>
+                      <span className="font-semibold">{approver?.full_name}</span> is currently the approver for:
+                      <ul className="mt-2 ml-4 space-y-1">
+                        {assignedTeams.map(team => (
+                          <li key={team.id} className="text-sm">
+                            • {team.name}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-3">
+                        Do you still want to assign them as the approver for this new team?
+                      </p>
+                    </>
+                  );
+                })()}
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-700 flex gap-3">
+              <button
+                onClick={() => {
+                  console.log("DEBUG CreateTeamModal: Confirmation cancelled, clearing approver selection");
+                  setShowConfirmation(false);
+                  setPendingApproverId(null);
+                  // Clear the approver selection
+                  setNewTeam({ ...newTeam, approver: null });
+                }}
+                className={`flex-1 px-4 py-2 rounded font-semibold transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  console.log("DEBUG CreateTeamModal: Confirmation accepted, assigning approver", pendingApproverId);
+                  setNewTeam({ ...newTeam, approver: pendingApproverId });
+                  setShowConfirmation(false);
+                  setPendingApproverId(null);
+                }}
+                className="flex-1 px-4 py-2 rounded font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
+              >
+                Yes, Assign Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Member Assignment Error Dialog */}
+      {errorDialog.show && (
+        <div className="fixed inset-0 flex items-center justify-center z-60 p-4 bg-black/50 backdrop-blur-sm">
+          <div
+            className={`${
+              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+            } rounded-lg shadow-2xl max-w-md w-full border ${
+              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-red-500 bg-opacity-20">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">{errorDialog.title}</h2>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Some members could not be added
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  console.log("DEBUG CreateTeamModal: Closing error dialog");
+                  setErrorDialog({ show: false, title: "", message: "" });
+                }}
+                className="hover:opacity-70 transition-opacity"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-sm">{errorDialog.message}</p>
+            </div>
+
+            <div className="p-6 border-t border-gray-700">
+              <button
+                onClick={() => {
+                  console.log("DEBUG CreateTeamModal: Closing error dialog");
+                  setErrorDialog({ show: false, title: "", message: "" });
+                }}
+                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-white hover:bg-gray-100 text-gray-900"
+                    : "bg-gray-900 hover:bg-gray-800 text-white"
+                }`}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

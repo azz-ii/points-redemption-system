@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from datetime import date
 
 class Distributor(models.Model):
     id = models.AutoField(primary_key=True)
@@ -10,7 +11,7 @@ class Distributor(models.Model):
     location = models.CharField(max_length=255, help_text="Location of the distributor")
     region = models.CharField(max_length=100, help_text="Region where the distributor operates")
     points = models.PositiveIntegerField(default=0, help_text='Current points balance for the distributor')
-    date_added = models.DateField(default=timezone.now, help_text="Date the distributor was added")
+    date_added = models.DateField(auto_now_add=True, help_text="Date the distributor was added")
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

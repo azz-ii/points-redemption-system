@@ -8,7 +8,7 @@ class DistributorSerializer(serializers.ModelSerializer):
         model = Distributor
         fields = [
             'id', 'name', 'contact_email', 'phone', 'location', 
-            'region', 'date_added', 'added_by', 'added_by_name'
+            'region', 'points', 'team', 'date_added', 'added_by', 'added_by_name'
         ]
         read_only_fields = ['id', 'date_added', 'added_by', 'added_by_name']
     
