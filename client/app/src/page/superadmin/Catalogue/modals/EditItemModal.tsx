@@ -88,7 +88,8 @@ export function EditItemModal({
 
           {/* Loading State */}
           {loading && (
-            <div className="text-center py-4">
+            <div className="flex flex-col items-center justify-center gap-4 py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               <p className="text-gray-500">Loading variants...</p>
             </div>
           )}
@@ -389,6 +390,19 @@ export function EditItemModal({
                           } focus:outline-none focus:border-blue-500`}
                           placeholder="https://example.com/image.jpg"
                         />
+                        {/* Image Preview */}
+                        {variant.image_url && (
+                          <div className="mt-2 bg-gray-300 aspect-video overflow-hidden rounded">
+                            <img
+                              src={variant.image_url || "/images/tshirt.png"}
+                              alt="Preview"
+                              onError={(e) => {
+                                e.currentTarget.src = "/images/tshirt.png";
+                              }}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

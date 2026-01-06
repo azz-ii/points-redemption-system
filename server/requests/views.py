@@ -164,6 +164,29 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
+        # Check if sufficient stock is available for all requested items
+        insufficient_stock_items = []
+        for item in redemption_request.items.all():
+            variant = item.variant
+            if variant.stock < item.quantity:
+                insufficient_stock_items.append({
+                    'item_code': variant.item_code,
+                    'item_name': variant.catalogue_item.item_name,
+                    'option': variant.option_description or 'N/A',
+                    'available': variant.stock,
+                    'requested': item.quantity
+                })
+        
+        if insufficient_stock_items:
+            return Response(
+                {
+                    'error': 'Insufficient stock',
+                    'detail': 'Not enough stock available for the following items',
+                    'items': insufficient_stock_items
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # Use transaction to ensure atomicity
         try:
             with transaction.atomic():
@@ -176,6 +199,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     distributor = redemption_request.requested_for
                     distributor.points -= redemption_request.total_points
                     distributor.save()
+                
+                # Deduct stock from all requested items
+                for item in redemption_request.items.all():
+                    variant = item.variant
+                    variant.stock -= item.quantity
+                    variant.save()
                 
                 # Update request status
                 redemption_request.status = 'APPROVED'

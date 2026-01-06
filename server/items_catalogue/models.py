@@ -56,6 +56,8 @@ class Variant(models.Model):
     points = models.CharField(max_length=100, help_text="Points required (can be numeric or formula like '1/inv amt')")
     price = models.CharField(max_length=100, help_text="Price (e.g., '₱130.00' or 'P0.50/inv amt.')")
     image_url = models.URLField(max_length=500, blank=True, null=True, help_text='URL to the variant image')
+    stock = models.IntegerField(default=0, help_text='Current stock quantity available')
+    reorder_level = models.IntegerField(default=10, help_text='Stock level at which to trigger low stock alert')
 
     def __str__(self):
         return f"{self.catalogue_item.item_name} - {self.item_code} ({self.option_description})"

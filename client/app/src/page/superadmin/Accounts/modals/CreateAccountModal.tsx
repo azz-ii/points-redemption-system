@@ -10,6 +10,7 @@ interface NewAccountData {
   full_name: string;
   email: string;
   position: string;
+  points: number;
   is_activated: boolean;
   is_banned: boolean;
 }
@@ -166,6 +167,26 @@ export function CreateAccountModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Points *
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={newAccount.points}
+              onChange={(e) =>
+                setNewAccount({ ...newAccount, points: parseInt(e.target.value) || 0 })
+              }
+              className={`w-full px-3 py-2 rounded border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:outline-none focus:border-blue-500`}
+              placeholder="Enter points"
+            />
           </div>
 
           <div className="flex items-center gap-4">

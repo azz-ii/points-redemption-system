@@ -7,8 +7,6 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
-  Search,
-  Sliders,
   UserPlus,
   LogOut,
   Warehouse,
@@ -21,6 +19,8 @@ import {
   EditAccountModal,
   BanAccountModal,
   DeleteAccountModal,
+  BulkBanAccountModal,
+  BulkDeleteAccountModal,
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
@@ -47,7 +47,6 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [error, setError] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -67,6 +66,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     full_name: "",
     email: "",
     position: "",
+    points: 0,
     is_activated: false,
     is_banned: false,
   });
@@ -82,8 +82,13 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [viewTarget, setViewTarget] = useState<Account | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const [showBulkBanModal, setShowBulkBanModal] = useState(false);
+  const [bulkBanTargets, setBulkBanTargets] = useState<Account[]>([]);
+  const [bulkBanReason, setBulkBanReason] = useState("");
+  const [bulkBanMessage, setBulkBanMessage] = useState("");
+  const [bulkBanDuration, setBulkBanDuration] = useState<"1" | "7" | "30" | "permanent">("1");
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Fetch accounts on component mount
@@ -193,6 +198,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       full_name: account.full_name,
       email: account.email,
       position: account.position,
+      points: account.points || 0,
       is_activated: account.is_activated,
       is_banned: account.is_banned,
     });
@@ -279,6 +285,146 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     }
   };
 
+  // Delete selected accounts (bulk delete)
+  const handleDeleteSelected = async (selectedAccounts: Account[]) => {
+    setBulkDeleteTargets(selectedAccounts);
+    setShowBulkDeleteModal(true);
+  };
+
+  // Confirm bulk delete
+  const handleBulkDeleteConfirm = async () => {
+    try {
+      setLoading(true);
+      
+      // Delete all selected accounts
+      const deleteResults = await Promise.allSettled(
+        bulkDeleteTargets.map(account =>
+          fetch(`http://127.0.0.1:8000/api/users/${account.id}/`, {
+            method: "DELETE",
+          })
+        )
+      );
+
+      const successCount = deleteResults.filter(r => r.status === "fulfilled").length;
+      const failCount = deleteResults.filter(r => r.status === "rejected").length;
+      
+      setShowBulkDeleteModal(false);
+      setBulkDeleteTargets([]);
+      
+      if (failCount === 0) {
+        setToast({
+          message: `Successfully deleted ${successCount} account(s)`,
+          type: "success",
+        });
+      } else {
+        setToast({
+          message: `Deleted ${successCount} of ${bulkDeleteTargets.length} account(s). ${failCount} failed.`,
+          type: "error",
+        });
+      }
+      
+      // Refresh accounts list
+      fetchAccounts();
+    } catch (err) {
+      setError("Error deleting accounts");
+      console.error("Error deleting accounts:", err);
+      setToast({
+        message: "Error deleting some accounts",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Ban selected accounts (bulk ban)
+  const handleBanSelected = async (selectedAccounts: Account[]) => {
+    setBulkBanTargets(selectedAccounts);
+    setBulkBanReason("");
+    setBulkBanMessage("");
+    setBulkBanDuration("1");
+    setShowBulkBanModal(true);
+    setError("");
+  };
+
+  // Confirm bulk ban
+  const handleBulkBanConfirm = async () => {
+    if (!bulkBanReason) {
+      setError("Ban reason is required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const ban_date = new Date().toISOString();
+      let unban_date: string | null = null;
+      let durationValue: number | null = null;
+
+      if (bulkBanDuration !== "permanent") {
+        durationValue = parseInt(bulkBanDuration, 10);
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() + durationValue);
+        unban_date = d.toISOString();
+      }
+
+      // Ban all selected accounts
+      const banResults = await Promise.allSettled(
+        bulkBanTargets.map(account => {
+          const payload = {
+            username: account.username,
+            full_name: account.full_name,
+            email: account.email,
+            position: account.position,
+            is_activated: account.is_activated,
+            is_banned: true,
+            ban_reason: bulkBanReason,
+            ban_message: bulkBanMessage || null,
+            ban_duration: durationValue,
+            ban_date,
+            unban_date,
+          };
+
+          return fetch(`http://127.0.0.1:8000/api/users/${account.id}/`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        })
+      );
+
+      const successCount = banResults.filter(r => r.status === "fulfilled").length;
+      const failCount = banResults.filter(r => r.status === "rejected").length;
+
+      setShowBulkBanModal(false);
+      setBulkBanTargets([]);
+      setError("");
+
+      if (failCount === 0) {
+        setToast({
+          message: `Successfully banned ${successCount} account(s)`,
+          type: "success",
+        });
+      } else {
+        setToast({
+          message: `Banned ${successCount} of ${bulkBanTargets.length} account(s). ${failCount} failed.`,
+          type: "error",
+        });
+      }
+
+      fetchAccounts();
+    } catch (err) {
+      setError("Error banning accounts");
+      console.error("Error banning accounts:", err);
+      setToast({
+        message: "Error banning some accounts",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Open ban modal is handled inline when clicking Ban button
 
   // Submit ban: compute ban_date and unban_date then send update
@@ -349,7 +495,11 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     }
   };
 
-  // Filter accounts based on search query
+  // Mobile pagination
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
+  
   const filteredAccounts = accounts.filter(
     (account) =>
       account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -358,7 +508,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       account.id.toString().includes(searchQuery) ||
       account.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
   const totalPages = Math.max(
     1,
     Math.ceil(filteredAccounts.length / itemsPerPage)
@@ -477,77 +627,12 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
             </div>
           </div>
 
-          {/* Search and Actions */}
-          <div className="flex justify-between items-center mb-6">
-            <div
-              className={`relative flex items-center ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search by ID, Name, Email......"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 w-80 ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => fetchAccounts()}
-                title={loading ? "Refreshing..." : "Refresh"}
-                disabled={loading}
-                className={`p-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors disabled:opacity-50`}
-              >
-                <RotateCw
-                  className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
-                />
-              </button>
-              <button
-                className={`p-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors`}
-              >
-                <Sliders className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                  resolvedTheme === "dark"
-                    ? "bg-white text-black hover:bg-gray-200"
-                    : "bg-gray-900 text-white hover:bg-gray-700"
-                } transition-colors font-semibold`}
-              >
-                <UserPlus className="h-5 w-5" />
-                <span>Add User</span>
-              </button>
-            </div>
-          </div>
+
 
           {/* Table */}
           <AccountsTable
             accounts={accounts}
-            paginatedAccounts={paginatedAccounts}
-            filteredAccounts={filteredAccounts}
             loading={loading}
-            resolvedTheme={resolvedTheme}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
             onViewAccount={(account) => {
               setViewTarget(account);
               setShowViewModal(true);
@@ -567,6 +652,9 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               setShowDeleteModal(true);
               setError("");
             }}
+            onDeleteSelected={handleDeleteSelected}
+            onBanSelected={handleBanSelected}
+            onCreateNew={() => setShowCreateModal(true)}
           />
         </div>
 
@@ -581,32 +669,6 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
             >
               Manage user accounts
             </p>
-
-            {/* Mobile Search */}
-            <div className="mb-4">
-              <div
-                className={`relative flex items-center rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-300"
-                }`}
-              >
-                <Search className="absolute left-3 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Search....."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className={`pl-10 w-full text-sm ${
-                    resolvedTheme === "dark"
-                      ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                      : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                  }`}
-                />
-              </div>
-            </div>
 
             {/* Add Account Button */}
             <button
@@ -727,6 +789,36 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
         account={deleteTarget}
         loading={loading}
         onConfirm={(id) => handleDeleteAccount(id, true)}
+      />
+
+      <BulkBanAccountModal
+        isOpen={showBulkBanModal}
+        onClose={() => {
+          setShowBulkBanModal(false);
+          setBulkBanTargets([]);
+        }}
+        accounts={bulkBanTargets}
+        banReason={bulkBanReason}
+        setBanReason={setBulkBanReason}
+        banMessage={bulkBanMessage}
+        setBanMessage={setBulkBanMessage}
+        banDuration={bulkBanDuration}
+        setBanDuration={setBulkBanDuration}
+        loading={loading}
+        error={error}
+        setError={setError}
+        onSubmit={handleBulkBanConfirm}
+      />
+
+      <BulkDeleteAccountModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => {
+          setShowBulkDeleteModal(false);
+          setBulkDeleteTargets([]);
+        }}
+        accounts={bulkDeleteTargets}
+        loading={loading}
+        onConfirm={handleBulkDeleteConfirm}
       />
 
       {/* Toast Notification */}

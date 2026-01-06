@@ -37,6 +37,7 @@ interface DashboardProps {
       | "redemption"
       | "inventory"
       | "distributors"
+      | "teams"
   ) => void;
   onLogout?: () => void;
 }

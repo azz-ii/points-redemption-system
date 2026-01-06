@@ -1,37 +1,27 @@
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
-import type { ModalBaseProps, CatalogueVariant } from "./types";
+import { useTheme } from "next-themes";
+import type { ModalBaseProps, DistributorFormData } from "./types";
 
-interface EditVariantData {
-  item_code: string;
-  option_description: string;
-  points: string;
-  price: string;
-  image_url: string;
-}
-
-interface EditVariantModalProps extends ModalBaseProps {
-  variant: CatalogueVariant | null;
-  data: EditVariantData;
-  setData: React.Dispatch<React.SetStateAction<EditVariantData>>;
+interface EditDistributorModalProps extends ModalBaseProps {
+  editDistributor: DistributorFormData;
+  setEditDistributor: (data: DistributorFormData) => void;
   updating: boolean;
   error: string | null;
-  onConfirm: () => void;
+  onSubmit: () => void;
 }
 
-export function EditVariantModal({
+export function EditDistributorModal({
   isOpen,
   onClose,
-  variant,
-  data,
-  setData,
+  editDistributor,
+  setEditDistributor,
   updating,
   error,
-  onConfirm,
-}: EditVariantModalProps) {
+  onSubmit,
+}: EditDistributorModalProps) {
   const { resolvedTheme } = useTheme();
 
-  if (!isOpen || !variant) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -42,15 +32,16 @@ export function EditVariantModal({
           resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
         }`}
       >
+        {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold">Edit Variant</h2>
+            <h2 className="text-xl font-semibold">Edit Distributor</h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              Update variant details
+              Update distributor details
             </p>
           </div>
           <button
@@ -61,7 +52,8 @@ export function EditVariantModal({
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        {/* Content */}
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
@@ -70,18 +62,38 @@ export function EditVariantModal({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Item Code */}
+            {/* Name */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Item Code *
+                Name *
               </label>
               <input
                 type="text"
-                value={data.item_code}
+                value={editDistributor.name}
                 onChange={(e) =>
-                  setData({
-                    ...data,
-                    item_code: e.target.value,
+                  setEditDistributor({ ...editDistributor, name: e.target.value })
+                }
+                className={`w-full px-3 py-2 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500`}
+                placeholder="Enter distributor name"
+              />
+            </div>
+
+            {/* Contact Email */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Contact Email *
+              </label>
+              <input
+                type="email"
+                value={editDistributor.contact_email}
+                onChange={(e) =>
+                  setEditDistributor({
+                    ...editDistributor,
+                    contact_email: e.target.value,
                   })
                 }
                 className={`w-full px-3 py-2 rounded border ${
@@ -89,22 +101,42 @@ export function EditVariantModal({
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500`}
-                placeholder="e.g., MC0001"
+                placeholder="email@example.com"
               />
             </div>
 
-            {/* Option Description */}
+            {/* Phone */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Variant Description (Optional)
+                Phone *
+              </label>
+              <input
+                type="tel"
+                value={editDistributor.phone}
+                onChange={(e) =>
+                  setEditDistributor({ ...editDistributor, phone: e.target.value })
+                }
+                className={`w-full px-3 py-2 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500`}
+                placeholder="+63 XXX XXX XXXX"
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Location *
               </label>
               <input
                 type="text"
-                value={data.option_description}
+                value={editDistributor.location}
                 onChange={(e) =>
-                  setData({
-                    ...data,
-                    option_description: e.target.value,
+                  setEditDistributor({
+                    ...editDistributor,
+                    location: e.target.value,
                   })
                 }
                 className={`w-full px-3 py-2 rounded border ${
@@ -112,92 +144,33 @@ export function EditVariantModal({
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500`}
-                placeholder="e.g., Size S, Color Blue"
+                placeholder="City, Province"
               />
             </div>
 
-            {/* Points */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Points Required *
-              </label>
-              <input
-                type="text"
-                value={data.points}
-                onChange={(e) =>
-                  setData({
-                    ...data,
-                    points: e.target.value,
-                  })
-                }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
-                placeholder="e.g., 500"
-              />
-            </div>
-
-            {/* Price */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Price *</label>
-              <input
-                type="text"
-                value={data.price}
-                onChange={(e) =>
-                  setData({
-                    ...data,
-                    price: e.target.value,
-                  })
-                }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
-                placeholder="e.g., ₱130.00"
-              />
-            </div>
-
-            {/* Image URL */}
+            {/* Region */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-2">
-                Image URL (Optional)
+                Region *
               </label>
               <input
-                type="url"
-                value={data.image_url}
+                type="text"
+                value={editDistributor.region}
                 onChange={(e) =>
-                  setData({
-                    ...data,
-                    image_url: e.target.value,
-                  })
+                  setEditDistributor({ ...editDistributor, region: e.target.value })
                 }
                 className={`w-full px-3 py-2 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500`}
-                placeholder="https://example.com/image.jpg"
+                placeholder="e.g., NCR, Region 4A"
               />
-              {/* Image Preview */}
-              {data.image_url && (
-                <div className="mt-2 bg-gray-300 aspect-video overflow-hidden rounded">
-                  <img
-                    src={data.image_url || "/images/tshirt.png"}
-                    alt="Preview"
-                    onError={(e) => {
-                      e.currentTarget.src = "/images/tshirt.png";
-                    }}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
             </div>
           </div>
         </div>
 
+        {/* Footer */}
         <div className="p-6 border-t border-gray-700 flex gap-2 justify-end">
           <button
             onClick={onClose}
@@ -211,11 +184,11 @@ export function EditVariantModal({
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={onSubmit}
             disabled={updating}
             className="px-6 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {updating ? "Updating..." : "Update Variant"}
+            {updating ? "Updating..." : "Update Distributor"}
           </button>
         </div>
       </div>

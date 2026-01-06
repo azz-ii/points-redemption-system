@@ -4,6 +4,7 @@ export interface Account {
   full_name: string;
   email: string;
   position: string;
+  points: number;
   is_activated: boolean;
   is_banned: boolean;
 }

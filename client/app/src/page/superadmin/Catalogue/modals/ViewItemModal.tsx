@@ -17,7 +17,7 @@ export function ViewItemModal({
 }: ViewItemModalProps) {
   const { resolvedTheme } = useTheme();
 
-  if (!isOpen || viewVariants.length === 0) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -49,13 +49,12 @@ export function ViewItemModal({
 
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Loading State */}
-          {loading && (
-            <div className="text-center py-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               <p className="text-gray-500">Loading variants...</p>
             </div>
-          )}
-
-          {!loading && viewVariants.length > 0 && (
+          ) : viewVariants.length > 0 ? (
             <>
               {/* Shared Fields */}
               <div className="space-y-4">
@@ -226,6 +225,10 @@ export function ViewItemModal({
                 ))}
               </div>
             </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-500">No variants found.</p>
+            </div>
           )}
         </div>
 

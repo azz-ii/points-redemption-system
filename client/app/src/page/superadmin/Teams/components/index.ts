@@ -1,0 +1,1 @@
+﻿export { TeamsTable } from "./TeamsTable";

@@ -57,6 +57,10 @@ export function ViewAccountModal({
             <p className="font-medium">{account.position || "N/A"}</p>
           </div>
           <div>
+            <p className="text-xs text-gray-500">Points</p>
+            <p className="font-medium">{account.points?.toLocaleString() ?? 0}</p>
+          </div>
+          <div>
             <p className="text-xs text-gray-500">Status</p>
             <p className="font-medium">
               {account.is_activated ? "Active" : "Inactive"}

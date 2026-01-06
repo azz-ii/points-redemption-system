@@ -14,7 +14,7 @@ class VariantNestedSerializer(serializers.ModelSerializer):
     """Serializer for Variant when nested in CatalogueItem"""
     class Meta:
         model = Variant
-        fields = ['item_code', 'option_description', 'points', 'price', 'image_url']
+        fields = ['item_code', 'option_description', 'points', 'price', 'image_url', 'stock', 'reorder_level']
         extra_kwargs = {
             'item_code': {'required': True},
             'points': {'required': True},
@@ -46,7 +46,7 @@ class VariantSerializer(serializers.ModelSerializer):
         model = Variant
         fields = [
             'id', 'catalogue_item', 'catalogue_item_id', 'item_code', 'option_description',
-            'points', 'price', 'image_url'
+            'points', 'price', 'image_url', 'stock', 'reorder_level'
         ]
         
     def create(self, validated_data):

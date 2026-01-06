@@ -9,6 +9,7 @@ interface EditAccountData {
   full_name: string;
   email: string;
   position: string;
+  points: number;
   is_activated: boolean;
   is_banned: boolean;
 }
@@ -151,6 +152,50 @@ export function EditAccountModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Points *
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                min="0"
+                value={editAccount.points}
+                onChange={(e) =>
+                  setEditAccount({ ...editAccount, points: parseInt(e.target.value) || 0 })
+                }
+                className={`flex-1 px-3 py-2 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500`}
+                placeholder="Enter points"
+              />
+              <button
+                type="button"
+                onClick={() => setEditAccount({ ...editAccount, points: editAccount.points + 10 })}
+                className={`px-3 py-2 rounded border font-semibold text-sm transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 hover:bg-gray-700 text-white"
+                    : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
+                }`}
+              >
+                +10
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditAccount({ ...editAccount, points: editAccount.points + 100 })}
+                className={`px-3 py-2 rounded border font-semibold text-sm transition-colors ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 hover:bg-gray-700 text-white"
+                    : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
+                }`}
+              >
+                +100
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

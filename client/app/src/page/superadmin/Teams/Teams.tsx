@@ -8,17 +8,16 @@ import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
   Search,
-  Sliders,
   LogOut,
-  Pencil,
-  Warehouse,
-  Trash2,
   X,
+  Users,
   Eye,
-  RotateCw,
+  Pencil,
+  Trash2,
   ChevronLeft,
   ChevronRight,
-  Users,
+  RotateCw,
+  Warehouse,
 } from "lucide-react";
 import {
   CreateTeamModal,
@@ -29,24 +28,8 @@ import {
   type EditTeamData,
   type ApproverOption,
 } from "./modals";
-
-interface Team {
-  id: number;
-  name: string;
-  approver: number | null;
-  approver_details?: {
-    id: number;
-    username: string;
-    full_name: string;
-    email: string;
-    position: string;
-  };
-  region: string;
-  member_count?: number;
-  distributor_count?: number;
-  created_at: string;
-  updated_at: string;
-}
+import { TeamsTable } from "./components";
+import type { Team } from "./components/columns";
 
 interface TeamsProps {
   onNavigate?: (
@@ -591,242 +574,20 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
             </div>
           </div>
 
-          {/* Search and Actions */}
-          <div className="flex justify-between items-center mb-6">
-            <div
-              className={`relative flex items-center ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search by Team Name, Approver, Region......"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 w-80 ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => fetchTeams()}
-                title={loading ? "Refreshing..." : "Refresh"}
-                disabled={loading}
-                className={`p-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors disabled:opacity-50`}
-              >
-                <RotateCw
-                  className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
-                />
-              </button>
-              <button
-                className={`p-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors`}
-              >
-                <Sliders className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => {
-                  console.log("DEBUG Teams: Opening create modal");
-                  setIsCreateModalOpen(true);
-                }}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                  resolvedTheme === "dark"
-                    ? "bg-white text-black hover:bg-gray-200"
-                    : "bg-gray-900 text-white hover:bg-gray-700"
-                } transition-colors font-semibold`}
-              >
-                <Users className="h-5 w-5" />
-                <span>Create Team</span>
-              </button>
-            </div>
-          </div>
 
-          {/* Table */}
-          <div
-            className={`border rounded-lg overflow-hidden ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
-          >
-            <table className="w-full">
-              <thead
-                className={`${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-50 text-gray-700"
-                }`}
-              >
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Team Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Approver
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Region
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Members
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Distributors
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Created
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                {loading && teams.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-8 text-center text-gray-500"
-                    >
-                      Loading teams...
-                    </td>
-                  </tr>
-                ) : filteredTeams.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-8 text-center text-gray-500"
-                    >
-                      No teams found
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedTeams.map((team) => (
-                    <tr
-                      key={team.id}
-                      className={`hover:${
-                        resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                      } transition-colors`}
-                    >
-                      <td className="px-6 py-4 text-sm">
-                        {team.id ?? "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold">
-                        {team.name || "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {team.approver_details ? (
-                          <div>
-                            <div className="font-medium">
-                              {team.approver_details.full_name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {team.approver_details.email}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-500">No Approver</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {team.region || "N/A"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                          {team.member_count || 0} {team.member_count === 1 ? "member" : "members"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
-                          {team.distributor_count ?? 0}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {new Date(team.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleViewTeam(team.id)}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors"
-                            title="View"
-                            disabled={loading}
-                          >
-                            <Eye className="h-5 w-5" />
-                          </button>
 
-                          <button
-                            onClick={() => handleEditClick(team)}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition-colors"
-                            title="Edit"
-                            disabled={loading}
-                          >
-                            <Pencil className="h-5 w-5" />
-                          </button>
-
-                          <button
-                            onClick={() => handleDeleteClick(team)}
-                            className="px-4 py-2 rounded flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
-                            title="Delete"
-                            disabled={loading}
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <span className="text-sm font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          {/* Teams Table */}
+          <TeamsTable
+            teams={teams}
+            loading={loading}
+            onView={(team) => handleViewTeam(team.id)}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+            onCreateNew={() => {
+              console.log("DEBUG Teams: Opening create modal");
+              setIsCreateModalOpen(true);
+            }}
+          />
         </div>
 
         {/* Mobile Layout */}

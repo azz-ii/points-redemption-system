@@ -16,7 +16,7 @@ import Accounts from "./page/superadmin/Accounts/Accounts";
 import Catalogue from "./page/superadmin/Catalogue/Catalogue";
 import Redemption from "./page/superadmin/Redemption";
 import Inventory from "./page/superadmin/Inventory";
-import Distributors from "./page/superadmin/Distributors";
+import Distributors from "./page/superadmin/Distributors/Distributors";
 import Teams from "./page/superadmin/Teams/Teams";
 import { Toaster } from "sonner";
 

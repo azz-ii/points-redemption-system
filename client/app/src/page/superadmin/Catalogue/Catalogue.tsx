@@ -528,6 +528,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
   // Handle view click
   const handleViewClick = async (item: CatalogueVariant) => {
     setViewTarget(item);
+    setViewVariants([]); // Reset variants before loading
     setLoadingViewVariants(true);
     setShowViewModal(true);
 
@@ -1052,7 +1053,10 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
 
       <ViewItemModal
         isOpen={showViewModal && !!viewTarget}
-        onClose={() => setShowViewModal(false)}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewTarget(null);
+        }}
         viewVariants={viewVariants}
         loading={loadingViewVariants}
       />

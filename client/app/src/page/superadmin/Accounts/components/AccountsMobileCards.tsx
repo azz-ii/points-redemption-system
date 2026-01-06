@@ -80,6 +80,9 @@ export function AccountsMobileCards({
                   >
                     {account.email || "N/A"}
                   </p>
+                  <p className="text-xs font-semibold mt-1">
+                    Points: {account.points?.toLocaleString() ?? 0}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">
                   <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-400 text-black">
