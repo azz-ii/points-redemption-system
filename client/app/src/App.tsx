@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Login from "./page/login/Login";
 import ApproverDashboard from "./page/approver/Dashboard";
-import ApproverRequests from "./page/approver/Requests";
+import ApproverRequests from "./page/approver/Requests/Requests";
 import ApproverHistory from "./page/approver/History";
 import SalesDashboard from "./page/sales_agent/Dashboard";
 import MarketingDashboard from "./page/marketing/Dashboard";
@@ -14,7 +14,7 @@ import SuperAdminDashboard from "./page/superadmin/Dashboard";
 import SuperAdminHistory from "./page/superadmin/History";
 import Accounts from "./page/superadmin/Accounts/Accounts";
 import Catalogue from "./page/superadmin/Catalogue/Catalogue";
-import Redemption from "./page/superadmin/Redemption";
+import Redemption from "./page/superadmin/Redemption/Redemption";
 import Inventory from "./page/superadmin/Inventory";
 import Distributors from "./page/superadmin/Distributors/Distributors";
 import Teams from "./page/superadmin/Teams/Teams";
