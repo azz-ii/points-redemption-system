@@ -16,7 +16,6 @@ export interface Team {
     email: string;
     position: string;
   };
-  region: string;
   member_count?: number;
   created_at: string;
   updated_at: string;
@@ -104,22 +103,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
       const b = rowB.original.approver_details?.full_name || ""
       return a.localeCompare(b)
     },
-  },
-  {
-    accessorKey: "region",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Region
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("region") || "N/A"}</div>,
   },
   {
     accessorKey: "member_count",

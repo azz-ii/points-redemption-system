@@ -15,16 +15,16 @@ class TeamMembershipInline(admin.TabularInline):
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     """Admin interface for Team model"""
-    list_display = ['name', 'approver_name', 'region', 'member_count', 'created_at']
-    list_filter = ['region', 'created_at']
-    search_fields = ['name', 'region', 'approver__profile__full_name', 'approver__username']
+    list_display = ['name', 'approver_name', 'member_count', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['name', 'approver__profile__full_name', 'approver__username']
     autocomplete_fields = ['approver']
     inlines = [TeamMembershipInline]
     readonly_fields = ['created_at', 'updated_at', 'member_count']
     
     fieldsets = (
         ('Team Information', {
-            'fields': ('name', 'approver', 'region')
+            'fields': ('name', 'approver')
         }),
         ('Statistics', {
             'fields': ('member_count',),

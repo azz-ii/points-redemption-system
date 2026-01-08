@@ -55,13 +55,16 @@ export function EditItemModal({
       <div
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-4xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-4xl w-full border divide-y ${
+          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-item-title"
       >
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-xl font-semibold">Edit Catalogue Item</h2>
+            <h2 id="edit-item-title" className="text-xl font-semibold">Edit Catalogue Item</h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -73,12 +76,13 @@ export function EditItemModal({
           <button
             onClick={onClose}
             className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
@@ -102,30 +106,32 @@ export function EditItemModal({
 
                 {/* Reward */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="edit-reward" className="block text-sm font-medium mb-2">
                     Reward Category (Optional)
                   </label>
                   <input
+                    id="edit-reward"
                     type="text"
                     value={editItem.reward}
                     onChange={(e) =>
                       setEditItem({ ...editItem, reward: e.target.value })
                     }
-                    className={`w-full px-3 py-2 rounded border ${
+                    className={`w-full px-4 py-3 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
+                    } focus:outline-none focus:border-blue-500 text-base`}
                     placeholder="e.g., PLATINUM, GOLD, SILVER"
                   />
                 </div>
 
                 {/* Item Name */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="edit-item-name" className="block text-sm font-medium mb-2">
                     Item Name *
                   </label>
                   <input
+                    id="edit-item-name"
                     type="text"
                     value={editItem.item_name}
                     onChange={(e) =>
@@ -134,21 +140,23 @@ export function EditItemModal({
                         item_name: e.target.value,
                       })
                     }
-                    className={`w-full px-3 py-2 rounded border ${
+                    className={`w-full px-4 py-3 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
+                    } focus:outline-none focus:border-blue-500 text-base`}
                     placeholder="e.g., Platinum Polo Shirt"
+                    aria-required="true"
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="edit-description" className="block text-sm font-medium mb-2">
                     Description
                   </label>
                   <textarea
+                    id="edit-description"
                     value={editItem.description}
                     onChange={(e) =>
                       setEditItem({
@@ -156,11 +164,11 @@ export function EditItemModal({
                         description: e.target.value,
                       })
                     }
-                    className={`w-full px-3 py-2 rounded border ${
+                    className={`w-full px-4 py-3 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 resize-none`}
+                    } focus:outline-none focus:border-blue-500 resize-none text-base`}
                     rows={3}
                     placeholder="Detailed description of the item"
                   />
@@ -168,19 +176,20 @@ export function EditItemModal({
 
                 {/* Purpose */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="edit-purpose" className="block text-sm font-medium mb-2">
                     Purpose
                   </label>
                   <textarea
+                    id="edit-purpose"
                     value={editItem.purpose}
                     onChange={(e) =>
                       setEditItem({ ...editItem, purpose: e.target.value })
                     }
-                    className={`w-full px-3 py-2 rounded border ${
+                    className={`w-full px-4 py-3 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 resize-none`}
+                    } focus:outline-none focus:border-blue-500 resize-none text-base`}
                     rows={2}
                     placeholder="Purpose of the item"
                   />
@@ -188,10 +197,11 @@ export function EditItemModal({
 
                 {/* Specifications */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label htmlFor="edit-specs" className="block text-sm font-medium mb-2">
                     Specifications
                   </label>
                   <textarea
+                    id="edit-specs"
                     value={editItem.specifications}
                     onChange={(e) =>
                       setEditItem({
@@ -199,11 +209,11 @@ export function EditItemModal({
                         specifications: e.target.value,
                       })
                     }
-                    className={`w-full px-3 py-2 rounded border ${
+                    className={`w-full px-4 py-3 rounded border ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 resize-none`}
+                    } focus:outline-none focus:border-blue-500 resize-none text-base`}
                     rows={2}
                     placeholder="Specifications (e.g., 100% cotton, XS-XXL)"
                   />

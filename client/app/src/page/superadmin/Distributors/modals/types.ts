@@ -4,7 +4,6 @@ export interface Distributor {
   contact_email: string;
   phone: string;
   location: string;
-  region: string;
   points: number;
   created_at: string;
   updated_at: string;
@@ -18,7 +17,6 @@ export interface DistributorFormData {
   contact_email: string;
   phone: string;
   location: string;
-  region: string;
 }
 
 export interface ModalBaseProps {

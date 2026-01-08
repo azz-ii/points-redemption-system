@@ -50,8 +50,6 @@ class DistributorViewSet(viewsets.ModelViewSet):
                 contact_email__icontains=search
             ) | queryset.filter(
                 location__icontains=search
-            ) | queryset.filter(
-                region__icontains=search
             )
         
         return queryset.order_by('name')

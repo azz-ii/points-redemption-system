@@ -85,14 +85,12 @@ export function DataTable<TData, TValue>({
       const searchValue = String(filterValue).toLowerCase()
       const name = String(row.getValue("name") || "").toLowerCase()
       const id = String(row.getValue("id") || "").toLowerCase()
-      const region = String(row.getValue("region") || "").toLowerCase()
       const approverDetails = row.getValue("approver_details") as { full_name?: string; email?: string } | undefined
       const approverName = String(approverDetails?.full_name || "").toLowerCase()
       const approverEmail = String(approverDetails?.email || "").toLowerCase()
       
       return name.includes(searchValue) || 
              id.includes(searchValue) || 
-             region.includes(searchValue) ||
              approverName.includes(searchValue) ||
              approverEmail.includes(searchValue)
     },
@@ -111,7 +109,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Filter by name, approver, or region..."
+            placeholder="Filter by name, approver..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"

@@ -18,17 +18,20 @@ export function EditRedemptionModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div
-        className={`relative w-full max-w-md rounded-lg shadow-xl ${
+        className={`relative w-full max-w-lg rounded-lg shadow-xl border divide-y ${
           resolvedTheme === "dark"
-            ? "bg-gray-900 text-white"
-            : "bg-gray-50 text-gray-900"
+            ? "bg-gray-900 text-white border-gray-700 divide-gray-700"
+            : "bg-gray-50 text-gray-900 border-gray-200 divide-gray-200"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-redemption-title"
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-700">
+        <div className="p-8">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold">Edit Redemption</h2>
+              <h2 id="edit-redemption-title" className="text-xl font-semibold">Edit Redemption</h2>
               <p className="text-sm text-gray-500 mt-1">
                 Update request information
               </p>
@@ -40,6 +43,7 @@ export function EditRedemptionModal({
                   ? "hover:bg-gray-800"
                   : "hover:bg-gray-200"
               }`}
+              aria-label="Close dialog"
             >
               <X className="h-5 w-5" />
             </button>
@@ -47,7 +51,7 @@ export function EditRedemptionModal({
         </div>
 
         {/* Form Content */}
-        <div className="p-6 space-y-4">
+        <div className="p-8 space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2">Request ID</label>
             <input

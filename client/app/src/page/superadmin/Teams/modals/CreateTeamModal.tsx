@@ -179,22 +179,26 @@ export function CreateTeamModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-team-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-2xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-lg font-semibold">Create New Team</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Fill in the details to create a new team
+            <h2 id="create-team-title" className="text-xl font-semibold">Create Team</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Add a new team to your organization
             </p>
           </div>
           <button
-            onClick={handleClose}
+            onClick={onClose}
+            aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
           >
             <X className="h-5 w-5" />
@@ -202,7 +206,7 @@ export function CreateTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           <div>
             <label className="text-xs text-gray-500 mb-2 block">
               Team Name *
@@ -262,26 +266,6 @@ export function CreateTeamModal({
                 </option>
               ))}
             </select>
-          </div>
-
-          <div>
-            <label className="text-xs text-gray-500 mb-2 block">
-              Region (Optional)
-            </label>
-            <input
-              type="text"
-              value={newTeam.region}
-              onChange={(e) => {
-                console.log("DEBUG CreateTeamModal: Region changed", e.target.value);
-                setNewTeam({ ...newTeam, region: e.target.value });
-              }}
-              className={`w-full px-3 py-2 rounded border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:outline-none focus:border-blue-500`}
-              placeholder="Enter region (optional)"
-            />
           </div>
 
           {/* Members Section */}

@@ -269,22 +269,26 @@ export function ViewTeamModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-team-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-2xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-lg font-semibold">View Team</h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <h2 id="view-team-title" className="text-xl font-semibold">View Team</h2>
+            <p className="text-sm text-gray-500 mt-1">
               {teamDetails?.name || "Loading..."}
             </p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
           >
             <X className="h-5 w-5" />
@@ -292,7 +296,7 @@ export function ViewTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-500 py-8">
               Loading team details...
@@ -304,45 +308,32 @@ export function ViewTeamModal({
                 <h3 className="text-sm font-semibold text-gray-500">
                   Team Information
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Team ID</p>
-                    <p className="font-medium">{teamDetails.id}</p>
+                    <label className="block text-sm font-medium mb-2">Team Name</label>
+                    <input
+                      type="text"
+                      value={teamDetails.name}
+                      disabled
+                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-100 border-gray-300 text-gray-600"
+                      } focus:outline-none`}
+                    />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Team Name</p>
-                    <p className="font-medium">{teamDetails.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Approver</p>
-                    <p className="font-medium">
-                      {teamDetails.approver_details ? (
-                        <>
-                          {teamDetails.approver_details.full_name}
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            {teamDetails.approver_details.email}
-                          </span>
-                        </>
-                      ) : (
-                        "No Approver"
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Region</p>
-                    <p className="font-medium">{teamDetails.region || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Created</p>
-                    <p className="font-medium">
-                      {new Date(teamDetails.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                      {teamDetails.member_count || 0} members
-                    </span>
+                    <label className="block text-sm font-medium mb-2">Approver</label>
+                    <input
+                      type="text"
+                      value={teamDetails.approver_details ? teamDetails.approver_details.full_name : "No Approver"}
+                      disabled
+                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-100 border-gray-300 text-gray-600"
+                      } focus:outline-none`}
+                    />
                   </div>
                 </div>
               </div>
