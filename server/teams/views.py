@@ -173,7 +173,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         from requests.models import RedemptionRequest
         from requests.serializers import RedemptionRequestSerializer
         
-        # Get requests from team members only (not distributor-based)
+        # Get requests from team members only
         team_requests = RedemptionRequest.objects.filter(
             requested_by__team_memberships__team=team
         ).distinct()

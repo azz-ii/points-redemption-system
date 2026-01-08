@@ -4,6 +4,8 @@ export interface RequestItem {
   requested_by_name: string;
   requested_for: number;
   requested_for_name: string;
+  team: number | null;
+  team_name: string | null;
   status: string;
   status_display: string;
   total_points: number;

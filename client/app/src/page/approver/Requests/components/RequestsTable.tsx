@@ -52,6 +52,9 @@ export function RequestsTable({
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
+                Team
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold">
                 Requested By
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
@@ -74,7 +77,7 @@ export function RequestsTable({
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
+                <td colSpan={8} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     <p className="text-sm text-gray-500">Loading requests...</p>
@@ -83,7 +86,7 @@ export function RequestsTable({
               </tr>
             ) : requests.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
+                <td colSpan={8} className="px-6 py-12 text-center">
                   <p className="text-sm text-gray-500">No requests found</p>
                 </td>
               </tr>
@@ -96,6 +99,9 @@ export function RequestsTable({
                   } transition-colors`}
                 >
                   <td className="px-6 py-4 text-sm">#{request.id}</td>
+                  <td className="px-6 py-4 text-sm">
+                    {request.team_name || <span className="text-gray-400 italic">No Team</span>}
+                  </td>
                   <td className="px-6 py-4 text-sm">
                     {request.requested_by_name}
                   </td>

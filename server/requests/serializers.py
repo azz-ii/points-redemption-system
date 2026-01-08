@@ -41,6 +41,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     requested_by_name = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
+    team_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     points_deducted_from_display = serializers.CharField(source='get_points_deducted_from_display', read_only=True)
 
@@ -48,12 +49,12 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
         model = RedemptionRequest
         fields = [
             'id', 'requested_by', 'requested_by_name', 'requested_for', 
-            'requested_for_name', 'points_deducted_from', 'points_deducted_from_display',
-            'total_points', 'status', 'status_display', 'date_requested',
-            'reviewed_by', 'reviewed_by_name', 'date_reviewed', 'remarks',
-            'rejection_reason', 'items'
+            'requested_for_name', 'team', 'team_name', 'points_deducted_from', 
+            'points_deducted_from_display', 'total_points', 'status', 'status_display', 
+            'date_requested', 'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
+            'remarks', 'rejection_reason', 'items'
         ]
-        read_only_fields = ['id', 'date_requested', 'reviewed_by', 'date_reviewed']
+        read_only_fields = ['id', 'date_requested', 'reviewed_by', 'date_reviewed', 'team']
 
     def get_requested_by_name(self, obj):
         if obj.requested_by:
@@ -65,6 +66,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
 
     def get_requested_for_name(self, obj):
         return obj.requested_for.name if obj.requested_for else None
+
+    def get_team_name(self, obj):
+        return obj.team.name if obj.team else None
 
     def get_reviewed_by_name(self, obj):
         if obj.reviewed_by:
@@ -103,12 +107,18 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
+        from teams.models import TeamMembership
+        
         items_data = validated_data.pop('items')
         requested_by = self.context['request'].user
         
-        # Create the main request
+        # Get the user's team membership
+        membership = TeamMembership.objects.filter(user=requested_by).first()
+        
+        # Create the main request with team assignment
         redemption_request = RedemptionRequest.objects.create(
             requested_by=requested_by,
+            team=membership.team if membership else None,
             **validated_data
         )
         

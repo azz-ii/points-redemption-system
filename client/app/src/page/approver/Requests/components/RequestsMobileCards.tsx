@@ -80,6 +80,12 @@ export function RequestsMobileCards({
 
           <div className="space-y-1 mb-3 text-xs">
             <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Team:</span>
+              <span className="font-medium">
+                {request.team_name || <span className="text-gray-400 italic">No Team</span>}
+              </span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">For:</span>
               <span className="font-medium">{request.requested_for_name}</span>
             </div>

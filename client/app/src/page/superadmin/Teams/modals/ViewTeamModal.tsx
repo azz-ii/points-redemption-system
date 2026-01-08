@@ -16,8 +16,12 @@ export function ViewTeamModal({
 }: ViewTeamModalProps) {
   const { resolvedTheme } = useTheme();
   const [teamDetails, setTeamDetails] = useState<TeamDetail | null>(null);
-  const [availableSalesAgents, setAvailableSalesAgents] = useState<SalesAgentOption[]>([]);
-  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
+  const [availableSalesAgents, setAvailableSalesAgents] = useState<
+    SalesAgentOption[]
+  >([]);
+  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -34,19 +38,22 @@ export function ViewTeamModal({
   // Fetch team details when modal opens
   const fetchTeamDetails = useCallback(async () => {
     if (!team) return;
-    
+
     try {
       setLoading(true);
       console.log("DEBUG ViewTeamModal: Fetching team details for ID", team.id);
-      
-      const response = await fetch(`http://127.0.0.1:8000/api/teams/${team.id}/`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/teams/${team.id}/`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const data = await response.json();
       console.log("DEBUG ViewTeamModal: Team details fetched", {
         status: response.status,
@@ -56,7 +63,10 @@ export function ViewTeamModal({
       if (response.ok) {
         setTeamDetails(data);
       } else {
-        console.error("DEBUG ViewTeamModal: Failed to fetch team details", data);
+        console.error(
+          "DEBUG ViewTeamModal: Failed to fetch team details",
+          data
+        );
       }
     } catch (err) {
       console.error("DEBUG ViewTeamModal: Error fetching team details", err);
@@ -67,7 +77,10 @@ export function ViewTeamModal({
 
   useEffect(() => {
     if (isOpen && team) {
-      console.log("DEBUG ViewTeamModal: Modal opened, fetching team details", team.id);
+      console.log(
+        "DEBUG ViewTeamModal: Modal opened, fetching team details",
+        team.id
+      );
       fetchTeamDetails();
       fetchAvailableSalesAgents();
     } else if (!isOpen) {
@@ -82,7 +95,7 @@ export function ViewTeamModal({
   const fetchAvailableSalesAgents = async () => {
     try {
       console.log("DEBUG ViewTeamModal: Fetching available sales agents");
-      
+
       const response = await fetch("http://127.0.0.1:8000/api/users/", {
         method: "GET",
         credentials: "include",
@@ -90,7 +103,7 @@ export function ViewTeamModal({
           "Content-Type": "application/json",
         },
       });
-      
+
       const data = await response.json();
       console.log("DEBUG ViewTeamModal: Users fetched", {
         status: response.status,
@@ -102,11 +115,11 @@ export function ViewTeamModal({
         const salesAgents = data.accounts.filter(
           (user: { position: string }) => user.position === "Sales Agent"
         );
-        
+
         console.log("DEBUG ViewTeamModal: Sales agents filtered", {
           total: salesAgents.length,
         });
-        
+
         setAvailableSalesAgents(salesAgents);
       }
     } catch (err) {
@@ -157,7 +170,8 @@ export function ViewTeamModal({
         onRefresh(); // Refresh parent teams list
       } else {
         console.error("DEBUG ViewTeamModal: Failed to add member", data);
-        const errorMessage = data.error || data.user_id?.[0] || "Failed to add member";
+        const errorMessage =
+          data.error || data.user_id?.[0] || "Failed to add member";
         setErrorDialog({
           show: true,
           title: "Cannot Add Member",
@@ -328,9 +342,6 @@ export function ViewTeamModal({
                   <div className="flex gap-2">
                     <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
                       {teamDetails.member_count || 0} members
-                    </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
-                      {teamDetails.distributor_count || 0} distributors
                     </span>
                   </div>
                 </div>

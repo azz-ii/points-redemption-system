@@ -1,7 +1,20 @@
-import { useState, useEffect, useCallback, type Dispatch, type SetStateAction } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useTheme } from "next-themes";
 import { X, AlertTriangle, UserPlus, Trash2, AlertCircle } from "lucide-react";
-import type { Team, ModalBaseProps, EditTeamData, ApproverOption, TeamDetail, SalesAgentOption } from "./types";
+import type {
+  Team,
+  ModalBaseProps,
+  EditTeamData,
+  ApproverOption,
+  TeamDetail,
+  SalesAgentOption,
+} from "./types";
 
 interface EditTeamModalProps extends ModalBaseProps {
   team: Team | null;
@@ -32,10 +45,16 @@ export function EditTeamModal({
 }: EditTeamModalProps) {
   const { resolvedTheme } = useTheme();
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingApproverId, setPendingApproverId] = useState<number | null>(null);
+  const [pendingApproverId, setPendingApproverId] = useState<number | null>(
+    null
+  );
   const [teamDetails, setTeamDetails] = useState<TeamDetail | null>(null);
-  const [availableSalesAgents, setAvailableSalesAgents] = useState<SalesAgentOption[]>([]);
-  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
+  const [availableSalesAgents, setAvailableSalesAgents] = useState<
+    SalesAgentOption[]
+  >([]);
+  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(
+    null
+  );
   const [memberLoading, setMemberLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -52,19 +71,22 @@ export function EditTeamModal({
   // Fetch team details when modal opens
   const fetchTeamDetails = useCallback(async () => {
     if (!team) return;
-    
+
     try {
       setMemberLoading(true);
       console.log("DEBUG EditTeamModal: Fetching team details for ID", team.id);
-      
-      const response = await fetch(`http://127.0.0.1:8000/api/teams/${team.id}/`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/teams/${team.id}/`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const data = await response.json();
       console.log("DEBUG EditTeamModal: Team details fetched", {
         status: response.status,
@@ -74,7 +96,10 @@ export function EditTeamModal({
       if (response.ok) {
         setTeamDetails(data);
       } else {
-        console.error("DEBUG EditTeamModal: Failed to fetch team details", data);
+        console.error(
+          "DEBUG EditTeamModal: Failed to fetch team details",
+          data
+        );
       }
     } catch (err) {
       console.error("DEBUG EditTeamModal: Error fetching team details", err);
@@ -86,7 +111,7 @@ export function EditTeamModal({
   const fetchAvailableSalesAgents = async () => {
     try {
       console.log("DEBUG EditTeamModal: Fetching available sales agents");
-      
+
       const response = await fetch("http://127.0.0.1:8000/api/users/", {
         method: "GET",
         credentials: "include",
@@ -94,7 +119,7 @@ export function EditTeamModal({
           "Content-Type": "application/json",
         },
       });
-      
+
       const data = await response.json();
       console.log("DEBUG EditTeamModal: Users fetched", {
         status: response.status,
@@ -106,11 +131,11 @@ export function EditTeamModal({
         const salesAgents = data.accounts.filter(
           (user: { position: string }) => user.position === "Sales Agent"
         );
-        
+
         console.log("DEBUG EditTeamModal: Sales agents filtered", {
           total: salesAgents.length,
         });
-        
+
         setAvailableSalesAgents(salesAgents);
       }
     } catch (err) {
@@ -161,7 +186,8 @@ export function EditTeamModal({
         onRefresh(); // Refresh parent teams list
       } else {
         console.error("DEBUG EditTeamModal: Failed to add member", data);
-        const errorMessage = data.error || data.user_id?.[0] || "Failed to add member";
+        const errorMessage =
+          data.error || data.user_id?.[0] || "Failed to add member";
         setErrorDialog({
           show: true,
           title: "Cannot Add Member",
@@ -239,11 +265,12 @@ export function EditTeamModal({
     }
   };
 
-
-
   useEffect(() => {
     if (isOpen && team) {
-      console.log("DEBUG EditTeamModal: Modal opened, fetching team details", team.id);
+      console.log(
+        "DEBUG EditTeamModal: Modal opened, fetching team details",
+        team.id
+      );
       fetchTeamDetails();
       fetchAvailableSalesAgents();
     } else if (!isOpen) {
@@ -323,7 +350,10 @@ export function EditTeamModal({
               type="text"
               value={editTeam.name}
               onChange={(e) => {
-                console.log("DEBUG EditTeamModal: Team name changed", e.target.value);
+                console.log(
+                  "DEBUG EditTeamModal: Team name changed",
+                  e.target.value
+                );
                 setEditTeam({ ...editTeam, name: e.target.value });
               }}
               className={`w-full px-3 py-2 rounded border ${
@@ -347,18 +377,24 @@ export function EditTeamModal({
                   rawValue: e.target.value,
                   parsedValue: value,
                 });
-                
+
                 // Check if this approver is already assigned to other teams (excluding current team)
                 if (value) {
-                  const existingTeams = teams.filter(t => t.approver === value && t.id !== team.id);
+                  const existingTeams = teams.filter(
+                    (t) => t.approver === value && t.id !== team.id
+                  );
                   if (existingTeams.length > 0) {
-                    console.log("DEBUG EditTeamModal: Approver already assigned to", existingTeams.length, "other team(s)");
+                    console.log(
+                      "DEBUG EditTeamModal: Approver already assigned to",
+                      existingTeams.length,
+                      "other team(s)"
+                    );
                     setPendingApproverId(value);
                     setShowConfirmation(true);
                     return;
                   }
                 }
-                
+
                 setEditTeam({ ...editTeam, approver: value });
               }}
               className={`w-full px-3 py-2 rounded border ${
@@ -384,7 +420,10 @@ export function EditTeamModal({
               type="text"
               value={editTeam.region}
               onChange={(e) => {
-                console.log("DEBUG EditTeamModal: Region changed", e.target.value);
+                console.log(
+                  "DEBUG EditTeamModal: Region changed",
+                  e.target.value
+                );
                 setEditTeam({ ...editTeam, region: e.target.value });
               }}
               className={`w-full px-3 py-2 rounded border ${
@@ -444,8 +483,7 @@ export function EditTeamModal({
                     <option value="">Select an agent...</option>
                     {filteredSalesAgents.map((agent) => (
                       <option key={agent.id} value={agent.id}>
-                        {agent.full_name} ({agent.email}) - {agent.points}{" "}
-                        pts
+                        {agent.full_name} ({agent.email}) - {agent.points} pts
                       </option>
                     ))}
                   </select>
@@ -585,32 +623,52 @@ export function EditTeamModal({
                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold">Approver Already Assigned</h3>
+                <h3 className="text-lg font-semibold">
+                  Approver Already Assigned
+                </h3>
                 <p className="text-sm text-gray-400 mt-1">
                   This approver is already managing{" "}
-                  {teams.filter(t => t.approver === pendingApproverId && t.id !== team.id).length} other team(s)
+                  {
+                    teams.filter(
+                      (t) =>
+                        t.approver === pendingApproverId && t.id !== team.id
+                    ).length
+                  }{" "}
+                  other team(s)
                 </p>
               </div>
             </div>
 
             {/* Body */}
             <div className="p-6">
-              <p className={resolvedTheme === "dark" ? "text-gray-300" : "text-gray-600"}>
+              <p
+                className={
+                  resolvedTheme === "dark" ? "text-gray-300" : "text-gray-600"
+                }
+              >
                 {(() => {
-                  const approver = approvers.find(a => a.id === pendingApproverId);
-                  const assignedTeams = teams.filter(t => t.approver === pendingApproverId && t.id !== team.id);
+                  const approver = approvers.find(
+                    (a) => a.id === pendingApproverId
+                  );
+                  const assignedTeams = teams.filter(
+                    (t) => t.approver === pendingApproverId && t.id !== team.id
+                  );
                   return (
                     <>
-                      <span className="font-semibold">{approver?.full_name}</span> is currently the approver for:
+                      <span className="font-semibold">
+                        {approver?.full_name}
+                      </span>{" "}
+                      is currently the approver for:
                       <ul className="mt-2 ml-4 space-y-1">
-                        {assignedTeams.map(t => (
+                        {assignedTeams.map((t) => (
                           <li key={t.id} className="text-sm">
                             • {t.name}
                           </li>
                         ))}
                       </ul>
                       <p className="mt-3">
-                        Do you still want to assign them as the approver for <span className="font-semibold">{team.name}</span>?
+                        Do you still want to assign them as the approver for{" "}
+                        <span className="font-semibold">{team.name}</span>?
                       </p>
                     </>
                   );
@@ -622,7 +680,9 @@ export function EditTeamModal({
             <div className="p-6 border-t border-gray-700 flex gap-3">
               <button
                 onClick={() => {
-                  console.log("DEBUG EditTeamModal: Confirmation cancelled, clearing approver selection");
+                  console.log(
+                    "DEBUG EditTeamModal: Confirmation cancelled, clearing approver selection"
+                  );
                   setShowConfirmation(false);
                   setPendingApproverId(null);
                   // Clear the approver selection (revert to previous value)
@@ -638,7 +698,10 @@ export function EditTeamModal({
               </button>
               <button
                 onClick={() => {
-                  console.log("DEBUG EditTeamModal: Confirmation accepted, assigning approver", pendingApproverId);
+                  console.log(
+                    "DEBUG EditTeamModal: Confirmation accepted, assigning approver",
+                    pendingApproverId
+                  );
                   setEditTeam({ ...editTeam, approver: pendingApproverId });
                   setShowConfirmation(false);
                   setPendingApproverId(null);
