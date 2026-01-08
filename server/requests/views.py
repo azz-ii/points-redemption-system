@@ -35,12 +35,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         profile = getattr(user, 'profile', None)
         
         if not profile:
-            # Super admin without profile sees all
-            return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+            # Super admin without profile sees only approved/rejected requests
+            return RedemptionRequest.objects.exclude(status='PENDING').prefetch_related('items', 'items__variant')
         
         # Admin - highest ranking employee, manages all teams
         if profile.position == 'Admin':
-            return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+            return RedemptionRequest.objects.exclude(status='PENDING').prefetch_related('items', 'items__variant')
         
         # Sales Agent - team-scoped access
         elif profile.position == 'Sales Agent':

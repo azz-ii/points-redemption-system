@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, ArrowUpDown } from "lucide-react"
+import { Eye, Pencil, ArrowUpDown, PackageCheck, PackageX } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { RedemptionItem } from "../modals/types"
@@ -123,6 +123,22 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
     },
   },
   {
+    accessorKey: "reviewed_by_name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Reviewed By
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => <div>{row.getValue("reviewed_by_name") || "N/A"}</div>,
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => {
       return (
@@ -138,15 +154,16 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
     },
     cell: ({ row }) => {
       const status = row.getValue("status") as string
+      const statusUpper = status?.toUpperCase() || ""
       
       return (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            status === "Approved"
-              ? "bg-green-500 text-white"
-              : status === "Rejected"
-              ? "bg-red-500 text-white"
-              : "bg-yellow-400 text-black"
+            statusUpper === "APPROVED"
+              ? "bg-green-600 text-white"
+              : statusUpper === "REJECTED"
+              ? "bg-red-600 text-white"
+              : "bg-yellow-500 text-gray-900"
           }`}
         >
           {status}
@@ -159,9 +176,32 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
       const redemption = row.original
+      const status = row.getValue("status") as string
+      const statusUpper = status?.toUpperCase() || ""
+      const isApproved = statusUpper === "APPROVED"
 
       return (
         <div className="flex justify-end gap-2">
+          {isApproved && (
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+                title="Mark as Delivered"
+              >
+                <PackageCheck className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white"
+                title="Mark as Not Delivered"
+              >
+                <PackageX className="h-4 w-4" />
+              </Button>
+            </>
+          )}
           <Button
             variant="default"
             size="sm"
@@ -170,15 +210,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
             title="View"
           >
             <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onEditRedemption(redemption)}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
           </Button>
         </div>
       )

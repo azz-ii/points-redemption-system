@@ -96,7 +96,6 @@ export function RejectRequestModal({
           >
             Reject
           </button>
-          </div>
         </div>
       </div>
     </div>

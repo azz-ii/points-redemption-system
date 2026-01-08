@@ -87,7 +87,6 @@ export function ApproveRequestModal({
           >
             Approve
           </button>
-          </div>
         </div>
       </div>
     </div>
