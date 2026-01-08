@@ -20,14 +20,6 @@ class Distributor(models.Model):
         related_name='added_distributors',
         help_text='User who added this distributor'
     )
-    team = models.ForeignKey(
-        'teams.Team',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='distributors',
-        help_text='Team that this distributor is assigned to'
-    )
 
     def __str__(self):
         return f"{self.name}"
