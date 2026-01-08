@@ -1,6 +1,7 @@
 import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { Trash2, AlertTriangle } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
+import { BaseModal } from "./BaseModal";
 
 interface DeleteAccountModalProps extends ModalBaseProps {
   account: Account | null;
@@ -19,70 +20,111 @@ export function DeleteAccountModal({
 
   if (!isOpen || !account) return null;
 
-  const handleClose = () => {
-    onClose();
-  };
-
   const handleConfirm = () => {
     onConfirm(account.id);
   };
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-      <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-md w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+  const footer = (
+    <>
+      <button
+        onClick={onClose}
+        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          resolvedTheme === "dark"
+            ? "bg-gray-700 hover:bg-gray-600 text-white"
+            : "bg-gray-200 hover:bg-gray-300 text-gray-900"
         }`}
       >
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
-          <div>
-            <h2 className="text-lg font-semibold">Delete User</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              This action cannot be undone.
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        Keep Account
+      </button>
+      <button
+        onClick={handleConfirm}
+        disabled={loading}
+        className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+          resolvedTheme === "dark"
+            ? "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            : "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        }`}
+      >
+        <Trash2 className="h-4 w-4" />
+        {loading ? "Deleting..." : "Delete Account"}
+      </button>
+    </>
+  );
 
-        <div className="p-6 space-y-4">
-          <p>
-            Are you sure you want to delete{" "}
-            <strong>{account.full_name}</strong> ({account.username})?
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Account"
+      subtitle="This action cannot be undone"
+      footer={footer}
+      isDangerous
+    >
+      <div className="space-y-4">
+        <div
+          className={`p-3 rounded-lg border flex gap-2 ${
+            resolvedTheme === "dark"
+              ? "bg-red-500/5 border-red-500/30"
+              : "bg-red-500/5 border-red-500/30"
+          }`}
+        >
+          <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700 font-medium">
+            Deleting this account will permanently remove all associated data.
           </p>
         </div>
 
-        <div className="p-6 border-t border-gray-700 flex gap-2">
-          <button
-            onClick={handleClose}
-            className={`px-4 py-2 rounded font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+        <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 space-y-3">
+          <p
+            className={`text-sm font-medium ${
+              resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
-            Cancel
-          </button>
-
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            className={`px-4 py-2 rounded font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                : "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-            }`}
-          >
-            {loading ? "Deleting..." : "Delete"}
-          </button>
+            Account to be deleted:
+          </p>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <span
+                className={
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }
+              >
+                Name
+              </span>
+              <span className="font-semibold">{account.full_name}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span
+                className={
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }
+              >
+                Username
+              </span>
+              <span className="font-semibold">{account.username}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span
+                className={
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }
+              >
+                Email
+              </span>
+              <span className="font-semibold text-sm">{account.email}</span>
+            </div>
+          </div>
         </div>
+
+        <p
+          className={`text-sm ${
+            resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          Are you absolutely sure you want to delete this account? Please verify
+          the details above.
+        </p>
       </div>
-    </div>
+    </BaseModal>
   );
 }

@@ -1,6 +1,7 @@
 import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { Trash2, AlertTriangle } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
+import { BaseModal } from "./BaseModal";
 
 interface BulkDeleteAccountModalProps extends ModalBaseProps {
   accounts: Account[];
@@ -19,80 +20,98 @@ export function BulkDeleteAccountModal({
 
   if (!isOpen || accounts.length === 0) return null;
 
-  const handleClose = () => {
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-      <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-md w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+  const footer = (
+    <>
+      <button
+        onClick={onClose}
+        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          resolvedTheme === "dark"
+            ? "bg-gray-700 hover:bg-gray-600 text-white"
+            : "bg-gray-200 hover:bg-gray-300 text-gray-900"
         }`}
       >
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
-          <div>
-            <h2 className="text-lg font-semibold">Delete Multiple Users</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              This action cannot be undone.
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        Keep Accounts
+      </button>
+      <button
+        onClick={onConfirm}
+        disabled={loading}
+        className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+          resolvedTheme === "dark"
+            ? "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            : "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        }`}
+      >
+        <Trash2 className="h-4 w-4" />
+        {loading
+          ? "Deleting..."
+          : `Delete ${accounts.length} User${accounts.length > 1 ? "s" : ""}`}
+      </button>
+    </>
+  );
+
+  return (
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete Multiple Users"
+      subtitle="This action cannot be undone"
+      footer={footer}
+      isDangerous
+    >
+      <div className="space-y-4">
+        <div
+          className={`p-3 rounded-lg border flex gap-2 ${
+            resolvedTheme === "dark"
+              ? "bg-red-500/5 border-red-500/30"
+              : "bg-red-500/5 border-red-500/30"
+          }`}
+        >
+          <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700 font-medium">
+            Deleting these accounts will permanently remove all associated data.
+          </p>
         </div>
 
-        <div className="p-6 space-y-4">
-          <p>
-            Are you sure you want to delete <strong>{accounts.length}</strong> user{accounts.length > 1 ? 's' : ''}?
+        <div>
+          <p
+            className={`text-sm font-medium mb-2 ${
+              resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            You are about to delete <strong>{accounts.length}</strong> user
+            {accounts.length > 1 ? "s" : ""}:
           </p>
-          
-          <div className="space-y-1 max-h-48 overflow-y-auto">
+
+          <div
+            className={`space-y-1.5 max-h-48 overflow-y-auto p-3 rounded-lg ${
+              resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
+            }`}
+          >
             {accounts.map((account) => (
               <div
                 key={account.id}
-                className={`text-sm px-3 py-2 rounded ${
+                className={`text-sm px-2 py-1.5 rounded flex justify-between ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-100 text-gray-700"
+                    ? "bg-gray-700 text-gray-200"
+                    : "bg-gray-200 text-gray-800"
                 }`}
               >
-                <strong>{account.full_name}</strong> ({account.username})
+                <span className="font-medium">{account.full_name}</span>
+                <span className="text-gray-500">@{account.username}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-700 flex gap-2">
-          <button
-            onClick={handleClose}
-            className={`px-4 py-2 rounded font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-            }`}
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className={`px-4 py-2 rounded font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-                : "bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
-            }`}
-          >
-            {loading ? "Deleting..." : `Delete ${accounts.length} User${accounts.length > 1 ? 's' : ''}`}
-          </button>
-        </div>
+        <p
+          className={`text-sm ${
+            resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          Please verify the accounts above. This action is permanent and cannot
+          be reversed.
+        </p>
       </div>
-    </div>
+    </BaseModal>
   );
 }

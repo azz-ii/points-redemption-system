@@ -1,6 +1,7 @@
 import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
+import { BaseModal } from "./BaseModal";
 
 interface ViewAccountModalProps extends ModalBaseProps {
   account: Account | null;
@@ -15,60 +16,151 @@ export function ViewAccountModal({
 
   if (!isOpen || !account) return null;
 
+  const statusColor =
+    account.is_activated && !account.is_banned
+      ? "text-green-600"
+      : account.is_banned
+      ? "text-red-600"
+      : "text-gray-600";
+
+  const statusIcon =
+    account.is_activated && !account.is_banned ? (
+      <CheckCircle2 className="h-4 w-4" />
+    ) : account.is_banned ? (
+      <XCircle className="h-4 w-4" />
+    ) : (
+      <XCircle className="h-4 w-4" />
+    );
+
+  const statusLabel = account.is_activated
+    ? account.is_banned
+      ? "Banned"
+      : "Active"
+    : "Inactive";
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
-      <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-md w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-        }`}
-      >
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
-          <div>
-            <h2 className="text-lg font-semibold">View Account</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Details for {account.full_name}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Account Details"
+      subtitle={`Viewing ${account.full_name}`}
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <DetailField label="Username" value={account.username} />
+          <DetailField label="Full Name" value={account.full_name} />
+          <DetailField label="Email" value={account.email} />
+          <DetailField label="Position" value={account.position} />
+          <DetailField
+            label="Points"
+            value={account.points?.toLocaleString() ?? "0"}
+          />
+          <div className="space-y-1">
+            <p
+              className={`text-sm font-medium ${
+                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Status
             </p>
+            <div
+              className={`flex items-center gap-2 font-semibold ${statusColor}`}
+            >
+              {statusIcon}
+              {statusLabel}
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
-        <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
-          <div>
-            <p className="text-xs text-gray-500">Username</p>
-            <p className="font-medium">{account.username || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Full Name</p>
-            <p className="font-medium">{account.full_name || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Email</p>
-            <p className="font-medium">{account.email || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Position</p>
-            <p className="font-medium">{account.position || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Points</p>
-            <p className="font-medium">{account.points?.toLocaleString() ?? 0}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Status</p>
-            <p className="font-medium">
-              {account.is_activated ? "Active" : "Inactive"}
-              {account.is_banned ? " • Banned" : ""}
-            </p>
+        {/* Additional Info */}
+        <div
+          className={`p-3 rounded-lg ${
+            resolvedTheme === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
+          }`}
+        >
+          <p
+            className={`text-xs mb-2 font-medium ${
+              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            Account Status
+          </p>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span
+                className={
+                  resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+                }
+              >
+                Activated
+              </span>
+              <span className="font-medium">
+                {account.is_activated ? (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Yes
+                  </span>
+                ) : (
+                  <span className="text-gray-500 flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    No
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span
+                className={
+                  resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+                }
+              >
+                Banned
+              </span>
+              <span className="font-medium">
+                {account.is_banned ? (
+                  <span className="text-red-600 flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    Yes
+                  </span>
+                ) : (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    No
+                  </span>
+                )}
+              </span>
+            </div>
           </div>
         </div>
       </div>
+    </BaseModal>
+  );
+}
+
+interface DetailFieldProps {
+  label: string;
+  value: string;
+}
+
+function DetailField({ label, value }: DetailFieldProps) {
+  const { resolvedTheme } = useTheme();
+
+  return (
+    <div className="space-y-1">
+      <p
+        className={`text-sm font-medium ${
+          resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+        }`}
+      >
+        {label}
+      </p>
+      <p
+        className={`font-semibold ${
+          resolvedTheme === "dark" ? "text-white" : "text-gray-900"
+        }`}
+      >
+        {value || "—"}
+      </p>
     </div>
   );
 }
