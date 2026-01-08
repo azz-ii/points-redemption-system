@@ -34,43 +34,11 @@ class DistributorViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        Filter distributors based on user's team and role.
+        All authenticated users can access all distributors.
         Optionally filter based on query parameters.
         """
-        from teams.models import TeamMembership, Team
-        
-        user = self.request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Superusers and staff get full access
-        if user.is_superuser or user.is_staff:
-            queryset = Distributor.objects.all()
-        # No profile - grant full access
-        elif not profile:
-            queryset = Distributor.objects.all()
-        # Admin position - full access
-        elif profile.position == 'Admin':
-            queryset = Distributor.objects.all()
-        # Marketing, Reception, Executive Assistant - full access
-        elif profile.position in ['Marketing', 'Reception', 'Executive Assistant']:
-            queryset = Distributor.objects.all()
-        # Sales Agent - team-scoped access
-        elif profile.position == 'Sales Agent':
-            membership = TeamMembership.objects.filter(user=user).first()
-            if membership:
-                queryset = Distributor.objects.filter(team=membership.team)
-            else:
-                queryset = Distributor.objects.none()
-        # Approver - team-scoped access
-        elif profile.position == 'Approver':
-            managed_teams = Team.objects.filter(approver=user)
-            if managed_teams.exists():
-                queryset = Distributor.objects.filter(team__in=managed_teams)
-            else:
-                queryset = Distributor.objects.none()
-        # Default - no access
-        else:
-            queryset = Distributor.objects.none()
+        # All users get full access to all distributors
+        queryset = Distributor.objects.all()
         
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)

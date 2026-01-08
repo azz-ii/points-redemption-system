@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Team, TeamMembership
 from users.models import UserProfile
-from distributers.serializers import DistributorSerializer
 
 
 class ApproverSerializer(serializers.ModelSerializer):
@@ -65,20 +64,15 @@ class TeamSerializer(serializers.ModelSerializer):
     """Basic serializer for Team model"""
     approver_details = ApproverSerializer(source='approver', read_only=True)
     member_count = serializers.SerializerMethodField()
-    distributor_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
-        fields = ['id', 'name', 'approver', 'approver_details', 'region', 'member_count', 'distributor_count', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'approver', 'approver_details', 'region', 'member_count', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_member_count(self, obj):
         """Get the count of team members"""
         return obj.member_count  # Uses the property from the model
-    
-    def get_distributor_count(self, obj):
-        """Get count of distributors assigned to this team"""
-        return obj.distributors.count()
     
     def validate_approver(self, value):
         """Validate that approver has Approver position"""
@@ -93,14 +87,12 @@ class TeamDetailSerializer(serializers.ModelSerializer):
     approver_details = ApproverSerializer(source='approver', read_only=True)
     members = serializers.SerializerMethodField()
     member_count = serializers.IntegerField(read_only=True)
-    distributor_count = serializers.SerializerMethodField()
-    distributors = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
         fields = [
             'id', 'name', 'approver', 'approver_details', 'region',
-            'members', 'member_count', 'distributor_count', 'distributors',
+            'members', 'member_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -109,15 +101,6 @@ class TeamDetailSerializer(serializers.ModelSerializer):
         """Get all team members with details"""
         memberships = obj.memberships.all()
         return TeamMembershipSerializer(memberships, many=True).data
-    
-    def get_distributor_count(self, obj):
-        """Get count of distributors assigned to this team"""
-        return obj.distributors.count()
-    
-    def get_distributors(self, obj):
-        """Get all distributors assigned to this team"""
-        distributors = obj.distributors.all()
-        return DistributorSerializer(distributors, many=True).data
 
 
 class AssignMemberSerializer(serializers.Serializer):
@@ -158,32 +141,4 @@ class RemoveMemberSerializer(serializers.Serializer):
             User.objects.get(id=value)
         except User.DoesNotExist:
             raise serializers.ValidationError('User not found.')
-        return value
-
-
-class AssignDistributorSerializer(serializers.Serializer):
-    """Serializer for assigning a distributor to a team"""
-    distributor_id = serializers.IntegerField()
-    
-    def validate_distributor_id(self, value):
-        """Validate distributor exists"""
-        from distributers.models import Distributor
-        try:
-            Distributor.objects.get(id=value)
-        except Distributor.DoesNotExist:
-            raise serializers.ValidationError('Distributor not found.')
-        return value
-
-
-class RemoveDistributorSerializer(serializers.Serializer):
-    """Serializer for removing a distributor from a team"""
-    distributor_id = serializers.IntegerField()
-    
-    def validate_distributor_id(self, value):
-        """Validate distributor exists"""
-        from distributers.models import Distributor
-        try:
-            Distributor.objects.get(id=value)
-        except Distributor.DoesNotExist:
-            raise serializers.ValidationError('Distributor not found.')
         return value

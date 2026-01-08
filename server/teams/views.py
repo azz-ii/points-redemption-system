@@ -12,9 +12,7 @@ from .serializers import (
     TeamDetailSerializer,
     TeamMembershipSerializer,
     AssignMemberSerializer,
-    RemoveMemberSerializer,
-    AssignDistributorSerializer,
-    RemoveDistributorSerializer
+    RemoveMemberSerializer
 )
 
 
@@ -98,12 +96,6 @@ class TeamViewSet(viewsets.ModelViewSet):
                 'detail': f'This team has {team.memberships.count()} member(s). Remove all members before deleting.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        if team.distributors.exists():
-            return Response({
-                'error': 'Cannot delete team with distributors',
-                'detail': f'This team has {team.distributors.count()} distributor(s). Reassign distributors before deleting.'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
         team.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
@@ -163,94 +155,11 @@ class TeamViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def members(self, request, pk=None):
-        """
-        Get all members of this team.
-        GET /api/teams/{id}/members/
-        """
+        """Get all members of this team."""
         team = self.get_object()
         memberships = team.memberships.all()
         serializer = TeamMembershipSerializer(memberships, many=True)
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def distributors(self, request, pk=None):
-        """
-        Get all distributors assigned to this team.
-        GET /api/teams/{id}/distributors/
-        """
-        team = self.get_object()
-        distributors = team.distributors.all()
-        
-        # Import here to avoid circular import
-        from distributers.serializers import DistributorSerializer
-        serializer = DistributorSerializer(distributors, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def assign_distributor(self, request, pk=None):
-        """
-        Assign a distributor to this team.
-        POST /api/teams/{id}/assign_distributor/
-        Body: {"distributor_id": 123}
-        """
-        team = self.get_object()
-        serializer = AssignDistributorSerializer(data=request.data)
-        
-        if serializer.is_valid():
-            distributor_id = serializer.validated_data['distributor_id']
-            
-            # Import here to avoid circular import
-            from distributers.models import Distributor
-            distributor = get_object_or_404(Distributor, id=distributor_id)
-            
-            # Check if distributor is already assigned to another team
-            if distributor.team and distributor.team != team:
-                return Response({
-                    'error': f'Distributor "{distributor.name}" is already assigned to team "{distributor.team.name}". Remove from that team first.'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Assign distributor to team
-            distributor.team = team
-            distributor.save()
-            
-            return Response({
-                'message': f'Distributor "{distributor.name}" successfully assigned to {team.name}'
-            }, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @action(detail=True, methods=['post'])
-    def remove_distributor(self, request, pk=None):
-        """
-        Remove a distributor from this team.
-        POST /api/teams/{id}/remove_distributor/
-        Body: {"distributor_id": 123}
-        """
-        team = self.get_object()
-        serializer = RemoveDistributorSerializer(data=request.data)
-        
-        if serializer.is_valid():
-            distributor_id = serializer.validated_data['distributor_id']
-            
-            # Import here to avoid circular import
-            from distributers.models import Distributor
-            distributor = get_object_or_404(Distributor, id=distributor_id)
-            
-            # Check if distributor is assigned to this team
-            if distributor.team != team:
-                return Response({
-                    'error': 'Distributor is not assigned to this team'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Remove distributor from team
-            distributor.team = None
-            distributor.save()
-            
-            return Response({
-                'message': f'Distributor "{distributor.name}" successfully removed from {team.name}'
-            }, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['get'])
     def requests(self, request, pk=None):
@@ -264,10 +173,9 @@ class TeamViewSet(viewsets.ModelViewSet):
         from requests.models import RedemptionRequest
         from requests.serializers import RedemptionRequestSerializer
         
-        # Get requests from team members or for team's distributors
+        # Get requests from team members only (not distributor-based)
         team_requests = RedemptionRequest.objects.filter(
-            Q(requested_by__team_memberships__team=team) |
-            Q(requested_for__team=team)
+            requested_by__team_memberships__team=team
         ).distinct()
         
         serializer = RedemptionRequestSerializer(team_requests, many=True)
