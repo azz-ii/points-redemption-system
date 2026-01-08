@@ -18,7 +18,6 @@ export interface Team {
   };
   region: string;
   member_count?: number;
-  distributor_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -141,29 +140,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
       return (
         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
           {count || 0} {count === 1 ? "member" : "members"}
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: "distributor_count",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Distributors
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const count = row.getValue("distributor_count") as number
-      return (
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
-          {count ?? 0}
         </span>
       )
     },

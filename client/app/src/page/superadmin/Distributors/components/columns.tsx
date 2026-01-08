@@ -135,29 +135,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
     },
   },
   {
-    accessorKey: "team_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Team
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const teamName = row.getValue("team_name") as string | undefined
-      return teamName ? (
-        <div>{teamName}</div>
-      ) : (
-        <span className="text-muted-foreground">No team</span>
-      )
-    },
-  },
-  {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {

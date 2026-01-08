@@ -6,8 +6,6 @@ export interface Distributor {
   location: string;
   region: string;
   points: number;
-  team: number | null;
-  team_name?: string;
   created_at: string;
   updated_at: string;
   date_added: string;

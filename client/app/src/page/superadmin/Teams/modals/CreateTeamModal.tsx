@@ -1,7 +1,7 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { useTheme } from "next-themes";
-import { X, AlertTriangle, UserPlus, Trash2, AlertCircle, Store } from "lucide-react";
-import type { ModalBaseProps, NewTeamData, ApproverOption, Team, SalesAgentOption, DistributorOption } from "./types";
+import { X, AlertTriangle, UserPlus, Trash2, AlertCircle } from "lucide-react";
+import type { ModalBaseProps, NewTeamData, ApproverOption, Team, SalesAgentOption } from "./types";
 
 interface CreateTeamModalProps extends ModalBaseProps {
   newTeam: NewTeamData;
@@ -11,7 +11,7 @@ interface CreateTeamModalProps extends ModalBaseProps {
   loading: boolean;
   error: string;
   setError: Dispatch<SetStateAction<string>>;
-  onSubmit: (memberIds?: number[], distributorIds?: number[]) => void;
+  onSubmit: (memberIds?: number[]) => void;
 }
 
 export function CreateTeamModal({
@@ -34,11 +34,6 @@ export function CreateTeamModal({
   const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const [allUsers, setAllUsers] = useState<Array<{ id: number; team: number | null }>>([]);
-  const [availableDistributors, setAvailableDistributors] = useState<DistributorOption[]>([]);
-  const [selectedDistributors, setSelectedDistributors] = useState<DistributorOption[]>([]);
-  const [selectedDistributor, setSelectedDistributor] = useState<number | null>(null);
-  const [showAddDistributor, setShowAddDistributor] = useState(false);
-  const [allDistributors, setAllDistributors] = useState<Array<{ id: number; team: number | null }>>([]);
   const [errorDialog, setErrorDialog] = useState<{
     show: boolean;
     title: string;
@@ -87,54 +82,15 @@ export function CreateTeamModal({
     }
   };
 
-  const fetchAvailableDistributors = async () => {
-    try {
-      console.log("DEBUG CreateTeamModal: Fetching available distributors");
-      
-      const response = await fetch("http://127.0.0.1:8000/api/distributors/", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      const data = await response.json();
-      console.log("DEBUG CreateTeamModal: Distributors fetched", {
-        status: response.status,
-        isPaginated: !!data.results,
-        totalDistributors: data.results?.length || data.length || 0,
-      });
-
-      if (response.ok) {
-        // Handle paginated response - API returns {results: [...]} or plain array
-        const distributors = data.results || data;
-        
-        if (Array.isArray(distributors)) {
-          // Store all distributors for team checking
-          setAllDistributors(distributors.map((d: { id: number; team: number | null }) => ({ id: d.id, team: d.team })));
-          setAvailableDistributors(distributors);
-          console.log("DEBUG CreateTeamModal: Distributors loaded:", distributors.length);
-        }
-      }
-    } catch (err) {
-      console.error("DEBUG CreateTeamModal: Error fetching distributors", err);
-    }
-  };
-
-  // Fetch available sales agents and distributors when modal opens
+  // Fetch available sales agents when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchAvailableSalesAgents();
-      fetchAvailableDistributors();
     } else {
       // Reset state when modal closes
       setSelectedMembers([]);
       setShowAddMember(false);
       setSelectedSalesAgent(null);
-      setSelectedDistributors([]);
-      setShowAddDistributor(false);
-      setSelectedDistributor(null);
       setErrorDialog({ show: false, title: "", message: "" });
     }
   }, [isOpen]);
@@ -187,64 +143,10 @@ export function CreateTeamModal({
     setSelectedMembers(selectedMembers.filter(m => m.id !== memberId));
   };
 
-  const handleAddDistributor = () => {
-    if (!selectedDistributor) {
-      console.warn("DEBUG CreateTeamModal: No distributor selected");
-      return;
-    }
-
-    const distributor = availableDistributors.find(d => d.id === selectedDistributor);
-    if (!distributor) {
-      console.warn("DEBUG CreateTeamModal: Distributor not found", selectedDistributor);
-      return;
-    }
-
-    // Check if this distributor is already in a team
-    const distributorInTeam = allDistributors.find(d => d.id === selectedDistributor && d.team !== null);
-    if (distributorInTeam) {
-      const teamName = teams.find(t => t.id === distributorInTeam.team)?.name || "another team";
-      console.log("DEBUG CreateTeamModal: Distributor already in team", {
-        distributorId: selectedDistributor,
-        distributorName: distributor.name,
-        teamId: distributorInTeam.team,
-        teamName,
-      });
-      
-      setErrorDialog({
-        show: true,
-        title: "Cannot Add Distributor",
-        message: `${distributor.name} is already assigned to ${teamName}. A distributor can only belong to one team at a time.`,
-      });
-      return;
-    }
-
-    // Check if already selected
-    if (selectedDistributors.find(d => d.id === distributor.id)) {
-      console.warn("DEBUG CreateTeamModal: Distributor already selected", distributor.id);
-      return;
-    }
-
-    console.log("DEBUG CreateTeamModal: Adding distributor to list", distributor.name);
-    setSelectedDistributors([...selectedDistributors, distributor]);
-    setSelectedDistributor(null);
-    setShowAddDistributor(false);
-  };
-
-  const handleRemoveDistributor = (distributorId: number) => {
-    console.log("DEBUG CreateTeamModal: Removing distributor from list", distributorId);
-    setSelectedDistributors(selectedDistributors.filter(d => d.id !== distributorId));
-  };
-
   // Filter out already selected members
   const selectedMemberIds = selectedMembers.map(m => m.id);
   const filteredSalesAgents = availableSalesAgents.filter(
     agent => !selectedMemberIds.includes(agent.id)
-  );
-
-  // Filter out already selected distributors
-  const selectedDistributorIds = selectedDistributors.map(d => d.id);
-  const filteredDistributors = availableDistributors.filter(
-    distributor => !selectedDistributorIds.includes(distributor.id)
   );
 
   if (!isOpen) return null;
@@ -261,13 +163,9 @@ export function CreateTeamModal({
       newTeam,
       approversAvailable: approvers.length,
       membersToAdd: selectedMembers.length,
-      distributorsToAdd: selectedDistributors.length,
     });
-    // Pass selected member IDs and distributor IDs to parent
-    onSubmit(
-      selectedMembers.map(m => m.id),
-      selectedDistributors.map(d => d.id)
-    );
+    // Pass selected member IDs to parent
+    onSubmit(selectedMembers.map(m => m.id));
   };
 
   console.log("DEBUG CreateTeamModal: Rendering", {
@@ -495,128 +393,6 @@ export function CreateTeamModal({
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => handleRemoveMember(member.id)}
-                            className="text-red-500 hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-          {/* Distributors Section */}
-          <div className="pt-4 border-t border-gray-700">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-semibold text-gray-500">
-                Distributors ({selectedDistributors.length})
-              </h3>
-              <button
-                onClick={() => setShowAddDistributor(!showAddDistributor)}
-                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
-                  resolvedTheme === "dark"
-                    ? "bg-white text-black hover:bg-gray-100"
-                    : "bg-gray-900 text-white hover:bg-gray-800"
-                } transition-colors`}
-              >
-                <Store className="h-3 w-3" />
-                {showAddDistributor ? "Cancel" : "Add Distributor"}
-              </button>
-            </div>
-
-            {/* Add Distributor Form */}
-            {showAddDistributor && (
-              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
-                <label className="text-xs text-gray-500 mb-2 block">
-                  Select Distributor
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    value={selectedDistributor ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value ? Number(e.target.value) : null;
-                      console.log("DEBUG CreateTeamModal: Distributor selected", value);
-                      setSelectedDistributor(value);
-                    }}
-                    className={`flex-1 px-3 py-2 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 text-sm`}
-                  >
-                    <option value="">Select a distributor...</option>
-                    {filteredDistributors.map((distributor) => (
-                      <option key={distributor.id} value={distributor.id}>
-                        {distributor.name} - {distributor.region} ({distributor.location})
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleAddDistributor}
-                    disabled={!selectedDistributor}
-                    className={`px-4 py-2 rounded text-sm font-semibold ${
-                      resolvedTheme === "dark"
-                        ? "bg-white text-black hover:bg-gray-100"
-                        : "bg-gray-900 text-white hover:bg-gray-800"
-                    } transition-colors disabled:opacity-50`}
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Distributors List */}
-            <div
-              className={`border rounded-lg overflow-hidden ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              {selectedDistributors.length === 0 ? (
-                <div className="text-center text-gray-500 py-8 text-sm">
-                  No distributors added yet
-                </div>
-              ) : (
-                <table className="w-full">
-                  <thead
-                    className={`${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 text-gray-300"
-                        : "bg-gray-50 text-gray-700"
-                    }`}
-                  >
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold">
-                        Name
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold">
-                        Region
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold">
-                        Location
-                      </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                    {selectedDistributors.map((distributor) => (
-                      <tr
-                        key={distributor.id}
-                        className={`hover:${
-                          resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                        } transition-colors`}
-                      >
-                        <td className="px-4 py-3 text-sm">{distributor.name}</td>
-                        <td className="px-4 py-3 text-sm">{distributor.region}</td>
-                        <td className="px-4 py-3 text-sm">{distributor.location}</td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleRemoveDistributor(distributor.id)}
                             className="text-red-500 hover:text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />

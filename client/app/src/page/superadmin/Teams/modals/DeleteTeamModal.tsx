@@ -29,22 +29,18 @@ export function DeleteTeamModal({
       teamId: team.id,
       teamName: team.name,
       memberCount: team.member_count,
-      distributorCount: team.distributor_count,
     });
     onConfirm(team.id);
   };
 
-  const hasMembersOrDistributors =
-    (team.member_count && team.member_count > 0) ||
-    (team.distributor_count && team.distributor_count > 0);
+  const hasMembers = team.member_count && team.member_count > 0;
 
   console.log("DEBUG DeleteTeamModal: Rendering", {
     isOpen,
     teamId: team?.id,
     teamName: team?.name,
     memberCount: team?.member_count,
-    distributorCount: team?.distributor_count,
-    hasMembersOrDistributors,
+    hasMembers,
     loading,
   });
 
@@ -78,8 +74,8 @@ export function DeleteTeamModal({
             <strong>{team.name}</strong>?
           </p>
 
-          {/* Warning if team has members or distributors */}
-          {hasMembersOrDistributors && (
+          {/* Warning if team has members */}
+          {hasMembers && (
             <div
               className={`flex items-start gap-3 p-3 rounded border ${
                 resolvedTheme === "dark"
@@ -90,25 +86,16 @@ export function DeleteTeamModal({
               <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-500">
-                  Warning: This team has active associations
+                  Warning: This team has active members
                 </p>
                 <ul className="text-xs text-yellow-700 dark:text-yellow-400 mt-2 space-y-1">
-                  {team.member_count && team.member_count > 0 && (
-                    <li>
-                      • {team.member_count} team member
-                      {team.member_count === 1 ? "" : "s"}
-                    </li>
-                  )}
-                  {team.distributor_count && team.distributor_count > 0 && (
-                    <li>
-                      • {team.distributor_count} assigned distributor
-                      {team.distributor_count === 1 ? "" : "s"}
-                    </li>
-                  )}
+                  <li>
+                    • {team.member_count} team member
+                    {team.member_count === 1 ? "" : "s"}
+                  </li>
                 </ul>
                 <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
-                  The backend will prevent deletion if members or distributors
-                  exist. Remove them first.
+                  The backend will prevent deletion if members exist. Remove them first.
                 </p>
               </div>
             </div>

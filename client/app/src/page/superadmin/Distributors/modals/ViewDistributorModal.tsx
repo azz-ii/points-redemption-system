@@ -75,10 +75,6 @@ export function ViewDistributorModal({
               <p className="text-xs text-gray-500 mb-1">Points</p>
               <p className="font-semibold">{distributor.points}</p>
             </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Team</p>
-              <p className="font-semibold">{distributor.team_name || "No team"}</p>
-            </div>
           </div>
         </div>
 

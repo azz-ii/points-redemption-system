@@ -186,7 +186,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
   const paginatedTeams = filteredTeams.slice(startIndex, endIndex);
 
   // Handle create team submission
-  const handleCreateTeam = async (memberIds?: number[], distributorIds?: number[]) => {
+  const handleCreateTeam = async (memberIds?: number[]) => {
     if (!newTeam.name.trim()) {
       setCreateError("Team name is required");
       console.warn("DEBUG Teams: Create team validation failed - name required");
@@ -196,7 +196,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
     try {
       setCreateLoading(true);
       setCreateError("");
-      console.log("DEBUG Teams: Creating team", { newTeam, memberIds, distributorIds });
+      console.log("DEBUG Teams: Creating team", { newTeam, memberIds });
 
       const response = await fetch("http://127.0.0.1:8000/api/teams/", {
         method: "POST",
@@ -242,35 +242,6 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
               }
             } catch (err) {
               console.error("DEBUG Teams: Error assigning member", memberId, err);
-            }
-          }
-        }
-
-        // Assign distributors if any were selected
-        if (distributorIds && distributorIds.length > 0) {
-          console.log("DEBUG Teams: Assigning", distributorIds.length, "distributors to team");
-          for (const distributorId of distributorIds) {
-            try {
-              const assignResponse = await fetch(
-                `http://127.0.0.1:8000/api/teams/${createdTeamId}/assign_distributor/`,
-                {
-                  method: "POST",
-                  credentials: "include",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ distributor_id: distributorId }),
-                }
-              );
-              
-              if (!assignResponse.ok) {
-                const errorData = await assignResponse.json();
-                console.warn("DEBUG Teams: Failed to assign distributor", distributorId, errorData);
-              } else {
-                console.log("DEBUG Teams: Successfully assigned distributor", distributorId);
-              }
-            } catch (err) {
-              console.error("DEBUG Teams: Error assigning distributor", distributorId, err);
             }
           }
         }
@@ -393,7 +364,6 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       id: team.id,
       name: team.name,
       memberCount: team.member_count,
-      distributorCount: team.distributor_count,
     });
     setTeamToDelete(team);
     setIsDeleteModalOpen(true);
@@ -696,13 +666,9 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white text-center">
                           {team.member_count} {team.member_count === 1 ? "member" : "members"}
                         </span>
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white text-center">
-                          {team.distributor_count ?? 0} dist.
-                        </span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-xs text-gray-500">
+                    <div className="flex justify-between items-center">\n                      <div className="text-xs text-gray-500">
                         Created: {new Date(team.created_at).toLocaleDateString()}
                       </div>
                       <div className="relative">
