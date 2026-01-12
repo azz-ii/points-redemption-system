@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, ArrowUpDown, PackageCheck, PackageX } from "lucide-react";
+import { Eye, ArrowUpDown, PackageCheck, PackageX } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import type { RedemptionItem } from "../modals/types";
@@ -9,6 +9,8 @@ import type { RedemptionItem } from "../modals/types";
 interface ColumnContext {
   onViewRedemption: (redemption: RedemptionItem) => void;
   onEditRedemption: (redemption: RedemptionItem) => void;
+  onMarkAsProcessed: (redemption: RedemptionItem) => void;
+  onCancelRequest: (redemption: RedemptionItem) => void;
 }
 
 export const createColumns = (
@@ -143,7 +145,7 @@ export const createColumns = (
     cell: ({ row }) => <div>{row.getValue("reviewed_by_name") || "N/A"}</div>,
   },
   {
-    accessorKey: "status",
+    accessorKey: "processing_status",
     header: ({ column }) => {
       return (
         <Button
@@ -151,28 +153,47 @@ export const createColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="px-0 hover:bg-transparent"
         >
-          Status
+          Processing Status
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      const statusUpper = status?.toUpperCase() || "";
+      const processingStatus = row.getValue("processing_status") as string;
+      const statusUpper = processingStatus?.toUpperCase() || "";
 
       return (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            statusUpper === "APPROVED"
+            statusUpper === "PROCESSED"
               ? "bg-green-600 text-white"
-              : statusUpper === "REJECTED"
+              : statusUpper === "CANCELLED"
               ? "bg-red-600 text-white"
               : "bg-yellow-500 text-gray-900"
           }`}
         >
-          {status}
+          {processingStatus?.replace(/_/g, ' ') || "Not Processed"}
         </span>
       );
+    },
+  },
+  {
+    accessorKey: "date_processed",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Date Processed
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const date = row.getValue("date_processed") as string;
+      return date ? new Date(date).toLocaleString() : "N/A";
     },
   },
   {
@@ -180,27 +201,30 @@ export const createColumns = (
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
       const redemption = row.original;
-      const status = row.getValue("status") as string;
-      const statusUpper = status?.toUpperCase() || "";
-      const isApproved = statusUpper === "APPROVED";
+      const processingStatus = row.getValue("processing_status") as string;
+      const processingStatusUpper = processingStatus?.toUpperCase() || "";
+      const isNotProcessed = processingStatusUpper === "NOT_PROCESSED";
+      const isCancelled = processingStatusUpper === "CANCELLED";
 
       return (
         <div className="flex justify-end gap-2">
-          {isApproved && (
+          {isNotProcessed && !isCancelled && (
             <>
               <Button
                 variant="default"
                 size="sm"
+                onClick={() => context.onMarkAsProcessed(redemption)}
                 className="bg-green-600 hover:bg-green-700 text-white"
-                title="Mark as Delivered"
+                title="Mark as Processed"
               >
                 <PackageCheck className="h-4 w-4" />
               </Button>
               <Button
                 variant="default"
                 size="sm"
+                onClick={() => context.onCancelRequest(redemption)}
                 className="bg-red-600 hover:bg-red-700 text-white"
-                title="Mark as Not Delivered"
+                title="Cancel Request"
               >
                 <PackageX className="h-4 w-4" />
               </Button>

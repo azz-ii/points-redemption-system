@@ -17,8 +17,9 @@ import {
   Warehouse,
   LogOut,
 } from "lucide-react";
-import { ViewRedemptionModal, EditRedemptionModal, type RedemptionItem } from "./modals";
+import { ViewRedemptionModal, EditRedemptionModal, MarkAsProcessedModal, CancelRequestModal, type RedemptionItem } from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
+import { toast } from "react-hot-toast";
 
 // Using the API response type directly
 type RedemptionItemAPI = RedemptionRequestResponse;
@@ -44,6 +45,8 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
   const itemsPerPage = 7;
   const [selectedItem, setSelectedItem] = useState<RedemptionItem | null>(null);
   const [editItem, setEditItem] = useState<RedemptionItem | null>(null);
+  const [processItem, setProcessItem] = useState<RedemptionItem | null>(null);
+  const [cancelItem, setCancelItem] = useState<RedemptionItem | null>(null);
   const [items, setItems] = useState<RedemptionItemAPI[]>([]);
   const [searchQuery, setSearchQuery] = useState(""); // Only for mobile view
   const [loading, setLoading] = useState(true);
@@ -93,6 +96,58 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
   const startIndex = (safePage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const requests = await redemptionRequestsApi.getRequests();
+      setItems(requests);
+    } catch (err) {
+      console.error("Error fetching redemption requests:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load redemption requests"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAsProcessed = async (remarks: string) => {
+    if (!processItem) return;
+
+    setProcessItem(null);
+    toast.success("Request marked as processed successfully");
+
+    redemptionRequestsApi
+      .markAsProcessed(processItem.id, remarks)
+      .then(() => {
+        fetchRequests();
+      })
+      .catch((err) => {
+        toast.error(err.message || "Failed to mark request as processed");
+        fetchRequests();
+      });
+  };
+
+  const handleCancelRequest = async (reason: string, remarks: string) => {
+    if (!cancelItem) return;
+
+    setCancelItem(null);
+    toast.success("Request cancelled successfully");
+
+    redemptionRequestsApi
+      .cancelRequest(cancelItem.id, reason, remarks)
+      .then(() => {
+        fetchRequests();
+      })
+      .catch((err) => {
+        toast.error(err.message || "Failed to cancel request");
+        fetchRequests();
+      });
+  };
 
   return (
     <div
@@ -183,10 +238,12 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
           </div>
 
           <RedemptionTable
-            redemptions={items as RedemptionItem[]}
+            redemptions={items as unknown as RedemptionItem[]}
             loading={loading}
             onView={(item) => setSelectedItem(item)}
             onEdit={(item) => setEditItem(item)}
+            onMarkAsProcessed={(item) => setProcessItem(item)}
+            onCancelRequest={(item) => setCancelItem(item)}
             onCreateNew={() => console.log("Create new redemption request")}
           />
         </div>
@@ -249,8 +306,8 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
           </button>
 
           <RedemptionMobileCards
-            paginatedItems={paginatedItems as RedemptionItem[]}
-            filteredItems={filteredItems as RedemptionItem[]}
+            paginatedItems={paginatedItems as unknown as RedemptionItem[]}
+            filteredItems={filteredItems as unknown as RedemptionItem[]}
             loading={loading}
             currentPage={safePage}
             totalPages={totalPages}
@@ -280,6 +337,20 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
         isOpen={!!editItem}
         onClose={() => setEditItem(null)}
         item={editItem as RedemptionItem}
+      />
+
+      <MarkAsProcessedModal
+        isOpen={!!processItem}
+        onClose={() => setProcessItem(null)}
+        item={processItem as RedemptionItem}
+        onConfirm={handleMarkAsProcessed}
+      />
+
+      <CancelRequestModal
+        isOpen={!!cancelItem}
+        onClose={() => setCancelItem(null)}
+        item={cancelItem as RedemptionItem}
+        onConfirm={handleCancelRequest}
       />
     </div>
   );

@@ -14,6 +14,11 @@ class RequestStatus(models.TextChoices):
     APPROVED = 'APPROVED', 'Approved'
     REJECTED = 'REJECTED', 'Rejected'
 
+class ProcessingStatus(models.TextChoices):
+    NOT_PROCESSED = 'NOT_PROCESSED', 'Not Processed'
+    PROCESSED = 'PROCESSED', 'Processed'
+    CANCELLED = 'CANCELLED', 'Cancelled'
+
 class RedemptionRequest(models.Model):
     id = models.AutoField(primary_key=True)
     requested_by = models.ForeignKey(
@@ -50,7 +55,13 @@ class RedemptionRequest(models.Model):
         max_length=20,
         choices=RequestStatus.choices,
         default=RequestStatus.PENDING,
-        help_text='Current status of the request'
+        help_text='Current approval status of the request (Approver level)'
+    )
+    processing_status = models.CharField(
+        max_length=20,
+        choices=ProcessingStatus.choices,
+        default=ProcessingStatus.NOT_PROCESSED,
+        help_text='Current processing status of the request (Superadmin level)'
     )
     date_requested = models.DateTimeField(
         default=timezone.now,
@@ -62,12 +73,38 @@ class RedemptionRequest(models.Model):
         null=True,
         blank=True,
         related_name='reviewed_requests',
-        help_text='User who approved or rejected this request'
+        help_text='Approver who approved or rejected this request'
     )
     date_reviewed = models.DateTimeField(
         null=True,
         blank=True,
-        help_text='Date and time when the request was reviewed'
+        help_text='Date and time when the request was reviewed by approver'
+    )
+    processed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processed_requests',
+        help_text='Superadmin who marked this request as processed'
+    )
+    date_processed = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Date and time when the request was marked as processed'
+    )
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cancelled_requests',
+        help_text='Superadmin who cancelled this request'
+    )
+    date_cancelled = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Date and time when the request was cancelled'
     )
     remarks = models.TextField(
         blank=True,

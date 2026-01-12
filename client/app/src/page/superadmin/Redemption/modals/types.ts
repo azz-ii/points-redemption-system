@@ -5,11 +5,18 @@
   requested_for: number;
   requested_for_name: string;
   status: string;
+  processing_status?: string;
   total_points: number;
   date_requested: string;
   reviewed_by?: number;
   reviewed_by_name?: string;
   date_reviewed?: string;
+  processed_by?: number;
+  processed_by_name?: string;
+  date_processed?: string;
+  cancelled_by?: number;
+  cancelled_by_name?: string;
+  date_cancelled?: string;
   remarks?: string;
   rejection_reason?: string;
   items: Array<{

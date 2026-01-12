@@ -41,8 +41,11 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     requested_by_name = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
+    processed_by_name = serializers.SerializerMethodField()
+    cancelled_by_name = serializers.SerializerMethodField()
     team_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    processing_status_display = serializers.CharField(source='get_processing_status_display', read_only=True)
     points_deducted_from_display = serializers.CharField(source='get_points_deducted_from_display', read_only=True)
 
     class Meta:
@@ -50,11 +53,15 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'requested_by', 'requested_by_name', 'requested_for', 
             'requested_for_name', 'team', 'team_name', 'points_deducted_from', 
-            'points_deducted_from_display', 'total_points', 'status', 'status_display', 
-            'date_requested', 'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
+            'points_deducted_from_display', 'total_points', 'status', 'status_display',
+            'processing_status', 'processing_status_display', 'date_requested', 
+            'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
+            'processed_by', 'processed_by_name', 'date_processed',
+            'cancelled_by', 'cancelled_by_name', 'date_cancelled',
             'remarks', 'rejection_reason', 'items'
         ]
-        read_only_fields = ['id', 'date_requested', 'reviewed_by', 'date_reviewed', 'team']
+        read_only_fields = ['id', 'date_requested', 'reviewed_by', 'date_reviewed', 
+                            'processed_by', 'date_processed', 'cancelled_by', 'date_cancelled', 'team']
 
     def get_requested_by_name(self, obj):
         if obj.requested_by:
@@ -76,6 +83,22 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             if profile:
                 return profile.full_name or obj.reviewed_by.username
             return obj.reviewed_by.username
+        return None
+
+    def get_processed_by_name(self, obj):
+        if obj.processed_by:
+            profile = getattr(obj.processed_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.processed_by.username
+            return obj.processed_by.username
+        return None
+
+    def get_cancelled_by_name(self, obj):
+        if obj.cancelled_by:
+            profile = getattr(obj.cancelled_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.cancelled_by.username
+            return obj.cancelled_by.username
         return None
 
 
