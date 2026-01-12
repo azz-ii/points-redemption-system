@@ -43,11 +43,13 @@ function Distributors() {
     try {
       setLoading(true);
       const data = await distributorsApi.getDistributors(searchQuery);
-      setDistributors(data);
+      // Ensure data is always an array
+      setDistributors(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       console.error("Error fetching distributors:", err);
       setError("Failed to load distributors. Please try again.");
+      setDistributors([]);
     } finally {
       setLoading(false);
     }

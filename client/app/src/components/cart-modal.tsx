@@ -67,7 +67,8 @@ export default function CartModal({
       try {
         setLoadingDistributors(true);
         const results = await distributorsApi.getDistributors(distributorSearch);
-        setDistributors(results);
+        // Ensure results is always an array
+        setDistributors(Array.isArray(results) ? results : []);
       } catch (error) {
         console.error("Error searching distributors:", error);
         setDistributors([]);
