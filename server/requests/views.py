@@ -494,3 +494,108 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
+
+
+from rest_framework.views import APIView
+from django.db.models import Count, Q
+
+class DashboardStatsView(APIView):
+    """
+    API endpoint for superadmin dashboard statistics.
+    Returns counts of all requests by status and processing status.
+    No role-based filtering - returns all system data.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get dashboard statistics for all requests in the system"""
+        try:
+            # Get all request counts
+            total_requests = RedemptionRequest.objects.count()
+            pending_count = RedemptionRequest.objects.filter(status='PENDING').count()
+            approved_count = RedemptionRequest.objects.filter(status='APPROVED').count()
+            rejected_count = RedemptionRequest.objects.filter(status='REJECTED').count()
+            
+            processed_count = RedemptionRequest.objects.filter(processing_status='PROCESSED').count()
+            not_processed_count = RedemptionRequest.objects.filter(processing_status='NOT_PROCESSED').count()
+            cancelled_count = RedemptionRequest.objects.filter(processing_status='CANCELLED').count()
+            
+            # Get on-board distributors count
+            from distributers.models import Distributor
+            on_board_count = Distributor.objects.count()
+            
+            return Response({
+                'total_requests': total_requests,
+                'pending_count': pending_count,
+                'approved_count': approved_count,
+                'rejected_count': rejected_count,
+                'processed_count': processed_count,
+                'not_processed_count': not_processed_count,
+                'cancelled_count': cancelled_count,
+                'on_board_count': on_board_count,
+            })
+        except Exception as e:
+            logger.error(f"Error fetching dashboard stats: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch dashboard statistics', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class DashboardRedemptionRequestsView(APIView):
+    """
+    API endpoint for superadmin dashboard redemption requests.
+    Returns all RedemptionRequest records with pagination.
+    No role-based filtering - returns all system data.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get all redemption requests with pagination"""
+        try:
+            # Get pagination parameters
+            limit = int(request.query_params.get('limit', 10))
+            offset = int(request.query_params.get('offset', 0))
+            
+            # Validate limit to prevent abuse
+            limit = min(limit, 100)  # Max 100 items per page
+            limit = max(limit, 1)    # Min 1 item per page
+            
+            # Get all redemption requests with related data
+            all_requests = RedemptionRequest.objects.all().prefetch_related(
+                'items',
+                'items__variant',
+                'requested_by',
+                'requested_for',
+                'reviewed_by',
+                'processed_by',
+                'cancelled_by',
+                'team'
+            ).order_by('-date_requested')
+            
+            # Get total count
+            total_count = all_requests.count()
+            
+            # Apply pagination
+            paginated_requests = all_requests[offset:offset + limit]
+            
+            # Serialize the data
+            serializer = RedemptionRequestSerializer(paginated_requests, many=True)
+            
+            return Response({
+                'count': total_count,
+                'limit': limit,
+                'offset': offset,
+                'results': serializer.data
+            })
+        except ValueError as e:
+            return Response(
+                {'error': 'Invalid pagination parameters'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Error fetching dashboard redemption requests: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch redemption requests', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

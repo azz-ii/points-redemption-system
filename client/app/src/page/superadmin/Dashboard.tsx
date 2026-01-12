@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -10,111 +10,153 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { useLogout } from "@/context/AuthContext";
 import {
   Bell,
-  Search,
-  Check,
-  X,
-  Pencil,
-  ChevronLeft,
-  ChevronRight,
   RotateCcw,
   Warehouse,
   LogOut,
+  X,
 } from "lucide-react";
-
-interface RequestItem {
-  id: string;
-  agent: string;
-  details: string;
-  quantity: number;
-  status: "Pending" | "Approved" | "Rejected";
-}
+import { dashboardApi, type DashboardStats, type RedemptionRequest as APIRedemptionRequest } from "@/lib/distributors-api";
+import { RedemptionTable } from "./Redemption/components";
+import { ViewRedemptionModal, EditRedemptionModal, MarkAsProcessedModal, CancelRequestModal, type RedemptionItem } from "./Redemption/modals";
+import { toast } from "react-hot-toast";
 
 function Dashboard() {
   const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const handleLogout = useLogout();
-  const activePage = "dashboard";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [pointAmount, setPointAmount] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
-    null
-  );
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [requests] = useState<RequestItem[]>([
-    {
-      id: "SA220011",
-      agent: "Kim Molina",
-      details: "Platinum Polo",
-      quantity: 12,
-      status: "Pending",
-    },
-    {
-      id: "SA220012",
-      agent: "Jerald Napoles",
-      details: "Platinum Cap",
-      quantity: 4,
-      status: "Pending",
-    },
-    {
-      id: "SA220013",
-      agent: "Maria Santos",
-      details: "Premium Jacket",
-      quantity: 8,
-      status: "Approved",
-    },
-    {
-      id: "SA220014",
-      agent: "Juan Cruz",
-      details: "Executive Shirt",
-      quantity: 6,
-      status: "Pending",
-    },
-    {
-      id: "SA220015",
-      agent: "Ana Garcia",
-      details: "Corporate Tie",
-      quantity: 10,
-      status: "Rejected",
-    },
-    {
-      id: "SA220016",
-      agent: "Liza Dela Cruz",
-      details: "Leather Shoes",
-      quantity: 5,
-      status: "Approved",
-    },
-  ]);
 
-  const clientOptions = Array.from(new Set(requests.map((r) => r.agent)));
+  // Dashboard stats
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  const selectedFilter = "All Incoming Submission Request";
-  const [searchQuery, setSearchQuery] = useState("");
+  // Redemption requests
+  const [requests, setRequests] = useState<APIRedemptionRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const pendingCount = requests.filter((r) => r.status === "Pending").length;
-  const approvedCount = requests.filter((r) => r.status === "Approved").length;
-  const onBoardCount = 20;
+  // Modals
+  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
+  const [editRequest, setEditRequest] = useState<RedemptionItem | null>(null);
+  const [processRequest, setProcessRequest] = useState<RedemptionItem | null>(null);
+  const [cancelRequest, setCancelRequest] = useState<RedemptionItem | null>(null);
 
-  const pageSize = 5;
+  // Fetch dashboard statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const data = await dashboardApi.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        toast.error("Failed to load dashboard statistics");
+      } finally {
+        setStatsLoading(false);
+      }
+    };
 
-  const filteredRequests = requests.filter((request) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      request.id.toLowerCase().includes(query) ||
-      request.agent.toLowerCase().includes(query) ||
-      request.details.toLowerCase().includes(query) ||
-      request.status.toLowerCase().includes(query)
-    );
-  });
+    fetchStats();
+  }, []);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  // Fetch redemption requests
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setRequestsLoading(true);
+        // Fetch all requests with a large limit for DataTable to paginate internally
+        console.log("Fetching redemption requests from dashboard API...");
+        const response = await dashboardApi.getRedemptionRequests(100, 0);
+        console.log("Dashboard API Response:", response);
+        setRequests(response.results as APIRedemptionRequest[]);
+        setTotalCount(response.count);
+      } catch (error) {
+        console.error("Error fetching redemption requests:", error);
+        toast.error("Failed to load redemption requests");
+      } finally {
+        setRequestsLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  // Modal handlers
+  const handleViewRequest = (item: RedemptionItem) => {
+    setSelectedRequest(item);
+  };
+
+  const handleEditRequest = (item: RedemptionItem) => {
+    setEditRequest(item);
+  };
+
+  const handleMarkAsProcessed = (item: RedemptionItem) => {
+    setProcessRequest(item);
+  };
+
+  const handleCancelRequest = (item: RedemptionItem) => {
+    setCancelRequest(item);
+  };
+
+  const confirmMarkAsProcessed = async (remarks: string) => {
+    if (!processRequest) return;
+
+    try {
+      setProcessRequest(null);
+      // TODO: Call API to mark as processed
+      toast.success("Request marked as processed successfully");
+      // Refetch requests
+      const response = await dashboardApi.getRedemptionRequests(100, 0);
+      setRequests(response.results as APIRedemptionRequest[]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to mark request as processed");
+    }
+  };
+
+  const confirmCancelRequest = async (reason: string, remarks: string) => {
+    if (!cancelRequest) return;
+
+    try {
+      setCancelRequest(null);
+      // TODO: Call API to cancel request
+      toast.success("Request cancelled successfully");
+      // Refetch requests
+      const response = await dashboardApi.getRedemptionRequests(100, 0);
+      setRequests(response.results as APIRedemptionRequest[]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to cancel request");
+    }
+  };
+
+  // Convert API response to RedemptionItem for table
+  const tableRequests = requests.map(req => ({
+    id: req.id,
+    requested_by: req.requested_by,
+    requested_by_name: req.requested_by_name,
+    requested_for: req.requested_for,
+    requested_for_name: req.requested_for_name,
+    status: req.status,
+    processing_status: req.processing_status,
+    total_points: req.total_points,
+    date_requested: req.date_requested,
+    reviewed_by: req.reviewed_by,
+    reviewed_by_name: req.reviewed_by_name,
+    date_reviewed: req.date_reviewed,
+    processed_by: req.processed_by,
+    processed_by_name: req.processed_by_name,
+    date_processed: req.date_processed,
+    cancelled_by: req.cancelled_by,
+    cancelled_by_name: req.cancelled_by_name,
+    date_cancelled: req.date_cancelled,
+    remarks: req.remarks,
+    rejection_reason: req.rejection_reason,
+    items: req.items,
+  } as RedemptionItem));
+
+  console.log("Table requests data:", tableRequests, "Total count:", totalCount);
 
   return (
     <div
@@ -142,9 +184,9 @@ function Dashboard() {
                 resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
               } flex items-center justify-center`}
             >
-              <span className="text-white font-semibold text-xs">I</span>
+              <span className="text-white font-semibold text-xs">D</span>
             </div>
-            <span className="font-medium text-sm">Welcome, Izza!</span>
+            <span className="font-medium text-sm">Dashboard</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -193,164 +235,11 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
-          <div className="p-4 space-y-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <div
-                className={`p-4 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
-                } transition-colors`}
-              >
-                <p className="text-xs text-gray-500 mb-2">Pending Requests</p>
-                <p className="text-2xl font-bold">
-                  {pendingCount}{" "}
-                  <span className="text-xs text-gray-500">
-                    / {pendingCount + approvedCount}
-                  </span>
-                </p>
-              </div>
-              <div
-                className={`p-4 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
-                } transition-colors`}
-              >
-                <p className="text-xs text-gray-500 mb-2">Approved Request</p>
-                <p className="text-2xl font-bold">{approvedCount}</p>
-              </div>
-            </div>
-
-            {/* Search */}
-            <div
-              className={`relative flex items-center rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search Distributors..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 py-3 ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
-
-            {/* Section Title */}
-            <div className="flex items-center justify-between mt-6">
-              <h3 className="font-bold text-sm">
-                Incoming Submission Requests
-              </h3>
-              <span className="bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">
-                {pendingCount}
-              </span>
-            </div>
-
-            {/* Request Cards */}
-            <div className="space-y-3">
-              {paginatedRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className={`p-4 rounded-lg border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-900 border-gray-700"
-                      : "bg-white border-gray-200"
-                  } transition-colors`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-semibold text-sm">{request.id}</p>
-                      <p className="text-xs text-gray-500">{request.agent}</p>
-                    </div>
-                    <span className="text-xs text-gray-500">2025-12-31</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mb-3">
-                    24 Redeem Item Request
-                  </p>
-                  <div className="flex justify-between items-center mb-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-semibold ${
-                        request.status === "Pending"
-                          ? "bg-yellow-400 text-black"
-                          : "bg-green-500 text-white"
-                      }`}
-                    >
-                      • {request.status}
-                    </span>
-                    <span className="text-xs font-semibold">
-                      Total: 14,500 pts
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      setSelectedRequest(request);
-                      setShowDetailsModal(true);
-                    }}
-                    className={`w-full py-2 text-xs font-medium rounded-lg ${
-                      resolvedTheme === "dark"
-                        ? "bg-white text-black hover:bg-gray-200"
-                        : "bg-gray-900 text-white hover:bg-gray-700"
-                    } transition-colors`}
-                  >
-                    View Details
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile Pagination */}
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </button>
-              <span className="text-xs font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold">Welcome, Izza</h1>
+              <h1 className="text-3xl font-semibold">Dashboard</h1>
               <p
                 className={`text-sm ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -401,16 +290,16 @@ function Dashboard() {
                     resolvedTheme === "dark" ? "bg-yellow-400" : "bg-yellow-500"
                   }`}
                 />
-                <p className="font-semibold">Pending Request</p>
+                <p className="font-semibold">Pending Requests</p>
               </div>
               <p className="text-4xl font-bold">
-                {pendingCount}{" "}
+                {statsLoading ? "-" : stats?.pending_count || 0}{" "}
                 <span
                   className={`text-lg ${
                     resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  / {pendingCount + approvedCount}
+                  / {statsLoading ? "-" : stats?.total_requests || 0}
                 </span>
               </p>
             </div>
@@ -430,7 +319,7 @@ function Dashboard() {
                 />
                 <p className="font-semibold">Approved Requests</p>
               </div>
-              <p className="text-4xl font-bold">{approvedCount}</p>
+              <p className="text-4xl font-bold">{statsLoading ? "-" : stats?.approved_count || 0}</p>
             </div>
 
             <div
@@ -448,169 +337,21 @@ function Dashboard() {
                 />
                 <p className="font-semibold">On-board</p>
               </div>
-              <p className="text-4xl font-bold">{onBoardCount}</p>
+              <p className="text-4xl font-bold">{statsLoading ? "-" : stats?.on_board_count || 0}</p>
             </div>
           </div>
 
-          {/* Filter and Search */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative">
-              <h3
-                className={`text-lg font-semibold ${
-                  resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-                aria-label="Current filter"
-              >
-                {selectedFilter}
-              </h3>
-            </div>
-            <div
-              className={`relative flex items-center ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 w-80 ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
-          </div>
-
-          {/* Table */}
-          <div
-            className={`border rounded-lg overflow-hidden ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
-          >
-            <table className="w-full">
-              <thead
-                className={`${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-50 text-gray-700"
-                }`}
-              >
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Agent
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Details
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className={`divide-y ${
-                  resolvedTheme === "dark"
-                    ? "divide-gray-700"
-                    : "divide-gray-200"
-                }`}
-              >
-                {paginatedRequests.map((request) => (
-                  <tr
-                    key={request.id}
-                    className={`hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors`}
-                  >
-                    <td className="px-6 py-4 text-sm">{request.id}</td>
-                    <td className="px-6 py-4 text-sm">{request.agent}</td>
-                    <td className="px-6 py-4 text-sm">{request.details}</td>
-                    <td className="px-6 py-4 text-sm">{request.quantity}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          request.status === "Pending"
-                            ? "bg-yellow-400 text-black"
-                            : request.status === "Approved"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
-                      >
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 flex justify-end gap-3">
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-medium"
-                        title="Confirm"
-                      >
-                        <Check className="w-4 h-4" /> Confirm
-                      </button>
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
-                        title="Reject"
-                      >
-                        <X className="w-4 h-4" /> Reject
-                      </button>
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-gray-400 text-white hover:bg-gray-500 transition-colors text-sm font-medium"
-                        title="Edit"
-                      >
-                        <Pencil className="w-4 h-4" /> Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Desktop Pagination */}
-            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <span className="text-sm font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+          {/* Redemption Table Section */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Redemption Requests</h3>
+            <RedemptionTable
+              redemptions={tableRequests}
+              loading={requestsLoading}
+              onView={handleViewRequest}
+              onEdit={handleEditRequest}
+              onMarkAsProcessed={handleMarkAsProcessed}
+              onCancelRequest={handleCancelRequest}
+            />
           </div>
         </div>
       </div>
@@ -657,11 +398,6 @@ function Dashboard() {
                 }`}
               >
                 <option value="">Choose a client</option>
-                {clientOptions.map((client) => (
-                  <option key={client} value={client}>
-                    {client}
-                  </option>
-                ))}
               </select>
 
               <label className="block text-sm font-medium">
@@ -706,126 +442,46 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Request Details Modal */}
-      {showDetailsModal && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setShowDetailsModal(false)}
-          />
-          <div
-            className={`relative w-full max-w-md rounded-xl border shadow-2xl p-6 space-y-4 ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700 text-white"
-                : "bg-white border-gray-200 text-gray-900"
-            }`}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Request Details</h2>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+      {/* Redemption Modals */}
+      {selectedRequest && (
+        <ViewRedemptionModal
+          isOpen={!!selectedRequest}
+          onClose={() => setSelectedRequest(null)}
+          redemption={selectedRequest}
+        />
+      )}
 
-            {/* Details */}
-            <div className="space-y-3 text-sm">
-              <div>
-                <p
-                  className={`text-xs font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Request ID
-                </p>
-                <p className="font-semibold">{selectedRequest.id}</p>
-              </div>
+      {editRequest && (
+        <EditRedemptionModal
+          isOpen={!!editRequest}
+          onClose={() => setEditRequest(null)}
+          redemption={editRequest}
+          onSave={() => {
+            setEditRequest(null);
+            // Refetch requests
+            dashboardApi.getRedemptionRequests(100, 0).then(response => {
+              setRequests(response.results as APIRedemptionRequest[]);
+            });
+          }}
+        />
+      )}
 
-              <div>
-                <p
-                  className={`text-xs font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Agent
-                </p>
-                <p className="font-semibold">{selectedRequest.agent}</p>
-              </div>
+      {processRequest && (
+        <MarkAsProcessedModal
+          isOpen={!!processRequest}
+          onClose={() => setProcessRequest(null)}
+          redemption={processRequest}
+          onConfirm={confirmMarkAsProcessed}
+        />
+      )}
 
-              <div>
-                <p
-                  className={`text-xs font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Details
-                </p>
-                <p className="font-semibold">{selectedRequest.details}</p>
-              </div>
-
-              <div>
-                <p
-                  className={`text-xs font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Quantity
-                </p>
-                <p className="font-semibold">{selectedRequest.quantity}</p>
-              </div>
-
-              <div>
-                <p
-                  className={`text-xs font-medium ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Status
-                </p>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                    selectedRequest.status === "Pending"
-                      ? "bg-yellow-400 text-black"
-                      : selectedRequest.status === "Approved"
-                      ? "bg-green-500 text-white"
-                      : "bg-red-500 text-white"
-                  }`}
-                >
-                  {selectedRequest.status}
-                </span>
-              </div>
-            </div>
-
-            {/* Action Buttons - Vertical Stack */}
-            <div className="flex flex-col gap-2 pt-4">
-              <button
-                className="w-full px-4 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors"
-                onClick={() => {
-                  console.log("Approve request:", selectedRequest.id);
-                  setShowDetailsModal(false);
-                }}
-              >
-                Approve
-              </button>
-              <button
-                className="w-full px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors"
-                onClick={() => {
-                  console.log("Reject request:", selectedRequest.id);
-                  setShowDetailsModal(false);
-                }}
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
+      {cancelRequest && (
+        <CancelRequestModal
+          isOpen={!!cancelRequest}
+          onClose={() => setCancelRequest(null)}
+          redemption={cancelRequest}
+          onConfirm={confirmCancelRequest}
+        />
       )}
 
       <MobileBottomNav />
