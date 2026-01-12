@@ -33,7 +33,6 @@ export default function CartModal({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const [step, setStep] = useState<"cart" | "details">("cart");
-  const [customerName, setCustomerName] = useState("");
   const [remarks, setRemarks] = useState("");
   const [svcDate, setSvcDate] = useState<string>("");
   const [svcTime, setSvcTime] = useState<string>("");
@@ -46,11 +45,10 @@ export default function CartModal({
   const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
   const [loadingDistributors, setLoadingDistributors] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Points deduction and submission state
   const [pointsDeductedFrom, setPointsDeductedFrom] = useState<'SELF' | 'DISTRIBUTOR'>('SELF');
-  const [submitting, setSubmitting] = useState(false);
 
   // Search distributors with debounce
   useEffect(() => {
@@ -106,14 +104,12 @@ export default function CartModal({
 
   const handleSelectDistributor = (distributor: Distributor) => {
     setSelectedDistributor(distributor);
-    setCustomerName(distributor.name);
     setDistributorSearch(distributor.name);
     setShowDistributorDropdown(false);
   };
 
   const handleDistributorSearchChange = (value: string) => {
     setDistributorSearch(value);
-    setCustomerName(value);
     setSelectedDistributor(null);
     setShowDistributorDropdown(true);
   };
@@ -129,21 +125,20 @@ export default function CartModal({
       return;
     }
 
-    // Prepare request data
-    const requestData: CreateRedemptionRequestData = {
-      requested_for: selectedDistributor.id,
-      points_deducted_from: pointsDeductedFrom,
-      remarks: remarks || undefined,
-      items: items.map(item => ({
-        variant_id: item.id,
-        quantity: item.quantity
-      }))
-    };
+    // Prepare request data - submit one item per request as per API design
+    const itemPromises = items.map(item => {
+      const requestData: CreateRedemptionRequestData = {
+        item_id: parseInt(item.id),
+        quantity: item.quantity,
+        distributor_id: selectedDistributor.id,
+        notes: remarks || undefined,
+      };
+      return redemptionRequestsApi.create(requestData);
+    });
 
     // Close modal and reset form immediately
     items.forEach(item => onRemoveItem(item.id));
     setStep("cart");
-    setCustomerName("");
     setRemarks("");
     setDistributorSearch("");
     setSelectedDistributor(null);
@@ -158,13 +153,13 @@ export default function CartModal({
       description: `Request for ${selectedDistributor.name} has been created successfully`
     });
 
-    // Execute API call in background without blocking
-    redemptionRequestsApi.createRequest(requestData)
-      .then((response) => {
+    // Execute API calls in background without blocking
+    Promise.all(itemPromises)
+      .then((responses: any[]) => {
         // Silently succeed - user already sees success toast
-        console.log("Redemption request created:", response);
+        console.log("Redemption requests created:", responses);
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error("Error submitting redemption request:", error);
         // Show error toast if submission failed
         toast.error("Failed to submit request", {
@@ -679,10 +674,9 @@ export default function CartModal({
               </button>
               <button 
                 onClick={handleSubmit}
-                disabled={submitting}
                 className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
-                {submitting ? "Submitting..." : "Submit Details"}
+                Submit Details
               </button>
             </div>
           </>
@@ -1113,10 +1107,9 @@ export default function CartModal({
             </button>
             <button 
               onClick={handleSubmit}
-              disabled={submitting}
               className="w-full px-4 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
-              {submitting ? "Submitting..." : "Submit Details"}
+              Submit Details
             </button>
           </div>
         )}
