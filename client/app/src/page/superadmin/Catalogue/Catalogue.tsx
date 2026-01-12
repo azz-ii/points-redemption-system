@@ -1018,15 +1018,6 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
       <MobileBottomNav
         currentPage={currentPage}
         onNavigate={onNavigate || (() => {})}
-        isModalOpen={
-          showCreateModal ||
-          showEditModal ||
-          showViewModal ||
-          showDeleteModal ||
-          showViewVariantModal ||
-          showEditVariantModal ||
-          showDeleteVariantModal
-        }
       />
       <NotificationPanel
         isOpen={isNotificationOpen}

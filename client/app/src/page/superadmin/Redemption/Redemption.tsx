@@ -9,12 +9,15 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import { Bell, Search, Sliders, Filter, Warehouse, LogOut } from "lucide-react";
 import {
-  ViewRedemptionModal,
-  EditRedemptionModal,
-  type RedemptionItem,
-} from "./modals";
+  Bell,
+  Search,
+  Sliders,
+  Filter,
+  Warehouse,
+  LogOut,
+} from "lucide-react";
+import { ViewRedemptionModal, EditRedemptionModal, MarkAsProcessedModal, CancelRequestModal, type RedemptionItem } from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
 import { toast } from "react-hot-toast";
 
@@ -30,8 +33,6 @@ interface RedemptionProps {
       | "catalogue"
       | "redemption"
       | "inventory"
-      | "distributors"
-      | "teams"
   ) => void;
   onLogout?: () => void;
 }

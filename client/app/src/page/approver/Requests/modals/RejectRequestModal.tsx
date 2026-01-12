@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
-import { BaseModal } from "@/page/superadmin/Accounts/modals/BaseModal";
+import { toast } from "react-hot-toast";
 import type { ModalBaseProps, RequestItem } from "./types";
 
 interface RejectRequestModalProps extends ModalBaseProps {
