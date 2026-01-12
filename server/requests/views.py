@@ -2,8 +2,10 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 from django.utils import timezone
 from django.db import transaction
+from django.contrib.auth.hashers import check_password
 import logging
 from .models import RedemptionRequest, RedemptionRequestItem
 from .serializers import (
@@ -17,6 +19,7 @@ from utils.email_service import (
     send_request_submitted_email
 )
 from users.models import UserProfile
+from distributers.models import Distributor
 
 # Configure logger for request operations
 logger = logging.getLogger('email')
@@ -597,5 +600,64 @@ class DashboardRedemptionRequestsView(APIView):
             logger.error(f"Error fetching dashboard redemption requests: {str(e)}")
             return Response(
                 {'error': 'Failed to fetch redemption requests', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ResetAllPointsView(APIView):
+    """
+    API endpoint to reset all points to zero for both agents and distributors.
+    Requires superadmin authentication and password verification.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Reset all points to zero with password verification"""
+        try:
+            # Check if user is superadmin
+            profile = getattr(request.user, 'profile', None)
+            is_admin = (not profile) or (profile and profile.position in ['Admin'])
+            
+            if not is_admin:
+                return Response(
+                    {'error': 'Only superadmins can reset all points'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Get password from request
+            password = request.data.get('password', '')
+            
+            if not password:
+                return Response(
+                    {'error': 'Password is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verify password
+            if not request.user.check_password(password):
+                return Response(
+                    {'error': 'Invalid password'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            # Reset all points using transaction for data consistency
+            with transaction.atomic():
+                # Reset all distributor points
+                Distributor.objects.all().update(points=0)
+                
+                # Reset all user profile points
+                UserProfile.objects.all().update(points=0)
+            
+            logger.info(f"Superadmin {request.user.username} reset all points to zero")
+            
+            return Response({
+                'success': True,
+                'message': 'All points have been reset to zero for both agents and distributors'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error resetting all points: {str(e)}")
+            return Response(
+                {'error': 'Failed to reset points', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

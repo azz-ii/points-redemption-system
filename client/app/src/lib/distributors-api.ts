@@ -132,4 +132,27 @@ export const dashboardApi = {
     console.log("Redemption requests data:", data);
     return data;
   },
+  resetAllPoints: async (password: string): Promise<{ success: boolean; message: string }> => {
+    // Extract CSRF token from cookies
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1] || '';
+
+    const response = await fetch(`${API_BASE_URL}/dashboard/reset-all-points/`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        ...(csrfToken && { 'X-CSRFToken': csrfToken })
+      },
+      credentials: 'include',
+      body: JSON.stringify({ password }),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error("Reset all points error:", response.status, error);
+      throw new Error(error.message || 'Failed to reset points. Please check your password.');
+    }
+    return response.json();
+  },
 };

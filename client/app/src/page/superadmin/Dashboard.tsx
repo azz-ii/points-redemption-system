@@ -14,6 +14,7 @@ import {
   Warehouse,
   LogOut,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { dashboardApi, type DashboardStats, type RedemptionRequest as APIRedemptionRequest } from "@/lib/distributors-api";
 import { RedemptionTable } from "./Redemption/components";
@@ -28,6 +29,9 @@ function Dashboard() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [pointAmount, setPointAmount] = useState<string>("");
+  const [showPasswordStep, setShowPasswordStep] = useState(false);
+  const [password, setPassword] = useState<string>("");
+  const [isResettingPoints, setIsResettingPoints] = useState(false);
 
   // Dashboard stats
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -129,6 +133,93 @@ function Dashboard() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to cancel request");
     }
+  };
+
+  const handleResetAllPointsConfirm = async () => {
+    if (!password) {
+      toast.error("Please enter your password");
+      return;
+    }
+
+    try {
+      setIsResettingPoints(true);
+      const result = await dashboardApi.resetAllPoints(password);
+      
+      if (result.success) {
+        toast.success("All points have been reset to zero successfully");
+        setIsResetModalOpen(false);
+        setShowPasswordStep(false);
+        setPassword("");
+        setSelectedClient("");
+        setPointAmount("");
+        
+        // Refresh dashboard stats
+        const stats = await dashboardApi.getStats();
+        setStats(stats);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to reset points. Please check your password.");
+    } finally {
+      setIsResettingPoints(false);
+    }
+  };
+
+  const handleResetAllPoints = async () => {
+    if (!password) {
+      toast.error("Please enter your password");
+      return;
+    }
+
+    try {
+      setIsResettingPoints(true);
+      const result = await dashboardApi.resetAllPoints(password);
+      
+      if (result.success) {
+        toast.success("All points have been reset to zero successfully");
+        setIsResetModalOpen(false);
+        setShowPasswordStep(false);
+        setPassword("");
+        setSelectedDistributor("");
+        
+        // Refresh dashboard stats
+        const stats = await dashboardApi.getStats();
+        setStats(stats);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to reset points. Please check your password.");
+    } finally {
+      setIsResettingPoints(false);
+    }
+  };
+
+  const handleResetDistributorPoints = async () => {
+    if (!selectedDistributor) {
+      toast.error("Please select a distributor");
+      return;
+    }
+
+    try {
+      setIsResettingPoints(true);
+      // TODO: Call API to reset points for specific distributor
+      console.log("Resetting points for distributor:", selectedDistributor);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success("Points reset successfully for selected distributor");
+      setSelectedDistributor("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to reset points");
+    } finally {
+      setIsResettingPoints(false);
+    }
+  };
+
+  const handleResetModalClose = () => {
+    setIsResetModalOpen(false);
+    setShowPasswordStep(false);
+    setPassword("");
+    setSelectedDistributor("");
   };
 
   // Convert API response to RedemptionItem for table
@@ -360,7 +451,9 @@ function Dashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setIsResetModalOpen(false)}
+            onClick={() => {
+              if (!showPasswordStep) setIsResetModalOpen(false);
+            }}
           />
           <div
             className={`relative w-full max-w-md rounded-xl border shadow-2xl p-6 space-y-4 ${
@@ -375,7 +468,14 @@ function Dashboard() {
                 <h2 className="text-lg font-semibold">Reset Points</h2>
               </div>
               <button
-                onClick={() => setIsResetModalOpen(false)}
+                onClick={() => {
+                  if (!showPasswordStep) {
+                    setIsResetModalOpen(false);
+                  } else {
+                    setShowPasswordStep(false);
+                    setPassword("");
+                  }
+                }}
                 className={`p-2 rounded-lg ${
                   resolvedTheme === "dark"
                     ? "hover:bg-gray-800"
@@ -386,58 +486,123 @@ function Dashboard() {
               </button>
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-sm font-medium">Select Client</label>
-              <select
-                value={selectedClient}
-                onChange={(e) => setSelectedClient(e.target.value)}
-                className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-700 text-white focus:border-gray-500 focus:ring-0"
-                    : "bg-white border-gray-300 text-gray-900 focus:border-gray-500 focus:ring-0"
-                }`}
-              >
-                <option value="">Choose a client</option>
-              </select>
+            {!showPasswordStep ? (
+              <>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium">Select Client</label>
+                  <select
+                    value={selectedClient}
+                    onChange={(e) => setSelectedClient(e.target.value)}
+                    className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-white focus:border-gray-500 focus:ring-0"
+                        : "bg-white border-gray-300 text-gray-900 focus:border-gray-500 focus:ring-0"
+                    }`}
+                  >
+                    <option value="">Choose a client</option>
+                  </select>
 
-              <label className="block text-sm font-medium">
-                Points to reset
-              </label>
-              <Input
-                type="number"
-                min="0"
-                value={pointAmount}
-                onChange={(e) => setPointAmount(e.target.value)}
-                placeholder="Enter points"
-                className="w-full"
-              />
-            </div>
+                  <label className="block text-sm font-medium">
+                    Points to reset
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={pointAmount}
+                    onChange={(e) => setPointAmount(e.target.value)}
+                    placeholder="Enter points"
+                    className="w-full"
+                  />
+                </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2">
-              <button
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <button
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                        : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                    }`}
+                    onClick={() => setShowPasswordStep(true)}
+                  >
+                    Reset All Points
+                  </button>
+                  <button
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                    onClick={() => setIsResetModalOpen(false)}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={`p-3 rounded-lg flex items-start gap-3 ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
-                }`}
-                onClick={() => {
-                  setSelectedClient("");
-                  setPointAmount("");
-                }}
-              >
-                Reset All Points
-              </button>
-              <button
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-                onClick={() => setIsResetModalOpen(false)}
-              >
-                Apply
-              </button>
-            </div>
+                    ? "bg-red-900/20 border border-red-800"
+                    : "bg-red-50 border border-red-200"
+                }`}>
+                  <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                    resolvedTheme === "dark" ? "text-red-400" : "text-red-600"
+                  }`} />
+                  <p className="text-sm">
+                    This will reset <strong>all points to zero</strong> for both agents and distributors. This action cannot be undone. Please enter your password to confirm.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium">Enter Your Password</label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    disabled={isResettingPoints}
+                    className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-500 focus:ring-0"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:ring-0"
+                    }`}
+                    onKeyPress={(e) => e.key === "Enter" && handleResetAllPointsConfirm()}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <button
+                    className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700 disabled:opacity-50"
+                        : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100 disabled:opacity-50"
+                    }`}
+                    onClick={() => {
+                      setShowPasswordStep(false);
+                      setPassword("");
+                    }}
+                    disabled={isResettingPoints}
+                  >
+                    Back
+                  </button>
+                  <button
+                    className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                      !password || isResettingPoints
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    } ${
+                      resolvedTheme === "dark"
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-red-600 text-white hover:bg-red-700"
+                    }`}
+                    onClick={handleResetAllPointsConfirm}
+                    disabled={!password || isResettingPoints}
+                  >
+                    {isResettingPoints ? "Resetting..." : "Confirm Reset"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

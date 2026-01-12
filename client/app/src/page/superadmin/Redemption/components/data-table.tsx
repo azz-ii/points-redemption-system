@@ -86,12 +86,12 @@ export function DataTable<TData, TValue>({
       const id = String(row.getValue("id") || "").toLowerCase()
       const requestedByName = String(row.getValue("requested_by_name") || "").toLowerCase()
       const requestedForName = String(row.getValue("requested_for_name") || "").toLowerCase()
-      const status = String(row.getValue("status") || "").toLowerCase()
+      const processingStatus = String(row.getValue("processing_status") || "").toLowerCase()
       
       return id.includes(searchValue) || 
              requestedByName.includes(searchValue) || 
              requestedForName.includes(searchValue) ||
-             status.includes(searchValue)
+             processingStatus.includes(searchValue)
     },
     initialState: {
       pagination: {
