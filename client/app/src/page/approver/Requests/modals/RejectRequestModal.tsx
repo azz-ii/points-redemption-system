@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
+import { BaseModal } from "@/page/superadmin/Accounts/modals/BaseModal";
 import type { ModalBaseProps, RequestItem } from "./types";
 
 interface RejectRequestModalProps extends ModalBaseProps {
@@ -49,8 +50,7 @@ export function RejectRequestModal({
           <h2 className="text-xl font-semibold mb-4">Reject Request</h2>
           <p className="text-sm mb-4">
             Are you sure you want to reject this request for{" "}
-            <span className="font-semibold">{request.requested_for_name}</span>
-            ?
+            <span className="font-semibold">{request.requested_for_name}</span>?
           </p>
 
           <div className="mb-4">

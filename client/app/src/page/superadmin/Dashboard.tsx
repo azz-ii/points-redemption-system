@@ -846,6 +846,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
       <MobileBottomNav
         currentPage={activePage}
         onNavigate={onNavigate || (() => {})}
+        isModalOpen={isResetModalOpen || showDetailsModal}
       />
       <NotificationPanel
         isOpen={isNotificationOpen}

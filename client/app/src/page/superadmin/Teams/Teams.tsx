@@ -56,7 +56,10 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -96,7 +99,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
         },
       });
       const data = await response.json();
-      
+
       console.log("API Response:", response.status, response.ok);
       console.log("API Data:", data);
 
@@ -126,7 +129,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
         },
       });
       const data = await response.json();
-      
+
       console.log("DEBUG Teams: Users fetched", {
         status: response.status,
         totalUsers: data.accounts?.length || 0,
@@ -140,11 +143,11 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
             full_name: user.full_name,
             email: user.email,
           }));
-        
+
         console.log("DEBUG Teams: Approvers filtered", {
           count: approversList.length,
         });
-        
+
         setApprovers(approversList);
       }
     } catch (err) {
@@ -172,8 +175,12 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.id.toString().includes(searchQuery) ||
       team.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.approver_details?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.approver_details?.email.toLowerCase().includes(searchQuery.toLowerCase())
+      team.approver_details?.full_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      team.approver_details?.email
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.max(
@@ -186,17 +193,26 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
   const paginatedTeams = filteredTeams.slice(startIndex, endIndex);
 
   // Handle create team submission
-  const handleCreateTeam = async (memberIds?: number[], distributorIds?: number[]) => {
+  const handleCreateTeam = async (
+    memberIds?: number[],
+    distributorIds?: number[]
+  ) => {
     if (!newTeam.name.trim()) {
       setCreateError("Team name is required");
-      console.warn("DEBUG Teams: Create team validation failed - name required");
+      console.warn(
+        "DEBUG Teams: Create team validation failed - name required"
+      );
       return;
     }
 
     try {
       setCreateLoading(true);
       setCreateError("");
-      console.log("DEBUG Teams: Creating team", { newTeam, memberIds, distributorIds });
+      console.log("DEBUG Teams: Creating team", {
+        newTeam,
+        memberIds,
+        distributorIds,
+      });
 
       const response = await fetch("http://127.0.0.1:8000/api/teams/", {
         method: "POST",
@@ -219,7 +235,11 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
 
         // Assign members if any were selected
         if (memberIds && memberIds.length > 0) {
-          console.log("DEBUG Teams: Assigning", memberIds.length, "members to team");
+          console.log(
+            "DEBUG Teams: Assigning",
+            memberIds.length,
+            "members to team"
+          );
           for (const memberId of memberIds) {
             try {
               const assignResponse = await fetch(
@@ -233,22 +253,37 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
                   body: JSON.stringify({ user_id: memberId }),
                 }
               );
-              
+
               if (!assignResponse.ok) {
                 const errorData = await assignResponse.json();
-                console.warn("DEBUG Teams: Failed to assign member", memberId, errorData);
+                console.warn(
+                  "DEBUG Teams: Failed to assign member",
+                  memberId,
+                  errorData
+                );
               } else {
-                console.log("DEBUG Teams: Successfully assigned member", memberId);
+                console.log(
+                  "DEBUG Teams: Successfully assigned member",
+                  memberId
+                );
               }
             } catch (err) {
-              console.error("DEBUG Teams: Error assigning member", memberId, err);
+              console.error(
+                "DEBUG Teams: Error assigning member",
+                memberId,
+                err
+              );
             }
           }
         }
 
         // Assign distributors if any were selected
         if (distributorIds && distributorIds.length > 0) {
-          console.log("DEBUG Teams: Assigning", distributorIds.length, "distributors to team");
+          console.log(
+            "DEBUG Teams: Assigning",
+            distributorIds.length,
+            "distributors to team"
+          );
           for (const distributorId of distributorIds) {
             try {
               const assignResponse = await fetch(
@@ -262,15 +297,26 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
                   body: JSON.stringify({ distributor_id: distributorId }),
                 }
               );
-              
+
               if (!assignResponse.ok) {
                 const errorData = await assignResponse.json();
-                console.warn("DEBUG Teams: Failed to assign distributor", distributorId, errorData);
+                console.warn(
+                  "DEBUG Teams: Failed to assign distributor",
+                  distributorId,
+                  errorData
+                );
               } else {
-                console.log("DEBUG Teams: Successfully assigned distributor", distributorId);
+                console.log(
+                  "DEBUG Teams: Successfully assigned distributor",
+                  distributorId
+                );
               }
             } catch (err) {
-              console.error("DEBUG Teams: Error assigning distributor", distributorId, err);
+              console.error(
+                "DEBUG Teams: Error assigning distributor",
+                distributorId,
+                err
+              );
             }
           }
         }
@@ -438,7 +484,8 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
 
         // Handle constraint errors (400 status)
         if (response.status === 400) {
-          const errorMessage = data.detail || data.error || "Failed to delete team";
+          const errorMessage =
+            data.detail || data.error || "Failed to delete team";
           setToast({
             message: errorMessage,
             type: "error",
@@ -574,8 +621,6 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
             </div>
           </div>
 
-
-
           {/* Teams Table */}
           <TeamsTable
             teams={teams}
@@ -689,12 +734,14 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
                               : "text-gray-600"
                           }`}
                         >
-                          <span className="font-medium">Region:</span> {team.region}
+                          <span className="font-medium">Region:</span>{" "}
+                          {team.region}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white text-center">
-                          {team.member_count} {team.member_count === 1 ? "member" : "members"}
+                          {team.member_count}{" "}
+                          {team.member_count === 1 ? "member" : "members"}
                         </span>
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white text-center">
                           {team.distributor_count ?? 0} dist.
@@ -703,7 +750,8 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-gray-500">
-                        Created: {new Date(team.created_at).toLocaleDateString()}
+                        Created:{" "}
+                        {new Date(team.created_at).toLocaleDateString()}
                       </div>
                       <div className="relative">
                         <button
@@ -820,6 +868,12 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       <MobileBottomNav
         currentPage="teams"
         onNavigate={onNavigate || (() => {})}
+        isModalOpen={
+          isCreateModalOpen ||
+          isViewModalOpen ||
+          isEditModalOpen ||
+          isDeleteModalOpen
+        }
       />
 
       <NotificationPanel

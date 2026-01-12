@@ -35,6 +35,7 @@ interface HistoryProps {
       | "redemption"
       | "inventory"
       | "distributors"
+      | "teams"
   ) => void;
   onLogout?: () => void;
 }
@@ -505,13 +506,18 @@ function History({ onNavigate, onLogout }: HistoryProps) {
 
       {/* Details Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSelectedItem(null)}
+          />
           <div
             className={`${
               resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full pointer-events-auto border ${
+            } rounded-lg shadow-2xl max-w-md w-full relative border ${
               resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
             }`}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-gray-700">

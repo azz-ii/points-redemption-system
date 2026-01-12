@@ -9,15 +9,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { Bell, Search, Sliders, Filter, Warehouse, LogOut } from "lucide-react";
 import {
-  Bell,
-  Search,
-  Sliders,
-  Filter,
-  Warehouse,
-  LogOut,
-} from "lucide-react";
-import { ViewRedemptionModal, EditRedemptionModal, type RedemptionItem } from "./modals";
+  ViewRedemptionModal,
+  EditRedemptionModal,
+  type RedemptionItem,
+} from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
 
 // Using the API response type directly
@@ -32,6 +29,8 @@ interface RedemptionProps {
       | "catalogue"
       | "redemption"
       | "inventory"
+      | "distributors"
+      | "teams"
   ) => void;
   onLogout?: () => void;
 }

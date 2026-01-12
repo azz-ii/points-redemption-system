@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { BaseModal } from "@/page/superadmin/Accounts/modals/BaseModal";
 import {
   Bell,
   Search,
@@ -13,7 +14,6 @@ import {
   Edit,
   Eye,
   Plus,
-  X,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -38,6 +38,8 @@ interface InventoryProps {
       | "catalogue"
       | "redemption"
       | "inventory"
+      | "distributors"
+      | "teams"
   ) => void;
   onLogout?: () => void;
 }
@@ -535,6 +537,7 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
       <MobileBottomNav
         currentPage={currentPage}
         onNavigate={onNavigate || (() => {})}
+        isModalOpen={!!selectedItem || !!editItem || showAddModal}
       />
       <NotificationPanel
         isOpen={isNotificationOpen}
@@ -543,354 +546,279 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
 
       {/* View Details Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setSelectedItem(null)}
-          />
-          <div
-            className={`relative w-full max-w-md rounded-lg shadow-lg ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-900"
-            } transition-colors`}
-          >
-            {/* Modal Header */}
-            <div
-              className={`flex justify-between items-center p-6 border-b ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              <h2 className="text-xl font-bold">Inventory Details</h2>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                } transition-colors`}
-              >
-                <X className="h-5 w-5" />
-              </button>
+        <BaseModal
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          title="Inventory Details"
+          subtitle="View item information"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Item ID
+              </p>
+              <p className="font-semibold text-base">{selectedItem.id}</p>
             </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-5">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Item Name
+              </p>
+              <p className="font-semibold text-base">{selectedItem.itemName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Category
+              </p>
+              <p className="font-semibold text-base">{selectedItem.category}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Item ID</p>
-                <p className="font-semibold text-base">{selectedItem.id}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Current Stock
+                </p>
+                <p className="font-semibold text-lg">{selectedItem.stock}</p>
               </div>
-
               <div>
-                <p className="text-sm text-gray-400 mb-1">Item Name</p>
-                <p className="font-semibold text-base">
-                  {selectedItem.itemName}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Reorder Level
+                </p>
+                <p className="font-semibold text-lg">
+                  {selectedItem.reorderLevel}
                 </p>
               </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Category</p>
-                <p className="font-semibold text-base">
-                  {selectedItem.category}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Current Stock</p>
-                  <p className="font-semibold text-lg">{selectedItem.stock}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 mb-1">Reorder Level</p>
-                  <p className="font-semibold text-lg">
-                    {selectedItem.reorderLevel}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Status</p>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                    selectedItem.status
-                  )}`}
-                >
-                  {selectedItem.status}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Last Updated</p>
-                <p className="font-semibold text-base">
-                  {selectedItem.lastUpdated}
-                </p>
-              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Status
+              </p>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                  selectedItem.status
+                )}`}
+              >
+                {selectedItem.status}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Last Updated
+              </p>
+              <p className="font-semibold text-base">
+                {selectedItem.lastUpdated}
+              </p>
             </div>
           </div>
-        </div>
+        </BaseModal>
       )}
 
       {/* Edit Inventory Modal */}
       {editItem && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setEditItem(null)}
-          />
-          <div
-            className={`relative w-full max-w-md rounded-lg shadow-lg ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-900"
-            } transition-colors`}
-          >
-            {/* Modal Header */}
-            <div
-              className={`flex justify-between items-center p-6 border-b ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              <h2 className="text-xl font-bold">Inventory Details</h2>
+        <BaseModal
+          isOpen={!!editItem}
+          onClose={() => setEditItem(null)}
+          title="Edit Inventory"
+          subtitle="Update stock level"
+          size="md"
+          footer={
+            <>
               <button
                 onClick={() => setEditItem(null)}
-                className={`p-2 rounded-lg ${
+                className={`px-4 py-2 rounded font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                } transition-colors`}
+                    ? "bg-gray-800 hover:bg-gray-700 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                }`}
               >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-5">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Item ID</p>
-                <p className="font-semibold text-base">{editItem.id}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Item Name</p>
-                <p className="font-semibold text-base">{editItem.itemName}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Category</p>
-                <p className="font-semibold text-base">{editItem.category}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
-                    Current Stock <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={editItem.stock}
-                    min="0"
-                    className={`w-full px-4 py-3 rounded-lg border text-lg font-semibold ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 mb-2">Reorder Level</p>
-                  <p className="font-semibold text-lg pt-3">
-                    {editItem.reorderLevel}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Status</p>
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                    editItem.status
-                  )}`}
-                >
-                  {editItem.status}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Last Updated</p>
-                <p className="font-semibold text-base">
-                  {editItem.lastUpdated}
-                </p>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              className={`flex gap-3 p-6 border-t ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              <button
-                onClick={() => setEditItem(null)}
-                className={`flex-1 px-4 py-3 rounded-lg font-semibold text-sm ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 hover:bg-gray-600 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-                } transition-colors`}
-              >
-                Close
+                Cancel
               </button>
               <button
                 onClick={() => {
                   // Handle update logic here
                   setEditItem(null);
                 }}
-                className="flex-1 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors"
+                className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
               >
                 Update Stock
               </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Item ID
+              </p>
+              <p className="font-semibold text-base">{editItem.id}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Item Name
+              </p>
+              <p className="font-semibold text-base">{editItem.itemName}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Category
+              </p>
+              <p className="font-semibold text-base">{editItem.category}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Current Stock <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  defaultValue={editItem.stock}
+                  min="0"
+                  className={`w-full px-3 py-2 rounded-lg border text-base font-semibold ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium mb-2">Reorder Level</p>
+                <div className="flex items-center h-10">
+                  <p className="font-semibold text-base">
+                    {editItem.reorderLevel}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Status
+              </p>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                  editItem.status
+                )}`}
+              >
+                {editItem.status}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                Last Updated
+              </p>
+              <p className="font-semibold text-base">{editItem.lastUpdated}</p>
             </div>
           </div>
-        </div>
+        </BaseModal>
       )}
 
       {/* Add Item Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowAddModal(false)}
-          />
-          <div
-            className={`relative w-full max-w-md rounded-lg shadow-lg ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-900"
-            } transition-colors`}
-          >
-            {/* Modal Header */}
-            <div
-              className={`flex justify-between items-center p-6 border-b ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              <div>
-                <h2 className="text-xl font-bold">Add New Inventory Item</h2>
-                <p className="text-sm text-gray-500">
-                  Enter item details below
-                </p>
-              </div>
+        <BaseModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          title="Add New Inventory Item"
+          subtitle="Enter item details below"
+          size="md"
+          footer={
+            <>
               <button
                 onClick={() => setShowAddModal(false)}
-                className={`p-2 rounded-lg ${
+                className={`px-4 py-2 rounded font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                } transition-colors`}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Item Name
-                </label>
-                <Input
-                  placeholder="Enter item name"
-                  value={newItem.itemName}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, itemName: e.target.value })
-                  }
-                  className={`w-full ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-700 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Category
-                </label>
-                <Input
-                  placeholder="Enter category"
-                  value={newItem.category}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, category: e.target.value })
-                  }
-                  className={`w-full ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-700 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  }`}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Stock
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={newItem.stock}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, stock: e.target.value })
-                    }
-                    className={`w-full ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    }`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Reorder Level
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={newItem.reorderLevel}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, reorderLevel: e.target.value })
-                    }
-                    className={`w-full ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              className={`flex gap-3 p-6 border-t ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
-            >
-              <button
-                onClick={() => setShowAddModal(false)}
-                className={`flex-1 px-4 py-2 rounded font-semibold ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 hover:bg-gray-600 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-                } transition-colors`}
+                    ? "bg-gray-800 hover:bg-gray-700 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                }`}
               >
                 Cancel
               </button>
-              <button className="flex-1 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors">
+              <button
+                onClick={() => {
+                  // Handle add logic here
+                  setShowAddModal(false);
+                }}
+                className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+              >
                 Add Item
               </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Item Name <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Enter item name"
+                value={newItem.itemName}
+                onChange={(e) =>
+                  setNewItem({ ...newItem, itemName: e.target.value })
+                }
+                className={`w-full ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-700 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                }`}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Category <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Enter category"
+                value={newItem.category}
+                onChange={(e) =>
+                  setNewItem({ ...newItem, category: e.target.value })
+                }
+                className={`w-full ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-700 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                }`}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Initial Stock <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  value={newItem.stock}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, stock: e.target.value })
+                  }
+                  className={`w-full ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  }`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Reorder Level <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  value={newItem.reorderLevel}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, reorderLevel: e.target.value })
+                  }
+                  className={`w-full ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  }`}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </BaseModal>
       )}
     </div>
   );

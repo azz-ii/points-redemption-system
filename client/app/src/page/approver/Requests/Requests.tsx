@@ -5,18 +5,18 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
 import { MobileBottomNavApprover } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import {
-  Bell,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Bell, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   redemptionRequestsApi,
   type RedemptionRequestResponse,
 } from "@/lib/api";
 import { toast } from "sonner";
-import { ViewRequestModal, ApproveRequestModal, RejectRequestModal, type RequestItem } from "./modals";
+import {
+  ViewRequestModal,
+  ApproveRequestModal,
+  RejectRequestModal,
+  type RequestItem,
+} from "./modals";
 import { RequestsTable, RequestsMobileCards } from "./components";
 
 // Using the API response type directly
@@ -40,8 +40,9 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] =
-    useState<RequestItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null
+  );
 
   // Fetch requests on mount
   useEffect(() => {
@@ -119,10 +120,8 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
     toast.success("Request approved successfully");
 
     // Execute API call in background without blocking
-    redemptionRequestsApi.approveRequest(
-      selectedRequest.id,
-      remarks
-    )
+    redemptionRequestsApi
+      .approveRequest(selectedRequest.id, remarks)
       .then(() => {
         // Silently succeed - user already sees success toast
         // Refresh the list in background
@@ -150,11 +149,8 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
     toast.success("Request rejected successfully");
 
     // Execute API call in background without blocking
-    redemptionRequestsApi.rejectRequest(
-      selectedRequest.id,
-      reason,
-      remarks
-    )
+    redemptionRequestsApi
+      .rejectRequest(selectedRequest.id, reason, remarks)
       .then(() => {
         // Silently succeed - user already sees success toast
         // Refresh the list in background
@@ -435,6 +431,7 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
         currentPage="requests"
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
+        isModalOpen={showApproveModal || showRejectModal || showViewModal}
       />
     </div>
   );

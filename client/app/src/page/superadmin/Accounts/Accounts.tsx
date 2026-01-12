@@ -5,14 +5,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import {
-  Bell,
-  UserPlus,
-  LogOut,
-  Warehouse,
-  X,
-  RotateCw,
-} from "lucide-react";
+import { Bell, UserPlus, LogOut, Warehouse, X, RotateCw } from "lucide-react";
 import {
   ViewAccountModal,
   CreateAccountModal,
@@ -86,10 +79,15 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [bulkBanTargets, setBulkBanTargets] = useState<Account[]>([]);
   const [bulkBanReason, setBulkBanReason] = useState("");
   const [bulkBanMessage, setBulkBanMessage] = useState("");
-  const [bulkBanDuration, setBulkBanDuration] = useState<"1" | "7" | "30" | "permanent">("1");
+  const [bulkBanDuration, setBulkBanDuration] = useState<
+    "1" | "7" | "30" | "permanent"
+  >("1");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Fetch accounts on component mount
   const fetchAccounts = async () => {
@@ -295,22 +293,26 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const handleBulkDeleteConfirm = async () => {
     try {
       setLoading(true);
-      
+
       // Delete all selected accounts
       const deleteResults = await Promise.allSettled(
-        bulkDeleteTargets.map(account =>
+        bulkDeleteTargets.map((account) =>
           fetch(`http://127.0.0.1:8000/api/users/${account.id}/`, {
             method: "DELETE",
           })
         )
       );
 
-      const successCount = deleteResults.filter(r => r.status === "fulfilled").length;
-      const failCount = deleteResults.filter(r => r.status === "rejected").length;
-      
+      const successCount = deleteResults.filter(
+        (r) => r.status === "fulfilled"
+      ).length;
+      const failCount = deleteResults.filter(
+        (r) => r.status === "rejected"
+      ).length;
+
       setShowBulkDeleteModal(false);
       setBulkDeleteTargets([]);
-      
+
       if (failCount === 0) {
         setToast({
           message: `Successfully deleted ${successCount} account(s)`,
@@ -322,7 +324,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
           type: "error",
         });
       }
-      
+
       // Refresh accounts list
       fetchAccounts();
     } catch (err) {
@@ -370,7 +372,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
 
       // Ban all selected accounts
       const banResults = await Promise.allSettled(
-        bulkBanTargets.map(account => {
+        bulkBanTargets.map((account) => {
           const payload = {
             username: account.username,
             full_name: account.full_name,
@@ -393,8 +395,12 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
         })
       );
 
-      const successCount = banResults.filter(r => r.status === "fulfilled").length;
-      const failCount = banResults.filter(r => r.status === "rejected").length;
+      const successCount = banResults.filter(
+        (r) => r.status === "fulfilled"
+      ).length;
+      const failCount = banResults.filter(
+        (r) => r.status === "rejected"
+      ).length;
 
       setShowBulkBanModal(false);
       setBulkBanTargets([]);
@@ -499,7 +505,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  
+
   const filteredAccounts = accounts.filter(
     (account) =>
       account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -508,7 +514,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       account.id.toString().includes(searchQuery) ||
       account.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   const totalPages = Math.max(
     1,
     Math.ceil(filteredAccounts.length / itemsPerPage)
@@ -627,8 +633,6 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
             </div>
           </div>
 
-
-
           {/* Table */}
           <AccountsTable
             accounts={accounts}
@@ -719,6 +723,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       <MobileBottomNav
         currentPage="accounts"
         onNavigate={onNavigate || (() => {})}
+        isModalOpen={showCreateModal || showEditModal}
       />
 
       <NotificationPanel
