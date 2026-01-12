@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
+import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -146,7 +147,7 @@ function Accounts() {
     });
 
     // Execute API call in background without blocking
-    fetch("/api/users/", {
+    fetchWithCsrf("/api/users/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -211,7 +212,7 @@ function Accounts() {
 
     try {
       setLoading(true);
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/users/${editingAccount.id}/`,
         {
           method: "PUT",
@@ -254,7 +255,7 @@ function Accounts() {
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/users/${id}/`, {
+      const response = await fetchWithCsrf(`/api/users/${id}/`, {
         method: "DELETE",
       });
 
@@ -288,7 +289,7 @@ function Accounts() {
       // Delete all selected accounts
       const deleteResults = await Promise.allSettled(
         bulkDeleteTargets.map(account =>
-          fetch(`/api/users/${account.id}/`, {
+          fetchWithCsrf(`/api/users/${account.id}/`, {
             method: "DELETE",
           })
         )
@@ -374,7 +375,7 @@ function Accounts() {
             unban_date,
           };
 
-          return fetch(`/api/users/${account.id}/`, {
+          return fetchWithCsrf(`/api/users/${account.id}/`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -452,7 +453,7 @@ function Accounts() {
         unban_date,
       };
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/users/${banTarget.id}/`,
         {
           method: "PUT",

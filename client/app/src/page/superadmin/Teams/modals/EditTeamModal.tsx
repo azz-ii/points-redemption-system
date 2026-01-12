@@ -15,6 +15,7 @@ import type {
   TeamDetail,
   SalesAgentOption,
 } from "./types";
+import { fetchWithCsrf } from "@/lib/csrf";
 
 interface EditTeamModalProps extends ModalBaseProps {
   team: Team | null;
@@ -159,7 +160,7 @@ export function EditTeamModal({
         userId: selectedSalesAgent,
       });
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/teams/${team.id}/assign_member/`,
         {
           method: "POST",
@@ -222,7 +223,7 @@ export function EditTeamModal({
         userName,
       });
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/teams/${team.id}/remove_member/`,
         {
           method: "POST",

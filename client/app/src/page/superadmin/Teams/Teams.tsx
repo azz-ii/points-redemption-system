@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
+import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -187,7 +188,7 @@ function Teams() {
       setCreateError("");
       console.log("DEBUG Teams: Creating team", { newTeam, memberIds });
 
-      const response = await fetch("/api/teams/", {
+      const response = await fetchWithCsrf("/api/teams/", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -211,7 +212,7 @@ function Teams() {
           console.log("DEBUG Teams: Assigning", memberIds.length, "members to team");
           for (const memberId of memberIds) {
             try {
-              const assignResponse = await fetch(
+              const assignResponse = await fetchWithCsrf(
                 `/api/teams/${createdTeamId}/assign_member/`,
                 {
                   method: "POST",
@@ -303,7 +304,7 @@ function Teams() {
         editTeam,
       });
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/teams/${teamToEdit.id}/`,
         {
           method: "PUT",
@@ -364,7 +365,7 @@ function Teams() {
       setDeleteLoading(true);
       console.log("DEBUG Teams: Deleting team", teamId);
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/teams/${teamId}/`,
         {
           method: "DELETE",

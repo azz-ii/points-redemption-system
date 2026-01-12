@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
+import { fetchWithCsrf } from "@/lib/csrf";
 
 interface ViewTeamModalProps extends ModalBaseProps {
   team: { id: number } | null;
@@ -143,7 +144,7 @@ export function ViewTeamModal({
         userId: selectedSalesAgent,
       });
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/teams/${team.id}/assign_member/`,
         {
           method: "POST",
@@ -206,7 +207,7 @@ export function ViewTeamModal({
         userName,
       });
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/teams/${team.id}/remove_member/`,
         {
           method: "POST",

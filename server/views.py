@@ -1,7 +1,8 @@
 # server/views.py
 from django.contrib.auth import authenticate, login
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from django.middleware.csrf import get_token
 from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -95,6 +96,9 @@ class LoginView(APIView):
                     "position": position,
                     "username": username
                 }, status=status.HTTP_200_OK)
+                
+                # Ensure CSRF cookie is set
+                get_token(request)
                 
                 # Manually set the session cookie in the response
                 if request.session.session_key:
