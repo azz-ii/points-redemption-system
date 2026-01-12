@@ -336,6 +336,19 @@ export function ViewTeamModal({
                       } focus:outline-none`}
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Marketing Admin</label>
+                    <input
+                      type="text"
+                      value={teamDetails.marketing_admin_details ? teamDetails.marketing_admin_details.full_name : "No Marketing Admin"}
+                      disabled
+                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-100 border-gray-300 text-gray-600"
+                      } focus:outline-none`}
+                    />
+                  </div>
                 </div>
               </div>
 

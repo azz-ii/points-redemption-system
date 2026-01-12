@@ -11,6 +11,7 @@ export type {
   NewTeamData,
   EditTeamData,
   ApproverOption,
+  MarketingAdminOption,
   SalesAgentOption,
   ApproverDetails,
   UserDetails,

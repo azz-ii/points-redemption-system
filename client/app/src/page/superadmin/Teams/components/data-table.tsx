@@ -88,11 +88,16 @@ export function DataTable<TData, TValue>({
       const approverDetails = row.getValue("approver_details") as { full_name?: string; email?: string } | undefined
       const approverName = String(approverDetails?.full_name || "").toLowerCase()
       const approverEmail = String(approverDetails?.email || "").toLowerCase()
+      const marketingAdminDetails = row.getValue("marketing_admin_details") as { full_name?: string; email?: string } | undefined
+      const marketingAdminName = String(marketingAdminDetails?.full_name || "").toLowerCase()
+      const marketingAdminEmail = String(marketingAdminDetails?.email || "").toLowerCase()
       
       return name.includes(searchValue) || 
              id.includes(searchValue) || 
              approverName.includes(searchValue) ||
-             approverEmail.includes(searchValue)
+             approverEmail.includes(searchValue) ||
+             marketingAdminName.includes(searchValue) ||
+             marketingAdminEmail.includes(searchValue)
     },
     initialState: {
       pagination: {
@@ -109,7 +114,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Filter by name, approver..."
+            placeholder="Filter by name, approver, marketing admin..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"

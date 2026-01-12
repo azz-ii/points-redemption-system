@@ -30,6 +30,7 @@ import {
   type NewTeamData,
   type EditTeamData,
   type ApproverOption,
+  type MarketingAdminOption,
 } from "./modals";
 import { TeamsTable } from "./components";
 import type { Team } from "./components/columns";
@@ -60,15 +61,16 @@ function Teams() {
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
   const [approvers, setApprovers] = useState<ApproverOption[]>([]);
+  const [marketingAdmins, setMarketingAdmins] = useState<MarketingAdminOption[]>([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
     approver: null,
-    region: "",
+    marketing_admin: null,
   });
   const [editTeam, setEditTeam] = useState<EditTeamData>({
     name: "",
     approver: null,
-    region: "",
+    marketing_admin: null,
   });
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -142,10 +144,49 @@ function Teams() {
     }
   };
 
+  // Fetch marketing admins for dropdown
+  const fetchMarketingAdmins = async () => {
+    try {
+      console.log("DEBUG Teams: Fetching marketing admins...");
+      const response = await fetch("/api/users/", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      
+      console.log("DEBUG Teams: Users fetched for marketing admins", {
+        status: response.status,
+        totalUsers: data.accounts?.length || 0,
+      });
+
+      if (response.ok && data.accounts) {
+        const marketingAdminsList = data.accounts
+          .filter((user: { position: string }) => user.position === "Marketing")
+          .map((user: { id: number; full_name: string; email: string }) => ({
+            id: user.id,
+            full_name: user.full_name,
+            email: user.email,
+          }));
+        
+        console.log("DEBUG Teams: Marketing admins filtered", {
+          count: marketingAdminsList.length,
+        });
+        
+        setMarketingAdmins(marketingAdminsList);
+      }
+    } catch (err) {
+      console.error("DEBUG Teams: Error fetching marketing admins", err);
+    }
+  };
+
   // Load teams on mount
   useEffect(() => {
     fetchTeams();
     fetchApprovers();
+    fetchMarketingAdmins();
   }, []);
 
   // Auto-dismiss toast after 3 seconds
@@ -161,9 +202,10 @@ function Teams() {
     (team) =>
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.id.toString().includes(searchQuery) ||
-      team.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.approver_details?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.approver_details?.email.toLowerCase().includes(searchQuery.toLowerCase())
+      team.approver_details?.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      team.marketing_admin_details?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      team.marketing_admin_details?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.max(
@@ -241,7 +283,7 @@ function Teams() {
           type: "success",
         });
         setIsCreateModalOpen(false);
-        setNewTeam({ name: "", approver: null, region: "" });
+        setNewTeam({ name: "", approver: null, marketing_admin: null });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
@@ -277,7 +319,7 @@ function Teams() {
     setEditTeam({
       name: team.name,
       approver: team.approver_details?.id ?? null,
-      region: team.region,
+      marketing_admin: team.marketing_admin_details?.id ?? null,
     });
     setEditError("");
     setIsEditModalOpen(true);
@@ -329,7 +371,7 @@ function Teams() {
         });
         setIsEditModalOpen(false);
         setTeamToEdit(null);
-        setEditTeam({ name: "", approver: null, region: "" });
+        setEditTeam({ name: "", approver: null, marketing_admin: null });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
@@ -645,7 +687,8 @@ function Teams() {
                               : "text-gray-600"
                           }`}
                         >
-                          <span className="font-medium">Region:</span> {team.region}
+                          <span className="font-medium">Marketing:</span>{" "}
+                          {team.marketing_admin_details?.full_name || "No Marketing Admin"}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
@@ -802,12 +845,13 @@ function Teams() {
         onClose={() => {
           console.log("DEBUG Teams: Closing create modal");
           setIsCreateModalOpen(false);
-          setNewTeam({ name: "", approver: null, region: "" });
+          setNewTeam({ name: "", approver: null, marketing_admin: null });
           setCreateError("");
         }}
         newTeam={newTeam}
         setNewTeam={setNewTeam}
         approvers={approvers}
+        marketingAdmins={marketingAdmins}
         teams={teams}
         loading={createLoading}
         error={createError}
@@ -832,13 +876,14 @@ function Teams() {
           console.log("DEBUG Teams: Closing edit modal");
           setIsEditModalOpen(false);
           setTeamToEdit(null);
-          setEditTeam({ name: "", approver: null, region: "" });
+          setEditTeam({ name: "", approver: null, marketing_admin: null });
           setEditError("");
         }}
         team={teamToEdit}
         editTeam={editTeam}
         setEditTeam={setEditTeam}
         approvers={approvers}
+        marketingAdmins={marketingAdmins}
         teams={teams}
         loading={editLoading}
         error={editError}

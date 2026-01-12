@@ -15,6 +15,17 @@ class ApproverSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'full_name', 'email', 'position']
 
 
+class MarketingAdminSerializer(serializers.ModelSerializer):
+    """Serializer for marketing admin user details"""
+    full_name = serializers.CharField(source='profile.full_name', read_only=True)
+    email = serializers.EmailField(source='profile.email', read_only=True)
+    position = serializers.CharField(source='profile.position', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'full_name', 'email', 'position']
+
+
 class TeamMemberSerializer(serializers.ModelSerializer):
     """Serializer for team member user details"""
     full_name = serializers.CharField(source='profile.full_name', read_only=True)
@@ -63,11 +74,12 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     """Basic serializer for Team model"""
     approver_details = ApproverSerializer(source='approver', read_only=True)
+    marketing_admin_details = MarketingAdminSerializer(source='marketing_admin', read_only=True)
     member_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
-        fields = ['id', 'name', 'approver', 'approver_details', 'member_count', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'approver', 'approver_details', 'marketing_admin', 'marketing_admin_details', 'member_count', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_member_count(self, obj):
@@ -80,18 +92,26 @@ class TeamSerializer(serializers.ModelSerializer):
             if value.profile.position != 'Approver':
                 raise serializers.ValidationError('Selected user must have Approver position.')
         return value
+    
+    def validate_marketing_admin(self, value):
+        """Validate that marketing_admin has Marketing position"""
+        if value and hasattr(value, 'profile'):
+            if value.profile.position != 'Marketing':
+                raise serializers.ValidationError('Selected user must have Marketing position.')
+        return value
 
 
 class TeamDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for Team with members list"""
     approver_details = ApproverSerializer(source='approver', read_only=True)
+    marketing_admin_details = MarketingAdminSerializer(source='marketing_admin', read_only=True)
     members = serializers.SerializerMethodField()
     member_count = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Team
         fields = [
-            'id', 'name', 'approver', 'approver_details',
+            'id', 'name', 'approver', 'approver_details', 'marketing_admin', 'marketing_admin_details',
             'members', 'member_count',
             'created_at', 'updated_at'
         ]
