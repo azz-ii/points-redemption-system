@@ -668,7 +668,8 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
                         </span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">\n                      <div className="text-xs text-gray-500">
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-gray-500">
                         Created: {new Date(team.created_at).toLocaleDateString()}
                       </div>
                       <div className="relative">
