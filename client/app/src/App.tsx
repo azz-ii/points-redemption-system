@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Login from "./page/login/Login";
 import ApproverDashboard from "./page/approver/Dashboard";
 import ApproverRequests from "./page/approver/Requests/Requests";
@@ -34,25 +34,70 @@ type PageType =
   | "distributors"
   | "teams";
 
+const pageToPath: Record<PageType, string> = {
+  login: "/",
+  dashboard: "/dashboard",
+  history: "/history",
+  "marketing-history": "/marketing/history",
+  "approver-history": "/approver/history",
+  "approver-requests": "/approver/requests",
+  accounts: "/accounts",
+  catalogue: "/catalogue",
+  redemption: "/redemption",
+  inventory: "/inventory",
+  distributors: "/distributors",
+  teams: "/teams",
+};
+
+const normalizePath = (path: string) => {
+  const url = new URL(path, window.location.origin);
+  let clean = url.pathname.toLowerCase();
+  if (clean.length > 1 && clean.endsWith("/")) clean = clean.slice(0, -1);
+  return clean;
+};
+
+const resolvePageFromPath = (path: string): PageType => {
+  const normalized = normalizePath(path);
+  const match = (Object.keys(pageToPath) as PageType[]).find(
+    (key) => pageToPath[key] === normalized
+  );
+  return match ?? "login";
+};
+
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>("login");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userPosition, setUserPosition] = useState<string>("");
 
+  const navigateToPage = (page: PageType, replace = false) => {
+    setCurrentPage(page);
+    const newPath = pageToPath[page] ?? "/";
+    const normalizedNewPath = normalizePath(newPath);
+    if (normalizePath(window.location.pathname) !== normalizedNewPath) {
+      const fn = replace ? "replaceState" : "pushState";
+      window.history[fn]({}, "", newPath);
+    }
+  };
+
   const handleLoginSuccess = (position: string) => {
     setIsLoggedIn(true);
     setUserPosition(position);
-    setCurrentPage("dashboard");
+    try {
+      localStorage.setItem("position", position);
+    } catch {
+      // ignore storage errors
+    }
+    navigateToPage("dashboard");
   };
 
   const handleNavigateTo = (page: PageType) => {
-    setCurrentPage(page);
+    navigateToPage(page);
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserPosition("");
-    setCurrentPage("login");
+    navigateToPage("login");
     try {
       localStorage.removeItem("username");
       localStorage.removeItem("position");
@@ -60,6 +105,57 @@ function App() {
       // ignore storage errors
     }
   };
+
+  useEffect(() => {
+    // Sync initial load with URL and stored session details
+    const readStoredPosition = () => {
+      try {
+        return localStorage.getItem("position") || "";
+      } catch {
+        return "";
+      }
+    };
+
+    const storedPosition = readStoredPosition();
+
+    if (storedPosition) setUserPosition(storedPosition);
+    setIsLoggedIn(Boolean(storedPosition));
+
+    const initialPageFromUrl = resolvePageFromPath(window.location.pathname);
+    const initialPage = storedPosition
+      ? initialPageFromUrl === "login"
+        ? "dashboard"
+        : initialPageFromUrl
+      : "login";
+
+    navigateToPage(initialPage, true);
+
+    const handlePopState = () => {
+      const pageFromUrl = resolvePageFromPath(window.location.pathname);
+      const latestPosition = readStoredPosition();
+      const authed = Boolean(latestPosition);
+
+      if (!authed && pageFromUrl !== "login") {
+        setIsLoggedIn(false);
+        setUserPosition("");
+        navigateToPage("login", true);
+        return;
+      }
+
+      setUserPosition(latestPosition);
+      setIsLoggedIn(authed);
+      const targetPage = authed
+        ? pageFromUrl === "login"
+          ? "dashboard"
+          : pageFromUrl
+        : "login";
+      setCurrentPage(targetPage);
+      if (targetPage !== pageFromUrl) navigateToPage(targetPage, true);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   let content;
 
@@ -211,7 +307,7 @@ function App() {
             <div className="text-center">
               <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
               <button
-                onClick={() => setCurrentPage("dashboard")}
+                onClick={() => navigateToPage("dashboard")}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Go to Dashboard
@@ -227,7 +323,7 @@ function App() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
           <button
-            onClick={() => setCurrentPage("dashboard")}
+            onClick={() => navigateToPage("dashboard")}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Go to Dashboard
