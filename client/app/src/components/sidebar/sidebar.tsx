@@ -43,7 +43,6 @@ export function Sidebar() {
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
-    { id: "history", label: "History", icon: History, path: "/admin/history" },
     { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
     { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
     { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
@@ -216,7 +215,6 @@ export function SidebarSuperAdmin() {
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
-    { id: "history", label: "History", icon: History, path: "/admin/history" },
     { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
     { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
     { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },

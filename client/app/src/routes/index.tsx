@@ -17,7 +17,6 @@ import ApproverHistory from "../page/approver/History";
 import MarketingHistory from "../page/marketing/History";
 import ReceptionHistory from "../page/reception/History";
 import ExecutiveAssistantHistory from "../page/executive_assistant/History";
-import SuperAdminHistory from "../page/superadmin/History";
 
 // Approver pages
 import ApproverRequests from "../page/approver/Requests/Requests";
@@ -77,7 +76,7 @@ function HistoryRouter() {
     case "SuperAdmin":
     case "admin":
     default:
-      return <Navigate to="/admin/history" replace />;
+      return <Navigate to="/admin/dashboard" replace />;
   }
 }
 
@@ -102,7 +101,6 @@ export function AppRoutes() {
           }
         >
           <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/admin/history" element={<SuperAdminHistory />} />
           <Route path="/admin/accounts" element={<Accounts />} />
           <Route path="/admin/catalogue" element={<Catalogue />} />
           <Route path="/admin/redemption" element={<Redemption />} />
