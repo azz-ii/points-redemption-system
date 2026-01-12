@@ -54,74 +54,146 @@ export function ViewRedemptionModal({
 
         {/* Content */}
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Request ID</p>
-            <p className="font-semibold">{item.id}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Requested By</p>
-            <p className="font-semibold">{item.requested_by_name}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Requested For</p>
-            <p className="font-semibold">{item.requested_for_name}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Date Requested</p>
-            <p className="font-semibold">
-              {new Date(item.date_requested).toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Status</p>
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                item.status === "Approved"
-                  ? "bg-green-500 text-white"
-                  : item.status === "Rejected"
-                  ? "bg-red-500 text-white"
-                  : "bg-yellow-400 text-black"
-              }`}
-            >
-              {item.status}
-            </span>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 mb-1">Total Points</p>
-            <p className="font-semibold">
-              {item.total_points.toLocaleString()}
-            </p>
-          </div>
-          {item.reviewed_by_name && (
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Reviewed By</p>
-              <p className="font-semibold">{item.reviewed_by_name}</p>
+          {/* Request Information */}
+          <div className="border-b pb-6">
+            <h3 className="font-semibold text-sm mb-4 text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              Request Information
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Request ID</p>
+                <p className="font-semibold">{item.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Requested By</p>
+                <p className="font-semibold">{item.requested_by_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Requested For</p>
+                <p className="font-semibold">{item.requested_for_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Date Requested</p>
+                <p className="font-semibold">
+                  {new Date(item.date_requested).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Total Points</p>
+                <p className="font-semibold">
+                  {item.total_points.toLocaleString()}
+                </p>
+              </div>
             </div>
-          )}
-          {item.date_reviewed && (
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Date Reviewed</p>
-              <p className="font-semibold">
-                {new Date(item.date_reviewed).toLocaleString()}
-              </p>
+          </div>
+
+          {/* Approval Status */}
+          <div className="border-b pb-6">
+            <h3 className="font-semibold text-sm mb-4 text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              Approval Status
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Status</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    item.status === "APPROVED"
+                      ? "bg-green-500 text-white"
+                      : item.status === "REJECTED"
+                      ? "bg-red-500 text-white"
+                      : "bg-yellow-400 text-black"
+                  }`}
+                >
+                  {item.status}
+                </span>
+              </div>
+              {item.reviewed_by_name && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Reviewed By</p>
+                  <p className="font-semibold">{item.reviewed_by_name}</p>
+                </div>
+              )}
+              {item.date_reviewed && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Date Reviewed</p>
+                  <p className="font-semibold">
+                    {new Date(item.date_reviewed).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {item.remarks && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Remarks</p>
+                  <p className="font-semibold">{item.remarks}</p>
+                </div>
+              )}
+              {item.rejection_reason && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Rejection Reason</p>
+                  <p className="font-semibold text-red-500">
+                    {item.rejection_reason}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-          {item.remarks && (
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Remarks</p>
-              <p className="font-semibold">{item.remarks}</p>
+          </div>
+
+          {/* Processing Status */}
+          <div className="border-b pb-6">
+            <h3 className="font-semibold text-sm mb-4 text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              Processing Status
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Status</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    (item.processing_status?.toUpperCase() || "") === "PROCESSED"
+                      ? "bg-green-500 text-white"
+                      : (item.processing_status?.toUpperCase() || "") === "CANCELLED"
+                      ? "bg-red-500 text-white"
+                      : "bg-yellow-400 text-black"
+                  }`}
+                >
+                  {item.processing_status?.replace(/_/g, ' ') || "Not Processed"}
+                </span>
+              </div>
+              {item.processed_by_name && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Processed By</p>
+                  <p className="font-semibold">{item.processed_by_name}</p>
+                </div>
+              )}
+              {item.date_processed && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Date Processed</p>
+                  <p className="font-semibold">
+                    {new Date(item.date_processed).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {item.cancelled_by_name && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Cancelled By</p>
+                  <p className="font-semibold">{item.cancelled_by_name}</p>
+                </div>
+              )}
+              {item.date_cancelled && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Date Cancelled</p>
+                  <p className="font-semibold">
+                    {new Date(item.date_cancelled).toLocaleString()}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-          {item.rejection_reason && (
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Rejection Reason</p>
-              <p className="font-semibold text-red-500">
-                {item.rejection_reason}
-              </p>
-            </div>
-          )}
+          </div>
+
+          {/* Items */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Items</p>
+            <h3 className="font-semibold text-sm mb-4 text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              Items ({item.items.length})
+            </h3>
             <div className="space-y-2">
               {item.items.map((reqItem) => (
                 <div
@@ -137,7 +209,7 @@ export function ViewRedemptionModal({
                     {reqItem.variant_name && ` - ${reqItem.variant_name}`}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Qty: {reqItem.quantity} {reqItem.points_per_item} pts ={" "}
+                    Qty: {reqItem.quantity} × {reqItem.points_per_item} pts ={" "}
                     {reqItem.total_points} pts
                   </p>
                 </div>

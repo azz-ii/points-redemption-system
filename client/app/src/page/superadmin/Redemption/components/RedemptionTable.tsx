@@ -7,6 +7,8 @@ interface RedemptionTableProps {
   loading: boolean;
   onView: (item: RedemptionItem) => void;
   onEdit: (item: RedemptionItem) => void;
+  onMarkAsProcessed?: (item: RedemptionItem) => void;
+  onCancelRequest?: (item: RedemptionItem) => void;
   onDeleteSelected?: (items: RedemptionItem[]) => void;
   onCreateNew?: () => void;
 }
@@ -16,12 +18,16 @@ export function RedemptionTable({
   loading,
   onView,
   onEdit,
+  onMarkAsProcessed,
+  onCancelRequest,
   onDeleteSelected,
   onCreateNew,
 }: RedemptionTableProps) {
   const columns = createColumns({
     onViewRedemption: onView,
     onEditRedemption: onEdit,
+    onMarkAsProcessed: onMarkAsProcessed || (() => {}),
+    onCancelRequest: onCancelRequest || (() => {}),
   });
 
   return (

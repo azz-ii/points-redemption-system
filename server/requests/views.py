@@ -35,12 +35,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         profile = getattr(user, 'profile', None)
         
         if not profile:
-            # Super admin without profile sees only approved/rejected requests
-            return RedemptionRequest.objects.exclude(status='PENDING').prefetch_related('items', 'items__variant')
+            # Super admin without profile sees only approved requests
+            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__variant')
         
         # Admin - highest ranking employee, manages all teams
         if profile.position == 'Admin':
-            return RedemptionRequest.objects.exclude(status='PENDING').prefetch_related('items', 'items__variant')
+            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__variant')
         
         # Sales Agent - team-scoped access
         elif profile.position == 'Sales Agent':
@@ -361,6 +361,136 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             logger.info(f"✓ Rejection email sent for request #{redemption_request.id}")
         else:
             logger.warning(f"⚠ Failed to send rejection email for request #{redemption_request.id}")
+        
+        serializer = self.get_serializer(redemption_request)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def mark_as_processed(self, request, pk=None):
+        """Mark an approved redemption request as processed (superadmin only)"""
+        redemption_request = self.get_object()
+        
+        # Check if user is superadmin
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        
+        if not profile or profile.position != 'Admin':
+            return Response(
+                {'error': 'Permission denied: Only superadmins can mark requests as processed'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if redemption_request.status != 'APPROVED':
+            return Response(
+                {'error': 'Only approved requests can be marked as processed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if redemption_request.processing_status == 'CANCELLED':
+            return Response(
+                {'error': 'Cancelled requests cannot be processed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update processing status
+        redemption_request.processing_status = 'PROCESSED'
+        redemption_request.processed_by = user
+        redemption_request.date_processed = timezone.now()
+        
+        # Get remarks if provided
+        if 'remarks' in request.data:
+            redemption_request.remarks = request.data.get('remarks')
+        
+        redemption_request.save()
+        
+        logger.info(f"Request #{redemption_request.id} marked as processed by {user.username}")
+        
+        serializer = self.get_serializer(redemption_request)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def cancel_request(self, request, pk=None):
+        """Cancel an approved or processed redemption request (superadmin only)"""
+        redemption_request = self.get_object()
+        
+        # Check if user is superadmin
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        
+        if not profile or profile.position != 'Admin':
+            return Response(
+                {'error': 'Permission denied: Only superadmins can cancel requests'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if redemption_request.status != 'APPROVED':
+            return Response(
+                {'error': 'Only approved requests can be cancelled'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if redemption_request.processing_status == 'PROCESSED':
+            return Response(
+                {'error': 'Processed requests cannot be cancelled'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if redemption_request.processing_status == 'CANCELLED':
+            return Response(
+                {'error': 'Request is already cancelled'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Cancellation reason is required
+        cancellation_reason = request.data.get('cancellation_reason')
+        if not cancellation_reason:
+            return Response(
+                {'error': 'Cancellation reason is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Use transaction to ensure atomicity when refunding points and stock
+        try:
+            with transaction.atomic():
+                # Refund points if the request was approved (points were deducted)
+                if redemption_request.points_deducted_from == 'SELF':
+                    user_profile = redemption_request.requested_by.profile
+                    user_profile.points += redemption_request.total_points
+                    user_profile.save()
+                    logger.info(f"Refunded {redemption_request.total_points} points to sales agent {redemption_request.requested_by.username}")
+                else:  # DISTRIBUTOR
+                    distributor = redemption_request.requested_for
+                    distributor.points += redemption_request.total_points
+                    distributor.save()
+                    logger.info(f"Refunded {redemption_request.total_points} points to distributor {distributor.name}")
+                
+                # Restore stock for all requested items
+                for item in redemption_request.items.all():
+                    variant = item.variant
+                    variant.stock += item.quantity
+                    variant.save()
+                    logger.info(f"Restored {item.quantity} units of {variant.item_code} to stock")
+                
+                # Update processing status
+                redemption_request.processing_status = 'CANCELLED'
+                redemption_request.cancelled_by = user
+                redemption_request.date_cancelled = timezone.now()
+                redemption_request.rejection_reason = cancellation_reason
+                
+                # Get remarks if provided
+                if 'remarks' in request.data:
+                    redemption_request.remarks = request.data.get('remarks')
+                
+                redemption_request.save()
+                
+                logger.info(f"Request #{redemption_request.id} cancelled by {user.username}")
+        
+        except Exception as e:
+            logger.error(f"Failed to cancel request #{redemption_request.id}: {str(e)}")
+            return Response(
+                {'error': 'Failed to cancel request', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)

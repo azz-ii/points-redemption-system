@@ -62,14 +62,14 @@ export function RedemptionMobileCards({
                   </div>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      item.status === "Approved"
+                      (item.processing_status?.toUpperCase() || "") === "PROCESSED"
                         ? "bg-green-500 text-white"
-                        : item.status === "Rejected"
+                        : (item.processing_status?.toUpperCase() || "") === "CANCELLED"
                         ? "bg-red-500 text-white"
                         : "bg-yellow-400 text-black"
                     }`}
                   >
-                    {item.status}
+                    {item.processing_status?.replace(/_/g, ' ') || "Not Processed"}
                   </span>
                 </div>
                 <div className="space-y-1 mb-3 text-xs">
