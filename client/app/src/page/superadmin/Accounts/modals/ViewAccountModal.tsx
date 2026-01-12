@@ -132,6 +132,18 @@ export function ViewAccountModal({
             </div>
           </div>
         </div>
+        <div className="p-8 flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              resolvedTheme === "dark"
+                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+            }`}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </BaseModal>
   );

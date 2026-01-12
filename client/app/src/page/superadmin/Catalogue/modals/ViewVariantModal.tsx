@@ -20,13 +20,20 @@ export function ViewVariantModal({
       <div
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-2xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-variant-title"
       >
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-xl font-semibold">View Variant</h2>
+            <h2 id="view-variant-title" className="text-xl font-semibold">
+              View Variant
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -38,12 +45,13 @@ export function ViewVariantModal({
           <button
             onClick={onClose}
             className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Variant ID */}
             <div>
@@ -100,10 +108,10 @@ export function ViewVariantModal({
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-700 flex gap-2 justify-end">
+        <div className="p-8 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-2 rounded-lg border transition-colors ${
+            className={`px-6 py-3 rounded-lg border transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

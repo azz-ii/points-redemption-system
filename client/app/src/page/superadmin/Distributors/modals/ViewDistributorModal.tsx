@@ -18,16 +18,23 @@ export function ViewDistributorModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-distributor-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-2xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-xl font-semibold">Distributor Details</h2>
+            <h2 id="view-distributor-title" className="text-xl font-semibold">
+              Distributor Details
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -38,6 +45,7 @@ export function ViewDistributorModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
           >
             <X className="h-5 w-5" />
@@ -45,48 +53,107 @@ export function ViewDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ID */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">ID</p>
-              <p className="font-semibold">{distributor.id}</p>
+              <label className="block text-sm font-medium mb-2">ID</label>
+              <input
+                type="text"
+                value={distributor.id}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
             </div>
+
+            {/* Name */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Name</p>
-              <p className="font-semibold">{distributor.name}</p>
+              <label className="block text-sm font-medium mb-2">Name</label>
+              <input
+                type="text"
+                value={distributor.name}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
             </div>
+
+            {/* Contact Email */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Email</p>
-              <p className="font-semibold">{distributor.contact_email}</p>
+              <label className="block text-sm font-medium mb-2">
+                Contact Email
+              </label>
+              <input
+                type="email"
+                value={distributor.contact_email}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
             </div>
+
+            {/* Phone */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Phone</p>
-              <p className="font-semibold">{distributor.phone}</p>
+              <label className="block text-sm font-medium mb-2">Phone</label>
+              <input
+                type="tel"
+                value={distributor.phone}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
             </div>
+
+            {/* Location */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Location</p>
-              <p className="font-semibold">{distributor.location}</p>
+              <label className="block text-sm font-medium mb-2">Location</label>
+              <input
+                type="text"
+                value={distributor.location}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
             </div>
+
+            {/* Points */}
             <div>
-              <p className="text-xs text-gray-500 mb-1">Region</p>
-              <p className="font-semibold">{distributor.region}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Points</p>
-              <p className="font-semibold">{distributor.points}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Team</p>
-              <p className="font-semibold">{distributor.team_name || "No team"}</p>
+              <label className="block text-sm font-medium mb-2">Points</label>
+              <input
+                type="text"
+                value={distributor.points?.toLocaleString() ?? 0}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700 flex gap-2 justify-end">
+        <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-2 rounded-lg border transition-colors ${
+            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

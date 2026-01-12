@@ -63,6 +63,9 @@ export function BulkBanAccountModal({
             ? "bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             : "bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         }`}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="bulk-ban-account-title"
       >
         <AlertTriangle className="h-4 w-4" />
         {loading

@@ -9,7 +9,6 @@ class Distributor(models.Model):
     contact_email = models.EmailField(max_length=254, help_text="Contact email address")
     phone = models.CharField(max_length=20, help_text="Contact phone number")
     location = models.CharField(max_length=255, help_text="Location of the distributor")
-    region = models.CharField(max_length=100, help_text="Region where the distributor operates")
     points = models.PositiveIntegerField(default=0, help_text='Current points balance for the distributor')
     date_added = models.DateField(auto_now_add=True, help_text="Date the distributor was added")
     added_by = models.ForeignKey(

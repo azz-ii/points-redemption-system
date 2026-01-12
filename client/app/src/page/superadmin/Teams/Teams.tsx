@@ -439,7 +439,6 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       id: team.id,
       name: team.name,
       memberCount: team.member_count,
-      distributorCount: team.distributor_count,
     });
     setTeamToDelete(team);
     setIsDeleteModalOpen(true);

@@ -91,12 +91,6 @@ export function DistributorsMobileCards({
                   <span className="font-medium">{distributor.region}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Team:</span>
-                  <span className="font-medium">
-                    {distributor.team_name || "No team"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Created:</span>
                   <span className="font-medium">
                     {formatDate(distributor.created_at)}

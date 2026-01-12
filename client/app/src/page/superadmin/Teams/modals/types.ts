@@ -20,7 +20,6 @@ export interface Team {
   approver_details?: ApproverDetails;
   region: string;
   member_count?: number;
-  distributor_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -45,7 +44,6 @@ export interface TeamMember {
 
 export interface TeamDetail extends Team {
   members?: TeamMember[];
-  distributors?: DistributorOption[];
 }
 
 export interface NewTeamData {
@@ -72,17 +70,6 @@ export interface SalesAgentOption {
   full_name: string;
   email: string;
   points: number;
-}
-
-export interface DistributorOption {
-  id: number;
-  name: string;
-  contact_email: string;
-  phone: string;
-  location: string;
-  region: string;
-  points?: number;
-  team?: number | null;
 }
 
 export interface User {

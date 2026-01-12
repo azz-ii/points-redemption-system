@@ -95,22 +95,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
     },
     cell: ({ row }) => <div>{row.getValue("location") || "N/A"}</div>,
   },
-  {
-    accessorKey: "region",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Region
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("region") || "N/A"}</div>,
-  },
+
   {
     accessorKey: "points",
     header: ({ column }) => {
@@ -131,29 +116,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
           {points?.toLocaleString() ?? 0}
         </span>
-      )
-    },
-  },
-  {
-    accessorKey: "team_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Team
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const teamName = row.getValue("team_name") as string | undefined
-      return teamName ? (
-        <div>{teamName}</div>
-      ) : (
-        <span className="text-muted-foreground">No team</span>
       )
     },
   },

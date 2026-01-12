@@ -35,22 +35,21 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         profile = getattr(user, 'profile', None)
         
         if not profile:
-            # Super admin without profile sees all
-            return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+            # Super admin without profile sees only approved/rejected requests
+            return RedemptionRequest.objects.exclude(status='PENDING').prefetch_related('items', 'items__variant')
         
         # Admin - highest ranking employee, manages all teams
         if profile.position == 'Admin':
-            return RedemptionRequest.objects.all().prefetch_related('items', 'items__variant')
+            return RedemptionRequest.objects.exclude(status='PENDING').prefetch_related('items', 'items__variant')
         
         # Sales Agent - team-scoped access
         elif profile.position == 'Sales Agent':
             # Sales agents see only their team's requests
             membership = TeamMembership.objects.filter(user=user).first()
             if membership:
-                # Show requests by team members OR for team's distributors
+                # Show requests that belong to their team
                 return RedemptionRequest.objects.filter(
-                    Q(requested_by__team_memberships__team=membership.team) |
-                    Q(requested_for__team=membership.team)
+                    team=membership.team
                 ).distinct().prefetch_related('items', 'items__variant')
             # If not in a team, only see own requests
             return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__variant')
@@ -59,12 +58,31 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         elif profile.position == 'Approver':
             # Approvers see only their managed team's requests
             managed_teams = Team.objects.filter(approver=user)
+            logger.info(f"🔍 [APPROVER DEBUG] User: {user.id} ({user.username})")
+            logger.info(f"🔍 [APPROVER DEBUG] Managed teams count: {managed_teams.count()}")
+            logger.info(f"🔍 [APPROVER DEBUG] Managed team IDs: {list(managed_teams.values_list('id', 'name'))}")
+            
             if managed_teams.exists():
-                return RedemptionRequest.objects.filter(
-                    Q(requested_by__team_memberships__team__in=managed_teams) |
-                    Q(requested_for__team__in=managed_teams)
+                from django.db.models import Q
+                from teams.models import TeamMembership
+                
+                # Get all users in the managed teams
+                team_member_ids = TeamMembership.objects.filter(
+                    team__in=managed_teams
+                ).values_list('user_id', flat=True)
+                logger.info(f"🔍 [APPROVER DEBUG] Team member IDs: {list(team_member_ids)}")
+                
+                # Filter by team field OR by requesting user being in managed teams (fallback for NULL team)
+                queryset = RedemptionRequest.objects.filter(
+                    Q(team__in=managed_teams) | Q(team__isnull=True, requested_by_id__in=team_member_ids)
                 ).distinct().prefetch_related('items', 'items__variant')
+                
+                logger.info(f"🔍 [APPROVER DEBUG] Total requests found: {queryset.count()}")
+                logger.info(f"🔍 [APPROVER DEBUG] Request details: {list(queryset.values('id', 'team_id', 'requested_by_id', 'status'))}")
+                
+                return queryset
             # If not managing any team, see no requests
+            logger.warning(f"⚠️ [APPROVER DEBUG] User {user.username} is not managing any teams!")
             return RedemptionRequest.objects.none()
         
         # Administrative support positions - global access
@@ -83,18 +101,34 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Create a new redemption request and notify team approver"""
         from teams.models import TeamMembership
+        from rest_framework.exceptions import ValidationError
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        # Create the request
-        redemption_request = serializer.save()
-        
-        # Get the team approver for notification
+        # Get the sales agent's team at the time of request creation
         user = request.user
         membership = TeamMembership.objects.filter(user=user).first()
         
-        if membership and membership.team.approver:
+        logger.info(f"📝 [CREATE DEBUG] User: {user.id} ({user.username})")
+        logger.info(f"📝 [CREATE DEBUG] Team membership: {membership}")
+        if membership:
+            logger.info(f"📝 [CREATE DEBUG] Team: {membership.team.id} ({membership.team.name})")
+        
+        # Validate that the user is in a team before creating the request
+        if not membership:
+            logger.error(f"❌ [CREATE DEBUG] User {user.username} has no team membership!")
+            raise ValidationError({
+                "detail": "You must be assigned to a team before creating a redemption request. Please contact your administrator."
+            })
+        
+        # Create the request with team assignment (handled by serializer)
+        redemption_request = serializer.save()
+        
+        logger.info(f"✅ [CREATE DEBUG] Request #{redemption_request.id} created with team_id={redemption_request.team_id}")
+        
+        # Get the team approver for notification
+        if membership.team.approver:
             # Send notification to the team's approver
             team_approver = membership.team.approver
             if hasattr(team_approver, 'profile') and team_approver.profile.email:
@@ -132,7 +166,29 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         """Approve a redemption request and deduct points"""
+        from teams.models import Team
+        
         redemption_request = self.get_object()
+        
+        # Check if approver has permission for this request's team
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        
+        # Only Approvers need team-based permission check
+        if profile and profile.position == 'Approver':
+            # Check if request belongs to a team managed by this approver
+            if not redemption_request.team:
+                return Response(
+                    {'error': 'Permission denied: Request does not belong to any team'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Check if this approver manages the request's team
+            if redemption_request.team.approver != user:
+                return Response(
+                    {'error': 'Permission denied: You can only approve requests from your team'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
         
         if redemption_request.status != 'PENDING':
             return Response(
@@ -243,7 +299,29 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         """Reject a redemption request"""
+        from teams.models import Team
+        
         redemption_request = self.get_object()
+        
+        # Check if approver has permission for this request's team
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        
+        # Only Approvers need team-based permission check
+        if profile and profile.position == 'Approver':
+            # Check if request belongs to a team managed by this approver
+            if not redemption_request.team:
+                return Response(
+                    {'error': 'Permission denied: Request does not belong to any team'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Check if this approver manages the request's team
+            if redemption_request.team.approver != user:
+                return Response(
+                    {'error': 'Permission denied: You can only reject requests from your team'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
         
         if redemption_request.status != 'PENDING':
             return Response(

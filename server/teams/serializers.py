@@ -67,7 +67,7 @@ class TeamSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Team
-        fields = ['id', 'name', 'approver', 'approver_details', 'region', 'member_count', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'approver', 'approver_details', 'member_count', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_member_count(self, obj):
@@ -91,7 +91,7 @@ class TeamDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = [
-            'id', 'name', 'approver', 'approver_details', 'region',
+            'id', 'name', 'approver', 'approver_details',
             'members', 'member_count',
             'created_at', 'updated_at'
         ]

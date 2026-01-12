@@ -24,13 +24,20 @@ export function ViewItemModal({
       <div
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-4xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-4xl w-full border divide-y ${
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-item-title"
       >
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-xl font-semibold">View Catalogue Item</h2>
+            <h2 id="view-item-title" className="text-xl font-semibold">
+              View Catalogue Item
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -42,12 +49,13 @@ export function ViewItemModal({
           <button
             onClick={onClose}
             className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Loading State */}
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-4 py-4">

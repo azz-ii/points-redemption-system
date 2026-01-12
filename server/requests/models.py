@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.conf import settings
 from distributers.models import Distributor
 from items_catalogue.models import Variant
+from teams.models import Team
 
 class PointsDeductionChoice(models.TextChoices):
     SELF = 'SELF', 'Self (Sales Agent)'
@@ -26,6 +27,14 @@ class RedemptionRequest(models.Model):
         on_delete=models.CASCADE,
         related_name='redemption_requests',
         help_text='Distributor for whom the items are being redeemed'
+    )
+    team = models.ForeignKey(
+        'teams.Team',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='redemption_requests',
+        help_text='Team that this request belongs to (set at creation time)'
     )
     points_deducted_from = models.CharField(
         max_length=20,

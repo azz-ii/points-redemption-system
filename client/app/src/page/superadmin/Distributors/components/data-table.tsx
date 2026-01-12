@@ -86,12 +86,10 @@ export function DataTable<TData, TValue>({
       const name = String(row.getValue("name") || "").toLowerCase()
       const email = String(row.getValue("contact_email") || "").toLowerCase()
       const location = String(row.getValue("location") || "").toLowerCase()
-      const region = String(row.getValue("region") || "").toLowerCase()
       
       return name.includes(searchValue) || 
              email.includes(searchValue) || 
-             location.includes(searchValue) ||
-             region.includes(searchValue)
+             location.includes(searchValue)
     },
     initialState: {
       pagination: {
@@ -108,7 +106,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Filter by name, email, location, or region..."
+            placeholder="Filter by name, email, or location..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"

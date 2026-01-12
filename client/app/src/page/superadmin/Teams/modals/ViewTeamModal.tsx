@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
-import { X, UserPlus, Trash2, Store, AlertCircle } from "lucide-react";
-import type { ModalBaseProps, TeamDetail, SalesAgentOption, DistributorOption } from "./types";
+import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
+import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
 
 interface ViewTeamModalProps extends ModalBaseProps {
   team: { id: number } | null;
@@ -16,14 +16,15 @@ export function ViewTeamModal({
 }: ViewTeamModalProps) {
   const { resolvedTheme } = useTheme();
   const [teamDetails, setTeamDetails] = useState<TeamDetail | null>(null);
-  const [availableSalesAgents, setAvailableSalesAgents] = useState<SalesAgentOption[]>([]);
-  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
+  const [availableSalesAgents, setAvailableSalesAgents] = useState<
+    SalesAgentOption[]
+  >([]);
+  const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
-  const [availableDistributors, setAvailableDistributors] = useState<DistributorOption[]>([]);
-  const [selectedDistributor, setSelectedDistributor] = useState<number | null>(null);
-  const [showAddDistributor, setShowAddDistributor] = useState(false);
   const [errorDialog, setErrorDialog] = useState<{
     show: boolean;
     title: string;
@@ -37,19 +38,22 @@ export function ViewTeamModal({
   // Fetch team details when modal opens
   const fetchTeamDetails = useCallback(async () => {
     if (!team) return;
-    
+
     try {
       setLoading(true);
       console.log("DEBUG ViewTeamModal: Fetching team details for ID", team.id);
-      
-      const response = await fetch(`http://127.0.0.1:8000/api/teams/${team.id}/`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/teams/${team.id}/`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
       const data = await response.json();
       console.log("DEBUG ViewTeamModal: Team details fetched", {
         status: response.status,
@@ -59,7 +63,10 @@ export function ViewTeamModal({
       if (response.ok) {
         setTeamDetails(data);
       } else {
-        console.error("DEBUG ViewTeamModal: Failed to fetch team details", data);
+        console.error(
+          "DEBUG ViewTeamModal: Failed to fetch team details",
+          data
+        );
       }
     } catch (err) {
       console.error("DEBUG ViewTeamModal: Error fetching team details", err);
@@ -70,17 +77,17 @@ export function ViewTeamModal({
 
   useEffect(() => {
     if (isOpen && team) {
-      console.log("DEBUG ViewTeamModal: Modal opened, fetching team details", team.id);
+      console.log(
+        "DEBUG ViewTeamModal: Modal opened, fetching team details",
+        team.id
+      );
       fetchTeamDetails();
       fetchAvailableSalesAgents();
-      fetchAvailableDistributors();
     } else if (!isOpen) {
       // Reset state when modal closes
       setTeamDetails(null);
       setShowAddMember(false);
       setSelectedSalesAgent(null);
-      setShowAddDistributor(false);
-      setSelectedDistributor(null);
       setErrorDialog({ show: false, title: "", message: "" });
     }
   }, [isOpen, team, fetchTeamDetails]);
@@ -88,7 +95,7 @@ export function ViewTeamModal({
   const fetchAvailableSalesAgents = async () => {
     try {
       console.log("DEBUG ViewTeamModal: Fetching available sales agents");
-      
+
       const response = await fetch("http://127.0.0.1:8000/api/users/", {
         method: "GET",
         credentials: "include",
@@ -96,7 +103,7 @@ export function ViewTeamModal({
           "Content-Type": "application/json",
         },
       });
-      
+
       const data = await response.json();
       console.log("DEBUG ViewTeamModal: Users fetched", {
         status: response.status,
@@ -108,47 +115,15 @@ export function ViewTeamModal({
         const salesAgents = data.accounts.filter(
           (user: { position: string }) => user.position === "Sales Agent"
         );
-        
+
         console.log("DEBUG ViewTeamModal: Sales agents filtered", {
           total: salesAgents.length,
         });
-        
+
         setAvailableSalesAgents(salesAgents);
       }
     } catch (err) {
       console.error("DEBUG ViewTeamModal: Error fetching sales agents", err);
-    }
-  };
-
-  const fetchAvailableDistributors = async () => {
-    try {
-      console.log("DEBUG ViewTeamModal: Fetching available distributors");
-      
-      const response = await fetch("http://127.0.0.1:8000/api/distributors/", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      const data = await response.json();
-      console.log("DEBUG ViewTeamModal: Distributors fetched", {
-        status: response.status,
-        isPaginated: !!data.results,
-        totalDistributors: data.results?.length || data.length || 0,
-      });
-
-      if (response.ok) {
-        const distributors = data.results || data;
-        
-        if (Array.isArray(distributors)) {
-          setAvailableDistributors(distributors);
-          console.log("DEBUG ViewTeamModal: Distributors loaded:", distributors.length);
-        }
-      }
-    } catch (err) {
-      console.error("DEBUG ViewTeamModal: Error fetching distributors", err);
     }
   };
 
@@ -195,7 +170,8 @@ export function ViewTeamModal({
         onRefresh(); // Refresh parent teams list
       } else {
         console.error("DEBUG ViewTeamModal: Failed to add member", data);
-        const errorMessage = data.error || data.user_id?.[0] || "Failed to add member";
+        const errorMessage =
+          data.error || data.user_id?.[0] || "Failed to add member";
         setErrorDialog({
           show: true,
           title: "Cannot Add Member",
@@ -273,137 +249,12 @@ export function ViewTeamModal({
     }
   };
 
-  const handleAddDistributor = async () => {
-    if (!team || !selectedDistributor) {
-      console.warn("DEBUG ViewTeamModal: Cannot add distributor - missing data", {
-        team,
-        selectedDistributor,
-      });
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      console.log("DEBUG ViewTeamModal: Adding distributor", {
-        teamId: team.id,
-        distributorId: selectedDistributor,
-      });
-
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${team.id}/assign_distributor/`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ distributor_id: selectedDistributor }),
-        }
-      );
-
-      const data = await response.json();
-      console.log("DEBUG ViewTeamModal: Add distributor response", {
-        status: response.status,
-        data,
-      });
-
-      if (response.ok) {
-        await fetchTeamDetails();
-        await fetchAvailableDistributors();
-        setShowAddDistributor(false);
-        setSelectedDistributor(null);
-        onRefresh();
-      } else {
-        console.error("DEBUG ViewTeamModal: Failed to add distributor", data);
-        const errorMessage = data.error || data.distributor_id?.[0] || "Failed to add distributor";
-        setErrorDialog({
-          show: true,
-          title: "Cannot Add Distributor",
-          message: errorMessage,
-        });
-      }
-    } catch (err) {
-      console.error("DEBUG ViewTeamModal: Error adding distributor", err);
-      setErrorDialog({
-        show: true,
-        title: "Connection Error",
-        message: "Error connecting to server. Please try again.",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRemoveDistributor = async (distributorId: number, distributorName: string) => {
-    if (!team) return;
-
-    const confirmed = window.confirm(
-      `Are you sure you want to remove ${distributorName} from this team?`
-    );
-    if (!confirmed) return;
-
-    try {
-      setActionLoading(true);
-      console.log("DEBUG ViewTeamModal: Removing distributor", {
-        teamId: team.id,
-        distributorId,
-        distributorName,
-      });
-
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${team.id}/remove_distributor/`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ distributor_id: distributorId }),
-        }
-      );
-
-      const data = await response.json();
-      console.log("DEBUG ViewTeamModal: Remove distributor response", {
-        status: response.status,
-        data,
-      });
-
-      if (response.ok) {
-        await fetchTeamDetails();
-        await fetchAvailableDistributors();
-        onRefresh();
-      } else {
-        console.error("DEBUG ViewTeamModal: Failed to remove distributor", data);
-        setErrorDialog({
-          show: true,
-          title: "Cannot Remove Distributor",
-          message: data.error || "Failed to remove distributor",
-        });
-      }
-    } catch (err) {
-      console.error("DEBUG ViewTeamModal: Error removing distributor", err);
-      setErrorDialog({
-        show: true,
-        title: "Connection Error",
-        message: "Error connecting to server. Please try again.",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   if (!isOpen || !team) return null;
 
   // Filter out members who are already in the team
   const memberUserIds = teamDetails?.members?.map((m) => m.user) || [];
   const filteredSalesAgents = availableSalesAgents.filter(
     (agent) => !memberUserIds.includes(agent.id)
-  );
-
-  // Filter out distributors already assigned to this team or other teams
-  const assignedDistributorIds = teamDetails?.distributors?.map((d) => d.id) || [];
-  const filteredDistributors = availableDistributors.filter(
-    (distributor) => !assignedDistributorIds.includes(distributor.id) && !distributor.team
   );
 
   console.log("DEBUG ViewTeamModal: Rendering", {
@@ -418,22 +269,26 @@ export function ViewTeamModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-team-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-2xl w-full border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 className="text-lg font-semibold">View Team</h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <h2 id="view-team-title" className="text-xl font-semibold">View Team</h2>
+            <p className="text-sm text-gray-500 mt-1">
               {teamDetails?.name || "Loading..."}
             </p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
           >
             <X className="h-5 w-5" />
@@ -441,7 +296,7 @@ export function ViewTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-500 py-8">
               Loading team details...
@@ -453,48 +308,32 @@ export function ViewTeamModal({
                 <h3 className="text-sm font-semibold text-gray-500">
                   Team Information
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Team ID</p>
-                    <p className="font-medium">{teamDetails.id}</p>
+                    <label className="block text-sm font-medium mb-2">Team Name</label>
+                    <input
+                      type="text"
+                      value={teamDetails.name}
+                      disabled
+                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-100 border-gray-300 text-gray-600"
+                      } focus:outline-none`}
+                    />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Team Name</p>
-                    <p className="font-medium">{teamDetails.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Approver</p>
-                    <p className="font-medium">
-                      {teamDetails.approver_details ? (
-                        <>
-                          {teamDetails.approver_details.full_name}
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            {teamDetails.approver_details.email}
-                          </span>
-                        </>
-                      ) : (
-                        "No Approver"
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Region</p>
-                    <p className="font-medium">{teamDetails.region || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Created</p>
-                    <p className="font-medium">
-                      {new Date(teamDetails.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                      {teamDetails.member_count || 0} members
-                    </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
-                      {teamDetails.distributor_count || 0} distributors
-                    </span>
+                    <label className="block text-sm font-medium mb-2">Approver</label>
+                    <input
+                      type="text"
+                      value={teamDetails.approver_details ? teamDetails.approver_details.full_name : "No Approver"}
+                      disabled
+                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-700 border-gray-600 text-gray-300"
+                          : "bg-gray-100 border-gray-300 text-gray-600"
+                      } focus:outline-none`}
+                    />
                   </div>
                 </div>
               </div>
@@ -635,137 +474,6 @@ export function ViewTeamModal({
                                     member.user,
                                     member.user_details.full_name
                                   )
-                                }
-                                disabled={actionLoading}
-                                className="px-3 py-1 rounded text-xs font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50 inline-flex items-center gap-1"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                Remove
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-
-              {/* Distributors Section */}
-              <div className="pt-4 border-t border-gray-700">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-sm font-semibold text-gray-500">
-                    Distributors ({teamDetails.distributors?.length || 0})
-                  </h3>
-                  <button
-                    onClick={() => setShowAddDistributor(!showAddDistributor)}
-                    disabled={actionLoading}
-                    className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
-                      resolvedTheme === "dark"
-                        ? "bg-white text-black hover:bg-gray-100"
-                        : "bg-gray-900 text-white hover:bg-gray-800"
-                    } transition-colors disabled:opacity-50`}
-                  >
-                    <Store className="h-3 w-3" />
-                    {showAddDistributor ? "Cancel" : "Add Distributor"}
-                  </button>
-                </div>
-
-                {/* Add Distributor Form */}
-                {showAddDistributor && (
-                  <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
-                    <label className="text-xs text-gray-500 mb-2 block">
-                      Select Distributor
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        value={selectedDistributor ?? ""}
-                        onChange={(e) => {
-                          const value = e.target.value ? Number(e.target.value) : null;
-                          console.log("DEBUG ViewTeamModal: Distributor selected", value);
-                          setSelectedDistributor(value);
-                        }}
-                        className={`flex-1 px-3 py-2 rounded border ${
-                          resolvedTheme === "dark"
-                            ? "bg-gray-800 border-gray-600 text-white"
-                            : "bg-white border-gray-300 text-gray-900"
-                        } focus:outline-none focus:border-blue-500 text-sm`}
-                      >
-                        <option value="">Select a distributor...</option>
-                        {filteredDistributors.map((distributor) => (
-                          <option key={distributor.id} value={distributor.id}>
-                            {distributor.name} - {distributor.region} ({distributor.location})
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={handleAddDistributor}
-                        disabled={!selectedDistributor || actionLoading}
-                        className={`px-4 py-2 rounded text-sm font-semibold ${
-                          resolvedTheme === "dark"
-                            ? "bg-white text-black hover:bg-gray-100"
-                            : "bg-gray-900 text-white hover:bg-gray-800"
-                        } transition-colors disabled:opacity-50`}
-                      >
-                        {actionLoading ? "Adding..." : "Add"}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Distributors Table */}
-                <div
-                  className={`border rounded-lg overflow-hidden ${
-                    resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-                  }`}
-                >
-                  {!teamDetails.distributors || teamDetails.distributors.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8 text-sm">
-                      No distributors assigned to this team
-                    </div>
-                  ) : (
-                    <table className="w-full">
-                      <thead
-                        className={`${
-                          resolvedTheme === "dark"
-                            ? "bg-gray-800 text-gray-300"
-                            : "bg-gray-50 text-gray-700"
-                        }`}
-                      >
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
-                            Name
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
-                            Region
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
-                            Location
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
-                            Contact
-                          </th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                        {teamDetails.distributors.map((distributor) => (
-                          <tr
-                            key={distributor.id}
-                            className={`hover:${
-                              resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                            } transition-colors`}
-                          >
-                            <td className="px-4 py-3 text-sm">{distributor.name}</td>
-                            <td className="px-4 py-3 text-sm">{distributor.region}</td>
-                            <td className="px-4 py-3 text-sm">{distributor.location}</td>
-                            <td className="px-4 py-3 text-sm">{distributor.contact_email}</td>
-                            <td className="px-4 py-3 text-right">
-                              <button
-                                onClick={() =>
-                                  handleRemoveDistributor(distributor.id, distributor.name)
                                 }
                                 disabled={actionLoading}
                                 className="px-3 py-1 rounded text-xs font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50 inline-flex items-center gap-1"

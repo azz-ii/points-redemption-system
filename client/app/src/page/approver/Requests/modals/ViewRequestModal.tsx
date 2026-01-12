@@ -33,24 +33,32 @@ export function ViewRequestModal({
       <div
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full max-h-96 overflow-y-auto border ${
-          resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-request-title"
       >
-        <div className="p-6">
+        <div className="p-8">
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-xl font-semibold">Request Details</h2>
+            <h2 id="view-request-title" className="text-xl font-semibold">
+              Request Details
+            </h2>
             <button
               onClick={onClose}
               className={`p-1 rounded hover:${
                 resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
               } transition-colors`}
+              aria-label="Close dialog"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="space-y-4 text-sm">
+          <div className="space-y-6 text-base max-h-[70vh] overflow-y-auto">
             <div>
               <p className="text-gray-500 dark:text-gray-400 mb-1">
                 Request ID
@@ -123,9 +131,7 @@ export function ViewRequestModal({
 
             {request.remarks && (
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Remarks
-                </p>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
                 <p className="font-semibold">{request.remarks}</p>
               </div>
             )}

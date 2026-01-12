@@ -17,7 +17,6 @@ class Team(models.Model):
         limit_choices_to={'profile__position': 'Approver'},
         help_text='Approver who manages this team'
     )
-    region = models.CharField(max_length=100, blank=True, help_text='Team operating region')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
