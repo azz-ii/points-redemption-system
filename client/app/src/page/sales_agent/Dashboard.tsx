@@ -534,7 +534,6 @@ function SalesDashboard({ onLogout }: DashboardProps) {
         currentPage={currentPage}
         onNavigate={handleNavigate}
         onLogout={onLogout || (() => {})}
-        isModalOpen={isDeliveryModalOpen}
       />
     </div>
   );

@@ -5,7 +5,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
-import { Bell, Search, Plus, Store, LogOut } from "lucide-react";
+import {
+  Bell,
+  Search,
+  Plus,
+  Store,
+  LogOut,
+} from "lucide-react";
 
 import { distributorsApi, type Distributor } from "@/lib/distributors-api";
 import {
@@ -78,10 +84,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * 15;
   const endIndex = startIndex + 15;
-  const paginatedDistributors = filteredDistributors.slice(
-    startIndex,
-    endIndex
-  );
+  const paginatedDistributors = filteredDistributors.slice(startIndex, endIndex);
 
   // Reset to page 1 when search query changes
   useEffect(() => {
@@ -113,9 +116,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingDistributorId, setEditingDistributorId] = useState<
-    number | null
-  >(null);
+  const [editingDistributorId, setEditingDistributorId] = useState<number | null>(null);
   const [viewTarget, setViewTarget] = useState<Distributor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Distributor | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -149,10 +150,8 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
 
     try {
       setCreating(true);
-      const createdDistributor = await distributorsApi.createDistributor(
-        newDistributor
-      );
-      setDistributors((prev) => [...prev, createdDistributor]);
+      const createdDistributor = await distributorsApi.createDistributor(newDistributor);
+      setDistributors(prev => [...prev, createdDistributor]);
       setNewDistributor({
         name: "",
         contact_email: "",
@@ -214,15 +213,10 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
 
     try {
       setUpdating(true);
-      const updatedDistributor = await distributorsApi.updateDistributor(
-        editingDistributorId,
-        editDistributor
-      );
-      setDistributors((prev) =>
-        prev.map((d) =>
-          d.id === editingDistributorId ? updatedDistributor : d
-        )
-      );
+      const updatedDistributor = await distributorsApi.updateDistributor(editingDistributorId, editDistributor);
+      setDistributors(prev => prev.map(d => 
+        d.id === editingDistributorId ? updatedDistributor : d
+      ));
       setShowEditModal(false);
       setEditingDistributorId(null);
       setEditError(null);
@@ -251,7 +245,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
 
     try {
       await distributorsApi.deleteDistributor(deleteTarget.id);
-      setDistributors((prev) => prev.filter((d) => d.id !== deleteTarget.id));
+      setDistributors(prev => prev.filter(d => d.id !== deleteTarget.id));
       setShowDeleteModal(false);
       setDeleteTarget(null);
     } catch (err) {
@@ -356,6 +350,8 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
               <ThemeToggle />
             </div>
           </div>
+
+
 
           {/* Loading/Error States */}
           {loading && (
@@ -476,9 +472,6 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
       <MobileBottomNav
         currentPage={currentPage}
         onNavigate={onNavigate || (() => {})}
-        isModalOpen={
-          showCreateModal || showEditModal || showViewModal || showDeleteModal
-        }
       />
       <NotificationPanel
         isOpen={isNotificationOpen}

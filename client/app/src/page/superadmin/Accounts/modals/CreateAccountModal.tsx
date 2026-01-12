@@ -1,9 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
+import { useTheme } from "next-themes";
+import { X } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
-import { BaseModal } from "./BaseModal";
-import { FormInput, FormSelect } from "./FormComponents";
-import { useTheme } from "next-themes";
 
 interface NewAccountData {
   username: string;
@@ -44,115 +43,238 @@ export function CreateAccountModal({
     setError("");
   };
 
-  const footer = (
-    <>
-      <button
-        onClick={handleClose}
-        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-          resolvedTheme === "dark"
-            ? "bg-gray-700 hover:bg-gray-600 text-white"
-            : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-        }`}
-      >
-        Cancel
-      </button>
-      <button
-        onClick={onSubmit}
-        disabled={loading}
-        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-          resolvedTheme === "dark"
-            ? "bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        }`}
-      >
-        {loading ? "Creating..." : "Create Account"}
-      </button>
-    </>
-  );
-
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="Create New Account"
-      subtitle="Fill in the details to create a new user account"
-      footer={footer}
-    >
-      <div className="space-y-4">
-        {error && (
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 text-sm font-medium">
-            {error}
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-account-title"
+        className={`${
+          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex justify-between items-center p-8">
+          <div>
+            <h2 id="create-account-title" className="text-xl font-semibold">
+              Create New Account
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Please fill in the details to create a new account
+            </p>
           </div>
-        )}
+          <button
+            onClick={handleClose}
+            aria-label="Close dialog"
+            className="hover:opacity-70 transition-opacity"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-        <FormInput
-          label="Username"
-          required
-          type="text"
-          value={newAccount.username}
-          onChange={(e) =>
-            setNewAccount({ ...newAccount, username: e.target.value })
-          }
-          placeholder="Enter username"
-        />
+        {/* Content */}
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Credentials Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Credentials
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="username"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Username *
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={newAccount.username}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, username: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter username"
+                  aria-required="true"
+                />
+              </div>
 
-        <FormInput
-          label="Password"
-          required
-          type="password"
-          value={newAccount.password}
-          onChange={(e) =>
-            setNewAccount({ ...newAccount, password: e.target.value })
-          }
-          placeholder="Enter password"
-        />
+              <div>
+                <label
+                  htmlFor="password"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Password *
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={newAccount.password}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, password: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter password"
+                  aria-required="true"
+                />
+              </div>
+            </div>
+          </div>
 
-        <FormInput
-          label="Full Name"
-          required
-          type="text"
-          value={newAccount.full_name}
-          onChange={(e) =>
-            setNewAccount({ ...newAccount, full_name: e.target.value })
-          }
-          placeholder="Enter full name"
-        />
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Personal Information
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="fullName"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Full Name *
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={newAccount.full_name}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, full_name: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter full name"
+                  aria-required="true"
+                />
+              </div>
 
-        <FormInput
-          label="Email Address"
-          required
-          type="email"
-          value={newAccount.email}
-          onChange={(e) =>
-            setNewAccount({ ...newAccount, email: e.target.value })
-          }
-          placeholder="Enter email address"
-        />
+              <div>
+                <label
+                  htmlFor="email"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Email Address *
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={newAccount.email}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, email: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter email address"
+                  aria-required="true"
+                />
+              </div>
+            </div>
+          </div>
 
-        <FormSelect
-          label="Position"
-          required
-          value={newAccount.position}
-          onChange={(e) =>
-            setNewAccount({ ...newAccount, position: e.target.value })
-          }
-          options={POSITION_OPTIONS}
-        />
+          {/* Role & Points Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Role & Points
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="position"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Position *
+                </label>
+                <select
+                  id="position"
+                  value={newAccount.position}
+                  onChange={(e) =>
+                    setNewAccount({ ...newAccount, position: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  aria-required="true"
+                >
+                  {POSITION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <FormInput
-          label="Initial Points"
-          type="number"
-          min="0"
-          value={newAccount.points}
-          onChange={(e) =>
-            setNewAccount({
-              ...newAccount,
-              points: parseInt(e.target.value) || 0,
-            })
-          }
-          placeholder="0"
-        />
+              <div>
+                <label
+                  htmlFor="points"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Points *
+                </label>
+                <input
+                  id="points"
+                  type="number"
+                  min="0"
+                  value={newAccount.points}
+                  onChange={(e) =>
+                    setNewAccount({
+                      ...newAccount,
+                      points: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500`}
+                  placeholder="Enter points"
+                  aria-required="true"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-8 border-t">
+          {error && (
+            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+          <button
+            onClick={onSubmit}
+            disabled={loading}
+            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
+              resolvedTheme === "dark"
+                ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
+                : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
+            }`}
+          >
+            {loading ? "Creating..." : "Create Account"}
+          </button>
+        </div>
       </div>
-    </BaseModal>
+    </div>
   );
 }
