@@ -27,13 +27,17 @@ export function DeleteDistributorModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="delete-distributor-title" className="text-xl font-semibold">Delete Distributor</h2>
+            <h2 id="delete-distributor-title" className="text-xl font-semibold">
+              Delete Distributor
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"

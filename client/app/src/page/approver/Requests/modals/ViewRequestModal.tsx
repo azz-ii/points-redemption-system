@@ -34,7 +34,9 @@ export function ViewRequestModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="dialog"
         aria-modal="true"
@@ -42,7 +44,9 @@ export function ViewRequestModal({
       >
         <div className="p-8">
           <div className="flex justify-between items-start mb-4">
-            <h2 id="view-request-title" className="text-xl font-semibold">Request Details</h2>
+            <h2 id="view-request-title" className="text-xl font-semibold">
+              Request Details
+            </h2>
             <button
               onClick={onClose}
               className={`p-1 rounded hover:${
@@ -127,9 +131,7 @@ export function ViewRequestModal({
 
             {request.remarks && (
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Remarks
-                </p>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
                 <p className="font-semibold">{request.remarks}</p>
               </div>
             )}

@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bell, Search, Filter, ShoppingCart } from "lucide-react";
-import { ViewRedemptionStatusModal, type StatusItem } from "./modals";
+import { ViewRedemptionStatusModal } from "./modals/ViewRedemptionStatusModal";
+import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
 import {
   RedemptionStatusTable,
   RedemptionStatusMobileCards,
@@ -31,83 +32,61 @@ export default function RedemptionStatus({
   // Use currentPage from props to reflect parent routing state
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<StatusItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<RedemptionRequestItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RedemptionRequest | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
+  const [requests, setRequests] = useState<RedemptionRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 7;
 
-  const history: StatusItem[] = [
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Pending",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Approved",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Rejected",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Rejected",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Rejected",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Rejected",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Rejected",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-    {
-      id: "MC0003C",
-      type: "T-shirt",
-      details: "Platinum Polo",
-      status: "Rejected",
-      date: "2025-12-31",
-      image: "/images/tshirt.png",
-    },
-  ];
+  // Fetch redemption requests from API
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch("/api/redemption-requests/", {
+          credentials: "include",
+        });
 
-  const filtered = history.filter((item) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch requests: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setRequests(data);
+      } catch (err) {
+        console.error("Error fetching redemption requests:", err);
+        setError(err instanceof Error ? err.message : "Failed to load requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  // Flatten request items for display
+  const flattenedItems = requests.flatMap((request) =>
+    request.items.map((item) => ({
+      ...item,
+      requestId: request.id,
+      status: request.status,
+      status_display: request.status_display,
+      date_requested: request.date_requested,
+      request: request,
+    }))
+  );
+
+  const filtered = flattenedItems.filter((item) => {
     const q = searchQuery.toLowerCase();
     return (
-      item.id.toLowerCase().includes(q) ||
-      item.type.toLowerCase().includes(q) ||
-      item.details.toLowerCase().includes(q)
+      item.requestId.toString().includes(q) ||
+      item.variant_code.toLowerCase().includes(q) ||
+      item.catalogue_item_name.toLowerCase().includes(q) ||
+      (item.variant_option && item.variant_option.toLowerCase().includes(q)) ||
+      item.status_display.toLowerCase().includes(q)
     );
   });
 
@@ -119,8 +98,14 @@ export default function RedemptionStatus({
 
   const handleNavigate = (page: SalesPages) => onNavigate(page);
 
-  const openDetails = (item: StatusItem) => setSelectedItem(item);
-  const closeDetails = () => setSelectedItem(null);
+  const openDetails = (item: RedemptionRequestItem & { request: RedemptionRequest }) => {
+    setSelectedItem(item);
+    setSelectedRequest(item.request);
+  };
+  const closeDetails = () => {
+    setSelectedItem(null);
+    setSelectedRequest(null);
+  };
 
   return (
     <div className="flex h-screen">
@@ -217,6 +202,8 @@ export default function RedemptionStatus({
             currentPage={safePage}
             totalPages={totalPages}
             onPageChange={setCurrentPageIndex}
+            loading={loading}
+            error={error}
           />
 
           <RedemptionStatusMobileCards
@@ -227,6 +214,8 @@ export default function RedemptionStatus({
             currentPage={safePage}
             totalPages={totalPages}
             onPageChange={setCurrentPageIndex}
+            loading={loading}
+            error={error}
           />
         </div>
       </div>
@@ -241,6 +230,7 @@ export default function RedemptionStatus({
         isOpen={!!selectedItem}
         onClose={closeDetails}
         item={selectedItem}
+        request={selectedRequest}
       />
 
       {/* Mobile Bottom Navigation */}

@@ -52,13 +52,17 @@ export function CreateAccountModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="create-account-title" className="text-xl font-semibold">Create New Account</h2>
+            <h2 id="create-account-title" className="text-xl font-semibold">
+              Create New Account
+            </h2>
             <p className="text-sm text-gray-500 mt-1">
               Please fill in the details to create a new account
             </p>
@@ -76,10 +80,15 @@ export function CreateAccountModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Credentials</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Credentials
+            </h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="username" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="username"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Username *
                 </label>
                 <input
@@ -100,7 +109,10 @@ export function CreateAccountModal({
               </div>
 
               <div>
-                <label htmlFor="password" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="password"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Password *
                 </label>
                 <input
@@ -124,10 +136,15 @@ export function CreateAccountModal({
 
           {/* Personal Information Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Personal Information</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Personal Information
+            </h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="fullName" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="fullName"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Full Name *
                 </label>
                 <input
@@ -148,7 +165,10 @@ export function CreateAccountModal({
               </div>
 
               <div>
-                <label htmlFor="email" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="email"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Email Address *
                 </label>
                 <input
@@ -172,10 +192,15 @@ export function CreateAccountModal({
 
           {/* Role & Points Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Role & Points</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Role & Points
+            </h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="position" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="position"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Position *
                 </label>
                 <select
@@ -200,7 +225,10 @@ export function CreateAccountModal({
               </div>
 
               <div>
-                <label htmlFor="points" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="points"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Points *
                 </label>
                 <input
@@ -209,7 +237,10 @@ export function CreateAccountModal({
                   min="0"
                   value={newAccount.points}
                   onChange={(e) =>
-                    setNewAccount({ ...newAccount, points: parseInt(e.target.value) || 0 })
+                    setNewAccount({
+                      ...newAccount,
+                      points: parseInt(e.target.value) || 0,
+                    })
                   }
                   className={`w-full px-4 py-3 rounded border ${
                     resolvedTheme === "dark"

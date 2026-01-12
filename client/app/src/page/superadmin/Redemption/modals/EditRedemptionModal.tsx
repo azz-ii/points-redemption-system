@@ -31,7 +31,9 @@ export function EditRedemptionModal({
         <div className="p-8">
           <div className="flex justify-between items-start">
             <div>
-              <h2 id="edit-redemption-title" className="text-xl font-semibold">Edit Redemption</h2>
+              <h2 id="edit-redemption-title" className="text-xl font-semibold">
+                Edit Redemption
+              </h2>
               <p className="text-sm text-gray-500 mt-1">
                 Update request information
               </p>
@@ -111,7 +113,9 @@ export function EditRedemptionModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Total Points</label>
+            <label className="block text-sm font-medium mb-2">
+              Total Points
+            </label>
             <input
               type="text"
               value={item.total_points.toLocaleString()}

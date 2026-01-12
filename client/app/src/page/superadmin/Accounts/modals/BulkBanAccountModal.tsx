@@ -47,7 +47,9 @@ export function BulkBanAccountModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="alertdialog"
         aria-modal="true"
@@ -55,9 +57,12 @@ export function BulkBanAccountModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="bulk-ban-account-title" className="text-xl font-semibold">Ban Multiple Users</h2>
+            <h2 id="bulk-ban-account-title" className="text-xl font-semibold">
+              Ban Multiple Users
+            </h2>
             <p className="text-xs text-gray-500 mt-1">
-              Ban {accounts.length} selected user{accounts.length > 1 ? 's' : ''}
+              Ban {accounts.length} selected user
+              {accounts.length > 1 ? "s" : ""}
             </p>
           </div>
           <button
@@ -89,7 +94,10 @@ export function BulkBanAccountModal({
           </div>
 
           <div>
-            <label htmlFor="bulk-ban-reason" className="text-xs text-gray-500 mb-2 block">
+            <label
+              htmlFor="bulk-ban-reason"
+              className="text-xs text-gray-500 mb-2 block"
+            >
               Ban Reason *
             </label>
             <textarea
@@ -106,7 +114,10 @@ export function BulkBanAccountModal({
           </div>
 
           <div>
-            <label htmlFor="bulk-ban-message" className="text-xs text-gray-500 mb-2 block">
+            <label
+              htmlFor="bulk-ban-message"
+              className="text-xs text-gray-500 mb-2 block"
+            >
               Ban Message
             </label>
             <textarea
@@ -123,16 +134,17 @@ export function BulkBanAccountModal({
           </div>
 
           <div>
-            <label htmlFor="bulk-ban-duration" className="text-xs text-gray-500 mb-2 block">
+            <label
+              htmlFor="bulk-ban-duration"
+              className="text-xs text-gray-500 mb-2 block"
+            >
               Ban Duration *
             </label>
             <select
               id="bulk-ban-duration"
               value={banDuration}
               onChange={(e) =>
-                setBanDuration(
-                  e.target.value as "1" | "7" | "30" | "permanent"
-                )
+                setBanDuration(e.target.value as "1" | "7" | "30" | "permanent")
               }
               className={`w-full px-3 py-2 rounded border ${
                 resolvedTheme === "dark"
@@ -175,7 +187,11 @@ export function BulkBanAccountModal({
                   : "bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
               }`}
             >
-              {loading ? "Banning..." : `Ban ${accounts.length} User${accounts.length > 1 ? 's' : ''}`}
+              {loading
+                ? "Banning..."
+                : `Ban ${accounts.length} User${
+                    accounts.length > 1 ? "s" : ""
+                  }`}
             </button>
           </div>
         </div>

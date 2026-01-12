@@ -56,7 +56,9 @@ export function EditItemModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-4xl w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="dialog"
         aria-modal="true"
@@ -64,7 +66,9 @@ export function EditItemModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="edit-item-title" className="text-xl font-semibold">Edit Catalogue Item</h2>
+            <h2 id="edit-item-title" className="text-xl font-semibold">
+              Edit Catalogue Item
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -106,7 +110,10 @@ export function EditItemModal({
 
                 {/* Reward */}
                 <div>
-                  <label htmlFor="edit-reward" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="edit-reward"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Reward Category (Optional)
                   </label>
                   <input
@@ -127,7 +134,10 @@ export function EditItemModal({
 
                 {/* Item Name */}
                 <div>
-                  <label htmlFor="edit-item-name" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="edit-item-name"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Item Name *
                   </label>
                   <input
@@ -152,7 +162,10 @@ export function EditItemModal({
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="edit-description" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="edit-description"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Description
                   </label>
                   <textarea
@@ -176,7 +189,10 @@ export function EditItemModal({
 
                 {/* Purpose */}
                 <div>
-                  <label htmlFor="edit-purpose" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="edit-purpose"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Purpose
                   </label>
                   <textarea
@@ -197,7 +213,10 @@ export function EditItemModal({
 
                 {/* Specifications */}
                 <div>
-                  <label htmlFor="edit-specs" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="edit-specs"
+                    className="block text-sm font-medium mb-2"
+                  >
                     Specifications
                   </label>
                   <textarea
@@ -291,11 +310,7 @@ export function EditItemModal({
                           type="text"
                           value={variant.item_code}
                           onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              "item_code",
-                              e.target.value
-                            )
+                            onUpdateVariant(index, "item_code", e.target.value)
                           }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
@@ -339,11 +354,7 @@ export function EditItemModal({
                           type="text"
                           value={variant.points}
                           onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              "points",
-                              e.target.value
-                            )
+                            onUpdateVariant(index, "points", e.target.value)
                           }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
@@ -363,11 +374,7 @@ export function EditItemModal({
                           type="text"
                           value={variant.price}
                           onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              "price",
-                              e.target.value
-                            )
+                            onUpdateVariant(index, "price", e.target.value)
                           }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
@@ -387,11 +394,7 @@ export function EditItemModal({
                           type="url"
                           value={variant.image_url}
                           onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              "image_url",
-                              e.target.value
-                            )
+                            onUpdateVariant(index, "image_url", e.target.value)
                           }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"

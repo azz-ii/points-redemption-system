@@ -1,17 +1,19 @@
-﻿"use client"
+﻿"use client";
 
-import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, ArrowUpDown, PackageCheck, PackageX } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import type { RedemptionItem } from "../modals/types"
+import type { ColumnDef } from "@tanstack/react-table";
+import { Eye, Pencil, ArrowUpDown, PackageCheck, PackageX } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import type { RedemptionItem } from "../modals/types";
 
 interface ColumnContext {
-  onViewRedemption: (redemption: RedemptionItem) => void
-  onEditRedemption: (redemption: RedemptionItem) => void
+  onViewRedemption: (redemption: RedemptionItem) => void;
+  onEditRedemption: (redemption: RedemptionItem) => void;
 }
 
-export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>[] => [
+export const createColumns = (
+  context: ColumnContext
+): ColumnDef<RedemptionItem>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -48,9 +50,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
-    cell: ({ row }) => <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>,
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>
+    ),
   },
   {
     accessorKey: "requested_by_name",
@@ -64,7 +68,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           Requested By
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("requested_by_name") || "N/A"}</div>,
   },
@@ -80,7 +84,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           Requested For
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("requested_for_name") || "N/A"}</div>,
   },
@@ -96,11 +100,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           Total Points
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => {
-      const points = row.getValue("total_points") as number
-      return <div>{points?.toLocaleString() ?? 0}</div>
+      const points = row.getValue("total_points") as number;
+      return <div>{points?.toLocaleString() ?? 0}</div>;
     },
   },
   {
@@ -115,11 +119,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           Date Requested
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => {
-      const date = row.getValue("date_requested") as string
-      return <div>{new Date(date).toLocaleDateString()}</div>
+      const date = row.getValue("date_requested") as string;
+      return <div>{new Date(date).toLocaleDateString()}</div>;
     },
   },
   {
@@ -134,7 +138,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           Reviewed By
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("reviewed_by_name") || "N/A"}</div>,
   },
@@ -150,12 +154,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
           Status
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => {
-      const status = row.getValue("status") as string
-      const statusUpper = status?.toUpperCase() || ""
-      
+      const status = row.getValue("status") as string;
+      const statusUpper = status?.toUpperCase() || "";
+
       return (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -168,17 +172,17 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
         >
           {status}
         </span>
-      )
+      );
     },
   },
   {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
-      const redemption = row.original
-      const status = row.getValue("status") as string
-      const statusUpper = status?.toUpperCase() || ""
-      const isApproved = statusUpper === "APPROVED"
+      const redemption = row.original;
+      const status = row.getValue("status") as string;
+      const statusUpper = status?.toUpperCase() || "";
+      const isApproved = statusUpper === "APPROVED";
 
       return (
         <div className="flex justify-end gap-2">
@@ -212,9 +216,9 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionItem>
             <Eye className="h-4 w-4" />
           </Button>
         </div>
-      )
+      );
     },
     enableSorting: false,
     enableHiding: false,
   },
-]
+];

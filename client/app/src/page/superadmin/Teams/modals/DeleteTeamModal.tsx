@@ -50,7 +50,9 @@ export function DeleteTeamModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="alertdialog"
         aria-modal="true"
@@ -58,7 +60,9 @@ export function DeleteTeamModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="delete-team-title" className="text-xl font-semibold">Delete Team</h2>
+            <h2 id="delete-team-title" className="text-xl font-semibold">
+              Delete Team
+            </h2>
             <p className="text-xs text-gray-500 mt-1">
               This action cannot be undone.
             </p>
@@ -74,8 +78,7 @@ export function DeleteTeamModal({
 
         <div className="p-8 space-y-6">
           <p>
-            Are you sure you want to delete{" "}
-            <strong>{team.name}</strong>?
+            Are you sure you want to delete <strong>{team.name}</strong>?
           </p>
 
           {/* Warning if team has members */}
@@ -99,7 +102,8 @@ export function DeleteTeamModal({
                   </li>
                 </ul>
                 <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
-                  The backend will prevent deletion if members exist. Remove them first.
+                  The backend will prevent deletion if members exist. Remove
+                  them first.
                 </p>
               </div>
             </div>

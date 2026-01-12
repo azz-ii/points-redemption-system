@@ -51,7 +51,9 @@ export function CreateItemModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-4xl w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="dialog"
         aria-modal="true"
@@ -60,7 +62,9 @@ export function CreateItemModal({
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="create-item-title" className="text-xl font-semibold">Add Catalogue Item</h2>
+            <h2 id="create-item-title" className="text-xl font-semibold">
+              Add Catalogue Item
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -93,7 +97,10 @@ export function CreateItemModal({
 
             {/* Reward */}
             <div>
-              <label htmlFor="reward-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="reward-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Reward Category (Optional)
               </label>
               <input
@@ -114,7 +121,10 @@ export function CreateItemModal({
 
             {/* Item Name */}
             <div>
-              <label htmlFor="item-name-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="item-name-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Item Name *
               </label>
               <input
@@ -136,7 +146,10 @@ export function CreateItemModal({
 
             {/* Description */}
             <div>
-              <label htmlFor="description-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="description-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Description
               </label>
               <textarea
@@ -157,7 +170,12 @@ export function CreateItemModal({
 
             {/* Purpose */}
             <div>
-              <label htmlFor="purpose-input" className="block text-sm font-medium mb-2">Purpose</label>
+              <label
+                htmlFor="purpose-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Purpose
+              </label>
               <textarea
                 id="purpose-input"
                 value={newItem.purpose}
@@ -176,7 +194,10 @@ export function CreateItemModal({
 
             {/* Specifications */}
             <div>
-              <label htmlFor="specs-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="specs-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Specifications
               </label>
               <textarea
@@ -197,7 +218,10 @@ export function CreateItemModal({
 
             {/* Legend */}
             <div>
-              <label htmlFor="legend-select" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="legend-select"
+                className="block text-sm font-medium mb-2"
+              >
                 Category *
               </label>
               <select
@@ -267,7 +291,10 @@ export function CreateItemModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Item Code */}
                   <div>
-                    <label htmlFor={`item-code-${index}`} className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor={`item-code-${index}`}
+                      className="block text-sm font-medium mb-2"
+                    >
                       Item Code *
                     </label>
                     <input
@@ -289,7 +316,10 @@ export function CreateItemModal({
 
                   {/* Option Description */}
                   <div>
-                    <label htmlFor={`option-desc-${index}`} className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor={`option-desc-${index}`}
+                      className="block text-sm font-medium mb-2"
+                    >
                       Variant Description (Optional)
                     </label>
                     <input
@@ -314,7 +344,10 @@ export function CreateItemModal({
 
                   {/* Points */}
                   <div>
-                    <label htmlFor={`points-${index}`} className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor={`points-${index}`}
+                      className="block text-sm font-medium mb-2"
+                    >
                       Points Required *
                     </label>
                     <input
@@ -336,7 +369,10 @@ export function CreateItemModal({
 
                   {/* Price */}
                   <div>
-                    <label htmlFor={`price-${index}`} className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor={`price-${index}`}
+                      className="block text-sm font-medium mb-2"
+                    >
                       Price *
                     </label>
                     <input
@@ -358,7 +394,10 @@ export function CreateItemModal({
 
                   {/* Image URL */}
                   <div className="md:col-span-2">
-                    <label htmlFor={`image-url-${index}`} className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor={`image-url-${index}`}
+                      className="block text-sm font-medium mb-2"
+                    >
                       Image URL (Optional)
                     </label>
                     <input

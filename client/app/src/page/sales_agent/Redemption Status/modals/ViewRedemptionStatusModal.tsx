@@ -7,12 +7,15 @@ export function ViewRedemptionStatusModal({
   isOpen,
   onClose,
   item,
+  request,
 }: ViewRedemptionStatusModalProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const [imageLoading, setImageLoading] = useState(true);
 
-  if (!isOpen || !item) return null;
+  if (!isOpen || !item || !request) return null;
+
+  const imageUrl = item.image_url || "/images/tshirt.png";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -45,8 +48,8 @@ export function ViewRedemptionStatusModal({
                 <div className="absolute inset-0 bg-gray-300 dark:bg-gray-700 animate-pulse" />
               )}
               <img
-                src={item.image}
-                alt={`${item.type}: ${item.details}`}
+                src={imageUrl}
+                alt={`${item.catalogue_item_name}: ${item.variant_option || ""}`}
                 onLoad={() => setImageLoading(false)}
                 onError={(e) => {
                   e.currentTarget.src = "/images/tshirt.png";
@@ -65,57 +68,74 @@ export function ViewRedemptionStatusModal({
                   isDark ? "text-green-400" : "text-green-600"
                 }`}
               >
-                {item.id}
+                {item.variant_code}
               </p>
-              <h3 className="mt-1 text-2xl font-bold">{item.details}</h3>
+              <h3 className="mt-1 text-2xl font-bold">{item.catalogue_item_name}</h3>
+              {item.variant_option && (
+                <p className={`mt-1 text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  {item.variant_option}
+                </p>
+              )}
               <div
                 className={`mt-3 space-y-3 ${
                   isDark ? "text-gray-300" : "text-gray-700"
                 }`}
               >
                 <div>
-                  <p className="text-sm font-semibold">Description</p>
-                  <p className="text-sm">
-                    Premium cotton polo for events and daily wear.
-                  </p>
+                  <p className="text-sm font-semibold">Quantity</p>
+                  <p className="text-sm">{item.quantity} unit{item.quantity !== 1 ? 's' : ''}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Purpose</p>
-                  <p className="text-sm">
-                    Company events or stylish uniform piece.
-                  </p>
+                  <p className="text-sm font-semibold">Points per Item</p>
+                  <p className="text-sm">{item.points_per_item} points</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Specifications</p>
-                  <ul className="list-disc pl-5 text-sm">
-                    <li>Material: 100% Platinum Cotton</li>
-                    <li>Fit: Modern</li>
-                    <li>Collar: Ribbed Polo</li>
-                    <li>Sleeves: Short with ribbed armbands</li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">Options</p>
+                  <p className="text-sm font-semibold">Status</p>
                   <p className="text-sm">
-                    Sizes S–XL; Colors Black, White, Navy Blue.
+                    <span
+                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
+                        request.status === "APPROVED"
+                          ? "bg-green-500 text-white"
+                          : request.status === "PENDING"
+                          ? "bg-yellow-500 text-white"
+                          : "bg-red-500 text-white"
+                      }`}
+                    >
+                      {request.status_display}
+                    </span>
                   </p>
                 </div>
+                {request.rejection_reason && (
+                  <div>
+                    <p className="text-sm font-semibold">Rejection Reason</p>
+                    <p className="text-sm">{request.rejection_reason}</p>
+                  </div>
+                )}
+                {request.remarks && (
+                  <div>
+                    <p className="text-sm font-semibold">Remarks</p>
+                    <p className="text-sm">{request.remarks}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
         {/* Bottom points/price bar */}
         <div
-          className={`flex items-center justify-end rounded-b-xl px-4 md:px-6 py-3 ${
+          className={`flex items-center justify-between rounded-b-xl px-4 md:px-6 py-3 ${
             isDark ? "bg-gray-800" : "bg-gray-100"
           }`}
         >
+          <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+            Total for this item
+          </p>
           <p
-            className={`ml-auto text-sm font-bold ${
+            className={`text-sm font-bold ${
               isDark ? "text-yellow-300" : "text-yellow-600"
             }`}
           >
-            500 Points
+            {item.total_points} Points
           </p>
         </div>
       </div>

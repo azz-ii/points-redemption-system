@@ -31,7 +31,9 @@ export function ViewRedemptionModal({
         <div className="p-8">
           <div className="flex justify-between items-start">
             <div>
-              <h2 id="view-redemption-title" className="text-xl font-semibold">Redemption Details</h2>
+              <h2 id="view-redemption-title" className="text-xl font-semibold">
+                Redemption Details
+              </h2>
               <p className="text-sm text-gray-500 mt-1">
                 View request information
               </p>
@@ -86,7 +88,9 @@ export function ViewRedemptionModal({
           </div>
           <div>
             <p className="text-xs text-gray-500 mb-1">Total Points</p>
-            <p className="font-semibold">{item.total_points.toLocaleString()}</p>
+            <p className="font-semibold">
+              {item.total_points.toLocaleString()}
+            </p>
           </div>
           {item.reviewed_by_name && (
             <div>
@@ -111,7 +115,9 @@ export function ViewRedemptionModal({
           {item.rejection_reason && (
             <div>
               <p className="text-xs text-gray-500 mb-1">Rejection Reason</p>
-              <p className="font-semibold text-red-500">{item.rejection_reason}</p>
+              <p className="font-semibold text-red-500">
+                {item.rejection_reason}
+              </p>
             </div>
           )}
           <div>
@@ -131,7 +137,7 @@ export function ViewRedemptionModal({
                     {reqItem.variant_name && ` - ${reqItem.variant_name}`}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Qty: {reqItem.quantity}  {reqItem.points_per_item} pts ={" "}
+                    Qty: {reqItem.quantity} {reqItem.points_per_item} pts ={" "}
                     {reqItem.total_points} pts
                   </p>
                 </div>

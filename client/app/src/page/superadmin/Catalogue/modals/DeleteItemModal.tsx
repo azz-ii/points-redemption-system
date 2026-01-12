@@ -23,7 +23,9 @@ export function DeleteItemModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="alertdialog"
         aria-modal="true"
@@ -31,7 +33,9 @@ export function DeleteItemModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="delete-item-title" className="text-xl font-semibold">Delete Item</h2>
+            <h2 id="delete-item-title" className="text-xl font-semibold">
+              Delete Item
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -51,8 +55,8 @@ export function DeleteItemModal({
 
         <div className="p-8 space-y-6">
           <p>
-            Are you sure you want to delete{" "}
-            <strong>{item.item_name}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{item.item_name}</strong>?
+            This action cannot be undone.
           </p>
         </div>
 

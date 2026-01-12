@@ -47,7 +47,9 @@ export function BanAccountModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="alertdialog"
         aria-modal="true"
@@ -55,7 +57,9 @@ export function BanAccountModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="ban-account-title" className="text-xl font-semibold">Ban User</h2>
+            <h2 id="ban-account-title" className="text-xl font-semibold">
+              Ban User
+            </h2>
             <p className="text-xs text-gray-500 mt-1">
               Ban user {account.full_name}{" "}
             </p>
@@ -71,7 +75,10 @@ export function BanAccountModal({
 
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           <div>
-            <label htmlFor="ban-reason" className="text-xs text-gray-500 mb-2 block">
+            <label
+              htmlFor="ban-reason"
+              className="text-xs text-gray-500 mb-2 block"
+            >
               Ban Reason *
             </label>
             <textarea
@@ -88,7 +95,10 @@ export function BanAccountModal({
           </div>
 
           <div>
-            <label htmlFor="ban-message" className="text-xs text-gray-500 mb-2 block">
+            <label
+              htmlFor="ban-message"
+              className="text-xs text-gray-500 mb-2 block"
+            >
               Ban Message
             </label>
             <textarea
@@ -105,16 +115,17 @@ export function BanAccountModal({
           </div>
 
           <div>
-            <label htmlFor="ban-duration" className="text-xs text-gray-500 mb-2 block">
+            <label
+              htmlFor="ban-duration"
+              className="text-xs text-gray-500 mb-2 block"
+            >
               Ban Duration *
             </label>
             <select
               id="ban-duration"
               value={banDuration}
               onChange={(e) =>
-                setBanDuration(
-                  e.target.value as "1" | "7" | "30" | "permanent"
-                )
+                setBanDuration(e.target.value as "1" | "7" | "30" | "permanent")
               }
               className={`w-full px-3 py-2 rounded border ${
                 resolvedTheme === "dark"

@@ -29,7 +29,9 @@ export function BulkDeleteAccountModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="alertdialog"
         aria-modal="true"
@@ -37,7 +39,12 @@ export function BulkDeleteAccountModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="bulk-delete-account-title" className="text-xl font-semibold">Delete Multiple Users</h2>
+            <h2
+              id="bulk-delete-account-title"
+              className="text-xl font-semibold"
+            >
+              Delete Multiple Users
+            </h2>
             <p className="text-xs text-gray-500 mt-1">
               This action cannot be undone.
             </p>
@@ -53,9 +60,10 @@ export function BulkDeleteAccountModal({
 
         <div className="p-8 space-y-6">
           <p>
-            Are you sure you want to delete <strong>{accounts.length}</strong> user{accounts.length > 1 ? 's' : ''}?
+            Are you sure you want to delete <strong>{accounts.length}</strong>{" "}
+            user{accounts.length > 1 ? "s" : ""}?
           </p>
-          
+
           <div className="space-y-1 max-h-[70vh] overflow-y-auto">
             {accounts.map((account) => (
               <div
@@ -93,7 +101,11 @@ export function BulkDeleteAccountModal({
                 : "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
             }`}
           >
-            {loading ? "Deleting..." : `Delete ${accounts.length} User${accounts.length > 1 ? 's' : ''}`}
+            {loading
+              ? "Deleting..."
+              : `Delete ${accounts.length} User${
+                  accounts.length > 1 ? "s" : ""
+                }`}
           </button>
         </div>
       </div>

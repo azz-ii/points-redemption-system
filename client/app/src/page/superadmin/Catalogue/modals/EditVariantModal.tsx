@@ -39,7 +39,9 @@ export function EditVariantModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="dialog"
         aria-modal="true"
@@ -47,7 +49,9 @@ export function EditVariantModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="edit-variant-title" className="text-xl font-semibold">Edit Variant</h2>
+            <h2 id="edit-variant-title" className="text-xl font-semibold">
+              Edit Variant
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
@@ -76,7 +80,10 @@ export function EditVariantModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Item Code */}
             <div>
-              <label htmlFor="edit-item-code" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="edit-item-code"
+                className="block text-sm font-medium mb-2"
+              >
                 Item Code *
               </label>
               <input
@@ -100,7 +107,10 @@ export function EditVariantModal({
 
             {/* Option Description */}
             <div>
-              <label htmlFor="edit-variant-desc" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="edit-variant-desc"
+                className="block text-sm font-medium mb-2"
+              >
                 Variant Description (Optional)
               </label>
               <input
@@ -124,7 +134,10 @@ export function EditVariantModal({
 
             {/* Points */}
             <div>
-              <label htmlFor="edit-variant-points" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="edit-variant-points"
+                className="block text-sm font-medium mb-2"
+              >
                 Points Required *
               </label>
               <input
@@ -148,7 +161,12 @@ export function EditVariantModal({
 
             {/* Price */}
             <div>
-              <label htmlFor="edit-variant-price" className="block text-sm font-medium mb-2">Price *</label>
+              <label
+                htmlFor="edit-variant-price"
+                className="block text-sm font-medium mb-2"
+              >
+                Price *
+              </label>
               <input
                 id="edit-variant-price"
                 type="text"
@@ -170,7 +188,10 @@ export function EditVariantModal({
 
             {/* Image URL */}
             <div className="md:col-span-2">
-              <label htmlFor="edit-variant-image" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="edit-variant-image"
+                className="block text-sm font-medium mb-2"
+              >
                 Image URL (Optional)
               </label>
               <input

@@ -37,12 +37,16 @@ export function DeleteAccountModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="delete-account-title" className="text-xl font-semibold">Delete User</h2>
+            <h2 id="delete-account-title" className="text-xl font-semibold">
+              Delete User
+            </h2>
             <p className="text-sm text-gray-500 mt-1">
               This action cannot be undone.
             </p>
@@ -58,8 +62,8 @@ export function DeleteAccountModal({
 
         <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
           <p id="delete-account-message" className="text-base">
-            Are you sure you want to delete{" "}
-            <strong>{account.full_name}</strong> ({account.username})?
+            Are you sure you want to delete <strong>{account.full_name}</strong>{" "}
+            ({account.username})?
           </p>
         </div>
 

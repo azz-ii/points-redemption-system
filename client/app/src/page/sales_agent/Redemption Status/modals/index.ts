@@ -1,2 +1,8 @@
 export { ViewRedemptionStatusModal } from "./ViewRedemptionStatusModal";
-export type { StatusItem, ModalBaseProps, ViewRedemptionStatusModalProps } from "./types";
+export type { 
+  RedemptionRequest,
+  RedemptionRequestItem,
+  CatalogueItem,
+  ModalBaseProps, 
+  ViewRedemptionStatusModalProps 
+} from "./types";

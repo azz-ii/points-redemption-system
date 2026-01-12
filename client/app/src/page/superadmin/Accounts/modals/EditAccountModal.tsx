@@ -53,13 +53,17 @@ export function EditAccountModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="edit-account-title" className="text-xl font-semibold">Edit Account</h2>
+            <h2 id="edit-account-title" className="text-xl font-semibold">
+              Edit Account
+            </h2>
             <p className="text-sm text-gray-500 mt-1">
               Update account details for {account.full_name}
             </p>
@@ -77,9 +81,14 @@ export function EditAccountModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Credentials</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Credentials
+            </h3>
             <div>
-              <label htmlFor="edit-username" className="text-xs text-gray-500 mb-2 block">
+              <label
+                htmlFor="edit-username"
+                className="text-xs text-gray-500 mb-2 block"
+              >
                 Username *
               </label>
               <input
@@ -102,10 +111,15 @@ export function EditAccountModal({
 
           {/* Personal Information Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Personal Information</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Personal Information
+            </h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="edit-fullName" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="edit-fullName"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Full Name *
                 </label>
                 <input
@@ -129,7 +143,10 @@ export function EditAccountModal({
               </div>
 
               <div>
-                <label htmlFor="edit-email" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="edit-email"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Email Address *
                 </label>
                 <input
@@ -153,10 +170,15 @@ export function EditAccountModal({
 
           {/* Role & Points Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Role & Points</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Role & Points
+            </h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="edit-position" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="edit-position"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Position *
                 </label>
                 <select
@@ -181,7 +203,10 @@ export function EditAccountModal({
               </div>
 
               <div>
-                <label htmlFor="edit-points" className="text-xs text-gray-500 mb-2 block">
+                <label
+                  htmlFor="edit-points"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
                   Points *
                 </label>
                 <div className="flex gap-2 items-center">
@@ -191,7 +216,10 @@ export function EditAccountModal({
                     min="0"
                     value={editAccount.points}
                     onChange={(e) =>
-                      setEditAccount({ ...editAccount, points: parseInt(e.target.value) || 0 })
+                      setEditAccount({
+                        ...editAccount,
+                        points: parseInt(e.target.value) || 0,
+                      })
                     }
                     className={`flex-1 px-4 py-3 rounded border ${
                       resolvedTheme === "dark"
@@ -203,7 +231,12 @@ export function EditAccountModal({
                   />
                   <button
                     type="button"
-                    onClick={() => setEditAccount({ ...editAccount, points: editAccount.points + 10 })}
+                    onClick={() =>
+                      setEditAccount({
+                        ...editAccount,
+                        points: editAccount.points + 10,
+                      })
+                    }
                     aria-label="Add 10 points"
                     className={`px-4 py-3 rounded border font-semibold text-sm transition-colors ${
                       resolvedTheme === "dark"
@@ -215,7 +248,12 @@ export function EditAccountModal({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditAccount({ ...editAccount, points: editAccount.points + 100 })}
+                    onClick={() =>
+                      setEditAccount({
+                        ...editAccount,
+                        points: editAccount.points + 100,
+                      })
+                    }
                     aria-label="Add 100 points"
                     className={`px-4 py-3 rounded border font-semibold text-sm transition-colors ${
                       resolvedTheme === "dark"

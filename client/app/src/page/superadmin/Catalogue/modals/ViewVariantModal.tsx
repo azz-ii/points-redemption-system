@@ -21,7 +21,9 @@ export function ViewVariantModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="dialog"
         aria-modal="true"
@@ -29,7 +31,9 @@ export function ViewVariantModal({
       >
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="view-variant-title" className="text-xl font-semibold">View Variant</h2>
+            <h2 id="view-variant-title" className="text-xl font-semibold">
+              View Variant
+            </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"

@@ -34,18 +34,21 @@ export function ApproveRequestModal({
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
         } rounded-lg shadow-2xl max-w-md w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
+          resolvedTheme === "dark"
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
         }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="approve-request-title"
       >
         <div className="p-8">
-          <h2 id="approve-request-title" className="text-xl font-semibold mb-4">Approve Request</h2>
+          <h2 id="approve-request-title" className="text-xl font-semibold mb-4">
+            Approve Request
+          </h2>
           <p className="text-sm mb-4">
             Are you sure you want to approve this request for{" "}
-            <span className="font-semibold">{request.requested_for_name}</span>
-            ?
+            <span className="font-semibold">{request.requested_for_name}</span>?
           </p>
 
           <div className="mb-4">
