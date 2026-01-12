@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
@@ -22,12 +24,9 @@ import { RequestsTable, RequestsMobileCards } from "./components";
 // Using the API response type directly
 type RequestItemAPI = RedemptionRequestResponse;
 
-interface RequestsProps {
-  onNavigate?: (page: "dashboard" | "approver-requests" | "history") => void;
-  onLogout?: () => void;
-}
-
-function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
+function ApproverRequests() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,11 +84,11 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
     page: "dashboard" | "approver-requests" | "history" | "requests"
   ) => {
     if (page === "history") {
-      onNavigate?.("history");
+      navigate("/approver/history");
     } else if (page === "approver-requests" || page === "requests") {
-      onNavigate?.("approver-requests");
+      navigate("/approver/requests");
     } else {
-      onNavigate?.(page);
+      navigate("/approver/dashboard");
     }
   };
 
@@ -192,11 +191,7 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarApprover
-        currentPage="requests"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarApprover />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -431,11 +426,7 @@ function ApproverRequests({ onNavigate, onLogout }: RequestsProps) {
       />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavApprover
-        currentPage="requests"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <MobileBottomNavApprover />
     </div>
   );
 }

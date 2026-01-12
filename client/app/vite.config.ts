@@ -91,10 +91,6 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
-      '/login': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
       '/pwa': {
         target: 'http://localhost:8000',
         changeOrigin: true,

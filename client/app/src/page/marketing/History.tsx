@@ -1,5 +1,7 @@
 import { useTheme } from "next-themes";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLogout } from "@/context/AuthContext";
 import { Search, Bell } from "lucide-react";
 import { SidebarMarketing } from "@/components/sidebar";
 import { NotificationPanel } from "@/components/notification-panel";
@@ -15,15 +17,9 @@ interface HistoryItem {
   status: "Approved" | "Rejected";
 }
 
-interface HistoryProps {
-  onNavigate?: (page: "dashboard" | "history" | "marketing-history") => void;
-  onLogout?: () => void;
-}
-
-export default function MarketingHistory({
-  onNavigate,
-  onLogout,
-}: HistoryProps) {
+export default function MarketingHistory() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -114,14 +110,6 @@ export default function MarketingHistory({
   const endIndex = startIndex + pageSize;
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "history") => {
-    if (page === "history") {
-      onNavigate?.("marketing-history");
-    } else {
-      onNavigate?.(page);
-    }
-  };
-
   const statusClass = (status: HistoryItem["status"]) => {
     switch (status) {
       case "Approved":
@@ -141,11 +129,7 @@ export default function MarketingHistory({
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarMarketing
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarMarketing />
 
       {/* Main */}
       <div className="flex-1 overflow-y-auto pb-20">
@@ -423,11 +407,7 @@ export default function MarketingHistory({
       )}
 
       {/* Mobile nav */}
-      <MobileBottomNavMarketing
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <MobileBottomNavMarketing />
     </div>
   );
 }

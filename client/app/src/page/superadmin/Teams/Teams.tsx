@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -31,22 +33,9 @@ import {
 import { TeamsTable } from "./components";
 import type { Team } from "./components/columns";
 
-interface TeamsProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "distributors"
-      | "teams"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Teams({ onNavigate, onLogout }: TeamsProps) {
+function Teams() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,7 +77,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
     try {
       setLoading(true);
       console.log("Fetching teams from API...");
-      const response = await fetch("http://127.0.0.1:8000/api/teams/", {
+      const response = await fetch("/api/teams/", {
         method: "GET",
         credentials: "include",
         headers: {
@@ -118,7 +107,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
   const fetchApprovers = async () => {
     try {
       console.log("DEBUG Teams: Fetching approvers...");
-      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+      const response = await fetch("/api/users/", {
         method: "GET",
         credentials: "include",
         headers: {
@@ -198,7 +187,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       setCreateError("");
       console.log("DEBUG Teams: Creating team", { newTeam, memberIds });
 
-      const response = await fetch("http://127.0.0.1:8000/api/teams/", {
+      const response = await fetch("/api/teams/", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -223,7 +212,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
           for (const memberId of memberIds) {
             try {
               const assignResponse = await fetch(
-                `http://127.0.0.1:8000/api/teams/${createdTeamId}/assign_member/`,
+                `/api/teams/${createdTeamId}/assign_member/`,
                 {
                   method: "POST",
                   credentials: "include",
@@ -315,7 +304,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       });
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamToEdit.id}/`,
+        `/api/teams/${teamToEdit.id}/`,
         {
           method: "PUT",
           credentials: "include",
@@ -376,7 +365,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       console.log("DEBUG Teams: Deleting team", teamId);
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${teamId}/`,
+        `/api/teams/${teamId}/`,
         {
           method: "DELETE",
           credentials: "include",
@@ -443,11 +432,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="teams"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -493,7 +478,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -504,7 +489,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -784,10 +769,7 @@ function Teams({ onNavigate, onLogout }: TeamsProps) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        currentPage="teams"
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
 
       <NotificationPanel
         isOpen={isNotificationOpen}

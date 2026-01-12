@@ -56,7 +56,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
     // Call API to activate account
     setIsLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/activate-account/", {
+      const response = await fetch("/api/activate-account/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, new_password: newPassword }),

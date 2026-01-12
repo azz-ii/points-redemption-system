@@ -44,7 +44,7 @@ export function ViewTeamModal({
       console.log("DEBUG ViewTeamModal: Fetching team details for ID", team.id);
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${team.id}/`,
+        `/api/teams/${team.id}/`,
         {
           method: "GET",
           credentials: "include",
@@ -96,7 +96,7 @@ export function ViewTeamModal({
     try {
       console.log("DEBUG ViewTeamModal: Fetching available sales agents");
 
-      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+      const response = await fetch("/api/users/", {
         method: "GET",
         credentials: "include",
         headers: {
@@ -144,7 +144,7 @@ export function ViewTeamModal({
       });
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${team.id}/assign_member/`,
+        `/api/teams/${team.id}/assign_member/`,
         {
           method: "POST",
           credentials: "include",
@@ -207,7 +207,7 @@ export function ViewTeamModal({
       });
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/teams/${team.id}/remove_member/`,
+        `/api/teams/${team.id}/remove_member/`,
         {
           method: "POST",
           credentials: "include",

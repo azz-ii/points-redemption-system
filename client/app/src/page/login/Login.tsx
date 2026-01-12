@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +9,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import ForgotPassword from "./ForgotPassword";
 import ActivateAccount from "./ActivateAccount";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
-interface LoginProps {
-  onLoginSuccess?: (position: string) => void;
-}
-
-function Login({ onLoginSuccess }: LoginProps) {
+function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,12 +19,19 @@ function Login({ onLoginSuccess }: LoginProps) {
   const [showActivateAccount, setShowActivateAccount] = useState(false);
   const [activationUsername, setActivationUsername] = useState("");
   const { resolvedTheme } = useTheme();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLoginSuccess = (position: string) => {
+    login(position, username);
+    navigate("/dashboard", { replace: true });
+  };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("/login/", {
+      const response = await fetch("/api/login/", {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -46,19 +51,12 @@ function Login({ onLoginSuccess }: LoginProps) {
         }
         
         const position = data.position || "Admin";
-        // persist username and position for sidebar display
-        try {
-          localStorage.setItem("username", username);
-          localStorage.setItem("position", position);
-        } catch {
-          // ignore storage errors
-        }
         setUsername("");
         setPassword("");
         toast.success("Login successful", {
           description: data.message || "Welcome back!"
         });
-        setTimeout(() => onLoginSuccess?.(position), 1000);
+        setTimeout(() => handleLoginSuccess(position), 1000);
       } else {
         console.error("Login failed:", data);
         
@@ -105,7 +103,7 @@ function Login({ onLoginSuccess }: LoginProps) {
             // Auto-login user after successful activation
             setShowActivateAccount(false);
             setActivationUsername("");
-            onLoginSuccess?.(position);
+            handleLoginSuccess(position);
           }}
         />
       ) : showForgotPassword ? (

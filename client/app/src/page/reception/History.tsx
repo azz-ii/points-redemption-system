@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarReception } from "@/components/sidebar";
@@ -16,12 +18,9 @@ interface HistoryItem {
   approvalStatus: "Approved" | "Rejected";
 }
 
-interface HistoryProps {
-  onNavigate?: (page: "dashboard" | "history") => void;
-  onLogout?: () => void;
-}
-
-function ReceptionHistory({ onNavigate, onLogout }: HistoryProps) {
+function ReceptionHistory() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,10 +71,6 @@ function ReceptionHistory({ onNavigate, onLogout }: HistoryProps) {
   const endIndex = startIndex + pageSize;
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "history") => {
-    onNavigate?.(page);
-  };
-
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -84,11 +79,7 @@ function ReceptionHistory({ onNavigate, onLogout }: HistoryProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarReception
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarReception />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -419,12 +410,7 @@ function ReceptionHistory({ onNavigate, onLogout }: HistoryProps) {
       />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavReception
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-        isModalOpen={isNotificationOpen}
-      />
+      <MobileBottomNavReception />
     </div>
   );
 }

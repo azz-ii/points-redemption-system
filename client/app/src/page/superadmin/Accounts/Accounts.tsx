@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -25,22 +27,9 @@ import {
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
 
-interface AccountsProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "distributors"
-      | "teams"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Accounts({ onNavigate, onLogout }: AccountsProps) {
+function Accounts() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
@@ -95,7 +84,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/api/users/");
+      const response = await fetch("/api/users/");
       const data = await response.json();
 
       if (response.ok) {
@@ -157,7 +146,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     });
 
     // Execute API call in background without blocking
-    fetch("http://127.0.0.1:8000/api/users/", {
+    fetch("/api/users/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -223,7 +212,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://127.0.0.1:8000/api/users/${editingAccount.id}/`,
+        `/api/users/${editingAccount.id}/`,
         {
           method: "PUT",
           headers: {
@@ -265,7 +254,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://127.0.0.1:8000/api/users/${id}/`, {
+      const response = await fetch(`/api/users/${id}/`, {
         method: "DELETE",
       });
 
@@ -299,7 +288,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       // Delete all selected accounts
       const deleteResults = await Promise.allSettled(
         bulkDeleteTargets.map(account =>
-          fetch(`http://127.0.0.1:8000/api/users/${account.id}/`, {
+          fetch(`/api/users/${account.id}/`, {
             method: "DELETE",
           })
         )
@@ -385,7 +374,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
             unban_date,
           };
 
-          return fetch(`http://127.0.0.1:8000/api/users/${account.id}/`, {
+          return fetch(`/api/users/${account.id}/`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -464,7 +453,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       };
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/users/${banTarget.id}/`,
+        `/api/users/${banTarget.id}/`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -526,11 +515,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="accounts"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -576,7 +561,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -587,7 +572,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -716,10 +701,7 @@ function Accounts({ onNavigate, onLogout }: AccountsProps) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        currentPage="accounts"
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
 
       <NotificationPanel
         isOpen={isNotificationOpen}

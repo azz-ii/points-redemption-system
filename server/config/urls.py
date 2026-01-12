@@ -33,7 +33,7 @@ from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDeta
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', LoginView.as_view(), name='login'),
+    path('api/login/', LoginView.as_view(), name='login'),
     path('api/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('api/activate-account/', ActivateAccountView.as_view(), name='activate_account'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
@@ -51,6 +51,8 @@ urlpatterns = [
     path('api/catalogue/<int:item_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
     # Distributor Management API
     path('', include('distributers.urls')),
+    # Customer Management API
+    path('', include('customers.urls')),
     # Redemption Requests API
     path('api/', include('requests.urls')),
     # OTP/Password Reset API

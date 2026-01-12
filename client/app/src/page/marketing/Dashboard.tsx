@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarMarketing } from "@/components/sidebar";
@@ -22,12 +24,9 @@ interface CampaignItem {
   status: "Pending" | "Approved" | "Rejected";
 }
 
-interface DashboardProps {
-  onNavigate?: (page: "dashboard" | "history") => void;
-  onLogout?: () => void;
-}
-
-function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
+function MarketingDashboard() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,14 +97,6 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
   const endIndex = startIndex + pageSize;
   const paginatedCampaigns = filteredCampaigns.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "history") => {
-    if (page === "history") {
-      onNavigate?.("marketing-history" as any);
-    } else {
-      onNavigate?.(page as any);
-    }
-  };
-
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -114,11 +105,7 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarMarketing
-        currentPage="dashboard"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarMarketing />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -793,12 +780,7 @@ function MarketingDashboard({ onNavigate, onLogout }: DashboardProps) {
         />
       </div>
 
-      <MobileBottomNavMarketing
-        currentPage="dashboard"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-        isModalOpen={isNotificationOpen}
-      />
+      <MobileBottomNavMarketing />
     </div>
   );
 }

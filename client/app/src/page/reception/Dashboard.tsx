@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarReception } from "@/components/sidebar";
@@ -23,12 +25,9 @@ interface ServiceItem {
   approvalStatus: "Pending" | "Approved" | "Rejected";
 }
 
-interface DashboardProps {
-  onNavigate?: (page: "dashboard" | "history") => void;
-  onLogout?: () => void;
-}
-
-function ReceptionDashboard({ onNavigate, onLogout }: DashboardProps) {
+function ReceptionDashboard() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,10 +42,6 @@ function ReceptionDashboard({ onNavigate, onLogout }: DashboardProps) {
     },
   ]);
 
-  const handleNavigate = (page: "dashboard" | "history") => {
-    onNavigate?.(page);
-  };
-
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -55,11 +50,7 @@ function ReceptionDashboard({ onNavigate, onLogout }: DashboardProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarReception
-        currentPage="dashboard"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarReception />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -397,12 +388,7 @@ function ReceptionDashboard({ onNavigate, onLogout }: DashboardProps) {
         />
       </div>
 
-      <MobileBottomNavReception
-        currentPage="dashboard"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-        isModalOpen={isNotificationOpen}
-      />
+      <MobileBottomNavReception />
     </div>
   );
 }

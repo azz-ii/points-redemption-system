@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   LogOut,
   Home,
@@ -17,15 +18,13 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLogout } from "@/context/AuthContext";
 
-interface SidebarProps {
-  currentPage: string;
-  onNavigate: (page: any) => void;
-  onLogout: () => void;
-}
-
-export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
+export function Sidebar() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -43,15 +42,21 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "history", label: "History", icon: History },
-    { id: "accounts", label: "Accounts", icon: User },
-    { id: "catalogue", label: "Catalogue", icon: Package },
-    { id: "distributors", label: "Distributors", icon: Store },
-    { id: "teams", label: "Teams", icon: Users },
-    { id: "redemption", label: "Redemption", icon: ClipboardList },
-    { id: "inventory", label: "Inventory", icon: Warehouse },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
+    { id: "history", label: "History", icon: History, path: "/admin/history" },
+    { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
+    { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
+    { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
+    { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
+    { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
+    { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -61,6 +66,8 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -106,10 +113,10 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -164,7 +171,7 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${
@@ -186,12 +193,11 @@ export function Sidebar({ currentPage, onNavigate, onLogout }: SidebarProps) {
   );
 }
 
-export function SidebarSuperAdmin({
-  currentPage,
-  onNavigate,
-  onLogout,
-}: SidebarProps) {
+export function SidebarSuperAdmin() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -209,15 +215,21 @@ export function SidebarSuperAdmin({
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "history", label: "History", icon: History },
-    { id: "accounts", label: "Accounts", icon: User },
-    { id: "catalogue", label: "Catalogue", icon: Package },
-    { id: "distributors", label: "Distributors", icon: Store },
-    { id: "teams", label: "Teams", icon: Users },
-    { id: "redemption", label: "Redemption", icon: ClipboardList },
-    { id: "inventory", label: "Inventory", icon: Warehouse },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
+    { id: "history", label: "History", icon: History, path: "/admin/history" },
+    { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
+    { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
+    { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
+    { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
+    { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
+    { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -227,6 +239,8 @@ export function SidebarSuperAdmin({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -272,10 +286,10 @@ export function SidebarSuperAdmin({
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -330,7 +344,7 @@ export function SidebarSuperAdmin({
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${
@@ -352,12 +366,11 @@ export function SidebarSuperAdmin({
   );
 }
 
-export function SidebarSales({
-  currentPage,
-  onNavigate,
-  onLogout,
-}: SidebarProps) {
+export function SidebarSales() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -375,10 +388,16 @@ export function SidebarSales({
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "redemption-status", label: "Redemption Status", icon: CheckCircle },
-    { id: "redeem-items", label: "Redeem Items", icon: Gift },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/sales/dashboard" },
+    { id: "redemption-status", label: "Redemption Status", icon: CheckCircle, path: "/sales/redemption-status" },
+    { id: "redeem-items", label: "Redeem Items", icon: Gift, path: "/sales/redeem-items" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -388,6 +407,8 @@ export function SidebarSales({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -433,10 +454,10 @@ export function SidebarSales({
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -491,7 +512,7 @@ export function SidebarSales({
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${
@@ -513,12 +534,11 @@ export function SidebarSales({
   );
 }
 
-export function SidebarApprover({
-  currentPage,
-  onNavigate,
-  onLogout,
-}: SidebarProps) {
+export function SidebarApprover() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -536,10 +556,16 @@ export function SidebarApprover({
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "requests", label: "Requests", icon: FileBox },
-    { id: "history", label: "History", icon: History },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/approver/dashboard" },
+    { id: "requests", label: "Requests", icon: FileBox, path: "/approver/requests" },
+    { id: "history", label: "History", icon: History, path: "/approver/history" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -549,6 +575,8 @@ export function SidebarApprover({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -594,10 +622,10 @@ export function SidebarApprover({
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -652,7 +680,7 @@ export function SidebarApprover({
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${
@@ -674,12 +702,11 @@ export function SidebarApprover({
   );
 }
 
-export function SidebarMarketing({
-  currentPage,
-  onNavigate,
-  onLogout,
-}: SidebarProps) {
+export function SidebarMarketing() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -697,9 +724,15 @@ export function SidebarMarketing({
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "history", label: "History", icon: History },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
+    { id: "history", label: "History", icon: History, path: "/marketing/history" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -709,6 +742,8 @@ export function SidebarMarketing({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -754,10 +789,10 @@ export function SidebarMarketing({
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -812,7 +847,7 @@ export function SidebarMarketing({
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${
@@ -834,12 +869,11 @@ export function SidebarMarketing({
   );
 }
 
-export function SidebarReception({
-  currentPage,
-  onNavigate,
-  onLogout,
-}: SidebarProps) {
+export function SidebarReception() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -857,9 +891,15 @@ export function SidebarReception({
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "history", label: "History", icon: History },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/reception/dashboard" },
+    { id: "history", label: "History", icon: History, path: "/reception/history" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -869,6 +909,8 @@ export function SidebarReception({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -914,10 +956,10 @@ export function SidebarReception({
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -972,7 +1014,7 @@ export function SidebarReception({
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${
@@ -994,12 +1036,11 @@ export function SidebarReception({
   );
 }
 
-export function SidebarExecutiveAssistant({
-  currentPage,
-  onNavigate,
-  onLogout,
-}: SidebarProps) {
+export function SidebarExecutiveAssistant() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
@@ -1017,9 +1058,15 @@ export function SidebarExecutiveAssistant({
   });
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "history", label: "History", icon: History },
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/executive-assistant/dashboard" },
+    { id: "history", label: "History", icon: History, path: "/executive-assistant/history" },
   ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -1029,6 +1076,8 @@ export function SidebarExecutiveAssistant({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  const currentPage = getCurrentPage();
 
   return (
     <div
@@ -1074,10 +1123,10 @@ export function SidebarExecutiveAssistant({
 
         {/* Navigation */}
         <nav className="space-y-3">
-          {navItems.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigate(path)}
               className={`w-full flex items-center ${
                 sidebarExpanded ? "gap-3" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
@@ -1132,7 +1181,7 @@ export function SidebarExecutiveAssistant({
           )}
         </div>
         <Button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`w-full flex items-center ${
             sidebarExpanded ? "justify-center" : "justify-center"
           } gap-2 ${

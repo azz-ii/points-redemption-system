@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -30,20 +32,9 @@ import {
   CataloguePagination,
 } from "./components";
 
-interface CatalogueProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
+function Catalogue() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const currentPage = "catalogue";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -754,11 +745,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="catalogue"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -792,7 +779,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -803,7 +790,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -1015,10 +1002,7 @@ function Catalogue({ onNavigate, onLogout }: CatalogueProps) {
         </div>
       </div>
 
-      <MobileBottomNav
-        currentPage={currentPage}
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

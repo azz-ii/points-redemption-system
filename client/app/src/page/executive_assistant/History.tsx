@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarExecutiveAssistant } from "@/components/sidebar";
@@ -15,12 +17,9 @@ interface ApprovalHistoryItem {
   approvalStatus: "Approved" | "Rejected";
 }
 
-interface HistoryProps {
-  onNavigate?: (page: "dashboard" | "history") => void;
-  onLogout?: () => void;
-}
-
-function ExecutiveAssistantHistory({ onNavigate, onLogout }: HistoryProps) {
+function ExecutiveAssistantHistory() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,10 +92,6 @@ function ExecutiveAssistantHistory({ onNavigate, onLogout }: HistoryProps) {
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
-  const handleNavigate = (page: "dashboard" | "history") => {
-    onNavigate?.(page);
-  };
-
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -105,11 +100,7 @@ function ExecutiveAssistantHistory({ onNavigate, onLogout }: HistoryProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarExecutiveAssistant
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarExecutiveAssistant />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -451,12 +442,7 @@ function ExecutiveAssistantHistory({ onNavigate, onLogout }: HistoryProps) {
         />
       </div>
 
-      <MobileBottomNavExecutiveAssistant
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-        isModalOpen={isNotificationOpen}
-      />
+      <MobileBottomNavExecutiveAssistant />
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function CreateTeamModal({
     try {
       console.log("DEBUG CreateTeamModal: Fetching available sales agents");
       
-      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+      const response = await fetch("/api/users/", {
         method: "GET",
         credentials: "include",
         headers: {

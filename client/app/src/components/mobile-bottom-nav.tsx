@@ -1,33 +1,41 @@
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Home,
   History as HistoryIcon,
   User,
   Package,
-  ClipboardList,
   ClipboardCheck,
   Gift,
   LogOut,
   FileBox,
   Users,
 } from "lucide-react";
-
-interface MobileBottomNavMarketingProps {
-  currentPage: "dashboard" | "history";
-  onNavigate: (page: "dashboard" | "history") => void;
-  onLogout: () => void;
-  isModalOpen?: boolean;
-}
+import { useLogout } from "@/context/AuthContext";
 
 export function MobileBottomNavMarketing({
-  currentPage,
-  onNavigate,
-  onLogout,
   isModalOpen = false,
-}: MobileBottomNavMarketingProps) {
+}: {
+  isModalOpen?: boolean;
+}) {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [isVisible, setIsVisible] = useState(true);
+
+  const navItems = [
+    { id: "dashboard", icon: Home, label: "Dashboard", path: "/marketing/dashboard" },
+    { id: "history", icon: HistoryIcon, label: "History", path: "/marketing/history" },
+    { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
+  ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path.includes("/history")) return "history";
+    return "dashboard";
+  };
 
   useEffect(() => {
     const scrollContainer =
@@ -61,21 +69,7 @@ export function MobileBottomNavMarketing({
       );
   }, []);
 
-  const navItems = [
-    {
-      id: "dashboard" as const,
-      icon: Home,
-      label: "Dashboard",
-      action: undefined,
-    },
-    {
-      id: "history" as const,
-      icon: HistoryIcon,
-      label: "History",
-      action: undefined,
-    },
-    { id: "logout" as const, icon: LogOut, label: "Logout", action: onLogout },
-  ];
+  const currentPage = getCurrentPage();
 
   return (
     <nav
@@ -88,7 +82,7 @@ export function MobileBottomNavMarketing({
       }`}
     >
       {navItems.map((item) => {
-        const isActive = !item.action && currentPage === item.id;
+        const isActive = !("action" in item) && currentPage === item.id;
         const activeClass = "bg-blue-600 text-white";
         const inactiveClass =
           resolvedTheme === "dark"
@@ -98,11 +92,13 @@ export function MobileBottomNavMarketing({
         return (
           <button
             key={item.id}
-            onClick={() =>
-              item.action
-                ? item.action()
-                : onNavigate(item.id as typeof currentPage)
-            }
+            onClick={() => {
+              if ("action" in item) {
+                item.action();
+              } else if ("path" in item) {
+                navigate(item.path);
+              }
+            }}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] ${
               isActive ? activeClass : inactiveClass
             }`}
@@ -114,23 +110,30 @@ export function MobileBottomNavMarketing({
       })}
     </nav>
   );
-}
-
-interface MobileBottomNavReceptionProps {
-  currentPage: "dashboard" | "history";
-  onNavigate: (page: "dashboard" | "history") => void;
-  onLogout: () => void;
-  isModalOpen?: boolean;
 }
 
 export function MobileBottomNavReception({
-  currentPage,
-  onNavigate,
-  onLogout,
   isModalOpen = false,
-}: MobileBottomNavReceptionProps) {
+}: {
+  isModalOpen?: boolean;
+}) {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [isVisible, setIsVisible] = useState(true);
+
+  const navItems = [
+    { id: "dashboard", icon: Home, label: "Dashboard", path: "/reception/dashboard" },
+    { id: "history", icon: HistoryIcon, label: "History", path: "/reception/history" },
+    { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
+  ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path.includes("/history")) return "history";
+    return "dashboard";
+  };
 
   useEffect(() => {
     const scrollContainer =
@@ -164,21 +167,7 @@ export function MobileBottomNavReception({
       );
   }, []);
 
-  const navItems = [
-    {
-      id: "dashboard" as const,
-      icon: Home,
-      label: "Dashboard",
-      action: undefined,
-    },
-    {
-      id: "history" as const,
-      icon: HistoryIcon,
-      label: "History",
-      action: undefined,
-    },
-    { id: "logout" as const, icon: LogOut, label: "Logout", action: onLogout },
-  ];
+  const currentPage = getCurrentPage();
 
   return (
     <nav
@@ -191,7 +180,7 @@ export function MobileBottomNavReception({
       }`}
     >
       {navItems.map((item) => {
-        const isActive = !item.action && currentPage === item.id;
+        const isActive = !("action" in item) && currentPage === item.id;
         const activeClass = "bg-blue-600 text-white";
         const inactiveClass =
           resolvedTheme === "dark"
@@ -201,11 +190,13 @@ export function MobileBottomNavReception({
         return (
           <button
             key={item.id}
-            onClick={() =>
-              item.action
-                ? item.action()
-                : onNavigate(item.id as typeof currentPage)
-            }
+            onClick={() => {
+              if ("action" in item) {
+                item.action();
+              } else if ("path" in item) {
+                navigate(item.path);
+              }
+            }}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] ${
               isActive ? activeClass : inactiveClass
             }`}
@@ -217,27 +208,32 @@ export function MobileBottomNavReception({
       })}
     </nav>
   );
-}
-
-// Mobile Bottom Navigation for Executive Assistant Role
-interface MobileBottomNavExecutiveAssistantProps {
-  currentPage: "dashboard" | "history";
-  onNavigate: (page: "dashboard" | "history") => void;
-  onLogout: () => void;
-  isModalOpen?: boolean;
 }
 
 export function MobileBottomNavExecutiveAssistant({
-  currentPage,
-  onNavigate,
-  onLogout,
   isModalOpen = false,
-}: MobileBottomNavExecutiveAssistantProps) {
+}: {
+  isModalOpen?: boolean;
+}) {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [isVisible, setIsVisible] = useState(true);
 
+  const navItems = [
+    { id: "dashboard", icon: Home, label: "Dashboard", path: "/executive-assistant/dashboard" },
+    { id: "history", icon: HistoryIcon, label: "History", path: "/executive-assistant/history" },
+    { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
+  ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path.includes("/history")) return "history";
+    return "dashboard";
+  };
+
   useEffect(() => {
-    // Find the scrollable container (parent with overflow-y-auto)
     const scrollContainer =
       document.querySelector('[class*="overflow-y-auto"]') || window;
     let lastScrollYRef = 0;
@@ -248,7 +244,6 @@ export function MobileBottomNavExecutiveAssistant({
           ? window.scrollY
           : (scrollContainer as HTMLElement).scrollTop;
 
-      // Show nav when scrolling up, hide when scrolling down
       if (currentScrollY < lastScrollYRef) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollYRef && currentScrollY > 100) {
@@ -258,7 +253,6 @@ export function MobileBottomNavExecutiveAssistant({
       lastScrollYRef = currentScrollY;
     };
 
-    // Add scroll event listener
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
@@ -271,21 +265,7 @@ export function MobileBottomNavExecutiveAssistant({
       );
   }, []);
 
-  const navItems = [
-    {
-      id: "dashboard" as const,
-      icon: Home,
-      label: "Dashboard",
-      action: undefined,
-    },
-    {
-      id: "history" as const,
-      icon: HistoryIcon,
-      label: "History",
-      action: undefined,
-    },
-    { id: "logout" as const, icon: LogOut, label: "Logout", action: onLogout },
-  ];
+  const currentPage = getCurrentPage();
 
   return (
     <nav
@@ -298,7 +278,7 @@ export function MobileBottomNavExecutiveAssistant({
       }`}
     >
       {navItems.map((item) => {
-        const isActive = !item.action && currentPage === item.id;
+        const isActive = !("action" in item) && currentPage === item.id;
         const activeClass = "bg-blue-600 text-white";
         const inactiveClass =
           resolvedTheme === "dark"
@@ -308,11 +288,13 @@ export function MobileBottomNavExecutiveAssistant({
         return (
           <button
             key={item.id}
-            onClick={() =>
-              item.action
-                ? item.action()
-                : onNavigate(item.id as typeof currentPage)
-            }
+            onClick={() => {
+              if ("action" in item) {
+                item.action();
+              } else if ("path" in item) {
+                navigate(item.path);
+              }
+            }}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] ${
               isActive ? activeClass : inactiveClass
             }`}
@@ -324,29 +306,34 @@ export function MobileBottomNavExecutiveAssistant({
       })}
     </nav>
   );
-}
-
-// Mobile Bottom Navigation for Sales Role
-interface MobileBottomNavSalesProps {
-  currentPage: "dashboard" | "redemption-status" | "redeem-items";
-  onNavigate: (
-    page: "dashboard" | "redemption-status" | "redeem-items"
-  ) => void;
-  onLogout: () => void;
-  isModalOpen?: boolean;
 }
 
 export function MobileBottomNavSales({
-  currentPage,
-  onNavigate,
-  onLogout,
   isModalOpen = false,
-}: MobileBottomNavSalesProps) {
+}: {
+  isModalOpen?: boolean;
+}) {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [isVisible, setIsVisible] = useState(true);
 
+  const navItems = [
+    { id: "dashboard", icon: Home, label: "Distributors", path: "/sales/dashboard" },
+    { id: "redemption-status", icon: ClipboardCheck, label: "Status", path: "/sales/redemption-status" },
+    { id: "redeem-items", icon: Gift, label: "Redeem", path: "/sales/redeem-items" },
+    { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
+  ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path.includes("/redemption-status")) return "redemption-status";
+    if (path.includes("/redeem-items")) return "redeem-items";
+    return "dashboard";
+  };
+
   useEffect(() => {
-    // Find the scrollable container (parent with overflow-y-auto)
     const scrollContainer =
       document.querySelector('[class*="overflow-y-auto"]') || window;
     let lastScrollYRef = 0;
@@ -357,7 +344,6 @@ export function MobileBottomNavSales({
           ? window.scrollY
           : (scrollContainer as HTMLElement).scrollTop;
 
-      // Show nav when scrolling up, hide when scrolling down
       if (currentScrollY < lastScrollYRef) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollYRef && currentScrollY > 100) {
@@ -367,7 +353,6 @@ export function MobileBottomNavSales({
       lastScrollYRef = currentScrollY;
     };
 
-    // Add scroll event listener
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
@@ -380,27 +365,7 @@ export function MobileBottomNavSales({
       );
   }, []);
 
-  const navItems = [
-    {
-      id: "dashboard" as const,
-      icon: Home,
-      label: "Distributors",
-      action: undefined,
-    },
-    {
-      id: "redemption-status" as const,
-      icon: ClipboardCheck,
-      label: "Status",
-      action: undefined,
-    },
-    {
-      id: "redeem-items" as const,
-      icon: Gift,
-      label: "Redeem",
-      action: undefined,
-    },
-    { id: "logout" as const, icon: LogOut, label: "Logout", action: onLogout },
-  ];
+  const currentPage = getCurrentPage();
 
   return (
     <nav
@@ -413,7 +378,7 @@ export function MobileBottomNavSales({
       }`}
     >
       {navItems.map((item) => {
-        const isActive = !item.action && currentPage === item.id;
+        const isActive = !("action" in item) && currentPage === item.id;
         const activeClass = "bg-blue-600 text-white";
         const inactiveClass =
           resolvedTheme === "dark"
@@ -423,11 +388,13 @@ export function MobileBottomNavSales({
         return (
           <button
             key={item.id}
-            onClick={() =>
-              item.action
-                ? item.action()
-                : onNavigate(item.id as typeof currentPage)
-            }
+            onClick={() => {
+              if ("action" in item) {
+                item.action();
+              } else if ("path" in item) {
+                navigate(item.path);
+              }
+            }}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] ${
               isActive ? activeClass : inactiveClass
             }`}
@@ -439,27 +406,34 @@ export function MobileBottomNavSales({
       })}
     </nav>
   );
-}
-
-// Mobile Bottom Navigation for Approver Role
-interface MobileBottomNavApproverProps {
-  currentPage: "dashboard" | "requests" | "history";
-  onNavigate: (page: "dashboard" | "requests" | "history") => void;
-  onLogout: () => void;
-  isModalOpen?: boolean;
 }
 
 export function MobileBottomNavApprover({
-  currentPage,
-  onNavigate,
-  onLogout,
   isModalOpen = false,
-}: MobileBottomNavApproverProps) {
+}: {
+  isModalOpen?: boolean;
+}) {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handleLogout = useLogout();
   const [isVisible, setIsVisible] = useState(true);
 
+  const navItems = [
+    { id: "dashboard", icon: Home, label: "Dashboard", path: "/approver/dashboard" },
+    { id: "requests", icon: FileBox, label: "Requests", path: "/approver/requests" },
+    { id: "history", icon: HistoryIcon, label: "History", path: "/approver/history" },
+    { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
+  ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path.includes("/requests")) return "requests";
+    if (path.includes("/history")) return "history";
+    return "dashboard";
+  };
+
   useEffect(() => {
-    // Find the scrollable container (parent with overflow-y-auto)
     const scrollContainer =
       document.querySelector('[class*="overflow-y-auto"]') || window;
     let lastScrollYRef = 0;
@@ -470,7 +444,6 @@ export function MobileBottomNavApprover({
           ? window.scrollY
           : (scrollContainer as HTMLElement).scrollTop;
 
-      // Show nav when scrolling up, hide when scrolling down
       if (currentScrollY < lastScrollYRef) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollYRef && currentScrollY > 100) {
@@ -480,7 +453,6 @@ export function MobileBottomNavApprover({
       lastScrollYRef = currentScrollY;
     };
 
-    // Add scroll event listener
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
@@ -493,27 +465,7 @@ export function MobileBottomNavApprover({
       );
   }, []);
 
-  const navItems = [
-    {
-      id: "dashboard" as const,
-      icon: Home,
-      label: "Dashboard",
-      action: undefined,
-    },
-    {
-      id: "requests" as const,
-      icon: ClipboardList,
-      label: "Requests",
-      action: undefined,
-    },
-    {
-      id: "history" as const,
-      icon: HistoryIcon,
-      label: "History",
-      action: undefined,
-    },
-    { id: "logout" as const, icon: LogOut, label: "Logout", action: onLogout },
-  ];
+  const currentPage = getCurrentPage();
 
   return (
     <nav
@@ -526,7 +478,7 @@ export function MobileBottomNavApprover({
       }`}
     >
       {navItems.map((item) => {
-        const isActive = !item.action && currentPage === item.id;
+        const isActive = !("action" in item) && currentPage === item.id;
         const activeClass = "bg-blue-600 text-white";
         const inactiveClass =
           resolvedTheme === "dark"
@@ -536,11 +488,13 @@ export function MobileBottomNavApprover({
         return (
           <button
             key={item.id}
-            onClick={() =>
-              item.action
-                ? item.action()
-                : onNavigate(item.id as typeof currentPage)
-            }
+            onClick={() => {
+              if ("action" in item) {
+                item.action();
+              } else if ("path" in item) {
+                navigate(item.path);
+              }
+            }}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors min-w-[60px] ${
               isActive ? activeClass : inactiveClass
             }`}
@@ -554,38 +508,29 @@ export function MobileBottomNavApprover({
   );
 }
 
-// Generic Mobile Bottom Navigation for SuperAdmin pages
-interface MobileBottomNavProps {
-  currentPage:
-    | "dashboard"
-    | "history"
-    | "accounts"
-    | "catalogue"
-    | "redemption"
-    | "inventory"
-    | "distributors"
-    | "teams";
-  onNavigate: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "distributors"
-      | "teams"
-  ) => void;
-  isModalOpen?: boolean;
-}
-
 export function MobileBottomNav({
-  currentPage,
-  onNavigate,
   isModalOpen = false,
-}: MobileBottomNavProps) {
+}: {
+  isModalOpen?: boolean;
+}) {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
+
+  const navItems = [
+    { id: "dashboard", icon: Home, label: "Dashboard", path: "/admin/dashboard" },
+    { id: "history", icon: HistoryIcon, label: "History", path: "/admin/history" },
+    { id: "accounts", icon: User, label: "Accounts", path: "/admin/accounts" },
+    { id: "catalogue", icon: Package, label: "Catalogue", path: "/admin/catalogue" },
+    { id: "teams", icon: Users, label: "Teams", path: "/admin/teams" },
+  ] as const;
+
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    const item = navItems.find((item) => path === item.path);
+    return item?.id || "dashboard";
+  };
 
   useEffect(() => {
     const scrollContainer =
@@ -619,13 +564,7 @@ export function MobileBottomNav({
       );
   }, []);
 
-  const navItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard" },
-    { id: "history", icon: HistoryIcon, label: "History" },
-    { id: "accounts", icon: User, label: "Accounts" },
-    { id: "catalogue", icon: Package, label: "Catalogue" },
-    { id: "teams", icon: Users, label: "Teams" },
-  ] as const;
+  const currentPage = getCurrentPage();
 
   return (
     <nav
@@ -637,7 +576,7 @@ export function MobileBottomNav({
           : "bg-white border-gray-200"
       }`}
     >
-      {navItems.map(({ id, icon: Icon, label }) => {
+      {navItems.map(({ id, icon: Icon, label, path }) => {
         const isActive = currentPage === id;
         const activeClass = "bg-blue-600 text-white";
         const inactiveClass =
@@ -648,7 +587,7 @@ export function MobileBottomNav({
         return (
           <button
             key={id}
-            onClick={() => onNavigate(id as typeof currentPage)}
+            onClick={() => navigate(path)}
             className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${
               isActive ? activeClass : inactiveClass
             }`}

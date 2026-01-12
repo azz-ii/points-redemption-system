@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
@@ -23,12 +25,9 @@ interface RequestItem {
   status: "Pending" | "Approved" | "Rejected";
 }
 
-interface DashboardProps {
-  onNavigate?: (page: "dashboard" | "approver-requests" | "history") => void;
-  onLogout?: () => void;
-}
-
-function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
+function ApproverDashboard() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,11 +97,11 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
 
   const handleNavigate = (page: "dashboard" | "requests" | "history") => {
     if (page === "history") {
-      onNavigate?.("approver-history" as any);
+      navigate("/approver/history");
     } else if (page === "requests") {
-      onNavigate?.("approver-requests" as any);
+      navigate("/approver/requests");
     } else {
-      onNavigate?.(page as any);
+      navigate("/approver/dashboard");
     }
   };
 
@@ -114,11 +113,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarApprover
-        currentPage="dashboard"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarApprover />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -441,11 +436,7 @@ function ApproverDashboard({ onNavigate, onLogout }: DashboardProps) {
       />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavApprover
-        currentPage="dashboard"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <MobileBottomNavApprover />
     </div>
   );
 }

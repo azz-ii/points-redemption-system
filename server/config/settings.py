@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'users',
     'items_catalogue',
     'distributers',
+    'customers',
     'requests',
     'otp',
     'teams',

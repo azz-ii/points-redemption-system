@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
@@ -15,19 +17,12 @@ import {
 // SalesPages type (single declaration)
 type SalesPages = "dashboard" | "redemption-status" | "redeem-items";
 
-interface RedemptionStatusProps {
-  onNavigate: (page: SalesPages) => void;
-  onLogout?: () => void;
-  currentPage?: SalesPages;
-}
-
-export default function RedemptionStatus({
-  onNavigate,
-  onLogout,
-  currentPage = "redemption-status",
-}: RedemptionStatusProps) {
+export default function RedemptionStatus() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const currentPage = "redemption-status" as SalesPages;
 
   // Use currentPage from props to reflect parent routing state
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,8 +91,6 @@ export default function RedemptionStatus({
   const endIndex = startIndex + itemsPerPage;
   const paginatedItems = filtered.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: SalesPages) => onNavigate(page);
-
   const openDetails = (item: RedemptionRequestItem & { request: RedemptionRequest }) => {
     setSelectedItem(item);
     setSelectedRequest(item.request);
@@ -109,11 +102,7 @@ export default function RedemptionStatus({
 
   return (
     <div className="flex h-screen">
-      <SidebarSales
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarSales />
 
       <div
         className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${
@@ -234,11 +223,7 @@ export default function RedemptionStatus({
       />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSales
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <MobileBottomNavSales />
     </div>
   );
 }

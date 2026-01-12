@@ -1,16 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import RedemptionStatus from "@/page/sales_agent/Redemption Status/Redemption-Status";
-import RedeemItem from "@/page/sales_agent/Redeem Item/Redeem-Item";
 import { Bell, Search, Truck, ShoppingCart, X } from "lucide-react";
-
-interface DashboardProps {
-  onLogout?: () => void;
-}
 
 interface Distributor {
   id: number;
@@ -19,7 +15,9 @@ interface Distributor {
   points: number;
 }
 
-function SalesDashboard({ onLogout }: DashboardProps) {
+function SalesDashboard() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -78,33 +76,19 @@ function SalesDashboard({ onLogout }: DashboardProps) {
 
   // Route to Redemption Status full-page when selected
   if (currentPage === "redemption-status") {
-    return (
-      <RedemptionStatus
-        onNavigate={handleNavigate}
-        onLogout={onLogout}
-        currentPage={currentPage}
-      />
-    );
+    navigate("/sales/status");
+    return null;
   }
 
   // Route to Redeem Items full-page when selected
   if (currentPage === "redeem-items") {
-    return (
-      <RedeemItem
-        onNavigate={handleNavigate}
-        onLogout={onLogout}
-        currentPage={currentPage}
-      />
-    );
+    navigate("/sales/redeem");
+    return null;
   }
 
   return (
     <div className="flex h-screen">
-      <SidebarSales
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarSales />
 
       {/* Main Content */}
       <div
@@ -530,11 +514,7 @@ function SalesDashboard({ onLogout }: DashboardProps) {
       />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSales
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <MobileBottomNavSales />
     </div>
   );
 }

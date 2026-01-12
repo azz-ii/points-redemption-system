@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { useLogout } from "@/context/AuthContext";
 import {
   Bell,
   Search,
@@ -27,23 +29,10 @@ interface RequestItem {
   status: "Pending" | "Approved" | "Rejected";
 }
 
-interface DashboardProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "distributors"
-      | "teams"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Dashboard({ onNavigate, onLogout }: DashboardProps) {
+function Dashboard() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const activePage = "dashboard";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -135,11 +124,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="dashboard"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -185,7 +170,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -196,7 +181,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -843,10 +828,7 @@ function Dashboard({ onNavigate, onLogout }: DashboardProps) {
         </div>
       )}
 
-      <MobileBottomNav
-        currentPage={activePage}
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

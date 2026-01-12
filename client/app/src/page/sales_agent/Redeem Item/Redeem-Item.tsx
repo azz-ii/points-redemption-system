@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
@@ -15,19 +17,12 @@ import {
 } from "./components";
 import type { SalesPages } from "./types";
 
-interface RedeemItemProps {
-  onNavigate: (page: SalesPages) => void;
-  onLogout?: () => void;
-  currentPage?: SalesPages;
-}
-
-export default function RedeemItem({
-  onNavigate,
-  onLogout,
-  currentPage = "redeem-items",
-}: RedeemItemProps) {
+export default function RedeemItem() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const currentPage = "redeem-items" as SalesPages;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -111,8 +106,6 @@ export default function RedeemItem({
     currentPage_num * itemsPerPage
   );
 
-  const handleNavigate = (page: SalesPages) => onNavigate(page);
-
   const handleAddToCart = (item: RedeemItemData) => {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id);
@@ -149,11 +142,7 @@ export default function RedeemItem({
 
   return (
     <div className="flex h-screen">
-      <SidebarSales
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarSales />
 
       <div
         className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${
@@ -219,12 +208,7 @@ export default function RedeemItem({
       />
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSales
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-        isModalOpen={cartOpen}
-      />
+      <MobileBottomNavSales />
     </div>
   );
 }

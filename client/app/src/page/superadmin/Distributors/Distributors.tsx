@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -22,22 +24,9 @@ import {
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
 
-interface DistributorsProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "distributors"
-      | "teams"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Distributors({ onNavigate, onLogout }: DistributorsProps) {
+function Distributors() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const currentPage = "distributors";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -262,11 +251,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage={currentPage}
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -300,7 +285,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -311,7 +296,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -469,10 +454,7 @@ function Distributors({ onNavigate, onLogout }: DistributorsProps) {
         </div>
       </div>
 
-      <MobileBottomNav
-        currentPage={currentPage}
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Sidebar } from "@/components/sidebar";
 import {
   redemptionRequestsApi,
@@ -24,22 +26,10 @@ import { toast } from "react-hot-toast";
 // Using the API response type directly
 type RedemptionItemAPI = RedemptionRequestResponse;
 
-interface RedemptionProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Redemption({ onNavigate, onLogout }: RedemptionProps) {
+function Redemption() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
-  const currentPage = "redemption";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const itemsPerPage = 7;
@@ -50,7 +40,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
   const [items, setItems] = useState<RedemptionItemAPI[]>([]);
   const [searchQuery, setSearchQuery] = useState(""); // Only for mobile view
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   // Fetch redemption requests on mount
   useEffect(() => {
@@ -157,11 +147,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="redemption"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -195,7 +181,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -206,7 +192,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -318,10 +304,7 @@ function Redemption({ onNavigate, onLogout }: RedemptionProps) {
         </div>
       </div>
 
-      <MobileBottomNav
-        currentPage={currentPage}
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

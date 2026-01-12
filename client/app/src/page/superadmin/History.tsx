@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { useLogout } from "@/context/AuthContext";
 import {
   Bell,
   Eye,
@@ -25,22 +27,10 @@ interface HistoryItem {
   status: "Approved" | "Rejected";
 }
 
-interface HistoryProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-      | "distributors"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function History({ onNavigate, onLogout }: HistoryProps) {
+function History() {
   const { resolvedTheme } = useTheme();
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const activePage = "history";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -136,11 +126,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="history"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -174,7 +160,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
               <Bell className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onNavigate?.("inventory")}
+              onClick={() => navigate("/admin/inventory")}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-900 hover:bg-gray-800"
@@ -185,7 +171,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -494,10 +480,7 @@ function History({ onNavigate, onLogout }: HistoryProps) {
         </div>
       </div>
 
-      <MobileBottomNav
-        currentPage={activePage}
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
@@ -15,12 +17,9 @@ interface HistoryItem {
   status: "Approved" | "Rejected";
 }
 
-interface HistoryProps {
-  onNavigate?: (page: "dashboard" | "approver-requests" | "history") => void;
-  onLogout?: () => void;
-}
-
-function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
+function ApproverHistory() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,11 +99,11 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
     page: "dashboard" | "approver-requests" | "history" | "requests"
   ) => {
     if (page === "approver-requests" || page === "requests") {
-      onNavigate?.("approver-requests");
+      navigate("/approver/requests");
     } else if (page === "history") {
-      onNavigate?.("history");
+      navigate("/approver/history");
     } else {
-      onNavigate?.("dashboard");
+      navigate("/approver/dashboard");
     }
   };
 
@@ -116,11 +115,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <SidebarApprover
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <SidebarApprover />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -504,11 +499,7 @@ function ApproverHistory({ onNavigate, onLogout }: HistoryProps) {
       )}
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNavApprover
-        currentPage="history"
-        onNavigate={handleNavigate}
-        onLogout={onLogout || (() => {})}
-      />
+      <MobileBottomNavApprover />
     </div>
   );
 }

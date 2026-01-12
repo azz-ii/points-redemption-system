@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
@@ -29,20 +31,9 @@ interface InventoryItem {
   lastUpdated: string;
 }
 
-interface InventoryProps {
-  onNavigate?: (
-    page:
-      | "dashboard"
-      | "history"
-      | "accounts"
-      | "catalogue"
-      | "redemption"
-      | "inventory"
-  ) => void;
-  onLogout?: () => void;
-}
-
-function Inventory({ onNavigate, onLogout }: InventoryProps) {
+function Inventory() {
+  const navigate = useNavigate();
+  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const currentPage = "inventory";
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -148,11 +139,7 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
           : "bg-gray-50 text-gray-900"
       } transition-colors`}
     >
-      <Sidebar
-        currentPage="inventory"
-        onNavigate={onNavigate || (() => {})}
-        onLogout={onLogout || (() => {})}
-      />
+      <Sidebar />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -187,7 +174,7 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
             </button>
             <ThemeToggle />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700"
@@ -532,10 +519,7 @@ function Inventory({ onNavigate, onLogout }: InventoryProps) {
         </div>
       </div>
 
-      <MobileBottomNav
-        currentPage={currentPage}
-        onNavigate={onNavigate || (() => {})}
-      />
+      <MobileBottomNav />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
