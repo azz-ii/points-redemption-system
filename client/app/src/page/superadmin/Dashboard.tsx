@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
@@ -71,10 +70,7 @@ function Dashboard() {
     const fetchRequests = async () => {
       try {
         setRequestsLoading(true);
-        // Fetch all requests with a large limit for DataTable to paginate internally
-        console.log("Fetching redemption requests from dashboard API...");
         const response = await dashboardApi.getRedemptionRequests(100, 0);
-        console.log("Dashboard API Response:", response);
         setRequests(response.results as APIRedemptionRequest[]);
         setTotalCount(response.count);
       } catch (error) {
@@ -164,64 +160,6 @@ function Dashboard() {
     }
   };
 
-  const handleResetAllPoints = async () => {
-    if (!password) {
-      toast.error("Please enter your password");
-      return;
-    }
-
-    try {
-      setIsResettingPoints(true);
-      const result = await dashboardApi.resetAllPoints(password);
-      
-      if (result.success) {
-        toast.success("All points have been reset to zero successfully");
-        setIsResetModalOpen(false);
-        setShowPasswordStep(false);
-        setPassword("");
-        setSelectedDistributor("");
-        
-        // Refresh dashboard stats
-        const stats = await dashboardApi.getStats();
-        setStats(stats);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to reset points. Please check your password.");
-    } finally {
-      setIsResettingPoints(false);
-    }
-  };
-
-  const handleResetDistributorPoints = async () => {
-    if (!selectedDistributor) {
-      toast.error("Please select a distributor");
-      return;
-    }
-
-    try {
-      setIsResettingPoints(true);
-      // TODO: Call API to reset points for specific distributor
-      console.log("Resetting points for distributor:", selectedDistributor);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Points reset successfully for selected distributor");
-      setSelectedDistributor("");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to reset points");
-    } finally {
-      setIsResettingPoints(false);
-    }
-  };
-
-  const handleResetModalClose = () => {
-    setIsResetModalOpen(false);
-    setShowPasswordStep(false);
-    setPassword("");
-    setSelectedDistributor("");
-  };
-
   // Convert API response to RedemptionItem for table
   const tableRequests = requests.map(req => ({
     id: req.id,
@@ -246,8 +184,6 @@ function Dashboard() {
     rejection_reason: req.rejection_reason,
     items: req.items,
   } as RedemptionItem));
-
-  console.log("Table requests data:", tableRequests, "Total count:", totalCount);
 
   return (
     <div
