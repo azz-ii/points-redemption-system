@@ -6,7 +6,7 @@ import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Search, Filter, ShoppingCart } from "lucide-react";
+import { Bell, Search, ShoppingCart } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal } from "./modals/ViewRedemptionStatusModal";
 import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
@@ -26,15 +26,15 @@ export default function RedemptionStatus() {
   const currentPage = "redemption-status" as SalesPages;
 
   // Use currentPage from props to reflect parent routing state
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // Only for mobile view
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<RedemptionRequestItem | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RedemptionRequest | null>(null);
-  const [currentPageIndex, setCurrentPageIndex] = useState(1);
+  const [currentPageIndex, setCurrentPageIndex] = useState(1); // Only for mobile view
   const [requests, setRequests] = useState<RedemptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 7;
+  const itemsPerPage = 7; // Only for mobile view
 
   // Fetch redemption requests from API
   useEffect(() => {
@@ -76,6 +76,7 @@ export default function RedemptionStatus() {
     }))
   );
 
+  // Filtering and pagination for mobile view only
   const filtered = flattenedItems.filter((item) => {
     const q = searchQuery.toLowerCase();
     return (
@@ -148,8 +149,8 @@ export default function RedemptionStatus() {
             </div>
           </div>
 
-          {/* Search + Actions */}
-          <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
+          {/* Mobile Search Bar */}
+          <div className="flex md:hidden items-center gap-3 mb-4">
             <div
               className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border ${
                 isDark
@@ -174,26 +175,13 @@ export default function RedemptionStatus() {
                 }`}
               />
             </div>
-            <button
-              className={`hidden md:inline-flex items-center justify-center p-3 rounded-lg border ${
-                isDark
-                  ? "border-gray-800 hover:bg-gray-800"
-                  : "border-gray-200 hover:bg-gray-100"
-              }`}
-              aria-label="Filter"
-            >
-              <Filter className="h-5 w-5" />
-            </button>
           </div>
 
           <TooltipProvider>
             <RedemptionStatusTable
-              items={paginatedItems}
+              items={flattenedItems}
               onViewItem={openDetails}
               isDark={isDark}
-              currentPage={safePage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPageIndex}
               loading={loading}
               error={error}
             />
