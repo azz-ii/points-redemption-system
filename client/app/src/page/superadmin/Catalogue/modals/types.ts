@@ -33,6 +33,8 @@ export interface Variant {
   points: string;
   price: string;
   image_url: string | null;
+  stock: number;
+  reorder_level: number;
 }
 
 export interface CatalogueVariant {

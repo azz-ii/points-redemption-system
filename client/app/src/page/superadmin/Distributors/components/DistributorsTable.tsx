@@ -10,6 +10,8 @@ interface DistributorsTableProps {
   onDelete: (distributor: Distributor) => void;
   onDeleteSelected?: (distributors: Distributor[]) => void;
   onCreateNew?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 export function DistributorsTable({
@@ -20,6 +22,8 @@ export function DistributorsTable({
   onDelete,
   onDeleteSelected,
   onCreateNew,
+  onRefresh,
+  refreshing,
 }: DistributorsTableProps) {
   const columns = createColumns({
     onView,
@@ -35,6 +39,8 @@ export function DistributorsTable({
       onDeleteSelected={onDeleteSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Distributor"
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     />
   );
 }

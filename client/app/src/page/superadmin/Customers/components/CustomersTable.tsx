@@ -10,6 +10,8 @@ interface CustomersTableProps {
   onDelete: (customer: Customer) => void;
   onDeleteSelected?: (customers: Customer[]) => void;
   onCreateNew?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 export function CustomersTable({
@@ -20,6 +22,8 @@ export function CustomersTable({
   onDelete,
   onDeleteSelected,
   onCreateNew,
+  onRefresh,
+  refreshing,
 }: CustomersTableProps) {
   const columns = createColumns({
     onView,
@@ -35,6 +39,8 @@ export function CustomersTable({
       onDeleteSelected={onDeleteSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Customer"
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     />
   );
 }

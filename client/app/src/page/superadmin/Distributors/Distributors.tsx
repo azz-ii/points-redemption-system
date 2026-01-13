@@ -368,6 +368,8 @@ function Distributors() {
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
               onCreateNew={() => setShowCreateModal(true)}
+              onRefresh={fetchDistributors}
+              refreshing={loading}
             />
           )}
         </div>

@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus, RotateCw } from "lucide-react"
 
 import {
   Table,
@@ -45,6 +45,8 @@ interface DataTableProps<TData, TValue> {
   onBanSelected?: (selectedRows: TData[]) => void
   onCreateNew?: () => void
   createButtonLabel?: string
+  onRefresh?: () => void
+  refreshing?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -55,6 +57,8 @@ export function DataTable<TData, TValue>({
   onBanSelected,
   onCreateNew,
   createButtonLabel = "Add New",
+  onRefresh,
+  refreshing = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -113,6 +117,18 @@ export function DataTable<TData, TValue>({
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={refreshing}
+              className="h-9 flex gap-2"
+            >
+              <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

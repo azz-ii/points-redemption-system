@@ -585,6 +585,8 @@ function Teams() {
               console.log("DEBUG Teams: Opening create modal");
               setIsCreateModalOpen(true);
             }}
+            onRefresh={fetchTeams}
+            refreshing={loading}
           />
         </div>
 

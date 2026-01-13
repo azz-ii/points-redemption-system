@@ -12,6 +12,8 @@ interface AccountsTableProps {
   onDeleteSelected?: (accounts: Account[]) => void;
   onBanSelected?: (accounts: Account[]) => void;
   onCreateNew?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 export function AccountsTable({
@@ -24,6 +26,8 @@ export function AccountsTable({
   onDeleteSelected,
   onBanSelected,
   onCreateNew,
+  onRefresh,
+  refreshing,
 }: AccountsTableProps) {
   const columns = createColumns({
     onViewAccount,
@@ -41,6 +45,8 @@ export function AccountsTable({
       onBanSelected={onBanSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add User"
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     />
   );
 }

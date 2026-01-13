@@ -29,7 +29,7 @@ from views import (
     ActivateAccountView,
 )
 from users.views import UserListCreateView, UserDetailView, CurrentUserView
-from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView, CatalogueItemUpdateView
+from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView, CatalogueItemUpdateView, InventoryListView, InventoryDetailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -49,6 +49,9 @@ urlpatterns = [
     path('api/catalogue/', CatalogueItemListCreateView.as_view(), name='catalogue_list_create'),
     path('api/catalogue/item/<int:catalogue_item_id>/', CatalogueItemUpdateView.as_view(), name='catalogue_item_update'),
     path('api/catalogue/<int:item_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
+    # Inventory Management API
+    path('api/inventory/', InventoryListView.as_view(), name='inventory_list'),
+    path('api/inventory/<int:variant_id>/', InventoryDetailView.as_view(), name='inventory_detail'),
     # Distributor Management API
     path('', include('distributers.urls')),
     # Customer Management API

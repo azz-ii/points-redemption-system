@@ -17,7 +17,7 @@ class VariantNestedSerializer(serializers.ModelSerializer):
     """Serializer for Variant when nested in CatalogueItem"""
     class Meta:
         model = Variant
-        fields = ['item_code', 'option_description', 'points', 'price', 'image_url', 'stock', 'reorder_level']
+        fields = ['id', 'item_code', 'option_description', 'points', 'price', 'image_url', 'stock', 'reorder_level']
         extra_kwargs = {
             'item_code': {'required': True},
             'points': {'required': True},
@@ -53,7 +53,7 @@ class CatalogueItemSerializer(serializers.ModelSerializer):
         model = CatalogueItem
         fields = [
             'id', 'reward', 'item_name', 'description',
-            'purpose', 'specifications', 'legend',
+            'purpose', 'specifications', 'legend', 'needs_driver',
             'added_by', 'mktg_admin', 'mktg_admin_name', 'approver', 'approver_name',
             'is_archived', 'date_archived', 'archived_by', 'variants'
         ]
@@ -88,15 +88,27 @@ class VariantSerializer(serializers.ModelSerializer):
         if not value or not value.strip():
             raise serializers.ValidationError("Price field cannot be empty")
         return value.strip()
-        
-    def validate_points(self, value):
-        """Validate points field"""
-        if not value or not value.strip():
-            raise serializers.ValidationError("Points field cannot be empty")
-        return value.strip()
+
+
+class InventoryVariantSerializer(serializers.ModelSerializer):
+    """Serializer for Variant with inventory-focused fields"""
+    item_name = serializers.CharField(source='catalogue_item.item_name', read_only=True)
+    legend = serializers.CharField(source='catalogue_item.legend', read_only=True)
+    catalogue_item_id = serializers.IntegerField(source='catalogue_item.id', read_only=True)
+    stock_status = serializers.SerializerMethodField()
     
-    def validate_price(self, value):
-        """Validate price field"""
-        if not value or not value.strip():
-            raise serializers.ValidationError("Price field cannot be empty")
-        return value.strip()
+    class Meta:
+        model = Variant
+        fields = [
+            'id', 'catalogue_item_id', 'item_name', 'item_code', 'option_description',
+            'points', 'price', 'image_url', 'stock', 'reorder_level', 'legend', 'stock_status'
+        ]
+    
+    def get_stock_status(self, obj):
+        """Calculate stock status based on stock and reorder_level"""
+        if obj.stock == 0:
+            return 'Out of Stock'
+        elif obj.stock <= obj.reorder_level:
+            return 'Low Stock'
+        else:
+            return 'In Stock'

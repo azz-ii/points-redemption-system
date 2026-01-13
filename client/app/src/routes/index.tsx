@@ -29,7 +29,7 @@ import RedemptionStatus from "../page/sales_agent/Redemption Status/Redemption-S
 import Accounts from "../page/superadmin/Accounts/Accounts";
 import Catalogue from "../page/superadmin/Catalogue/Catalogue";
 import Redemption from "../page/superadmin/Redemption/Redemption";
-import Inventory from "../page/superadmin/Inventory";
+import Inventory from "../page/superadmin/Inventory/Inventory";
 import Distributors from "../page/superadmin/Distributors/Distributors";
 import Customers from "../page/superadmin/Customers/Customers";
 import Teams from "../page/superadmin/Teams/Teams";

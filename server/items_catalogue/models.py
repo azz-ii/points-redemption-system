@@ -21,6 +21,7 @@ class CatalogueItem(models.Model):
         default=ItemLegend.GIVEAWAY,
         help_text="Category legend: Collateral (red), Giveaway (blue), Asset (yellow), Benefit (green)"
     )
+    needs_driver = models.BooleanField(default=False, help_text='Whether this item requires a driver')
     date_added = models.DateField(default=timezone.now, help_text="Date the item was added to the catalogue")
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

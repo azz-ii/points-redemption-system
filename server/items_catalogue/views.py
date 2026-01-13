@@ -2,7 +2,7 @@ from django.shortcuts import render
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, CharField, F
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,7 +10,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.pagination import PageNumberPagination
 from .models import CatalogueItem, Variant
-from .serializers import CatalogueItemSerializer, VariantSerializer
+from .serializers import CatalogueItemSerializer, VariantSerializer, InventoryVariantSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -287,6 +287,122 @@ class CatalogueItemDetailView(APIView):
                 catalogue_item.save()
             return Response({
                 "message": "Variant deleted successfully"
+            }, status=status.HTTP_200_OK)
+        except Variant.DoesNotExist:
+            return Response({
+                "error": "Variant not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class InventoryPagination(PageNumberPagination):
+    """Pagination for inventory items"""
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+
+class InventoryListView(APIView):
+    """List all inventory items (variants with stock info) or filter by status"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    def get(self, request):
+        """Get paginated list of inventory items with stock status"""
+        # Get query parameters
+        search = request.query_params.get('search', '').strip()
+        status_filter = request.query_params.get('status', '').strip()
+        
+        # Start with all variants
+        variants = Variant.objects.select_related('catalogue_item').all()
+        
+        # Apply search filter if provided
+        if search:
+            variants = variants.filter(
+                Q(catalogue_item__item_name__icontains=search) |
+                Q(item_code__icontains=search) |
+                Q(catalogue_item__legend__icontains=search) |
+                Q(option_description__icontains=search)
+            )
+        
+        # Annotate with stock status for filtering
+        variants = variants.annotate(
+            stock_status=Case(
+                When(stock=0, then=Value('Out of Stock')),
+                When(stock__lte=F('reorder_level'), then=Value('Low Stock')),
+                default=Value('In Stock'),
+                output_field=CharField(),
+            )
+        )
+        
+        # Apply status filter if provided
+        if status_filter:
+            if status_filter.lower() == 'out of stock':
+                variants = variants.filter(stock=0)
+            elif status_filter.lower() == 'low stock':
+                variants = variants.filter(stock__gt=0, stock__lte=F('reorder_level'))
+            elif status_filter.lower() == 'in stock':
+                variants = variants.filter(stock__gt=F('reorder_level'))
+        
+        # Order by catalogue_item and then by variant id for consistent pagination
+        variants = variants.order_by('catalogue_item__item_name', 'id')
+        
+        # Apply pagination
+        paginator = InventoryPagination()
+        paginated_variants = paginator.paginate_queryset(variants, request)
+        serializer = InventoryVariantSerializer(paginated_variants, many=True)
+        
+        # Return paginated response
+        return paginator.get_paginated_response(serializer.data)
+
+
+class InventoryDetailView(APIView):
+    """Update stock for a specific variant"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    def get(self, request, variant_id):
+        """Get a specific variant's inventory details"""
+        try:
+            variant = Variant.objects.select_related('catalogue_item').get(id=variant_id)
+            serializer = InventoryVariantSerializer(variant)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Variant.DoesNotExist:
+            return Response({
+                "error": "Variant not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+    
+    def patch(self, request, variant_id):
+        """Update stock and/or reorder level for a variant"""
+        try:
+            variant = Variant.objects.select_related('catalogue_item').get(id=variant_id)
+            
+            # Get the stock and reorder_level from request data
+            stock = request.data.get('stock')
+            reorder_level = request.data.get('reorder_level')
+            
+            # Update fields if provided
+            if stock is not None:
+                try:
+                    variant.stock = int(stock)
+                except (ValueError, TypeError):
+                    return Response({
+                        "error": "Stock must be a valid integer"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if reorder_level is not None:
+                try:
+                    variant.reorder_level = int(reorder_level)
+                except (ValueError, TypeError):
+                    return Response({
+                        "error": "Reorder level must be a valid integer"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            variant.save()
+            
+            serializer = InventoryVariantSerializer(variant)
+            return Response({
+                "message": "Stock updated successfully",
+                "item": serializer.data
             }, status=status.HTTP_200_OK)
         except Variant.DoesNotExist:
             return Response({

@@ -231,6 +231,8 @@ function Redemption() {
             onMarkAsProcessed={(item) => setProcessItem(item)}
             onCancelRequest={(item) => setCancelItem(item)}
             onCreateNew={() => console.log("Create new redemption request")}
+            onRefresh={fetchRequests}
+            refreshing={loading}
           />
         </div>
 

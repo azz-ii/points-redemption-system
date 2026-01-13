@@ -641,6 +641,8 @@ function Accounts() {
             onDeleteSelected={handleDeleteSelected}
             onBanSelected={handleBanSelected}
             onCreateNew={() => setShowCreateModal(true)}
+            onRefresh={fetchAccounts}
+            refreshing={loading}
           />
         </div>
 

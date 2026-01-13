@@ -11,6 +11,8 @@ interface RedemptionTableProps {
   onCancelRequest?: (item: RedemptionItem) => void;
   onDeleteSelected?: (items: RedemptionItem[]) => void;
   onCreateNew?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 export function RedemptionTable({
@@ -22,6 +24,8 @@ export function RedemptionTable({
   onCancelRequest,
   onDeleteSelected,
   onCreateNew,
+  onRefresh,
+  refreshing,
 }: RedemptionTableProps) {
   const columns = createColumns({
     onViewRedemption: onView,
@@ -38,6 +42,8 @@ export function RedemptionTable({
       onDeleteSelected={onDeleteSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="New Request"
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     />
   );
 }

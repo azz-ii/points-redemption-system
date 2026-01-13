@@ -355,6 +355,8 @@ function Customers() {
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
               onCreateNew={() => setShowCreateModal(true)}
+              onRefresh={fetchCustomers}
+              refreshing={loading}
             />
           )}
         </div>
