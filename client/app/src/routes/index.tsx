@@ -31,6 +31,7 @@ import Catalogue from "../page/superadmin/Catalogue/Catalogue";
 import Redemption from "../page/superadmin/Redemption/Redemption";
 import Inventory from "../page/superadmin/Inventory";
 import Distributors from "../page/superadmin/Distributors/Distributors";
+import Customers from "../page/superadmin/Customers/Customers";
 import Teams from "../page/superadmin/Teams/Teams";
 
 // Components
@@ -106,6 +107,7 @@ export function AppRoutes() {
           <Route path="/admin/redemption" element={<Redemption />} />
           <Route path="/admin/inventory" element={<Inventory />} />
           <Route path="/admin/distributors" element={<Distributors />} />
+          <Route path="/admin/customers" element={<Customers />} />
           <Route path="/admin/teams" element={<Teams />} />
         </Route>
 
