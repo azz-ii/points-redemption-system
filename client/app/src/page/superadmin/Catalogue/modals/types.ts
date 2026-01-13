@@ -14,6 +14,7 @@ export interface CatalogueItem {
   purpose: string;
   specifications: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  needs_driver: boolean;
   date_added: string;
   added_by: number | null;
   mktg_admin: number | null;
@@ -50,6 +51,7 @@ export interface CatalogueVariant {
   points: string;
   price: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  needs_driver: boolean;
   image_url: string | null;
   is_archived: boolean;
   date_added: string;

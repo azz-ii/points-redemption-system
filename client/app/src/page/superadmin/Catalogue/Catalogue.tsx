@@ -59,9 +59,14 @@ function Catalogue() {
       points: "500",
       price: "1200",
       legend: "ASSET",
+      needs_driver: false,
       image_url: null,
       is_archived: false,
-      date_added: new Date().toISOString().split("T")[0], // Add this
+      date_added: new Date().toISOString().split("T")[0],
+      mktg_admin: null,
+      mktg_admin_name: null,
+      approver: null,
+      approver_name: null,
     },
   ]);
 
@@ -143,6 +148,7 @@ function Catalogue() {
           points: variant.points,
           price: variant.price,
           legend: variant.catalogue_item.legend,
+          needs_driver: variant.catalogue_item.needs_driver,
           image_url: variant.image_url,
           is_archived: variant.catalogue_item.is_archived,
           date_added: variant.catalogue_item.date_added,
@@ -174,6 +180,7 @@ function Catalogue() {
           purpose: item.purpose,
           specifications: item.specifications,
           legend: item.legend,
+          needs_driver: item.needs_driver,
           reward: item.reward,
           is_archived: item.is_archived,
           date_added: item.date_added,
@@ -187,7 +194,7 @@ function Catalogue() {
     }
     acc[catalogueItemId].variants.push(item);
     return acc;
-  }, {} as Record<number, { catalogueItem: { id: number; item_name: string; description: string; purpose: string; specifications: string; legend: string; reward: string | null; is_archived: boolean; date_added: string; mktg_admin: number | null; mktg_admin_name: string | null; approver: number | null; approver_name: string | null }; variants: CatalogueVariant[] }>);
+  }, {} as Record<number, { catalogueItem: { id: number; item_name: string; description: string; purpose: string; specifications: string; legend: string; needs_driver: boolean; reward: string | null; is_archived: boolean; date_added: string; mktg_admin: number | null; mktg_admin_name: string | null; approver: number | null; approver_name: string | null }; variants: CatalogueVariant[] }>);
 
   const groupedItemsArray = Object.values(groupedItems);
 
@@ -229,6 +236,7 @@ function Catalogue() {
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
+    needs_driver: false,
     mktg_admin: null as number | null,
     approver: null as number | null,
     variants: [
@@ -249,6 +257,7 @@ function Catalogue() {
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
+    needs_driver: false,
     mktg_admin: null as number | null,
     approver: null as number | null,
     variants: [
@@ -341,6 +350,7 @@ function Catalogue() {
         purpose: newItem.purpose,
         specifications: newItem.specifications,
         legend: newItem.legend,
+        needs_driver: newItem.needs_driver,
         mktg_admin: newItem.mktg_admin,
         approver: newItem.approver,
         variants: newItem.variants.map((v) => ({
@@ -380,6 +390,7 @@ function Catalogue() {
         purpose: "",
         specifications: "",
         legend: "GIVEAWAY",
+        needs_driver: false,
         mktg_admin: null,
         approver: null,
         variants: [
@@ -438,6 +449,7 @@ function Catalogue() {
           purpose: catalogueItem.purpose,
           specifications: catalogueItem.specifications,
           legend: catalogueItem.legend,
+          needs_driver: catalogueItem.needs_driver,
           mktg_admin: catalogueItem.mktg_admin,
           approver: catalogueItem.approver,
           variants: allVariants.map((v: Variant) => ({
@@ -502,6 +514,7 @@ function Catalogue() {
         purpose: editItem.purpose,
         specifications: editItem.specifications,
         legend: editItem.legend,
+        needs_driver: editItem.needs_driver,
         mktg_admin: editItem.mktg_admin,
         approver: editItem.approver,
         variants: editItem.variants.map((v) => ({

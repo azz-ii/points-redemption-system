@@ -110,6 +110,20 @@ export function ViewItemModal({
                       {viewVariants[0].catalogue_item.legend}
                     </span>
                   </div>
+
+                  {/* Needs Driver */}
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Needs Driver</p>
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                        viewVariants[0].catalogue_item.needs_driver
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-500 text-white"
+                      }`}
+                    >
+                      {viewVariants[0].catalogue_item.needs_driver ? "Yes" : "No"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Description */}

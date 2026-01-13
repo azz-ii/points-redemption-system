@@ -9,6 +9,7 @@ interface NewItem {
   purpose: string;
   specifications: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  needs_driver: boolean;
   mktg_admin: number | null;
   approver: number | null;
   variants: Array<{
@@ -321,6 +322,32 @@ export function CreateItemModal({
                     </option>
                   ))}
               </select>
+            </div>
+
+            {/* Needs Driver */}
+            <div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newItem.needs_driver}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, needs_driver: e.target.checked })
+                  }
+                  className={`w-5 h-5 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600"
+                      : "bg-white border-gray-300"
+                  } focus:ring-blue-500 accent-blue-600`}
+                />
+                <span className="text-sm font-medium">Needs Driver</span>
+              </label>
+              <p
+                className={`text-xs mt-1 ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Check if this item requires a driver for delivery/service
+              </p>
             </div>
           </div>
 
