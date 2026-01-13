@@ -16,10 +16,20 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import { dashboardApi, type DashboardStats, type RedemptionRequest as APIRedemptionRequest } from "@/lib/distributors-api";
+import {
+  dashboardApi,
+  type DashboardStats,
+  type RedemptionRequest as APIRedemptionRequest,
+} from "@/lib/distributors-api";
 import { redemptionRequestsApi } from "@/lib/api";
 import { RedemptionTable } from "./Redemption/components";
-import { ViewRedemptionModal, EditRedemptionModal, MarkAsProcessedModal, CancelRequestModal, type RedemptionItem } from "./Redemption/modals";
+import {
+  ViewRedemptionModal,
+  EditRedemptionModal,
+  MarkAsProcessedModal,
+  CancelRequestModal,
+  type RedemptionItem,
+} from "./Redemption/modals";
 import { toast } from "react-hot-toast";
 
 function Dashboard() {
@@ -45,10 +55,16 @@ function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modals
-  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(
+    null
+  );
   const [editRequest, setEditRequest] = useState<RedemptionItem | null>(null);
-  const [processRequest, setProcessRequest] = useState<RedemptionItem | null>(null);
-  const [cancelRequest, setCancelRequest] = useState<RedemptionItem | null>(null);
+  const [processRequest, setProcessRequest] = useState<RedemptionItem | null>(
+    null
+  );
+  const [cancelRequest, setCancelRequest] = useState<RedemptionItem | null>(
+    null
+  );
 
   // Fetch dashboard statistics
   useEffect(() => {
@@ -75,8 +91,12 @@ function Dashboard() {
         setRequestsLoading(true);
         const response = await dashboardApi.getRedemptionRequests(100, 0);
         // Filter to show only approved and not processed requests
-        const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
-          req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+        const filteredRequests = (
+          response.results as APIRedemptionRequest[]
+        ).filter(
+          (req) =>
+            req.status === "APPROVED" &&
+            req.processing_status === "NOT_PROCESSED"
         );
         setRequests(filteredRequests);
         setTotalCount(filteredRequests.length);
@@ -117,13 +137,20 @@ function Dashboard() {
       toast.success("Request marked as processed successfully");
       // Refetch requests
       const response = await dashboardApi.getRedemptionRequests(100, 0);
-      const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
-        req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+      const filteredRequests = (
+        response.results as APIRedemptionRequest[]
+      ).filter(
+        (req) =>
+          req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
       );
       setRequests(filteredRequests);
       setTotalCount(filteredRequests.length);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to mark request as processed");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to mark request as processed"
+      );
     }
   };
 
@@ -132,17 +159,26 @@ function Dashboard() {
 
     try {
       setCancelRequest(null);
-      await redemptionRequestsApi.cancelRequest(cancelRequest.id, reason, remarks);
+      await redemptionRequestsApi.cancelRequest(
+        cancelRequest.id,
+        reason,
+        remarks
+      );
       toast.success("Request cancelled successfully");
       // Refetch requests
       const response = await dashboardApi.getRedemptionRequests(100, 0);
-      const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
-        req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+      const filteredRequests = (
+        response.results as APIRedemptionRequest[]
+      ).filter(
+        (req) =>
+          req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
       );
       setRequests(filteredRequests);
       setTotalCount(filteredRequests.length);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to cancel request");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to cancel request"
+      );
     }
   };
 
@@ -150,8 +186,11 @@ function Dashboard() {
     try {
       setIsRefreshing(true);
       const response = await dashboardApi.getRedemptionRequests(100, 0);
-      const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
-        req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+      const filteredRequests = (
+        response.results as APIRedemptionRequest[]
+      ).filter(
+        (req) =>
+          req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
       );
       setRequests(filteredRequests);
       setTotalCount(filteredRequests.length);
@@ -173,7 +212,7 @@ function Dashboard() {
     try {
       setIsResettingPoints(true);
       const result = await dashboardApi.resetAllPoints(password);
-      
+
       if (result.success) {
         toast.success("All points have been reset to zero successfully");
         setIsResetModalOpen(false);
@@ -181,46 +220,53 @@ function Dashboard() {
         setPassword("");
         setSelectedClient("");
         setPointAmount("");
-        
+
         // Refresh dashboard stats
         const stats = await dashboardApi.getStats();
         setStats(stats);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to reset points. Please check your password.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to reset points. Please check your password."
+      );
     } finally {
       setIsResettingPoints(false);
     }
   };
 
   // Convert API response to RedemptionItem for table
-  const tableRequests = requests.map(req => ({
-    id: req.id,
-    requested_by: req.requested_by,
-    requested_by_name: req.requested_by_name,
-    requested_for: req.requested_for,
-    requested_for_name: req.requested_for_name,
-    status: req.status,
-    processing_status: req.processing_status,
-    total_points: req.total_points,
-    date_requested: req.date_requested,
-    reviewed_by: req.reviewed_by,
-    reviewed_by_name: req.reviewed_by_name,
-    date_reviewed: req.date_reviewed,
-    processed_by: req.processed_by,
-    processed_by_name: req.processed_by_name,
-    date_processed: req.date_processed,
-    cancelled_by: req.cancelled_by,
-    cancelled_by_name: req.cancelled_by_name,
-    date_cancelled: req.date_cancelled,
-    remarks: req.remarks,
-    rejection_reason: req.rejection_reason,
-    items: req.items,
-  } as RedemptionItem));
+  const tableRequests = requests.map(
+    (req) =>
+      ({
+        id: req.id,
+        requested_by: req.requested_by,
+        requested_by_name: req.requested_by_name,
+        requested_for: req.requested_for,
+        requested_for_name: req.requested_for_name,
+        status: req.status,
+        processing_status: req.processing_status,
+        total_points: req.total_points,
+        date_requested: req.date_requested,
+        reviewed_by: req.reviewed_by,
+        reviewed_by_name: req.reviewed_by_name,
+        date_reviewed: req.date_reviewed,
+        processed_by: req.processed_by,
+        processed_by_name: req.processed_by_name,
+        date_processed: req.date_processed,
+        cancelled_by: req.cancelled_by,
+        cancelled_by_name: req.cancelled_by_name,
+        date_cancelled: req.date_cancelled,
+        remarks: req.remarks,
+        rejection_reason: req.rejection_reason,
+        items: req.items,
+      } as RedemptionItem)
+  );
 
   return (
     <div
-      className={`flex flex-col min-h-screen md:flex-row ${
+      className={`flex flex-col h-screen md:flex-row ${
         resolvedTheme === "dark"
           ? "bg-black text-white"
           : "bg-gray-50 text-gray-900"
@@ -229,7 +275,7 @@ function Dashboard() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Mobile Header */}
         <div
           className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
@@ -296,7 +342,7 @@ function Dashboard() {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:flex-1 md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Dashboard</h1>
@@ -372,7 +418,9 @@ function Dashboard() {
                 />
                 <p className="font-semibold">Approved Requests</p>
               </div>
-              <p className="text-4xl font-bold">{statsLoading ? "-" : stats?.approved_count || 0}</p>
+              <p className="text-4xl font-bold">
+                {statsLoading ? "-" : stats?.approved_count || 0}
+              </p>
             </div>
 
             <div
@@ -390,14 +438,18 @@ function Dashboard() {
                 />
                 <p className="font-semibold">On-board</p>
               </div>
-              <p className="text-4xl font-bold">{statsLoading ? "-" : stats?.on_board_count || 0}</p>
+              <p className="text-4xl font-bold">
+                {statsLoading ? "-" : stats?.on_board_count || 0}
+              </p>
             </div>
           </div>
 
           {/* Redemption Table Section */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Pending Redemption Requests</h3>
+              <h3 className="text-lg font-semibold">
+                Pending Redemption Requests
+              </h3>
               <button
                 onClick={handleRefreshRequests}
                 disabled={isRefreshing}
@@ -410,7 +462,9 @@ function Dashboard() {
                 }`}
                 title="Refresh requests"
               >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
                 {isRefreshing ? "Refreshing..." : "Refresh"}
               </button>
             </div>
@@ -468,7 +522,9 @@ function Dashboard() {
             {!showPasswordStep ? (
               <>
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium">Select Client</label>
+                  <label className="block text-sm font-medium">
+                    Select Client
+                  </label>
                   <select
                     value={selectedClient}
                     onChange={(e) => setSelectedClient(e.target.value)}
@@ -519,21 +575,29 @@ function Dashboard() {
               </>
             ) : (
               <>
-                <div className={`p-3 rounded-lg flex items-start gap-3 ${
-                  resolvedTheme === "dark"
-                    ? "bg-red-900/20 border border-red-800"
-                    : "bg-red-50 border border-red-200"
-                }`}>
-                  <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                    resolvedTheme === "dark" ? "text-red-400" : "text-red-600"
-                  }`} />
+                <div
+                  className={`p-3 rounded-lg flex items-start gap-3 ${
+                    resolvedTheme === "dark"
+                      ? "bg-red-900/20 border border-red-800"
+                      : "bg-red-50 border border-red-200"
+                  }`}
+                >
+                  <AlertCircle
+                    className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                      resolvedTheme === "dark" ? "text-red-400" : "text-red-600"
+                    }`}
+                  />
                   <p className="text-sm">
-                    This will reset <strong>all points to zero</strong> for both agents and distributors. This action cannot be undone. Please enter your password to confirm.
+                    This will reset <strong>all points to zero</strong> for both
+                    agents and distributors. This action cannot be undone.
+                    Please enter your password to confirm.
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium">Enter Your Password</label>
+                  <label className="block text-sm font-medium">
+                    Enter Your Password
+                  </label>
                   <Input
                     type="password"
                     value={password}
@@ -545,7 +609,9 @@ function Dashboard() {
                         ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-500 focus:ring-0"
                         : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:ring-0"
                     }`}
-                    onKeyPress={(e) => e.key === "Enter" && handleResetAllPointsConfirm()}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && handleResetAllPointsConfirm()
+                    }
                   />
                 </div>
 
@@ -603,9 +669,13 @@ function Dashboard() {
           onSave={() => {
             setEditRequest(null);
             // Refetch requests with filter
-            dashboardApi.getRedemptionRequests(100, 0).then(response => {
-              const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
-                req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+            dashboardApi.getRedemptionRequests(100, 0).then((response) => {
+              const filteredRequests = (
+                response.results as APIRedemptionRequest[]
+              ).filter(
+                (req) =>
+                  req.status === "APPROVED" &&
+                  req.processing_status === "NOT_PROCESSED"
               );
               setRequests(filteredRequests);
               setTotalCount(filteredRequests.length);
