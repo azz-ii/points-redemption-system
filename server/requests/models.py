@@ -19,6 +19,10 @@ class ProcessingStatus(models.TextChoices):
     PROCESSED = 'PROCESSED', 'Processed'
     CANCELLED = 'CANCELLED', 'Cancelled'
 
+class SvcDriverChoice(models.TextChoices):
+    WITH_DRIVER = 'WITH_DRIVER', 'With Driver'
+    WITHOUT_DRIVER = 'WITHOUT_DRIVER', 'Without Driver'
+
 class RedemptionRequest(models.Model):
     id = models.AutoField(primary_key=True)
     requested_by = models.ForeignKey(
@@ -115,6 +119,25 @@ class RedemptionRequest(models.Model):
         blank=True,
         null=True,
         help_text='Reason for rejection, if applicable'
+    )
+    
+    # Service Vehicle Use fields
+    svc_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text='Service vehicle use date'
+    )
+    svc_time = models.TimeField(
+        blank=True,
+        null=True,
+        help_text='Service vehicle use time'
+    )
+    svc_driver = models.CharField(
+        max_length=20,
+        choices=SvcDriverChoice.choices,
+        blank=True,
+        null=True,
+        help_text='Whether the service vehicle includes a driver'
     )
 
     def __str__(self):

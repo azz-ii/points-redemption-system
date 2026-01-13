@@ -11,6 +11,7 @@ export interface CartItem {
   points: number;
   image: string;
   quantity: number;
+  needs_driver: boolean;
 }
 
 interface CartModalProps {
@@ -101,6 +102,7 @@ export default function CartModal({
     0
   );
   const remainingPoints = availablePoints - totalPoints;
+  const hasItemsNeedingDriver = items.some(item => item.needs_driver);
 
   const handleSelectDistributor = (distributor: Distributor) => {
     setSelectedDistributor(distributor);
@@ -134,6 +136,12 @@ export default function CartModal({
         variant_id: item.id,
         quantity: item.quantity,
       })),
+      // Include service vehicle fields if any item needs driver
+      ...(hasItemsNeedingDriver && svcDate && {
+        svc_date: svcDate,
+        svc_time: svcTime || undefined,
+        svc_driver: svcDriver === 'with' ? 'WITH_DRIVER' : svcDriver === 'without' ? 'WITHOUT_DRIVER' : undefined,
+      }),
     };
 
     // Close modal and reset form immediately
@@ -575,89 +583,91 @@ export default function CartModal({
                 </div>
               </div>
 
-              {/* Service Vehicle Use */}
-              <div
-                className={`rounded-lg border ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
-              >
-                <div className="p-4">
-                  <div className="flex items-baseline gap-2">
-                    <h3 className="text-lg font-semibold">
-                      Service Vehicle Use
-                    </h3>
-                    <span
-                      className={`text-xs ${
-                        isDark ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      (If applicable)
-                    </span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label
-                        className={`text-sm ${
-                          isDark ? "text-gray-300" : "text-gray-700"
+              {/* Service Vehicle Use - Only show if items need driver */}
+              {hasItemsNeedingDriver && (
+                <div
+                  className={`rounded-lg border ${
+                    isDark ? "border-gray-800" : "border-gray-200"
+                  }`}
+                >
+                  <div className="p-4">
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-lg font-semibold">
+                        Service Vehicle Use
+                      </h3>
+                      <span
+                        className={`text-xs ${
+                          isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        Purpose/Remarks
-                      </label>
-                      <input
-                        type="date"
-                        value={svcDate}
-                        onChange={(e) => setSvcDate(e.target.value)}
-                        placeholder="mm/dd/yyyy"
-                        className={`w-full px-3 py-2 rounded-md outline-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      />
+                        (Required for selected items)
+                      </span>
                     </div>
-                    <div className="space-y-1">
-                      <label
-                        className={`text-sm ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Time
-                      </label>
-                      <input
-                        type="time"
-                        value={svcTime}
-                        onChange={(e) => setSvcTime(e.target.value)}
-                        className={`w-full px-3 py-2 rounded-md outline-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label
-                        className={`text-sm ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Driver
-                      </label>
-                      <select
-                        value={svcDriver}
-                        onChange={(e) => setSvcDriver(e.target.value)}
-                        className={`w-full px-3 py-2 rounded-md outline-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      >
-                        <option value="with">With Driver</option>
-                        <option value="without">Without Driver</option>
-                      </select>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label
+                          className={`text-sm ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={svcDate}
+                          onChange={(e) => setSvcDate(e.target.value)}
+                          placeholder="mm/dd/yyyy"
+                          className={`w-full px-3 py-2 rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          className={`text-sm ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Time
+                        </label>
+                        <input
+                          type="time"
+                          value={svcTime}
+                          onChange={(e) => setSvcTime(e.target.value)}
+                          className={`w-full px-3 py-2 rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          className={`text-sm ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Driver
+                        </label>
+                        <select
+                          value={svcDriver}
+                          onChange={(e) => setSvcDriver(e.target.value)}
+                          className={`w-full px-3 py-2 rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        >
+                          <option value="with">With Driver</option>
+                          <option value="without">Without Driver</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Actions */}
@@ -981,89 +991,91 @@ export default function CartModal({
                 </div>
               </div>
 
-              {/* Service Vehicle Use */}
-              <div
-                className={`rounded-lg border ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
-              >
-                <div className="p-3">
-                  <div className="flex items-baseline gap-1">
-                    <h3 className="text-sm font-semibold">
-                      Service Vehicle Use
-                    </h3>
-                    <span
-                      className={`text-xs ${
-                        isDark ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      (If applicable)
-                    </span>
-                  </div>
-                  <div className="mt-3 space-y-3">
-                    <div className="space-y-1">
-                      <label
+              {/* Service Vehicle Use - Only show if items need driver */}
+              {hasItemsNeedingDriver && (
+                <div
+                  className={`rounded-lg border ${
+                    isDark ? "border-gray-800" : "border-gray-200"
+                  }`}
+                >
+                  <div className="p-3">
+                    <div className="flex items-baseline gap-1">
+                      <h3 className="text-sm font-semibold">
+                        Service Vehicle Use
+                      </h3>
+                      <span
                         className={`text-xs ${
-                          isDark ? "text-gray-300" : "text-gray-700"
+                          isDark ? "text-gray-400" : "text-gray-600"
                         }`}
                       >
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        value={svcDate}
-                        onChange={(e) => setSvcDate(e.target.value)}
-                        className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      />
+                        (Required)
+                      </span>
                     </div>
-                    <div className="space-y-1">
-                      <label
-                        className={`text-xs ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Time
-                      </label>
-                      <input
-                        type="time"
-                        value={svcTime}
-                        onChange={(e) => setSvcTime(e.target.value)}
-                        className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label
-                        className={`text-xs ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
-                      >
-                        Driver
-                      </label>
-                      <select
-                        value={svcDriver}
-                        onChange={(e) => setSvcDriver(e.target.value)}
-                        className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
-                      >
-                        <option value="">With/Without Driver</option>
-                        <option value="with">With Driver</option>
-                        <option value="without">Without Driver</option>
-                      </select>
+                    <div className="mt-3 space-y-3">
+                      <div className="space-y-1">
+                        <label
+                          className={`text-xs ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={svcDate}
+                          onChange={(e) => setSvcDate(e.target.value)}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          className={`text-xs ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Time
+                        </label>
+                        <input
+                          type="time"
+                          value={svcTime}
+                          onChange={(e) => setSvcTime(e.target.value)}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label
+                          className={`text-xs ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Driver
+                        </label>
+                        <select
+                          value={svcDriver}
+                          onChange={(e) => setSvcDriver(e.target.value)}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        >
+                          <option value="">Select...</option>
+                          <option value="with">With Driver</option>
+                          <option value="without">Without Driver</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </>
         )}

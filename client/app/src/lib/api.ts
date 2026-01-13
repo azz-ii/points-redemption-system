@@ -11,6 +11,7 @@ export interface CatalogueItem {
   purpose: string;
   specifications: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  needs_driver: boolean;
   added_by: number | null;
   mktg_admin: number | null;
   mktg_admin_name: string | null;
@@ -46,6 +47,7 @@ export interface RedeemItemData {
   points: number;
   image: string;
   category: string;
+  needs_driver: boolean;
 }
 
 export interface UserProfile {
@@ -108,6 +110,7 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
     points: pointsValue,
     image: imageUrl,
     category: category,
+    needs_driver: variant.catalogue_item.needs_driver,
   };
 
   console.log("[API] Transformed item:", transformed);
@@ -238,6 +241,10 @@ export interface CreateRedemptionRequestData {
   points_deducted_from: 'SELF' | 'DISTRIBUTOR';
   remarks?: string;
   items: RedemptionRequestItem[];
+  // Service Vehicle Use fields (optional)
+  svc_date?: string; // ISO date string (YYYY-MM-DD)
+  svc_time?: string; // Time string (HH:MM)
+  svc_driver?: 'WITH_DRIVER' | 'WITHOUT_DRIVER';
 }
 
 export interface RedemptionRequestResponse {
@@ -259,6 +266,10 @@ export interface RedemptionRequestResponse {
   date_reviewed: string | null;
   remarks: string | null;
   rejection_reason: string | null;
+  // Service Vehicle Use fields
+  svc_date: string | null;
+  svc_time: string | null;
+  svc_driver: string | null;
   items: Array<{
     id: number;
     variant: number;

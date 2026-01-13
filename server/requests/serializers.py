@@ -58,7 +58,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
             'processed_by', 'processed_by_name', 'date_processed',
             'cancelled_by', 'cancelled_by_name', 'date_cancelled',
-            'remarks', 'rejection_reason', 'items'
+            'remarks', 'rejection_reason', 
+            'svc_date', 'svc_time', 'svc_driver',
+            'items'
         ]
         read_only_fields = ['id', 'date_requested', 'reviewed_by', 'date_reviewed', 
                             'processed_by', 'date_processed', 'cancelled_by', 'date_cancelled', 'team']
@@ -109,6 +111,14 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
     items = serializers.ListField(
         child=serializers.DictField(),
         min_length=1
+    )
+    # Service Vehicle Use fields (optional)
+    svc_date = serializers.DateField(required=False, allow_null=True)
+    svc_time = serializers.TimeField(required=False, allow_null=True)
+    svc_driver = serializers.ChoiceField(
+        choices=['WITH_DRIVER', 'WITHOUT_DRIVER'],
+        required=False,
+        allow_null=True
     )
 
     def validate_items(self, value):

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
-import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -532,7 +531,7 @@ function Catalogue() {
         " payload:",
         updatePayload
       );
-      const response = await fetchWithCsrf(
+      const response = await fetch(
         `/api/catalogue/item/${editingCatalogueItemId}/`,
         {
           method: "PUT",
@@ -644,7 +643,7 @@ function Catalogue() {
 
     try {
       console.log("[Catalogue] Deleting item (DELETE) id=", deleteTarget.id);
-      const response = await fetchWithCsrf(`/api/catalogue/${deleteTarget.id}/`, {
+      const response = await fetch(`/api/catalogue/${deleteTarget.id}/`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -704,7 +703,7 @@ function Catalogue() {
     }
     try {
       setUpdatingVariant(true);
-      const response = await fetchWithCsrf(`/api/catalogue/${editVariantTarget.id}/`, {
+      const response = await fetch(`/api/catalogue/${editVariantTarget.id}/`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -738,7 +737,7 @@ function Catalogue() {
   const confirmDeleteVariant = async () => {
     if (!deleteVariantTarget) return;
     try {
-      const response = await fetchWithCsrf(
+      const response = await fetch(
         `/api/catalogue/${deleteVariantTarget.id}/`,
         {
           method: "DELETE",

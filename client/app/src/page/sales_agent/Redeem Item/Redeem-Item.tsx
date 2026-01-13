@@ -122,6 +122,7 @@ export default function RedeemItem() {
           points: item.points,
           image: item.image,
           quantity: 1,
+          needs_driver: item.needs_driver,
         },
       ];
     });
