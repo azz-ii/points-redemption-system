@@ -17,7 +17,7 @@ import {
   LogOut,
   RotateCw,
 } from "lucide-react";
-import type { CatalogueItem, Variant, CatalogueVariant } from "./modals";
+import type { CatalogueItem, Variant, CatalogueVariant, User } from "./modals";
 import {
   CreateItemModal,
   EditItemModal,
@@ -67,6 +67,7 @@ function Catalogue() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [users, setUsers] = useState<User[]>([]);
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -77,6 +78,24 @@ function Catalogue() {
   useEffect(() => {
     fetchCatalogueItems();
   }, [page, rowsPerPage, searchQuery]);
+
+  // Fetch users for dropdowns
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("/api/users/", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data.accounts || []);
+        }
+      } catch (err) {
+        console.error("Error fetching users:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const fetchCatalogueItems = async () => {
     try {
@@ -127,6 +146,10 @@ function Catalogue() {
           image_url: variant.image_url,
           is_archived: variant.catalogue_item.is_archived,
           date_added: variant.catalogue_item.date_added,
+          mktg_admin: variant.catalogue_item.mktg_admin,
+          mktg_admin_name: variant.catalogue_item.mktg_admin_name,
+          approver: variant.catalogue_item.approver,
+          approver_name: variant.catalogue_item.approver_name,
         })
       );
       setItems(flattenedItems);
@@ -154,13 +177,17 @@ function Catalogue() {
           reward: item.reward,
           is_archived: item.is_archived,
           date_added: item.date_added,
+          mktg_admin: item.mktg_admin,
+          mktg_admin_name: item.mktg_admin_name,
+          approver: item.approver,
+          approver_name: item.approver_name,
         },
         variants: [],
       };
     }
     acc[catalogueItemId].variants.push(item);
     return acc;
-  }, {} as Record<number, { catalogueItem: { id: number; item_name: string; description: string; purpose: string; specifications: string; legend: string; reward: string | null; is_archived: boolean; date_added: string }; variants: CatalogueVariant[] }>);
+  }, {} as Record<number, { catalogueItem: { id: number; item_name: string; description: string; purpose: string; specifications: string; legend: string; reward: string | null; is_archived: boolean; date_added: string; mktg_admin: number | null; mktg_admin_name: string | null; approver: number | null; approver_name: string | null }; variants: CatalogueVariant[] }>);
 
   const groupedItemsArray = Object.values(groupedItems);
 
@@ -202,6 +229,8 @@ function Catalogue() {
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
+    mktg_admin: null as number | null,
+    approver: null as number | null,
     variants: [
       {
         item_code: "",
@@ -220,6 +249,8 @@ function Catalogue() {
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
+    mktg_admin: null as number | null,
+    approver: null as number | null,
     variants: [
       {
         id: null as number | null,
@@ -310,6 +341,8 @@ function Catalogue() {
         purpose: newItem.purpose,
         specifications: newItem.specifications,
         legend: newItem.legend,
+        mktg_admin: newItem.mktg_admin,
+        approver: newItem.approver,
         variants: newItem.variants.map((v) => ({
           item_code: v.item_code,
           option_description: v.option_description || null,
@@ -347,6 +380,8 @@ function Catalogue() {
         purpose: "",
         specifications: "",
         legend: "GIVEAWAY",
+        mktg_admin: null,
+        approver: null,
         variants: [
           {
             item_code: "",
@@ -403,6 +438,8 @@ function Catalogue() {
           purpose: catalogueItem.purpose,
           specifications: catalogueItem.specifications,
           legend: catalogueItem.legend,
+          mktg_admin: catalogueItem.mktg_admin,
+          approver: catalogueItem.approver,
           variants: allVariants.map((v: Variant) => ({
             id: v.id,
             item_code: v.item_code,
@@ -465,6 +502,8 @@ function Catalogue() {
         purpose: editItem.purpose,
         specifications: editItem.specifications,
         legend: editItem.legend,
+        mktg_admin: editItem.mktg_admin,
+        approver: editItem.approver,
         variants: editItem.variants.map((v) => ({
           id: v.id,
           item_code: v.item_code,
@@ -1020,6 +1059,7 @@ function Catalogue() {
         onAddVariant={addVariant}
         onRemoveVariant={removeVariant}
         onUpdateVariant={updateVariant}
+        users={users}
       />
 
       <EditItemModal
@@ -1034,6 +1074,7 @@ function Catalogue() {
         onAddVariant={addEditVariant}
         onRemoveVariant={removeEditVariant}
         onUpdateVariant={updateEditVariant}
+        users={users}
       />
 
       <ViewItemModal

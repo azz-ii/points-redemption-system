@@ -26,6 +26,16 @@ class Team(models.Model):
         limit_choices_to={'profile__position': 'Marketing'},
         help_text='Marketing admin assigned to this team'
     )
+    is_archived = models.BooleanField(default=False, help_text='Whether this team is archived')
+    date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the team was archived')
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='archived_teams',
+        help_text='User who archived this team'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

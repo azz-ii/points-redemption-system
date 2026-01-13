@@ -125,16 +125,16 @@ export default function CartModal({
       return;
     }
 
-    // Prepare request data - submit one item per request as per API design
-    const itemPromises = items.map(item => {
-      const requestData: CreateRedemptionRequestData = {
-        item_id: parseInt(item.id),
+    // Prepare request data using the correct API structure
+    const requestData: CreateRedemptionRequestData = {
+      requested_for: selectedDistributor.id,
+      points_deducted_from: pointsDeductedFrom,
+      remarks: remarks || undefined,
+      items: items.map(item => ({
+        variant_id: item.id,
         quantity: item.quantity,
-        distributor_id: selectedDistributor.id,
-        notes: remarks || undefined,
-      };
-      return redemptionRequestsApi.create(requestData);
-    });
+      })),
+    };
 
     // Close modal and reset form immediately
     items.forEach(item => onRemoveItem(item.id));
@@ -153,11 +153,11 @@ export default function CartModal({
       description: `Request for ${selectedDistributor.name} has been created successfully`
     });
 
-    // Execute API calls in background without blocking
-    Promise.all(itemPromises)
-      .then((responses: any[]) => {
+    // Execute API call in background without blocking
+    redemptionRequestsApi.createRequest(requestData)
+      .then((response) => {
         // Silently succeed - user already sees success toast
-        console.log("Redemption requests created:", responses);
+        console.log("Redemption request created:", response);
       })
       .catch((error: any) => {
         console.error("Error submitting redemption request:", error);

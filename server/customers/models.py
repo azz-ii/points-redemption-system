@@ -19,6 +19,16 @@ class Customer(models.Model):
         related_name='added_customers',
         help_text='User who added this customer'
     )
+    is_archived = models.BooleanField(default=False, help_text='Whether this customer is archived')
+    date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the customer was archived')
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='archived_customers',
+        help_text='User who archived this customer'
+    )
 
     def __str__(self):
         return f"{self.name}"

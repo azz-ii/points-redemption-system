@@ -30,6 +30,22 @@ class CatalogueItem(models.Model):
         related_name='added_items',
         help_text='User who added this catalogue item'
     )
+    mktg_admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='mktg_admin_items',
+        help_text='Marketing admin assigned to this catalogue item'
+    )
+    approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approver_items',
+        help_text='Approver assigned to this catalogue item'
+    )
     is_archived = models.BooleanField(default=False, help_text='Whether the item is archived')
     date_archived = models.DateTimeField(blank=True, null=True, help_text='Timestamp when the item was archived')
     archived_by = models.ForeignKey(

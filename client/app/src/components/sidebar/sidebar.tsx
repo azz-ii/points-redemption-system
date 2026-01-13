@@ -16,6 +16,7 @@ import {
   Store,
   FileBox,
   Users,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/context/AuthContext";
@@ -46,6 +47,7 @@ export function Sidebar() {
     { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
     { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
     { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
+    { id: "customers", label: "Customers", icon: UserCircle, path: "/admin/customers" },
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
     { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
@@ -81,7 +83,7 @@ export function Sidebar() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
@@ -218,6 +220,7 @@ export function SidebarSuperAdmin() {
     { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
     { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
     { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
+    { id: "customers", label: "Customers", icon: UserCircle, path: "/admin/customers" },
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
     { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
@@ -253,7 +256,7 @@ export function SidebarSuperAdmin() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
@@ -421,7 +424,7 @@ export function SidebarSales() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
@@ -589,7 +592,7 @@ export function SidebarApprover() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
@@ -756,7 +759,7 @@ export function SidebarMarketing() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
@@ -923,7 +926,7 @@ export function SidebarReception() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
@@ -1090,7 +1093,7 @@ export function SidebarExecutiveAssistant() {
       {/* Top */}
       <div className="space-y-3">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"

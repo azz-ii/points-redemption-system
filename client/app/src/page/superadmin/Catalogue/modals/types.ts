@@ -1,3 +1,11 @@
+export interface User {
+  id: number;
+  username: string;
+  full_name: string;
+  email: string;
+  position: string;
+}
+
 export interface CatalogueItem {
   id: number;
   reward: string | null;
@@ -8,6 +16,10 @@ export interface CatalogueItem {
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
   date_added: string;
   added_by: number | null;
+  mktg_admin: number | null;
+  mktg_admin_name: string | null;
+  approver: number | null;
+  approver_name: string | null;
   is_archived: boolean;
   date_archived: string | null;
   archived_by: number | null;
@@ -39,6 +51,10 @@ export interface CatalogueVariant {
   image_url: string | null;
   is_archived: boolean;
   date_added: string;
+  mktg_admin: number | null;
+  mktg_admin_name: string | null;
+  approver: number | null;
+  approver_name: string | null;
 }
 
 export interface ModalBaseProps {

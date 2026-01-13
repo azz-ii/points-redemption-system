@@ -1,6 +1,6 @@
 import { useTheme } from "next-themes";
 import { X, Plus, Trash2 } from "lucide-react";
-import type { ModalBaseProps } from "./types";
+import type { ModalBaseProps, User } from "./types";
 
 interface EditItemVariant {
   id: number | null;
@@ -18,6 +18,8 @@ interface EditItem {
   purpose: string;
   specifications: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  mktg_admin: number | null;
+  approver: number | null;
   variants: EditItemVariant[];
 }
 
@@ -31,6 +33,7 @@ interface EditItemModalProps extends ModalBaseProps {
   onAddVariant: () => void;
   onRemoveVariant: (index: number) => void;
   onUpdateVariant: (index: number, field: string, value: string) => void;
+  users: User[];
 }
 
 export function EditItemModal({
@@ -45,6 +48,7 @@ export function EditItemModal({
   onAddVariant,
   onRemoveVariant,
   onUpdateVariant,
+  users,
 }: EditItemModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -265,6 +269,66 @@ export function EditItemModal({
                     <option value="GIVEAWAY">Giveaway (Blue)</option>
                     <option value="ASSET">Asset (Yellow)</option>
                     <option value="BENEFIT">Benefit (Green)</option>
+                  </select>
+                </div>
+
+                {/* Marketing Admin */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Marketing Admin (Optional)
+                  </label>
+                  <select
+                    value={editItem.mktg_admin || ""}
+                    onChange={(e) =>
+                      setEditItem({
+                        ...editItem,
+                        mktg_admin: e.target.value ? parseInt(e.target.value) : null,
+                      })
+                    }
+                    className={`w-full px-3 py-2 rounded border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:outline-none focus:border-blue-500`}
+                  >
+                    <option value="">Select Marketing Admin</option>
+                    {users
+                      .filter((u) => u.position === "Marketing")
+                      .map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.full_name || user.username}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Approver */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Approver (Optional)
+                  </label>
+                  <select
+                    value={editItem.approver || ""}
+                    onChange={(e) =>
+                      setEditItem({
+                        ...editItem,
+                        approver: e.target.value ? parseInt(e.target.value) : null,
+                      })
+                    }
+                    className={`w-full px-3 py-2 rounded border ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-800 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:outline-none focus:border-blue-500`}
+                  >
+                    <option value="">Select Approver</option>
+                    {users
+                      .filter((u) => u.position === "Approver")
+                      .map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.full_name || user.username}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>

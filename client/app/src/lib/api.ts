@@ -12,6 +12,10 @@ export interface CatalogueItem {
   specifications: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
   added_by: number | null;
+  mktg_admin: number | null;
+  mktg_admin_name: string | null;
+  approver: number | null;
+  approver_name: string | null;
   is_archived: boolean;
   date_archived: string | null;
   archived_by: number | null;

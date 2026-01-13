@@ -14,6 +14,10 @@ interface GroupedItem {
     reward: string | null;
     is_archived: boolean;
     date_added: string;
+    mktg_admin: number | null;
+    mktg_admin_name: string | null;
+    approver: number | null;
+    approver_name: string | null;
   };
   variants: CatalogueVariant[];
 }

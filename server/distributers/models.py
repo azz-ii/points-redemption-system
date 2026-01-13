@@ -19,6 +19,16 @@ class Distributor(models.Model):
         related_name='added_distributors',
         help_text='User who added this distributor'
     )
+    is_archived = models.BooleanField(default=False, help_text='Whether this distributor is archived')
+    date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the distributor was archived')
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='archived_distributors',
+        help_text='User who archived this distributor'
+    )
 
     def __str__(self):
         return f"{self.name}"

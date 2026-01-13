@@ -25,6 +25,16 @@ class UserProfile(models.Model):
     unban_date = models.DateTimeField(blank=True, null=True)
     uses_points = models.BooleanField(default=False, help_text='Whether this user uses the points system')
     points = models.PositiveIntegerField(default=0, help_text='Current points balance for the user')
+    is_archived = models.BooleanField(default=False, help_text='Whether this user profile is archived')
+    date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the user profile was archived')
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='archived_user_profiles',
+        help_text='User who archived this user profile'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

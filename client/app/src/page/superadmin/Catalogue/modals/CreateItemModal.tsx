@@ -1,6 +1,6 @@
 import { useTheme } from "next-themes";
 import { X, Plus, Trash2 } from "lucide-react";
-import type { ModalBaseProps } from "./types";
+import type { ModalBaseProps, User } from "./types";
 
 interface NewItem {
   reward: string;
@@ -9,6 +9,8 @@ interface NewItem {
   purpose: string;
   specifications: string;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  mktg_admin: number | null;
+  approver: number | null;
   variants: Array<{
     item_code: string;
     option_description: string;
@@ -27,6 +29,7 @@ interface CreateItemModalProps extends ModalBaseProps {
   onAddVariant: () => void;
   onRemoveVariant: (index: number) => void;
   onUpdateVariant: (index: number, field: string, value: string) => void;
+  users: User[];
 }
 
 export function CreateItemModal({
@@ -40,6 +43,7 @@ export function CreateItemModal({
   onAddVariant,
   onRemoveVariant,
   onUpdateVariant,
+  users,
 }: CreateItemModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -248,6 +252,74 @@ export function CreateItemModal({
                 <option value="GIVEAWAY">Giveaway (Blue)</option>
                 <option value="ASSET">Asset (Yellow)</option>
                 <option value="BENEFIT">Benefit (Green)</option>
+              </select>
+            </div>
+
+            {/* Marketing Admin */}
+            <div>
+              <label
+                htmlFor="mktg-admin-select"
+                className="block text-sm font-medium mb-2"
+              >
+                Marketing Admin (Optional)
+              </label>
+              <select
+                id="mktg-admin-select"
+                value={newItem.mktg_admin || ""}
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    mktg_admin: e.target.value ? parseInt(e.target.value) : null,
+                  })
+                }
+                className={`w-full px-4 py-3 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500 text-base`}
+              >
+                <option value="">Select Marketing Admin</option>
+                {users
+                  .filter((u) => u.position === "Marketing")
+                  .map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.full_name || user.username}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* Approver */}
+            <div>
+              <label
+                htmlFor="approver-select"
+                className="block text-sm font-medium mb-2"
+              >
+                Approver (Optional)
+              </label>
+              <select
+                id="approver-select"
+                value={newItem.approver || ""}
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    approver: e.target.value ? parseInt(e.target.value) : null,
+                  })
+                }
+                className={`w-full px-4 py-3 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500 text-base`}
+              >
+                <option value="">Select Approver</option>
+                {users
+                  .filter((u) => u.position === "Approver")
+                  .map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.full_name || user.username}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>
