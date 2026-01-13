@@ -3,7 +3,7 @@ import { StatusChip } from "./StatusChip";
 import type { RedemptionRequestItem, RedemptionRequest } from "../modals/types";
 
 interface RedemptionStatusMobileCardsProps {
-  items: (RedemptionRequestItem & { requestId: number; status: string; status_display: string; date_requested: string; request: RedemptionRequest })[];
+  items: (RedemptionRequestItem & { requestId: number; status: string; status_display: string; processing_status: string; date_requested: string; request: RedemptionRequest })[];
   filteredCount: number;
   onViewItem: (item: RedemptionRequestItem & { request: RedemptionRequest }) => void;
   isDark: boolean;
@@ -76,7 +76,7 @@ export function RedemptionStatusMobileCards({
                 {item.variant_option || "Standard"} • Qty: {item.quantity} • {item.total_points} pts
               </p>
               <div className="flex justify-between items-center mb-3">
-                <StatusChip status={item.status} isDark={isDark} />
+                <StatusChip status={item.status} processingStatus={item.processing_status} isDark={isDark} />
                 <span
                   className={`text-xs ${
                     isDark ? "text-gray-400" : "text-gray-600"

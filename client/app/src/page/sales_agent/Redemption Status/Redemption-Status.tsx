@@ -7,6 +7,7 @@ import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bell, Search, Filter, ShoppingCart } from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal } from "./modals/ViewRedemptionStatusModal";
 import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
 import {
@@ -69,6 +70,7 @@ export default function RedemptionStatus() {
       requestId: request.id,
       status: request.status,
       status_display: request.status_display,
+      processing_status: request.processing_status,
       date_requested: request.date_requested,
       request: request,
     }))
@@ -184,28 +186,30 @@ export default function RedemptionStatus() {
             </button>
           </div>
 
-          <RedemptionStatusTable
-            items={paginatedItems}
-            onViewItem={openDetails}
-            isDark={isDark}
-            currentPage={safePage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPageIndex}
-            loading={loading}
-            error={error}
-          />
+          <TooltipProvider>
+            <RedemptionStatusTable
+              items={paginatedItems}
+              onViewItem={openDetails}
+              isDark={isDark}
+              currentPage={safePage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPageIndex}
+              loading={loading}
+              error={error}
+            />
 
-          <RedemptionStatusMobileCards
-            items={paginatedItems}
-            filteredCount={filtered.length}
-            onViewItem={openDetails}
-            isDark={isDark}
-            currentPage={safePage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPageIndex}
-            loading={loading}
-            error={error}
-          />
+            <RedemptionStatusMobileCards
+              items={paginatedItems}
+              filteredCount={filtered.length}
+              onViewItem={openDetails}
+              isDark={isDark}
+              currentPage={safePage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPageIndex}
+              loading={loading}
+              error={error}
+            />
+          </TooltipProvider>
         </div>
       </div>
 

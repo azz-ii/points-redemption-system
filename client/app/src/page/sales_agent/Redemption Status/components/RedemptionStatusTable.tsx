@@ -3,7 +3,7 @@ import { StatusChip } from "./StatusChip";
 import type { RedemptionRequestItem, RedemptionRequest } from "../modals/types";
 
 interface RedemptionStatusTableProps {
-  items: (RedemptionRequestItem & { requestId: number; status: string; status_display: string; date_requested: string; request: RedemptionRequest })[];
+  items: (RedemptionRequestItem & { requestId: number; status: string; status_display: string; processing_status: string; date_requested: string; request: RedemptionRequest })[];
   onViewItem: (item: RedemptionRequestItem & { request: RedemptionRequest }) => void;
   isDark: boolean;
   currentPage: number;
@@ -149,7 +149,7 @@ export function RedemptionStatusTable({
                 <td className="px-6 py-4">{item.quantity}</td>
                 <td className="px-6 py-4 font-semibold">{item.total_points}</td>
                 <td className="px-6 py-4">
-                  <StatusChip status={item.status} isDark={isDark} />
+                  <StatusChip status={item.status} processingStatus={item.processing_status} isDark={isDark} />
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button

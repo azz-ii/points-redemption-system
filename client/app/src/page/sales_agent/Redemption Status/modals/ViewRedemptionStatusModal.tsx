@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
 import { X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export function ViewRedemptionStatusModal({
@@ -16,13 +17,57 @@ export function ViewRedemptionStatusModal({
   if (!isOpen || !item || !request) return null;
 
   const imageUrl = item.image_url || "/images/tshirt.png";
+  const normalizedStatus = request.status.toUpperCase();
+
+  // Determine status display based on approval and processing status
+  const getStatusDisplay = () => {
+    if (normalizedStatus === "APPROVED") {
+      if (request.processing_status === "PROCESSED") {
+        return {
+          label: "Processed",
+          colorClass: isDark ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-700",
+          withTooltip: false,
+        };
+      }
+      if (request.processing_status === "CANCELLED") {
+        return {
+          label: "Cancelled",
+          colorClass: isDark ? "bg-red-500 text-white" : "bg-red-100 text-red-700",
+          withTooltip: true,
+          tooltipText: "An Admin Has Cancelled this Request",
+        };
+      }
+      return {
+        label: "Approved",
+        colorClass: isDark ? "bg-green-500 text-black" : "bg-green-100 text-green-700",
+        withTooltip: false,
+      };
+    }
+
+    if (normalizedStatus === "PENDING") {
+      return {
+        label: "Pending",
+        colorClass: isDark ? "bg-yellow-400 text-black" : "bg-yellow-100 text-yellow-700",
+        withTooltip: false,
+      };
+    }
+
+    return {
+      label: "Rejected",
+      colorClass: isDark ? "bg-red-500 text-white" : "bg-red-100 text-red-700",
+      withTooltip: false,
+    };
+  };
+
+  const statusDisplay = getStatusDisplay();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      {/* Card */}
-      <div
+    <TooltipProvider>
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+        {/* Card */}
+        <div
         className={`relative mx-4 w-full max-w-md md:max-w-3xl rounded-xl shadow-2xl ${
           isDark ? "bg-gray-900 text-white" : "bg-white text-gray-900"
         }`}
@@ -92,17 +137,24 @@ export function ViewRedemptionStatusModal({
                 <div>
                   <p className="text-sm font-semibold">Status</p>
                   <p className="text-sm">
-                    <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
-                        request.status === "APPROVED"
-                          ? "bg-green-500 text-white"
-                          : request.status === "PENDING"
-                          ? "bg-yellow-500 text-white"
-                          : "bg-red-500 text-white"
-                      }`}
-                    >
-                      {request.status_display}
-                    </span>
+                    {statusDisplay.withTooltip ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className={`inline-block px-2 py-1 rounded-full text-xs font-semibold cursor-help ${statusDisplay.colorClass}`}
+                          >
+                            {statusDisplay.label}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{statusDisplay.tooltipText}</TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${statusDisplay.colorClass}`}
+                      >
+                        {statusDisplay.label}
+                      </span>
+                    )}
                   </p>
                 </div>
                 {request.rejection_reason && (
@@ -139,6 +191,7 @@ export function ViewRedemptionStatusModal({
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }

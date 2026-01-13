@@ -37,6 +37,8 @@ export interface RedemptionRequest {
   total_points: number;
   status: "PENDING" | "APPROVED" | "REJECTED";
   status_display: string;
+  processing_status: "NOT_PROCESSED" | "PROCESSED" | "CANCELLED";
+  processing_status_display: string;
   date_requested: string;
   reviewed_by: number | null;
   reviewed_by_name: string | null;
