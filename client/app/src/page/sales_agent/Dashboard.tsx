@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
@@ -6,517 +6,492 @@ import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Search, Truck, ShoppingCart, X } from "lucide-react";
+import { Bell, Warehouse, LogOut, RefreshCw } from "lucide-react";
+import { agentDashboardApi, type AgentDashboardStats } from "@/lib/distributors-api";
+import { redemptionRequestsApi } from "@/lib/api";
+import { toast } from "react-hot-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-interface Distributor {
+interface RedemptionItem {
   id: number;
-  name: string;
-  location: string;
-  points: number;
+  requested_by: number;
+  requested_by_name: string;
+  requested_for: number;
+  requested_for_name: string;
+  status: string;
+  processing_status: string;
+  total_points: number;
+  date_requested: string;
+  items: any[];
 }
 
-function SalesDashboard() {
+function SalesAgentDashboard() {
   const navigate = useNavigate();
   const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const [currentPage, setCurrentPage] = useState<
-    "dashboard" | "redemption-status" | "redeem-items"
-  >("dashboard");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [notificationOpen, setNotificationOpen] = useState(false);
-  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
-  const [deliveryForm, setDeliveryForm] = useState({
-    vehicle: "",
-    date: "",
-    time: "",
-    withDriver: "yes" as "yes" | "no",
-  });
+  // Stats
+  const [stats, setStats] = useState<AgentDashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  // Sample distributor data
-  const distributors: Distributor[] = [
-    {
-      id: 1,
-      name: "Oracle Petroleum",
-      location: "Cubao, PHI",
-      points: 15000,
-    },
-    {
-      id: 2,
-      name: "Oracle Petroleum",
-      location: "Cubao, PHI",
-      points: 15000,
-    },
-    {
-      id: 3,
-      name: "Oracle Petroleum",
-      location: "Cubao, PHI",
-      points: 15000,
-    },
-    {
-      id: 4,
-      name: "Oracle Petroleum",
-      location: "Cubao, PHI",
-      points: 15000,
-    },
-  ];
+  // Requests
+  const [requests, setRequests] = useState<RedemptionItem[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const filteredDistributors = distributors.filter(
-    (dist) =>
-      dist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dist.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Notifications
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const handleNavigate = (
-    page: "dashboard" | "redemption-status" | "redeem-items"
-  ) => {
-    setCurrentPage(page);
+  // Fetch agent dashboard statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const data = await agentDashboardApi.getStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        toast.error("Failed to load dashboard statistics");
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // Fetch agent's pending requests
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setRequestsLoading(true);
+        const response = await redemptionRequestsApi.getRequests();
+        const allRequests = response || [];
+        
+        // Map to RedemptionItem format and filter for PENDING status only
+        const mappedRequests = (allRequests as any[])
+          .filter((req) => req.status === "PENDING")
+          .map(
+            (req) =>
+              ({
+                id: req.id,
+                requested_by: req.requested_by,
+                requested_by_name: req.requested_by_name,
+                requested_for: req.requested_for,
+                requested_for_name: req.requested_for_name,
+                status: req.status,
+                processing_status: req.processing_status,
+                total_points: req.total_points,
+                date_requested: req.date_requested,
+                items: req.items,
+              } as RedemptionItem)
+          );
+        
+        setRequests(mappedRequests);
+      } catch (error) {
+        console.error("Error fetching requests:", error);
+        toast.error("Failed to load requests");
+      } finally {
+        setRequestsLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  const handleRefreshRequests = async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await redemptionRequestsApi.getRequests();
+      const allRequests = response || [];
+      
+      const mappedRequests = (allRequests as any[])
+        .filter((req) => req.status === "PENDING")
+        .map(
+          (req) =>
+            ({
+              id: req.id,
+              requested_by: req.requested_by,
+              requested_by_name: req.requested_by_name,
+              requested_for: req.requested_for,
+              requested_for_name: req.requested_for_name,
+              status: req.status,
+              processing_status: req.processing_status,
+              total_points: req.total_points,
+              date_requested: req.date_requested,
+              items: req.items,
+            } as RedemptionItem)
+        );
+      
+      setRequests(mappedRequests);
+      toast.success("Requests refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing requests:", error);
+      toast.error("Failed to refresh requests");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
-  // Route to Redemption Status full-page when selected
-  if (currentPage === "redemption-status") {
-    navigate("/sales/status");
-    return null;
-  }
-
-  // Route to Redeem Items full-page when selected
-  if (currentPage === "redeem-items") {
-    navigate("/sales/redeem");
-    return null;
-  }
-
   return (
-    <div className="flex h-screen">
+    <div
+      className={`flex flex-col h-screen md:flex-row ${
+        isDark ? "bg-black text-white" : "bg-gray-50 text-gray-900"
+      } transition-colors`}
+    >
       <SidebarSales />
 
       {/* Main Content */}
-      <div
-        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${
-          isDark ? "bg-black text-white" : "bg-white text-gray-900"
-        }`}
-      >
-        {/* Header */}
-        <div className="p-4 md:p-8 md:pb-6">
-          <div className="flex justify-between items-start mb-4 md:mb-6">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-10 h-10 md:hidden rounded-full flex items-center justify-center ${
-                  isDark ? "bg-green-600" : "bg-green-500"
-                }`}
-              >
-                <span className="text-white font-semibold text-sm">J</span>
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-4xl font-bold mb-1">
-                  Welcome, Jane<span className="hidden md:inline">!</span>
-                </h1>
-                <p
-                  className={`text-xs md:text-base ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  <span className="md:hidden">Sales Agent</span>
-                  <span className="hidden md:inline">
-                    Manage points, track redemptions and redeem items
-                  </span>
-                </p>
-              </div>
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Mobile Header */}
+        <div
+          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
+            isDark
+              ? "bg-gray-900 border-gray-800"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-8 h-8 rounded-full ${
+                isDark ? "bg-green-600" : "bg-green-500"
+              } flex items-center justify-center`}
+            >
+              <span className="text-white font-semibold text-xs">
+                {stats?.agent_name?.charAt(0).toUpperCase() || "A"}
+              </span>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                className={`relative p-2 rounded-lg transition-colors ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
+            <span className="font-medium text-sm">Dashboard</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsNotificationOpen(true)}
+              className={`p-2 rounded-lg ${
+                isDark
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+              title="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => navigate("/admin/inventory")}
+              className={`p-2 rounded-lg ${
+                isDark
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <Warehouse className="h-5 w-5" />
+            </button>
+            <ThemeToggle />
+            <button
+              onClick={handleLogout}
+              className={`p-2 rounded-lg ${
+                isDark
+                  ? "bg-gray-800 hover:bg-gray-700"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors`}
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:flex md:flex-col md:flex-1 md:p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-semibold">Dashboard</h1>
+              <p
+                className={`text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-600"
                 }`}
-                aria-label="Cart"
               >
-                <ShoppingCart className="h-6 w-6" />
-              </button>
+                Manage your points and track pending redemption requests
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
               <button
-                onClick={() => setNotificationOpen(!notificationOpen)}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
-                aria-label="Notifications"
+                onClick={() => setIsNotificationOpen(true)}
+                className={`p-2 rounded-lg ${
+                  isDark
+                    ? "bg-gray-900 hover:bg-gray-800"
+                    : "bg-gray-100 hover:bg-gray-200"
+                } transition-colors`}
               >
-                <Bell className="h-6 w-6" />
+                <Bell className="h-5 w-5" />
               </button>
               <ThemeToggle />
             </div>
           </div>
 
-          {/* Search and Delivery Button */}
-          <div className="flex gap-2 md:gap-4 items-center mb-2 md:mb-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-6 mb-8 lg:grid-cols-4">
+            {/* Pending Requests */}
             <div
-              className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border ${
+              className={`p-6 rounded-lg border ${
                 isDark
-                  ? "bg-gray-900 border-gray-800"
-                  : "bg-gray-50 border-gray-200"
-              }`}
+                  ? "bg-gray-900 border-gray-700"
+                  : "bg-white border-gray-200"
+              } transition-colors`}
             >
-              <Search
-                className={`h-5 w-5 ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}
-              />
-              <input
-                type="text"
-                placeholder="Search Distributors....."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`flex-1 bg-transparent outline-none ${
-                  isDark
-                    ? "text-white placeholder-gray-500"
-                    : "text-gray-900 placeholder-gray-400"
-                }`}
-              />
-            </div>
-            <button
-              onClick={() => setIsDeliveryModalOpen(true)}
-              className={`hidden md:flex items-center gap-2 px-6 py-3 rounded-lg transition-colors font-medium ${
-                isDark
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              }`}
-            >
-              <Truck className="h-4 w-4" />
-              <span>+ Delivery</span>
-            </button>
-          </div>
-
-          {/* Mobile Delivery Button */}
-          <div className="md:hidden mb-4">
-            <button
-              onClick={() => setIsDeliveryModalOpen(true)}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors font-medium ${
-                isDark
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              }`}
-            >
-              <Truck className="h-4 w-4" />
-              <span>+ Delivery</span>
-            </button>
-          </div>
-
-          {/* Distributor Points Table */}
-          <div>
-            <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4">
-              Distributer Points
-            </h2>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-3">
-              {filteredDistributors.length > 0 ? (
-                filteredDistributors.map((distributor) => (
-                  <div
-                    key={distributor.id}
-                    className={`rounded-lg border p-4 ${
-                      isDark
-                        ? "bg-gray-900 border-gray-800"
-                        : "bg-white border-gray-200"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-base mb-1">
-                          {distributor.name}
-                        </h3>
-                        <p
-                          className={`text-sm ${
-                            isDark ? "text-gray-400" : "text-gray-600"
-                          }`}
-                        >
-                          {distributor.location}
-                        </p>
-                      </div>
-                      <div
-                        className={`text-lg font-bold ${
-                          isDark
-                            ? "text-white md:text-green-400"
-                            : "text-white md:text-green-600"
-                        }`}
-                      >
-                        {distributor.points.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
+              <div className="flex items-center gap-2 mb-4">
                 <div
-                  className={`rounded-lg border p-8 text-center ${
-                    isDark
-                      ? "bg-gray-900 border-gray-800 text-gray-500"
-                      : "bg-white border-gray-200 text-gray-400"
+                  className={`w-2 h-2 rounded-full ${
+                    isDark ? "bg-yellow-400" : "bg-yellow-500"
                   }`}
-                >
-                  No distributors found
-                </div>
-              )}
+                />
+                <p className="font-semibold text-sm">Pending</p>
+              </div>
+              <p className="text-4xl font-bold">
+                {statsLoading ? "-" : stats?.pending_count || 0}
+              </p>
             </div>
 
-            {/* Desktop Table View */}
+            {/* Approved Requests */}
             <div
-              className={`hidden md:block rounded-lg border overflow-hidden ${
+              className={`p-6 rounded-lg border ${
+                isDark
+                  ? "bg-gray-900 border-gray-700"
+                  : "bg-white border-gray-200"
+              } transition-colors`}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isDark ? "bg-green-400" : "bg-green-500"
+                  }`}
+                />
+                <p className="font-semibold text-sm">Approved</p>
+              </div>
+              <p className="text-4xl font-bold">
+                {statsLoading ? "-" : stats?.approved_count || 0}
+              </p>
+            </div>
+
+            {/* Processed Requests */}
+            <div
+              className={`p-6 rounded-lg border ${
+                isDark
+                  ? "bg-gray-900 border-gray-700"
+                  : "bg-white border-gray-200"
+              } transition-colors`}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isDark ? "bg-blue-400" : "bg-blue-500"
+                  }`}
+                />
+                <p className="font-semibold text-sm">Processed</p>
+              </div>
+              <p className="text-4xl font-bold">
+                {statsLoading ? "-" : stats?.processed_count || 0}
+              </p>
+            </div>
+
+            {/* Points Balance */}
+            <div
+              className={`p-6 rounded-lg border ${
+                isDark
+                  ? "bg-gray-900 border-gray-700"
+                  : "bg-white border-gray-200"
+              } transition-colors`}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isDark ? "bg-purple-400" : "bg-purple-500"
+                  }`}
+                />
+                <p className="font-semibold text-sm">Points Balance</p>
+              </div>
+              <p className="text-4xl font-bold">
+                {statsLoading ? "-" : (stats?.agent_points || 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Pending Requests Table Section */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Pending Redemption Requests</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate("/sales/redeem-items")}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                    isDark
+                      ? "bg-blue-600 border-blue-700 text-white hover:bg-blue-700"
+                      : "bg-blue-500 border-blue-600 text-white hover:bg-blue-600"
+                  }`}
+                  title="Quick redeem"
+                >
+                  <span>Redeem Items</span>
+                </button>
+                <button
+                  onClick={handleRefreshRequests}
+                  disabled={isRefreshing}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                    isRefreshing
+                      ? "opacity-50 cursor-not-allowed"
+                      : isDark
+                      ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                      : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                  }`}
+                  title="Refresh requests"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
+            </div>
+
+            {/* Pending Requests Table */}
+            <div
+              className={`rounded-lg border overflow-hidden ${
                 isDark ? "border-gray-800" : "border-gray-200"
               }`}
             >
-              <table className="w-full">
-                <thead className={isDark ? "bg-gray-900" : "bg-gray-50"}>
-                  <tr>
-                    <th
-                      className={`px-6 py-4 text-left text-sm font-medium ${
+              <Table>
+                <TableHeader className={isDark ? "bg-gray-900" : "bg-gray-50"}>
+                  <TableRow
+                    className={`border-b ${
+                      isDark ? "border-gray-800" : "border-gray-200"
+                    }`}
+                  >
+                    <TableHead
+                      className={`font-semibold ${
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      Distributor Name
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-left text-sm font-medium ${
+                      Request ID
+                    </TableHead>
+                    <TableHead
+                      className={`font-semibold ${
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      Location
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-left text-sm font-medium ${
+                      Requested By
+                    </TableHead>
+                    <TableHead
+                      className={`font-semibold ${
                         isDark ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      Points
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredDistributors.length > 0 ? (
-                    filteredDistributors.map((distributor) => (
-                      <tr
-                        key={distributor.id}
-                        className={`border-t ${
+                      Distributor
+                    </TableHead>
+                    <TableHead
+                      className={`font-semibold ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Total Points
+                    </TableHead>
+                    <TableHead
+                      className={`font-semibold ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Date Requested
+                    </TableHead>
+                    <TableHead
+                      className={`font-semibold ${
+                        isDark ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      Status
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {!requestsLoading && requests.length > 0 ? (
+                    requests.map((request) => (
+                      <TableRow
+                        key={request.id}
+                        className={`border-b ${
                           isDark ? "border-gray-800" : "border-gray-200"
-                        }`}
+                        } hover:${
+                          isDark ? "bg-gray-800/50" : "bg-gray-50"
+                        } transition-colors cursor-pointer`}
+                        onClick={() => navigate(`/sales/request/${request.id}`)}
                       >
-                        <td className="px-6 py-4 font-medium">
-                          {distributor.name}
-                        </td>
-                        <td
-                          className={`px-6 py-4 ${
+                        <TableCell className="font-medium">
+                          #{request.id}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {request.requested_by_name}
+                        </TableCell>
+                        <TableCell>
+                          {request.requested_for_name}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {request.total_points.toLocaleString()}
+                        </TableCell>
+                        <TableCell
+                          className={`${
                             isDark ? "text-gray-400" : "text-gray-600"
                           }`}
                         >
-                          {distributor.location}
-                        </td>
-                        <td className="px-6 py-4 font-semibold">
-                          {distributor.points.toLocaleString()}
-                        </td>
-                      </tr>
+                          {new Date(request.date_requested).toLocaleDateString()}
+                        </TableCell>                        <TableCell>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            {request.status}
+                          </span>
+                        </TableCell>                      </TableRow>
                     ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className={`px-6 py-8 text-center ${
+                  ) : !requestsLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className={`text-center py-8 ${
                           isDark ? "text-gray-500" : "text-gray-400"
                         }`}
                       >
-                        No distributors found
-                      </td>
-                    </tr>
+                        No pending requests found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className={`text-center py-8 ${
+                          isDark ? "text-gray-500" : "text-gray-400"
+                        }`}
+                      >
+                        Loading...
+                      </TableCell>
+                    </TableRow>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Delivery Request Modal */}
-      {isDeliveryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div
-            className={`w-full max-w-md rounded-lg shadow-xl ${
-              isDark ? "bg-gray-900" : "bg-white"
-            }`}
-          >
-            {/* Modal Header */}
-            <div
-              className={`flex items-center justify-between p-4 border-b ${
-                isDark ? "border-gray-800" : "border-gray-200"
-              }`}
-            >
-              <h2 className="text-lg font-semibold">
-                Request Vehicle Delivery
-              </h2>
-              <button
-                onClick={() => setIsDeliveryModalOpen(false)}
-                className={`p-1 rounded-lg transition-colors ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-4 space-y-4">
-              {/* Vehicle Selection */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Vehicle
-                </label>
-                <select
-                  value={deliveryForm.vehicle}
-                  onChange={(e) =>
-                    setDeliveryForm({
-                      ...deliveryForm,
-                      vehicle: e.target.value,
-                    })
-                  }
-                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
-                    isDark
-                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
-                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
-                  }`}
-                >
-                  <option value="">Select a vehicle</option>
-                  <option value="L-3000">L-3000</option>
-                  <option value="L-3001">L-3001</option>
-                  <option value="L-3002">L-3002</option>
-                  <option value="L-3003">L-3003</option>
-                </select>
-              </div>
-
-              {/* Date */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={deliveryForm.date}
-                  onChange={(e) =>
-                    setDeliveryForm({ ...deliveryForm, date: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
-                    isDark
-                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
-                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
-                  }`}
-                />
-              </div>
-
-              {/* Time */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Time
-                </label>
-                <input
-                  type="time"
-                  value={deliveryForm.time}
-                  onChange={(e) =>
-                    setDeliveryForm({ ...deliveryForm, time: e.target.value })
-                  }
-                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
-                    isDark
-                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
-                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
-                  }`}
-                />
-              </div>
-
-              {/* Driver Selection */}
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Driver
-                </label>
-                <select
-                  value={deliveryForm.withDriver}
-                  onChange={(e) =>
-                    setDeliveryForm({
-                      ...deliveryForm,
-                      withDriver: e.target.value as "yes" | "no",
-                    })
-                  }
-                  className={`w-full px-3 py-2 rounded-lg border outline-none transition-colors ${
-                    isDark
-                      ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500"
-                      : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"
-                  }`}
-                >
-                  <option value="yes">With Driver</option>
-                  <option value="no">Without Driver</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              className={`flex gap-2 p-4 border-t ${
-                isDark ? "border-gray-800" : "border-gray-200"
-              }`}
-            >
-              <button
-                onClick={() => setIsDeliveryModalOpen(false)}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isDark
-                    ? "bg-gray-800 hover:bg-gray-700"
-                    : "bg-gray-200 hover:bg-gray-300"
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  // Handle form submission
-                  console.log("Delivery request:", deliveryForm);
-                  setIsDeliveryModalOpen(false);
-                  // Reset form
-                  setDeliveryForm({
-                    vehicle: "",
-                    date: "",
-                    time: "",
-                    withDriver: "yes",
-                  });
-                }}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  isDark
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
-              >
-                Submit Request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNavSales />
 
       {/* Notification Panel */}
       <NotificationPanel
-        isOpen={notificationOpen}
-        onClose={() => setNotificationOpen(false)}
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
       />
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSales />
     </div>
   );
 }
 
-export default SalesDashboard;
+export default SalesAgentDashboard;

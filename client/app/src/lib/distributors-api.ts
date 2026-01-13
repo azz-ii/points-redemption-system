@@ -156,3 +156,27 @@ export const dashboardApi = {
     return response.json();
   },
 };
+
+export interface AgentDashboardStats {
+  pending_count: number;
+  approved_count: number;
+  processed_count: number;
+  agent_points: number;
+  active_distributors_count: number;
+  team_name: string;
+  agent_name: string;
+}
+
+export const agentDashboardApi = {
+  getStats: async (): Promise<AgentDashboardStats> => {
+    const response = await fetch(`${API_BASE_URL}/agent/dashboard/stats/`, {
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error("Agent dashboard stats error response:", response.status, error);
+      throw new Error('Failed to fetch agent dashboard statistics');
+    }
+    return response.json();
+  },
+};

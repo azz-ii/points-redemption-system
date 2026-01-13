@@ -661,3 +661,63 @@ class ResetAllPointsView(APIView):
                 {'error': 'Failed to reset points', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class AgentDashboardStatsView(APIView):
+    """
+    API endpoint for agent dashboard statistics.
+    Returns counts specific to the logged-in agent's requests and team.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get dashboard statistics for the logged-in agent"""
+        try:
+            from teams.models import TeamMembership, Team
+            from django.db.models import Count, Q
+            
+            user = request.user
+            profile = getattr(user, 'profile', None)
+            
+            # Get agent's team membership
+            membership = TeamMembership.objects.filter(user=user).first()
+            
+            if membership:
+                agent_team = membership.team
+                # Get requests from the agent's team
+                team_requests = RedemptionRequest.objects.filter(team=agent_team)
+            else:
+                # If not in a team, only count own requests
+                team_requests = RedemptionRequest.objects.filter(requested_by=user)
+            
+            # Calculate agent-specific statistics
+            pending_count = team_requests.filter(status='PENDING').count()
+            approved_count = team_requests.filter(status='APPROVED').count()
+            processed_count = team_requests.filter(processing_status='PROCESSED').count()
+            
+            # Get agent's current points
+            agent_points = profile.points if profile else 0
+            
+            # Get count of active distributors in agent's team (if applicable)
+            if membership:
+                # Get distributors associated with this team (if there's a relationship)
+                # For now, count all distributors as potentially managed by the team
+                active_distributors_count = Distributor.objects.count()
+            else:
+                active_distributors_count = 0
+            
+            return Response({
+                'pending_count': pending_count,
+                'approved_count': approved_count,
+                'processed_count': processed_count,
+                'agent_points': agent_points,
+                'active_distributors_count': active_distributors_count,
+                'team_name': membership.team.name if membership else 'No Team',
+                'agent_name': user.get_full_name() or user.username,
+            })
+        except Exception as e:
+            logger.error(f"Error fetching agent dashboard stats: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch agent dashboard statistics', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
