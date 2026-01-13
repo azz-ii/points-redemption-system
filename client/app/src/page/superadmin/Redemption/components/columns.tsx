@@ -178,25 +178,6 @@ export const createColumns = (
     },
   },
   {
-    accessorKey: "date_processed",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Date Processed
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const date = row.getValue("date_processed") as string;
-      return date ? new Date(date).toLocaleString() : "N/A";
-    },
-  },
-  {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {

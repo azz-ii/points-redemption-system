@@ -14,8 +14,10 @@ import {
   LogOut,
   X,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { dashboardApi, type DashboardStats, type RedemptionRequest as APIRedemptionRequest } from "@/lib/distributors-api";
+import { redemptionRequestsApi } from "@/lib/api";
 import { RedemptionTable } from "./Redemption/components";
 import { ViewRedemptionModal, EditRedemptionModal, MarkAsProcessedModal, CancelRequestModal, type RedemptionItem } from "./Redemption/modals";
 import { toast } from "react-hot-toast";
@@ -40,6 +42,7 @@ function Dashboard() {
   const [requests, setRequests] = useState<APIRedemptionRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modals
   const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
@@ -71,8 +74,12 @@ function Dashboard() {
       try {
         setRequestsLoading(true);
         const response = await dashboardApi.getRedemptionRequests(100, 0);
-        setRequests(response.results as APIRedemptionRequest[]);
-        setTotalCount(response.count);
+        // Filter to show only approved and not processed requests
+        const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
+          req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+        );
+        setRequests(filteredRequests);
+        setTotalCount(filteredRequests.length);
       } catch (error) {
         console.error("Error fetching redemption requests:", error);
         toast.error("Failed to load redemption requests");
@@ -106,11 +113,15 @@ function Dashboard() {
 
     try {
       setProcessRequest(null);
-      // TODO: Call API to mark as processed
+      await redemptionRequestsApi.markAsProcessed(processRequest.id, remarks);
       toast.success("Request marked as processed successfully");
       // Refetch requests
       const response = await dashboardApi.getRedemptionRequests(100, 0);
-      setRequests(response.results as APIRedemptionRequest[]);
+      const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
+        req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+      );
+      setRequests(filteredRequests);
+      setTotalCount(filteredRequests.length);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to mark request as processed");
     }
@@ -121,13 +132,35 @@ function Dashboard() {
 
     try {
       setCancelRequest(null);
-      // TODO: Call API to cancel request
+      await redemptionRequestsApi.cancelRequest(cancelRequest.id, reason, remarks);
       toast.success("Request cancelled successfully");
       // Refetch requests
       const response = await dashboardApi.getRedemptionRequests(100, 0);
-      setRequests(response.results as APIRedemptionRequest[]);
+      const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
+        req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+      );
+      setRequests(filteredRequests);
+      setTotalCount(filteredRequests.length);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to cancel request");
+    }
+  };
+
+  const handleRefreshRequests = async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await dashboardApi.getRedemptionRequests(100, 0);
+      const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
+        req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+      );
+      setRequests(filteredRequests);
+      setTotalCount(filteredRequests.length);
+      toast.success("Requests refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing requests:", error);
+      toast.error("Failed to refresh requests");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -320,14 +353,7 @@ function Dashboard() {
                 <p className="font-semibold">Pending Requests</p>
               </div>
               <p className="text-4xl font-bold">
-                {statsLoading ? "-" : stats?.pending_count || 0}{" "}
-                <span
-                  className={`text-lg ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  / {statsLoading ? "-" : stats?.total_requests || 0}
-                </span>
+                {requestsLoading ? "-" : totalCount}
               </p>
             </div>
 
@@ -370,7 +396,24 @@ function Dashboard() {
 
           {/* Redemption Table Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Redemption Requests</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Pending Redemption Requests</h3>
+              <button
+                onClick={handleRefreshRequests}
+                disabled={isRefreshing}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                  isRefreshing
+                    ? "opacity-50 cursor-not-allowed"
+                    : resolvedTheme === "dark"
+                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                }`}
+                title="Refresh requests"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
             <RedemptionTable
               redemptions={tableRequests}
               loading={requestsLoading}
@@ -548,7 +591,7 @@ function Dashboard() {
         <ViewRedemptionModal
           isOpen={!!selectedRequest}
           onClose={() => setSelectedRequest(null)}
-          redemption={selectedRequest}
+          item={selectedRequest}
         />
       )}
 
@@ -556,12 +599,16 @@ function Dashboard() {
         <EditRedemptionModal
           isOpen={!!editRequest}
           onClose={() => setEditRequest(null)}
-          redemption={editRequest}
+          item={editRequest}
           onSave={() => {
             setEditRequest(null);
-            // Refetch requests
+            // Refetch requests with filter
             dashboardApi.getRedemptionRequests(100, 0).then(response => {
-              setRequests(response.results as APIRedemptionRequest[]);
+              const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
+                req => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+              );
+              setRequests(filteredRequests);
+              setTotalCount(filteredRequests.length);
             });
           }}
         />
@@ -571,7 +618,7 @@ function Dashboard() {
         <MarkAsProcessedModal
           isOpen={!!processRequest}
           onClose={() => setProcessRequest(null)}
-          redemption={processRequest}
+          item={processRequest}
           onConfirm={confirmMarkAsProcessed}
         />
       )}
@@ -580,7 +627,7 @@ function Dashboard() {
         <CancelRequestModal
           isOpen={!!cancelRequest}
           onClose={() => setCancelRequest(null)}
-          redemption={cancelRequest}
+          item={cancelRequest}
           onConfirm={confirmCancelRequest}
         />
       )}
