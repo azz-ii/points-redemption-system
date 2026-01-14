@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Added to Team</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .email-container {
+            max-width: 650px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .email-body {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 15px;
+            color: #4b5563;
+            margin-bottom: 25px;
+        }
+        .welcome-badge {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 25px 0;
+            box-shadow: 0 4px 6px rgba(20, 184, 166, 0.3);
+        }
+        .info-box {
+            background: #f0fdfa;
+            border-left: 4px solid #14b8a6;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .info-box h3 {
+            margin: 0 0 15px 0;
+            color: #115e59;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #99f6e4;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #115e59;
+            min-width: 180px;
+        }
+        .info-value {
+            color: #374151;
+            flex: 1;
+        }
+        .benefits-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .benefits-box h3 {
+            margin: 0 0 15px 0;
+            color: #1e40af;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .benefits-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #374151;
+        }
+        .benefits-box li {
+            padding: 5px 0;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: white;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(20, 184, 166, 0.3);
+            transition: all 0.3s;
+        }
+        .action-button:hover {
+            background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+            box-shadow: 0 6px 8px rgba(20, 184, 166, 0.4);
+        }
+        .footer {
+            background: #f9fafb;
+            padding: 25px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Welcome to the Team!</h1>
+            <p>You've been added to a sales team</p>
+        </div>
+        
+        <div class="email-body">
+            <div class="greeting">
+                Hello {{ agent_full_name }},
+            </div>
+            
+            <div class="welcome-badge">
+                🎉 Welcome to "{{ team_name }}"!
+            </div>
+            
+            <div class="message">
+                Great news! You have been added to <strong>{{ team_name }}</strong> as a team member. You can now submit redemption requests through your team's approver.
+            </div>
+            
+            <div class="info-box">
+                <h3>Team Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Team Name:</span>
+                    <span class="info-value">{{ team_name }}</span>
+                </div>
+                {% if approver_name %}
+                <div class="info-row">
+                    <span class="info-label">Team Approver:</span>
+                    <span class="info-value">{{ approver_name }}</span>
+                </div>
+                {% endif %}
+                {% if approver_email %}
+                <div class="info-row">
+                    <span class="info-label">Approver Email:</span>
+                    <span class="info-value">{{ approver_email }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">Added By:</span>
+                    <span class="info-value">{{ added_by }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Added:</span>
+                    <span class="info-value">{{ date_added }}</span>
+                </div>
+            </div>
+            
+            <div class="benefits-box">
+                <h3>What You Can Do</h3>
+                <ul>
+                    <li>Submit redemption requests for your distributors</li>
+                    <li>Track the status of your submitted requests</li>
+                    <li>View your points balance and transaction history</li>
+                    <li>Receive notifications on request approvals/rejections</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="http://127.0.0.1:5173/dashboard" class="action-button">Go to Dashboard</a>
+            </div>
+            
+            <div class="message" style="margin-top: 30px; font-size: 14px;">
+                Your redemption requests will be reviewed by your team approver. If you have any questions, feel free to reach out to your approver or administrator.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Points Redemption System</strong></p>
+            <p>This is an automated notification. Please do not reply to this email.</p>
+            <p>© 2025 All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -16,7 +16,9 @@ from .serializers import (
 from utils.email_service import (
     send_request_approved_email, 
     send_request_rejected_email,
-    send_request_submitted_email
+    send_request_submitted_email,
+    send_request_processed_email,
+    send_approved_request_notification_to_admin
 )
 from users.models import UserProfile
 from distributers.models import Distributor
@@ -288,6 +290,18 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     logger.info(f"✓ Approval email sent for request #{redemption_request.id}")
                 else:
                     logger.warning(f"⚠ Failed to send approval email for request #{redemption_request.id}")
+                
+                # Send notification to superadmins that request is ready for processing
+                admin_email_sent = send_approved_request_notification_to_admin(
+                    request_obj=redemption_request,
+                    distributor=redemption_request.requested_for,
+                    approved_by=request.user
+                )
+                
+                if admin_email_sent:
+                    logger.info(f"✓ Admin notification sent for request #{redemption_request.id}")
+                else:
+                    logger.warning(f"⚠ Failed to send admin notification for request #{redemption_request.id}")
         
         except Exception as e:
             logger.error(f"Failed to process approval for request #{redemption_request.id}: {str(e)}")
@@ -408,6 +422,19 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         logger.info(f"Request #{redemption_request.id} marked as processed by {user.username}")
         
+        # Send processed email notification
+        logger.info(f"Request #{redemption_request.id} processed, sending email notification...")
+        email_sent = send_request_processed_email(
+            request_obj=redemption_request,
+            distributor=redemption_request.requested_for,
+            processed_by=user
+        )
+        
+        if email_sent:
+            logger.info(f"✓ Processed email sent for request #{redemption_request.id}")
+        else:
+            logger.warning(f"⚠ Failed to send processed email for request #{redemption_request.id}")
+        
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
 
@@ -494,6 +521,67 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 {'error': 'Failed to cancel request', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+        serializer = self.get_serializer(redemption_request)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def withdraw_request(self, request, pk=None):
+        """Allow sales agent to withdraw their own pending request"""
+        redemption_request = self.get_object()
+        user = request.user
+        
+        # Verify the user is the one who created this request
+        if redemption_request.requested_by != user:
+            return Response(
+                {'error': 'Permission denied: You can only withdraw your own requests'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Only pending requests can be withdrawn
+        if redemption_request.status != 'PENDING':
+            return Response(
+                {'error': 'Only pending requests can be withdrawn'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Withdrawal reason is required
+        withdrawal_reason = request.data.get('withdrawal_reason')
+        if not withdrawal_reason:
+            return Response(
+                {'error': 'Withdrawal reason is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update request status to WITHDRAWN
+        redemption_request.status = 'WITHDRAWN'
+        redemption_request.withdrawal_reason = withdrawal_reason
+        redemption_request.cancelled_by = user
+        redemption_request.date_cancelled = timezone.now()
+        
+        # Get remarks if provided
+        if 'remarks' in request.data:
+            redemption_request.remarks = request.data.get('remarks')
+        
+        redemption_request.save()
+        
+        logger.info(f"Request #{redemption_request.id} withdrawn by sales agent {user.username}")
+        
+        # Send withdrawal email notification to the team approver
+        from utils.email_service import send_request_withdrawn_email
+        
+        if redemption_request.team and redemption_request.team.approver:
+            approver = redemption_request.team.approver
+            if hasattr(approver, 'profile') and approver.profile.email:
+                email_sent = send_request_withdrawn_email(
+                    request_obj=redemption_request,
+                    distributor=redemption_request.requested_for,
+                    withdrawn_by=user
+                )
+                if email_sent:
+                    logger.info(f"Withdrawal notification sent to approver {approver.username}")
+                else:
+                    logger.warning(f"Failed to send withdrawal notification to approver {approver.username}")
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)

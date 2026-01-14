@@ -13,6 +13,7 @@ class RequestStatus(models.TextChoices):
     PENDING = 'PENDING', 'Pending'
     APPROVED = 'APPROVED', 'Approved'
     REJECTED = 'REJECTED', 'Rejected'
+    WITHDRAWN = 'WITHDRAWN', 'Withdrawn'
 
 class ProcessingStatus(models.TextChoices):
     NOT_PROCESSED = 'NOT_PROCESSED', 'Not Processed'
@@ -119,6 +120,11 @@ class RedemptionRequest(models.Model):
         blank=True,
         null=True,
         help_text='Reason for rejection, if applicable'
+    )
+    withdrawal_reason = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Reason for withdrawal by sales agent, if applicable'
     )
     
     # Service Vehicle Use fields

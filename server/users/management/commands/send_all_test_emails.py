@@ -16,13 +16,15 @@ logger = logging.getLogger('email')
 
 
 class Command(BaseCommand):
-    help = 'Send all 6 email templates with dummy data to test visual appearance'
+    help = 'Send all 10 email templates with dummy data to test visual appearance'
 
     def add_arguments(self, parser):
         parser.add_argument(
             'recipient',
             type=str,
-            help='Email address to send all test emails to'
+            nargs='?',
+            default=None,
+            help='Email address to send all test emails to (defaults to TEST_EMAIL from .env)'
         )
         parser.add_argument(
             '--negative',
@@ -33,6 +35,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         recipient = options['recipient']
         use_negative_balance = options['negative']
+        
+        # Use TEST_EMAIL from .env if no recipient provided
+        if not recipient:
+            recipient = settings.TEST_EMAIL if hasattr(settings, 'TEST_EMAIL') else None
+            if not recipient:
+                raise CommandError('No recipient provided. Either pass an email address or set TEST_EMAIL in .env')
 
         self.stdout.write(self.style.NOTICE('=' * 70))
         self.stdout.write(self.style.NOTICE('   Send All Email Templates - Visual Testing Tool'))
@@ -66,7 +74,7 @@ class Command(BaseCommand):
             context = email_config['context']
             display_name = email_config['display_name']
             
-            self.stdout.write(f'[{idx}/6] Sending: {display_name}')
+            self.stdout.write(f'[{idx}/{len(email_templates)}] Sending: {display_name}')
             self.stdout.write(f'      Template: {template_name}')
             self.stdout.write(f'      Subject: {subject}')
             
@@ -121,7 +129,7 @@ class Command(BaseCommand):
         
         if fail_count == 0:
             self.stdout.write(self.style.SUCCESS('\n All emails sent successfully!'))
-            self.stdout.write(self.style.WARNING('  Check inbox (and spam folder) for all 6 emails.'))
+            self.stdout.write(self.style.WARNING('  Check inbox (and spam folder) for all 10 emails.'))
         else:
             self.stdout.write(self.style.ERROR(f'\n {fail_count} email(s) failed to send.'))
             self.stdout.write(self.style.WARNING('  Check logs for error details.'))
@@ -199,6 +207,49 @@ class Command(BaseCommand):
                     'total_points': 32200, 'rejected_by': 'admin.garcia', 'requested_by': 'elena.mendoza',
                     'rejection_reason': 'Insufficient points balance. The distributor currently has only 28,500 points available.',
                     'remarks': 'Year-end rewards for sales team.'
+                }
+            },
+            {
+                'display_name': 'Request Processed',
+                'template_name': 'emails/request_processed.html',
+                'subject': '[TEST] Request #10542 Processed - Golden Star Trading Corp.',
+                'context': {
+                    'request_id': 10542, 'distributor_name': 'Golden Star Trading Corp.',
+                    'distributor_location': '2847 Aurora Boulevard, Cubao, Quezon City', 'items': items_list,
+                    'total_points': total_points, 'approved_by': 'admin.garcia', 'processed_by': 'superadmin.reyes',
+                    'requested_by': 'roberto.fernandez', 'date_processed': 'January 14, 2026 at 03:45 PM',
+                    'remarks': 'Items have been prepared and are ready for pickup.'
+                }
+            },
+            {
+                'display_name': 'Approved Request for Processing (Admin Notification)',
+                'template_name': 'emails/approved_request_for_processing.html',
+                'subject': '[TEST] Request #10542 Approved - Ready for Processing',
+                'context': {
+                    'request_id': 10542, 'distributor_name': 'Golden Star Trading Corp.',
+                    'distributor_location': '2847 Aurora Boulevard, Cubao, Quezon City', 'items': items_list,
+                    'total_points': total_points, 'approved_by': 'admin.garcia', 'requested_by': 'roberto.fernandez',
+                    'date_approved': 'January 14, 2026 at 02:50 PM', 'points_deducted_from': 'DISTRIBUTOR'
+                }
+            },
+            {
+                'display_name': 'Approver Assigned to Team',
+                'template_name': 'emails/added_to_a_team_approver.html',
+                'subject': "[TEST] You've been assigned as Approver for Metro Manila Sales Team",
+                'context': {
+                    'team_name': 'Metro Manila Sales Team', 'approver_full_name': 'Carlos Eduardo Villanueva',
+                    'member_count': 12, 'marketing_admin_name': 'Patricia Anne Reyes',
+                    'assigned_by': 'System Administrator'
+                }
+            },
+            {
+                'display_name': 'Agent Added to Team',
+                'template_name': 'emails/added_to_a_team_agent.html',
+                'subject': '[TEST] Welcome to Metro Manila Sales Team - Points Redemption System',
+                'context': {
+                    'team_name': 'Metro Manila Sales Team', 'agent_full_name': 'Miguel Antonio Santos',
+                    'approver_name': 'Carlos Eduardo Villanueva', 'approver_email': 'carlos.villanueva@company.com',
+                    'added_by': 'System Administrator', 'date_added': 'January 14, 2026 at 04:15 PM'
                 }
             },
         ]

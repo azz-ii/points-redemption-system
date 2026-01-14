@@ -69,7 +69,7 @@ class Command(BaseCommand):
                 # Send plain text email
                 self.stdout.write('\nSending plain text email...')
                 success = send_email_notification(
-                    subject='Points Redemption System',
+                    subject='Goodluck boi!',
                     message='This is a plain text test email from the Points Redemption System.\n\n'
                            'If you receive this email, the email configuration is working correctly!\n\n'
                            f'Sender: {settings.DEFAULT_FROM_EMAIL}\n'
@@ -84,8 +84,8 @@ class Command(BaseCommand):
                 # Create context based on template type
                 if template == 'test':
                     context = {}
-                    template_path = 'emails/goodluck.html'
-                    subject = 'Points Redemption System'
+                    template_path = 'emails/test.html'
+                    subject = 'Goodluck boi!'
                     
                 elif template == 'request_approved':
                     context = {

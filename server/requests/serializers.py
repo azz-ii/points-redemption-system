@@ -58,7 +58,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
             'processed_by', 'processed_by_name', 'date_processed',
             'cancelled_by', 'cancelled_by_name', 'date_cancelled',
-            'remarks', 'rejection_reason', 
+            'remarks', 'rejection_reason', 'withdrawal_reason',
             'svc_date', 'svc_time', 'svc_driver',
             'items'
         ]
