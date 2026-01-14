@@ -84,7 +84,7 @@ class Command(BaseCommand):
                 # Create context based on template type
                 if template == 'test':
                     context = {}
-                    template_path = 'emails/goodluck.html'
+                    template_path = 'emails/test.html'
                     subject = 'Points Redemption System'
                     
                 elif template == 'request_approved':
