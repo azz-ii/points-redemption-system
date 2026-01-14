@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Redemption Request</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
@@ -186,7 +191,7 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1>📋 New Redemption Request</h1>
+            <h1>New Redemption Request</h1>
             <p>A sales agent has submitted a redemption request for your review</p>
         </div>
         
@@ -229,10 +234,31 @@
                     <span class="info-label">Location:</span>
                     <span class="info-value">{{ distributor_location }}</span>
                 </div>
+            </div>
+            
+            <div class="info-box" style="{% if deductee_remaining_points < 0 %}background: #fee2e2; border-left-color: #dc2626;{% endif %}">
+                <h3 style="{% if deductee_remaining_points < 0 %}color: #991b1b;{% endif %}">Points Balance Information</h3>
                 <div class="info-row">
-                    <span class="info-label">Region:</span>
-                    <span class="info-value">{{ distributor_region }}</span>
+                    <span class="info-label">Points Deducted From:</span>
+                    <span class="info-value"><strong>{{ deductee_name }}</strong></span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Current Points Balance:</span>
+                    <span class="info-value"><strong>{{ deductee_current_points|floatformat:0 }}</strong> points</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Request Cost:</span>
+                    <span class="info-value" style="color: #dc2626; font-weight: 600;">-{{ total_points|floatformat:0 }} points</span>
+                </div>
+                <div class="info-row" style="border-top: 2px solid {% if deductee_remaining_points < 0 %}#dc2626{% else %}#3b82f6{% endif %}; padding-top: 12px; margin-top: 8px;">
+                    <span class="info-label" style="font-size: 16px; font-weight: 700;">Balance After Approval:</span>
+                    <span class="info-value" style="font-size: 18px; font-weight: 700; color: {% if deductee_remaining_points < 0 %}#dc2626{% else %}#059669{% endif %};">{{ deductee_remaining_points|floatformat:0 }} points</span>
+                </div>
+                {% if deductee_remaining_points < 0 %}
+                <div style="background: #fef2f2; border: 1px solid #dc2626; border-radius: 6px; padding: 12px; margin-top: 12px;">
+                    <p style="color: #991b1b; margin: 0; font-size: 13px; font-weight: 600;">⚠️ Warning: This request will result in a negative points balance. Company policy allows negative balances.</p>
+                </div>
+                {% endif %}
             </div>
             
             <h3 style="color: #1e40af; margin-top: 30px; margin-bottom: 15px;">Requested Items</h3>

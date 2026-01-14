@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request Rejected</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
@@ -169,8 +174,8 @@
         .remarks-box {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
-            padding: 15px;
-            margin: 20px 0;
+            padding: 20px;
+            margin: 25px 0;
             border-radius: 4px;
         }
         .remarks-box strong {
@@ -215,7 +220,7 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1>❌ Request Rejected</h1>
+            <h1>Request Rejected</h1>
             <p>Your redemption request has been rejected</p>
         </div>
         
@@ -233,7 +238,7 @@
             </div>
             
             <div class="rejection-reason-box">
-                <h3>🚫 Rejection Reason</h3>
+                <h3>Rejection Reason</h3>
                 <p>{{ rejection_reason }}</p>
             </div>
             
@@ -258,10 +263,6 @@
                 <div class="info-row">
                     <span class="info-label">Location:</span>
                     <span class="info-value">{{ distributor_location }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Region:</span>
-                    <span class="info-value">{{ distributor_region }}</span>
                 </div>
             </div>
             

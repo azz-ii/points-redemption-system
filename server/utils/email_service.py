@@ -220,7 +220,6 @@ def send_request_rejected_email(request_obj, distributor, rejected_by):
             'request_id': request_obj.id,
             'distributor_name': distributor.name,
             'distributor_location': distributor.location,
-            'distributor_region': distributor.region,
             'items': items_list,
             'total_points': total_points,
             'rejected_by': rejected_by.username,
@@ -384,6 +383,17 @@ def send_request_submitted_email(request_obj, distributor, approvers_emails):
             })
             total_points += item.total_points
         
+        # Determine deductee and their points based on points_deducted_from
+        if request_obj.points_deducted_from == 'SELF':
+            deductee_name = sales_agent_profile.full_name
+            deductee_current_points = sales_agent_profile.points
+        else:  # 'DISTRIBUTOR'
+            deductee_name = distributor.name
+            deductee_current_points = distributor.points
+        
+        # Calculate remaining balance after deduction (projected)
+        deductee_remaining_points = deductee_current_points - total_points
+        
         context = {
             'request_id': request_obj.id,
             'sales_agent_name': sales_agent_profile.full_name,
@@ -391,11 +401,14 @@ def send_request_submitted_email(request_obj, distributor, approvers_emails):
             'date_requested': request_obj.date_requested.strftime('%B %d, %Y at %I:%M %p'),
             'distributor_name': distributor.name,
             'distributor_location': distributor.location,
-            'distributor_region': distributor.region,
             'items': items_list,
             'total_points': total_points,
             'points_deducted_from': request_obj.points_deducted_from,
             'remarks': request_obj.remarks or '',
+            # Points balance information
+            'deductee_name': deductee_name,
+            'deductee_current_points': deductee_current_points,
+            'deductee_remaining_points': deductee_remaining_points,
         }
         
         return send_html_email(
