@@ -760,3 +760,69 @@ def send_request_withdrawn_email(request_obj, distributor, withdrawn_by):
         logger.error(f"Error sending withdrawal email for request #{request_obj.id}: {str(e)}")
         logger.exception("Full traceback:")
         return False
+
+
+def send_request_withdrawn_confirmation_email(request_obj, distributor, withdrawn_by):
+    """
+    Send confirmation email to the sales agent after they withdraw their request
+    
+    Args:
+        request_obj: RedemptionRequest model instance
+        distributor: Distributor model instance
+        withdrawn_by: User who withdrew the request (sales agent)
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        # Send to the sales agent who withdrew
+        if not hasattr(withdrawn_by, 'profile') or not withdrawn_by.profile.email:
+            logger.warning(f"No email address found for sales agent {withdrawn_by.username}")
+            return False
+        
+        recipient_email = withdrawn_by.profile.email
+        sales_agent_profile = withdrawn_by.profile
+        
+        logger.debug(f"Preparing withdrawal confirmation email for request #{request_obj.id} to {recipient_email}")
+        
+        # Calculate total items and points
+        items_list = []
+        total_points = 0
+        
+        for item in request_obj.items.all():
+            items_list.append({
+                'name': item.variant.catalogue_item.item_name,
+                'sku': item.variant.item_code,
+                'quantity': item.quantity,
+                'points_per_unit': item.points_per_item,
+                'total_points': item.total_points
+            })
+            total_points += item.total_points
+        
+        # Format date_cancelled for display
+        date_withdrawn_str = ''
+        if request_obj.date_cancelled:
+            date_withdrawn_str = request_obj.date_cancelled.strftime('%B %d, %Y at %I:%M %p')
+        
+        context = {
+            'request_id': request_obj.id,
+            'sales_agent_name': sales_agent_profile.full_name,
+            'distributor_name': distributor.name,
+            'distributor_location': distributor.location,
+            'items': items_list,
+            'total_points': total_points,
+            'withdrawal_reason': request_obj.withdrawal_reason or 'No reason provided',
+            'date_withdrawn': date_withdrawn_str,
+        }
+        
+        return send_html_email(
+            subject=f"Request #{request_obj.id} Withdrawn Successfully",
+            template_name='emails/request_witdrawn_success.html',
+            context=context,
+            recipient_list=[recipient_email]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending withdrawal confirmation email for request #{request_obj.id}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False

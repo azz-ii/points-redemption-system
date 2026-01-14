@@ -568,7 +568,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         logger.info(f"Request #{redemption_request.id} withdrawn by sales agent {user.username}")
         
         # Send withdrawal email notification to the team approver
-        from utils.email_service import send_request_withdrawn_email
+        from utils.email_service import send_request_withdrawn_email, send_request_withdrawn_confirmation_email
         
         if redemption_request.team and redemption_request.team.approver:
             approver = redemption_request.team.approver
@@ -582,6 +582,17 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     logger.info(f"Withdrawal notification sent to approver {approver.username}")
                 else:
                     logger.warning(f"Failed to send withdrawal notification to approver {approver.username}")
+        
+        # Send confirmation email to the sales agent
+        confirmation_sent = send_request_withdrawn_confirmation_email(
+            request_obj=redemption_request,
+            distributor=redemption_request.requested_for,
+            withdrawn_by=user
+        )
+        if confirmation_sent:
+            logger.info(f"Withdrawal confirmation sent to sales agent {user.username}")
+        else:
+            logger.warning(f"Failed to send withdrawal confirmation to sales agent {user.username}")
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
