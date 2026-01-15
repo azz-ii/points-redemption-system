@@ -30,7 +30,7 @@ import {
   CancelRequestModal,
   type RedemptionItem,
 } from "./Redemption/modals";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 function Dashboard() {
   const { resolvedTheme } = useTheme();
@@ -47,12 +47,14 @@ function Dashboard() {
   // Dashboard stats
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   // Redemption requests
   const [requests, setRequests] = useState<APIRedemptionRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
 
   // Modals
   const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(
@@ -71,11 +73,17 @@ function Dashboard() {
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
+        setStatsError(null);
         const data = await dashboardApi.getStats();
         setStats(data);
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
         toast.error("Failed to load dashboard statistics");
+        setStatsError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load stats right now."
+        );
       } finally {
         setStatsLoading(false);
       }
@@ -89,6 +97,7 @@ function Dashboard() {
     const fetchRequests = async () => {
       try {
         setRequestsLoading(true);
+        setRequestsError(null);
         const response = await dashboardApi.getRedemptionRequests(100, 0);
         // Filter to show only approved and not processed requests
         const filteredRequests = (
@@ -103,6 +112,11 @@ function Dashboard() {
       } catch (error) {
         console.error("Error fetching redemption requests:", error);
         toast.error("Failed to load redemption requests");
+        setRequestsError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load redemption requests"
+        );
       } finally {
         setRequestsLoading(false);
       }
@@ -185,6 +199,7 @@ function Dashboard() {
   const handleRefreshRequests = async () => {
     try {
       setIsRefreshing(true);
+      setRequestsError(null);
       const response = await dashboardApi.getRedemptionRequests(100, 0);
       const filteredRequests = (
         response.results as APIRedemptionRequest[]
@@ -198,6 +213,11 @@ function Dashboard() {
     } catch (error) {
       console.error("Error refreshing requests:", error);
       toast.error("Failed to refresh requests");
+      setRequestsError(
+        error instanceof Error
+          ? error.message
+          : "Unable to refresh redemption requests"
+      );
     } finally {
       setIsRefreshing(false);
     }
@@ -275,7 +295,7 @@ function Dashboard() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-y-auto pb-[env(safe-area-inset-bottom,16px)]">
         {/* Mobile Header */}
         <div
           className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
@@ -341,6 +361,51 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* Mobile KPI strip */}
+        <div className="md:hidden px-4 py-3 space-y-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950/60 backdrop-blur">
+          {statsError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 px-3 py-2 text-xs font-semibold">
+              {statsError}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Pending", value: totalCount, accent: "bg-amber-500" },
+              {
+                label: "Approved",
+                value: stats?.approved_count || 0,
+                accent: "bg-emerald-500",
+              },
+              {
+                label: "On-board",
+                value: stats?.on_board_count || 0,
+                accent: "bg-sky-500",
+              },
+            ].map((card, idx) => (
+              <div
+                key={card.label}
+                className={`rounded-xl border px-3 py-3 shadow-soft ${
+                  idx === 0 ? "col-span-2" : ""
+                } ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900/70 border-gray-800"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    {card.label}
+                  </span>
+                  <span className={`h-2 w-2 rounded-full ${card.accent}`} />
+                </div>
+                <p className="text-2xl font-bold mt-2">
+                  {statsLoading ? "—" : card.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:p-8">
           <div className="flex justify-between items-center mb-8">
@@ -382,100 +447,189 @@ function Dashboard() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-yellow-400" : "bg-yellow-500"
-                  }`}
-                />
-                <p className="font-semibold">Pending Requests</p>
+          <div className="space-y-4 mb-8">
+            {statsError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 px-4 py-3 text-sm font-semibold flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                <span>{statsError}</span>
               </div>
-              <p className="text-4xl font-bold">
-                {requestsLoading ? "-" : totalCount}
-              </p>
-            </div>
+            )}
 
-            <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
-            >
-              <div className="flex items-center gap-2 mb-4">
+            <div className="grid grid-cols-3 gap-6">
+              {[
+                {
+                  label: "Pending Requests",
+                  color: "bg-amber-500",
+                  value: totalCount,
+                  loading: requestsLoading,
+                },
+                {
+                  label: "Approved Requests",
+                  color: "bg-emerald-500",
+                  value: stats?.approved_count || 0,
+                  loading: statsLoading,
+                },
+                {
+                  label: "On-board",
+                  color: "bg-sky-500",
+                  value: stats?.on_board_count || 0,
+                  loading: statsLoading,
+                },
+              ].map((card) => (
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
-                  }`}
-                />
-                <p className="font-semibold">Approved Requests</p>
-              </div>
-              <p className="text-4xl font-bold">
-                {statsLoading ? "-" : stats?.approved_count || 0}
-              </p>
-            </div>
-
-            <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
-                  }`}
-                />
-                <p className="font-semibold">On-board</p>
-              </div>
-              <p className="text-4xl font-bold">
-                {statsLoading ? "-" : stats?.on_board_count || 0}
-              </p>
+                  key={card.label}
+                  className={`p-6 rounded-xl border shadow-soft ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-900 border-gray-700"
+                      : "bg-white border-gray-200"
+                  } transition-colors`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${card.color}`} />
+                      <p className="font-semibold text-sm">{card.label}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-brand-soft text-brand font-semibold">
+                      Live
+                    </span>
+                  </div>
+                  <p className="text-4xl font-bold tracking-tight">
+                    {card.loading ? (
+                      <span className="block h-8 w-16 rounded bg-gray-200 dark:bg-gray-800 animate-pulse" />
+                    ) : (
+                      card.value
+                    )}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Redemption Table Section */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
-                Pending Redemption Requests
-              </h3>
-              <button
-                onClick={handleRefreshRequests}
-                disabled={isRefreshing}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-                  isRefreshing
-                    ? "opacity-50 cursor-not-allowed"
-                    : resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
-                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
-                }`}
-                title="Refresh requests"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+          {/* Redemption Table Section + Controls */}
+          <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6 items-start">
+            <div
+              className={`rounded-xl border shadow-soft ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-950/70 border-gray-800"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <div className="flex flex-col gap-3 border-b border-gray-200 dark:border-gray-800 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">
+                    Pending Redemption Requests
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Only showing approved but not processed entries.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {requestsError && (
+                    <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                      {requestsError}
+                    </span>
+                  )}
+                  <button
+                    onClick={handleRefreshRequests}
+                    disabled={isRefreshing}
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                      isRefreshing
+                        ? "opacity-50 cursor-not-allowed"
+                        : resolvedTheme === "dark"
+                        ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                        : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                    }`}
+                    title="Refresh requests"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
+                    />
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
+                  </button>
+                </div>
+              </div>
+
+              {!requestsLoading && tableRequests.length === 0 ? (
+                <div className="p-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <p className="font-semibold mb-2">You are all caught up</p>
+                  <p className="mb-4">
+                    No pending redemption requests to process.
+                  </p>
+                  <button
+                    onClick={handleRefreshRequests}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand text-white shadow-soft hover:shadow-strong transition-shadow"
+                  >
+                    <RefreshCw className="h-4 w-4" /> Check again
+                  </button>
+                </div>
+              ) : (
+                <RedemptionTable
+                  redemptions={tableRequests}
+                  loading={requestsLoading}
+                  onView={handleViewRequest}
+                  onEdit={handleEditRequest}
+                  onMarkAsProcessed={handleMarkAsProcessed}
+                  onCancelRequest={handleCancelRequest}
                 />
-                {isRefreshing ? "Refreshing..." : "Refresh"}
-              </button>
+              )}
             </div>
-            <RedemptionTable
-              redemptions={tableRequests}
-              loading={requestsLoading}
-              onView={handleViewRequest}
-              onEdit={handleEditRequest}
-              onMarkAsProcessed={handleMarkAsProcessed}
-              onCancelRequest={handleCancelRequest}
-            />
+
+            {/* Side controls / danger zone */}
+            <div className="space-y-4">
+              <div
+                className={`rounded-xl border shadow-soft p-5 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-950/70 border-red-900/60"
+                    : "bg-red-50 border-red-200"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <p className="text-sm font-semibold">Danger zone</p>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                  Resetting points sets every user to zero. Double-check before
+                  you continue.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsResetModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-600 text-white font-semibold shadow-strong hover:bg-red-700 transition-colors"
+                  >
+                    <RotateCcw className="h-4 w-4" /> Reset all points
+                  </button>
+                  <button
+                    onClick={() => navigate("/admin/inventory")}
+                    className={`px-3 py-2 rounded-lg text-sm font-semibold border ${
+                      resolvedTheme === "dark"
+                        ? "border-gray-700 text-white hover:bg-gray-800"
+                        : "border-gray-200 text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    View inventory
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={`rounded-xl border shadow-soft p-5 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-950/70 border-gray-800"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <p className="text-sm font-semibold mb-2">Live pulse</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {requestsLoading
+                    ? "Syncing latest requests..."
+                    : `${totalCount} pending • ${
+                        stats?.approved_count ?? 0
+                      } approved today`}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -47,7 +47,7 @@ function ApproverDashboard() {
       quantity: 4,
       status: "Pending",
     },
-    {
+    { 
       id: "SA220013",
       agent: "Maria Santos",
       details: "Premium Jacket",

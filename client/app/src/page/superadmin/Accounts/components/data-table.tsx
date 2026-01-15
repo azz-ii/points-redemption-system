@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useTheme } from "next-themes"
+import * as React from "react";
+import { useTheme } from "next-themes";
 import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -15,8 +15,16 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus, RotateCw } from "lucide-react"
+} from "@tanstack/react-table";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  Settings2,
+  Ban,
+  UserPlus,
+  RotateCw,
+} from "lucide-react";
 
 import {
   Table,
@@ -25,9 +33,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -35,18 +43,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  loading?: boolean
-  onDeleteSelected?: (selectedRows: TData[]) => void
-  onBanSelected?: (selectedRows: TData[]) => void
-  onCreateNew?: () => void
-  createButtonLabel?: string
-  onRefresh?: () => void
-  refreshing?: boolean
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  loading?: boolean;
+  onDeleteSelected?: (selectedRows: TData[]) => void;
+  onBanSelected?: (selectedRows: TData[]) => void;
+  onCreateNew?: () => void;
+  createButtonLabel?: string;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -60,12 +68,15 @@ export function DataTable<TData, TValue>({
   onRefresh,
   refreshing = false,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const { resolvedTheme } = useTheme()
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const { resolvedTheme } = useTheme();
 
   const table = useReactTable({
     data,
@@ -88,24 +99,28 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
-      const searchValue = String(filterValue).toLowerCase()
-      const username = String(row.getValue("username") || "").toLowerCase()
-      const email = String(row.getValue("email") || "").toLowerCase()
-      const fullName = String(row.getValue("full_name") || "").toLowerCase()
-      
-      return username.includes(searchValue) || 
-             email.includes(searchValue) || 
-             fullName.includes(searchValue)
+      const searchValue = String(filterValue).toLowerCase();
+      const username = String(row.getValue("username") || "").toLowerCase();
+      const email = String(row.getValue("email") || "").toLowerCase();
+      const fullName = String(row.getValue("full_name") || "").toLowerCase();
+
+      return (
+        username.includes(searchValue) ||
+        email.includes(searchValue) ||
+        fullName.includes(searchValue)
+      );
     },
     initialState: {
       pagination: {
         pageSize: 7,
       },
     },
-  })
+  });
 
-  const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original)
-  const hasSelection = selectedRows.length > 0
+  const selectedRows = table
+    .getFilteredSelectedRowModel()
+    .rows.map((row) => row.original);
+  const hasSelection = selectedRows.length > 0;
 
   return (
     <div className="space-y-4">
@@ -125,17 +140,15 @@ export function DataTable<TData, TValue>({
               disabled={refreshing}
               className="h-9 flex gap-2"
             >
-              <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <RotateCw
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 flex gap-2"
-              >
+              <Button variant="outline" size="sm" className="h-9 flex gap-2">
                 <Settings2 className="h-4 w-4" />
                 Columns
               </Button>
@@ -147,7 +160,8 @@ export function DataTable<TData, TValue>({
                 .getAllColumns()
                 .filter(
                   (column) =>
-                    typeof column.accessorFn !== "undefined" && column.getCanHide()
+                    typeof column.accessorFn !== "undefined" &&
+                    column.getCanHide()
                 )
                 .map((column) => {
                   return (
@@ -155,11 +169,13 @@ export function DataTable<TData, TValue>({
                       key={column.id}
                       className="capitalize"
                       checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
                     >
                       {column.id.replace("_", " ")}
                     </DropdownMenuCheckboxItem>
-                  )
+                  );
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -200,10 +216,13 @@ export function DataTable<TData, TValue>({
         )}
       </div>
 
-      <div className="border rounded-lg overflow-hidden" style={{ height: "70vh", display: "flex", flexDirection: "column" }}>
+      <div
+        className="border rounded-lg overflow-hidden"
+        style={{ height: "70vh", display: "flex", flexDirection: "column" }}
+      >
         <div style={{ flex: 1, overflow: "auto" }}>
           <Table>
-            <TableHeader className="bg-muted">
+            <TableHeader className="bg-muted sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -216,7 +235,7 @@ export function DataTable<TData, TValue>({
                               header.getContext()
                             )}
                       </TableHead>
-                    )
+                    );
                   })}
                 </TableRow>
               ))}
@@ -236,6 +255,7 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-muted/50 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
@@ -265,11 +285,13 @@ export function DataTable<TData, TValue>({
           <div className="flex-1 text-sm text-muted-foreground">
             {hasSelection ? (
               <span>
-                {selectedRows.length} of {table.getFilteredRowModel().rows.length} row(s) selected
+                {selectedRows.length} of{" "}
+                {table.getFilteredRowModel().rows.length} row(s) selected
               </span>
             ) : (
               <span>
-                Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} results
+                Showing {table.getRowModel().rows.length} of{" "}
+                {table.getFilteredRowModel().rows.length} results
               </span>
             )}
           </div>
@@ -284,7 +306,8 @@ export function DataTable<TData, TValue>({
               <ChevronLeft className="h-4 w-4" /> Previous
             </Button>
             <span className="text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
             </span>
             <Button
               variant="outline"
@@ -299,5 +322,5 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
     </div>
-  )
+  );
 }
