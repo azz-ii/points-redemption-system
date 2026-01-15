@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
 import { MobileBottomNavApprover } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Bell,
   Search,
   Check,
   X,
-  Pencil,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -25,59 +30,84 @@ interface RequestItem {
   status: "Pending" | "Approved" | "Rejected";
 }
 
+const initialRequests: RequestItem[] = [
+  {
+    id: "RQ-001",
+    agent: "Alex Tan",
+    details: "Redeem 50,000 pts for Cap",
+    quantity: 50,
+    status: "Pending",
+  },
+  {
+    id: "RQ-002",
+    agent: "Jamie Lee",
+    details: "Redeem 10,000 pts for Polo",
+    quantity: 10,
+    status: "Approved",
+  },
+  {
+    id: "RQ-003",
+    agent: "Priya Kumar",
+    details: "Redeem 25,000 pts for Jacket",
+    quantity: 25,
+    status: "Rejected",
+  },
+  {
+    id: "RQ-004",
+    agent: "Hafiz Rahman",
+    details: "Redeem 5,000 pts for Tie",
+    quantity: 5,
+    status: "Pending",
+  },
+  {
+    id: "RQ-005",
+    agent: "Sarah Chen",
+    details: "Redeem 15,000 pts for Shirt",
+    quantity: 15,
+    status: "Approved",
+  },
+  {
+    id: "RQ-006",
+    agent: "Daniel Ong",
+    details: "Redeem 8,000 pts for Cap",
+    quantity: 8,
+    status: "Pending",
+  },
+  {
+    id: "RQ-007",
+    agent: "Maria Lopez",
+    details: "Redeem 30,000 pts for Shoes",
+    quantity: 30,
+    status: "Rejected",
+  },
+  {
+    id: "RQ-008",
+    agent: "Kenji Sato",
+    details: "Redeem 20,000 pts for Hoodie",
+    quantity: 20,
+    status: "Approved",
+  },
+];
+
 function ApproverDashboard() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests] = useState<RequestItem[]>([
-    {
-      id: "SA220011",
-      agent: "Kim Molina",
-      details: "Platinum Polo",
-      quantity: 12,
-      status: "Pending",
-    },
-    {
-      id: "SA220012",
-      agent: "Jerald Napoles",
-      details: "Platinum Cap",
-      quantity: 4,
-      status: "Pending",
-    },
-    { 
-      id: "SA220013",
-      agent: "Maria Santos",
-      details: "Premium Jacket",
-      quantity: 8,
-      status: "Approved",
-    },
-    {
-      id: "SA220014",
-      agent: "Juan Cruz",
-      details: "Executive Shirt",
-      quantity: 6,
-      status: "Pending",
-    },
-    {
-      id: "SA220015",
-      agent: "Ana Garcia",
-      details: "Corporate Tie",
-      quantity: 10,
-      status: "Rejected",
-    },
-    {
-      id: "SA220016",
-      agent: "Liza Dela Cruz",
-      details: "Leather Shoes",
-      quantity: 5,
-      status: "Approved",
-    },
-  ]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [requests, setRequests] = useState<RequestItem[]>(initialRequests);
 
-  const pageSize = 5;
+  const pageSize = 6;
+
+  const badgeTone = (status: RequestItem["status"]) => {
+    if (status === "Approved") {
+      return "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-200";
+    }
+    if (status === "Pending") {
+      return "bg-amber-100 text-amber-800 ring-1 ring-amber-300 dark:bg-amber-500/10 dark:text-amber-200";
+    }
+    return "bg-rose-100 text-rose-800 ring-1 ring-rose-300 dark:bg-rose-500/10 dark:text-rose-200";
+  };
+
   const filteredRequests = requests.filter((request) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
@@ -92,17 +122,18 @@ function ApproverDashboard() {
   const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  const paginatedRequests = filteredRequests.slice(
+    startIndex,
+    startIndex + pageSize
+  );
 
-  const handleNavigate = (page: "dashboard" | "requests" | "history") => {
-    if (page === "history") {
-      navigate("/approver/history");
-    } else if (page === "requests") {
-      navigate("/approver/requests");
-    } else {
-      navigate("/approver/dashboard");
-    }
+  const approvedCount = requests.filter((r) => r.status === "Approved").length;
+  const pendingCount = requests.filter((r) => r.status === "Pending").length;
+
+  const updateStatus = (id: string, status: RequestItem["status"]) => {
+    setRequests((prev) =>
+      prev.map((req) => (req.id === id ? { ...req, status } : req))
+    );
   };
 
   return (
@@ -115,7 +146,6 @@ function ApproverDashboard() {
     >
       <SidebarApprover />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <div
@@ -154,7 +184,6 @@ function ApproverDashboard() {
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto pb-20">
           <div className="p-4">
-            {/* Search */}
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
               <Input
@@ -172,7 +201,6 @@ function ApproverDashboard() {
               />
             </div>
 
-            {/* Request Cards */}
             <div className="space-y-3">
               {paginatedRequests.map((request) => (
                 <div
@@ -189,13 +217,9 @@ function ApproverDashboard() {
                       <p className="text-xs text-gray-500">{request.agent}</p>
                     </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        request.status === "Pending"
-                          ? "bg-yellow-400 text-black"
-                          : request.status === "Approved"
-                          ? "bg-green-500 text-white"
-                          : "bg-red-500 text-white"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${badgeTone(
+                        request.status
+                      )}`}
                     >
                       {request.status}
                     </span>
@@ -204,22 +228,24 @@ function ApproverDashboard() {
                   <p className="text-xs text-gray-500 mb-3">
                     Qty: {request.quantity}
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-green-500 text-white hover:bg-green-600 text-xs font-medium">
-                      <Check className="w-3 h-3" /> Confirm
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => updateStatus(request.id, "Approved")}
+                      className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-emerald-500 text-white hover:bg-emerald-600 text-xs font-medium"
+                    >
+                      <Check className="w-3 h-3" /> Approve
                     </button>
-                    <button className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-red-500 text-white hover:bg-red-600 text-xs font-medium">
+                    <button
+                      onClick={() => updateStatus(request.id, "Rejected")}
+                      className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-rose-500 text-white hover:bg-rose-600 text-xs font-medium"
+                    >
                       <X className="w-3 h-3" /> Reject
-                    </button>
-                    <button className="flex items-center justify-center gap-1 px-2 py-2 rounded bg-gray-400 text-white hover:bg-gray-500 text-xs font-medium">
-                      <Pencil className="w-3 h-3" /> Edit
                     </button>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Mobile Pagination */}
             <div className="flex items-center justify-between mt-6">
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
@@ -282,7 +308,57 @@ function ApproverDashboard() {
             </div>
           </div>
 
-          {/* Search */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div
+              className={`p-4 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border-gray-800"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Pending
+              </p>
+              <p className="text-2xl font-bold mt-2">{pendingCount}</p>
+            </div>
+            <div
+              className={`p-4 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border-gray-800"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Approved
+              </p>
+              <p className="text-2xl font-bold mt-2">{approvedCount}</p>
+            </div>
+            <div
+              className={`p-4 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border-gray-800"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Total
+              </p>
+              <p className="text-2xl font-bold mt-2">{requests.length}</p>
+            </div>
+          </div>
+
           <div className="mb-6">
             <div
               className={`relative flex items-center h-12 ${
@@ -293,7 +369,7 @@ function ApproverDashboard() {
             >
               <Search className="absolute left-3 h-5 w-5 text-gray-500" />
               <Input
-                placeholder="Search by ID, Name, Details, or Status....."
+                placeholder="Search by ID, Name, Details, or Status..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -308,95 +384,113 @@ function ApproverDashboard() {
             </div>
           </div>
 
-          {/* Table */}
           <div
-            className={`border rounded-lg overflow-hidden ${
+            className={`border rounded-xl overflow-hidden shadow-sm ${
               resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
+                ? "bg-neutral-900/80 border-neutral-800"
                 : "bg-white border-gray-200"
             } transition-colors`}
           >
-            <table className="w-full">
-              <thead
-                className={`${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-50 text-gray-700"
-                }`}
-              >
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+            <div
+              className={`px-6 py-4 border-b flex items-center justify-between ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800/50 border-gray-700 text-gray-400"
+                  : "bg-gray-100/50 border-gray-200 text-gray-600"
+              }`}
+            >
+              <div className="text-sm font-medium">Live queue</div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-200 font-semibold">
+                  {approvedCount} approved
+                </span>
+                <span className="px-2 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-200 font-semibold">
+                  {pendingCount} pending
+                </span>
+              </div>
+            </div>
+
+            <Table>
+              <TableHeader>
+                <TableRow
+                  className={`${
+                    resolvedTheme === "dark" ? "bg-gray-800/60" : "bg-gray-100"
+                  }`}
+                >
+                  <TableHead className="min-w-[110px] font-semibold">
                     ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  </TableHead>
+                  <TableHead className="min-w-[160px] font-semibold">
                     Agent
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Details
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
+                  </TableHead>
+                  <TableHead className="font-semibold">Details</TableHead>
+                  <TableHead className="w-28 font-semibold">Quantity</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="text-right w-48 font-semibold">
                     Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className={`divide-y ${
-                  resolvedTheme === "dark"
-                    ? "divide-gray-700"
-                    : "divide-gray-200"
-                }`}
-              >
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {paginatedRequests.map((request) => (
-                  <tr
+                  <TableRow
                     key={request.id}
-                    className={`hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors`}
+                    className={`${
+                      resolvedTheme === "dark"
+                        ? "hover:bg-gray-800/40"
+                        : "hover:bg-gray-50"
+                    }`}
                   >
-                    <td className="px-6 py-4 text-sm">{request.id}</td>
-                    <td className="px-6 py-4 text-sm">{request.agent}</td>
-                    <td className="px-6 py-4 text-sm">{request.details}</td>
-                    <td className="px-6 py-4 text-sm">{request.quantity}</td>
-                    <td className="px-6 py-4">
+                    <TableCell className="font-semibold">
+                      {request.id}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {request.agent}
+                    </TableCell>
+                    <TableCell
+                      className={`text-sm ${
+                        resolvedTheme === "dark"
+                          ? "text-muted-foreground"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {request.details}
+                    </TableCell>
+                    <TableCell className="text-sm font-semibold">
+                      {request.quantity}
+                    </TableCell>
+                    <TableCell>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          request.status === "Pending"
-                            ? "bg-yellow-400 text-black"
-                            : request.status === "Approved"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badgeTone(
+                          request.status
+                        )}`}
                       >
                         {request.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 flex justify-end gap-3">
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-medium"
-                        title="Confirm"
-                      >
-                        <Check className="w-4 h-4" /> Confirm
-                      </button>
-                      <button
-                        className="flex items-center gap-1 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
-                        title="Reject"
-                      >
-                        <X className="w-4 h-4" /> Reject
-                      </button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => updateStatus(request.id, "Approved")}
+                          className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                          title="Confirm"
+                        >
+                          <Check className="w-4 h-4" /> Confirm
+                        </button>
+                        <button
+                          onClick={() => updateStatus(request.id, "Rejected")}
+                          className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                          title="Reject"
+                        >
+                          <X className="w-4 h-4" /> Reject
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
 
-            {/* Desktop Pagination */}
-            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between p-4 border-t border-border/60">
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
@@ -429,13 +523,10 @@ function ApproverDashboard() {
         </div>
       </div>
 
-      {/* Notification Panel */}
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
       />
-
-      {/* Mobile Bottom Navigation */}
       <MobileBottomNavApprover />
     </div>
   );

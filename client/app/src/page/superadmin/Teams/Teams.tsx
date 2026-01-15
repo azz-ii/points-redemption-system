@@ -47,7 +47,10 @@ function Teams() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -61,7 +64,9 @@ function Teams() {
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
   const [approvers, setApprovers] = useState<ApproverOption[]>([]);
-  const [marketingAdmins, setMarketingAdmins] = useState<MarketingAdminOption[]>([]);
+  const [marketingAdmins, setMarketingAdmins] = useState<
+    MarketingAdminOption[]
+  >([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
     approver: null,
@@ -79,7 +84,6 @@ function Teams() {
   const fetchTeams = async () => {
     try {
       setLoading(true);
-      console.log("Fetching teams from API...");
       const response = await fetch("/api/teams/", {
         method: "GET",
         credentials: "include",
@@ -88,13 +92,9 @@ function Teams() {
         },
       });
       const data = await response.json();
-      
-      console.log("API Response:", response.status, response.ok);
-      console.log("API Data:", data);
 
       if (response.ok) {
         setTeams(Array.isArray(data) ? data : []);
-        console.log("Teams set:", Array.isArray(data) ? data : []);
       } else {
         console.error("API Error:", data);
       }
@@ -109,7 +109,6 @@ function Teams() {
   // Fetch approvers for dropdown
   const fetchApprovers = async () => {
     try {
-      console.log("DEBUG Teams: Fetching approvers...");
       const response = await fetch("/api/users/", {
         method: "GET",
         credentials: "include",
@@ -118,11 +117,6 @@ function Teams() {
         },
       });
       const data = await response.json();
-      
-      console.log("DEBUG Teams: Users fetched", {
-        status: response.status,
-        totalUsers: data.accounts?.length || 0,
-      });
 
       if (response.ok && data.accounts) {
         const approversList = data.accounts
@@ -132,11 +126,7 @@ function Teams() {
             full_name: user.full_name,
             email: user.email,
           }));
-        
-        console.log("DEBUG Teams: Approvers filtered", {
-          count: approversList.length,
-        });
-        
+
         setApprovers(approversList);
       }
     } catch (err) {
@@ -147,7 +137,6 @@ function Teams() {
   // Fetch marketing admins for dropdown
   const fetchMarketingAdmins = async () => {
     try {
-      console.log("DEBUG Teams: Fetching marketing admins...");
       const response = await fetch("/api/users/", {
         method: "GET",
         credentials: "include",
@@ -156,11 +145,6 @@ function Teams() {
         },
       });
       const data = await response.json();
-      
-      console.log("DEBUG Teams: Users fetched for marketing admins", {
-        status: response.status,
-        totalUsers: data.accounts?.length || 0,
-      });
 
       if (response.ok && data.accounts) {
         const marketingAdminsList = data.accounts
@@ -170,11 +154,7 @@ function Teams() {
             full_name: user.full_name,
             email: user.email,
           }));
-        
-        console.log("DEBUG Teams: Marketing admins filtered", {
-          count: marketingAdminsList.length,
-        });
-        
+
         setMarketingAdmins(marketingAdminsList);
       }
     } catch (err) {
@@ -202,10 +182,18 @@ function Teams() {
     (team) =>
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.id.toString().includes(searchQuery) ||
-      team.approver_details?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.approver_details?.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.marketing_admin_details?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.marketing_admin_details?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      team.approver_details?.full_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      team.approver_details?.email
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      team.marketing_admin_details?.full_name
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      team.marketing_admin_details?.email
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.max(
@@ -221,15 +209,12 @@ function Teams() {
   const handleCreateTeam = async (memberIds?: number[]) => {
     if (!newTeam.name.trim()) {
       setCreateError("Team name is required");
-      console.warn("DEBUG Teams: Create team validation failed - name required");
       return;
     }
 
     try {
       setCreateLoading(true);
       setCreateError("");
-      console.log("DEBUG Teams: Creating team", { newTeam, memberIds });
-
       const response = await fetchWithCsrf("/api/teams/", {
         method: "POST",
         credentials: "include",
@@ -240,18 +225,12 @@ function Teams() {
       });
 
       const data = await response.json();
-      console.log("DEBUG Teams: Create team response", {
-        status: response.status,
-        data,
-      });
 
       if (response.ok) {
-        console.log("DEBUG Teams: Team created successfully", data);
         const createdTeamId = data.id;
 
         // Assign members if any were selected
         if (memberIds && memberIds.length > 0) {
-          console.log("DEBUG Teams: Assigning", memberIds.length, "members to team");
           for (const memberId of memberIds) {
             try {
               const assignResponse = await fetchWithCsrf(
@@ -265,15 +244,17 @@ function Teams() {
                   body: JSON.stringify({ user_id: memberId }),
                 }
               );
-              
+
               if (!assignResponse.ok) {
                 const errorData = await assignResponse.json();
-                console.warn("DEBUG Teams: Failed to assign member", memberId, errorData);
               } else {
-                console.log("DEBUG Teams: Successfully assigned member", memberId);
               }
             } catch (err) {
-              console.error("DEBUG Teams: Error assigning member", memberId, err);
+              console.error(
+                "DEBUG Teams: Error assigning member",
+                memberId,
+                err
+              );
             }
           }
         }
@@ -311,10 +292,6 @@ function Teams() {
 
   // Handle edit team click
   const handleEditClick = (team: Team) => {
-    console.log("DEBUG Teams: Opening edit modal for team", {
-      id: team.id,
-      name: team.name,
-    });
     setTeamToEdit(team);
     setEditTeam({
       name: team.name,
@@ -328,35 +305,25 @@ function Teams() {
   // Handle edit team submission
   const handleEditTeam = async () => {
     if (!teamToEdit) {
-      console.error("DEBUG Teams: No team selected for editing");
       return;
     }
 
     if (!editTeam.name.trim()) {
       setEditError("Team name is required");
-      console.warn("DEBUG Teams: Edit team validation failed - name required");
       return;
     }
 
     try {
       setEditLoading(true);
       setEditError("");
-      console.log("DEBUG Teams: Updating team", {
-        teamId: teamToEdit.id,
-        editTeam,
+      const response = await fetchWithCsrf(`/api/teams/${teamToEdit.id}/`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editTeam),
       });
-
-      const response = await fetchWithCsrf(
-        `/api/teams/${teamToEdit.id}/`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editTeam),
-        }
-      );
 
       const data = await response.json();
       console.log("DEBUG Teams: Edit team response", {
@@ -407,16 +374,13 @@ function Teams() {
       setDeleteLoading(true);
       console.log("DEBUG Teams: Deleting team", teamId);
 
-      const response = await fetchWithCsrf(
-        `/api/teams/${teamId}/`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetchWithCsrf(`/api/teams/${teamId}/`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("DEBUG Teams: Delete team response", {
         status: response.status,
@@ -440,7 +404,8 @@ function Teams() {
 
         // Handle constraint errors (400 status)
         if (response.status === 400) {
-          const errorMessage = data.detail || data.error || "Failed to delete team";
+          const errorMessage =
+            data.detail || data.error || "Failed to delete team";
           setToast({
             message: errorMessage,
             type: "error",
@@ -572,8 +537,6 @@ function Teams() {
             </div>
           </div>
 
-
-
           {/* Teams Table */}
           <TeamsTable
             teams={teams}
@@ -690,18 +653,21 @@ function Teams() {
                           }`}
                         >
                           <span className="font-medium">Marketing:</span>{" "}
-                          {team.marketing_admin_details?.full_name || "No Marketing Admin"}
+                          {team.marketing_admin_details?.full_name ||
+                            "No Marketing Admin"}
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white text-center">
-                          {team.member_count} {team.member_count === 1 ? "member" : "members"}
+                          {team.member_count}{" "}
+                          {team.member_count === 1 ? "member" : "members"}
                         </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="text-xs text-gray-500">
-                        Created: {new Date(team.created_at).toLocaleDateString()}
+                        Created:{" "}
+                        {new Date(team.created_at).toLocaleDateString()}
                       </div>
                       <div className="relative">
                         <button

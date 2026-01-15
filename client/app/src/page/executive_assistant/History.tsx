@@ -24,7 +24,7 @@ function ExecutiveAssistantHistory() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 5;
 
   const [historyItems] = useState<ApprovalHistoryItem[]>([
     {
@@ -166,15 +166,19 @@ function ExecutiveAssistantHistory() {
           </div>
 
           {/* Search Bar */}
-          <div className="mb-6">
+          <div className="mb-8">
             <div
-              className={`relative flex items-center rounded-lg border ${
+              className={`relative flex items-center rounded-xl border-2 transition-all duration-300 hover:shadow-md focus-within:shadow-lg ${
                 resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
+                  ? "bg-gray-900 border-gray-700 hover:border-gray-600"
+                  : "bg-white border-gray-200 hover:border-gray-300"
               }`}
             >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
+              <Search
+                className={`absolute left-4 h-5 w-5 ${
+                  resolvedTheme === "dark" ? "text-gray-500" : "text-gray-400"
+                }`}
+              />
               <Input
                 placeholder="Search by ID, Name, or Category..."
                 value={searchQuery}
@@ -182,29 +186,40 @@ function ExecutiveAssistantHistory() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`pl-10 w-full h-12 text-base ${
+                className={`pl-12 w-full h-12 text-base font-medium ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-0 text-white placeholder:text-gray-500"
                     : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
+                } focus:outline-none`}
               />
             </div>
           </div>
 
           {/* History Table */}
           <div
-            className={`border rounded-lg overflow-hidden ${
+            className={`border-2 rounded-xl overflow-hidden transition-all duration-300 ${
               resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
+                ? "bg-gray-900 border-gray-700 shadow-xl"
+                : "bg-white border-gray-200 shadow-soft"
+            }`}
           >
             <div
-              className={`px-6 py-4 border-b ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              className={`px-8 py-6 border-b-2 bg-gradient-to-r ${
+                resolvedTheme === "dark"
+                  ? "border-gray-700 from-gray-800 to-gray-900"
+                  : "border-gray-100 from-gray-50 to-white"
               }`}
             >
-              <h2 className="text-xl font-semibold">Approval Requests</h2>
+              <h2 className="text-xl font-bold tracking-tight">
+                Approval Requests
+              </h2>
+              <p
+                className={`text-xs mt-1 ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                View all approved and rejected requests
+              </p>
             </div>
             <table className="w-full">
               <thead
@@ -215,19 +230,19 @@ function ExecutiveAssistantHistory() {
                 }`}
               >
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Submitter
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Status
                   </th>
                 </tr>
@@ -236,7 +251,7 @@ function ExecutiveAssistantHistory() {
                 className={`divide-y ${
                   resolvedTheme === "dark"
                     ? "divide-gray-700"
-                    : "divide-gray-200"
+                    : "divide-gray-100"
                 }`}
               >
                 {paginatedItems.map((item) => (
@@ -244,18 +259,26 @@ function ExecutiveAssistantHistory() {
                     key={item.id}
                     className={`hover:${
                       resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors`}
+                    } transition-all duration-200 hover:shadow-sm`}
                   >
-                    <td className="px-6 py-4 text-sm">{item.id}</td>
-                    <td className="px-6 py-4 text-sm">{item.submitter}</td>
-                    <td className="px-6 py-4 text-sm">{item.date}</td>
-                    <td className="px-6 py-4 text-sm">{item.category}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-5 text-sm font-semibold text-brand">
+                      {item.id}
+                    </td>
+                    <td className="px-8 py-5 text-sm font-medium">
+                      {item.submitter}
+                    </td>
+                    <td className="px-8 py-5 text-sm">{item.date}</td>
+                    <td className="px-8 py-5 text-sm">{item.category}</td>
+                    <td className="px-8 py-5">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-transform duration-200 ${
                           item.approvalStatus === "Approved"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
+                            ? resolvedTheme === "dark"
+                              ? "bg-green-900 text-green-200"
+                              : "bg-green-100 text-green-800"
+                            : resolvedTheme === "dark"
+                            ? "bg-red-900 text-red-200"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {item.approvalStatus}
@@ -268,14 +291,14 @@ function ExecutiveAssistantHistory() {
 
             {/* Pagination */}
             <div
-              className={`px-6 py-4 border-t flex justify-between items-center ${
+              className={`px-8 py-5 border-t-2 flex justify-between items-center bg-gradient-to-r ${
                 resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-gray-50 border-gray-200"
+                  ? "border-gray-700 from-gray-800 to-gray-900"
+                  : "border-gray-100 from-gray-50 to-white"
               }`}
             >
               <span
-                className={`text-sm ${
+                className={`text-xs font-semibold uppercase tracking-wide ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -286,19 +309,19 @@ function ExecutiveAssistantHistory() {
                 to {Math.min(currentPage * itemsPerPage, filteredItems.length)}{" "}
                 of {filteredItems.length}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded text-sm font-medium ${
+                  className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
                     currentPage === 1
                       ? resolvedTheme === "dark"
                         ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : resolvedTheme === "dark"
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-blue-500 hover:bg-blue-600 text-white"
-                  } transition-colors`}
+                      ? "bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg"
+                      : "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg"
+                  }`}
                 >
                   Previous
                 </button>
@@ -307,15 +330,15 @@ function ExecutiveAssistantHistory() {
                     setCurrentPage(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded text-sm font-medium ${
+                  className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
                     currentPage === totalPages
                       ? resolvedTheme === "dark"
                         ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : resolvedTheme === "dark"
-                      ? "bg-blue-600 hover:bg-blue-700 text-white"
-                      : "bg-blue-500 hover:bg-blue-600 text-white"
-                  } transition-colors`}
+                      ? "bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg"
+                      : "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg"
+                  }`}
                 >
                   Next
                 </button>
@@ -326,15 +349,21 @@ function ExecutiveAssistantHistory() {
 
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto pb-20 p-4">
-          <h2 className="text-2xl font-semibold mb-4">Approval History</h2>
+          <h2 className="text-2xl font-bold mb-6 tracking-tight">
+            Approval History
+          </h2>
           <div
-            className={`relative flex items-center rounded-lg border mb-4 ${
+            className={`relative flex items-center rounded-xl border-2 mb-6 transition-all duration-300 ${
               resolvedTheme === "dark"
                 ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-300"
+                : "bg-white border-gray-200"
             }`}
           >
-            <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+            <Search
+              className={`absolute left-3 h-4 w-4 ${
+                resolvedTheme === "dark" ? "text-gray-500" : "text-gray-400"
+              }`}
+            />
             <Input
               placeholder="Search"
               value={searchQuery}
@@ -342,7 +371,7 @@ function ExecutiveAssistantHistory() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`pl-10 w-full text-sm ${
+              className={`pl-10 w-full text-sm font-medium ${
                 resolvedTheme === "dark"
                   ? "bg-transparent border-0 text-white placeholder:text-gray-500"
                   : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
@@ -351,38 +380,48 @@ function ExecutiveAssistantHistory() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {paginatedItems.map((item) => (
               <div
                 key={item.id}
-                className={`p-4 rounded-lg border ${
+                className={`p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-md ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
+                    ? "bg-gray-900 border-gray-700 hover:border-gray-600"
+                    : "bg-white border-gray-200 hover:border-gray-300"
                 }`}
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="font-semibold text-sm">{item.id}</p>
-                    <p className="text-xs text-gray-500">{item.submitter}</p>
+                    <p className="font-bold text-sm text-brand">{item.id}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {item.submitter}
+                    </p>
                   </div>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${
                       item.approvalStatus === "Approved"
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
+                        ? resolvedTheme === "dark"
+                          ? "bg-green-900 text-green-200"
+                          : "bg-green-100 text-green-800"
+                        : resolvedTheme === "dark"
+                        ? "bg-red-900 text-red-200"
+                        : "bg-red-100 text-red-800"
                     }`}
                   >
                     {item.approvalStatus}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-gray-500 text-xs">Date</p>
-                    <p className="font-semibold">{item.date}</p>
+                    <p className="text-gray-500 text-xs uppercase font-semibold">
+                      Date
+                    </p>
+                    <p className="font-semibold mt-1">{item.date}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 text-xs text-right">Category</p>
+                    <p className="text-gray-500 text-xs uppercase font-semibold">
+                      Category
+                    </p>
                     <p className="font-semibold text-right">{item.category}</p>
                   </div>
                 </div>
@@ -392,24 +431,24 @@ function ExecutiveAssistantHistory() {
 
           {/* Mobile Pagination */}
           {filteredItems.length > itemsPerPage && (
-            <div className="flex justify-between gap-2 mt-6">
+            <div className="flex justify-between gap-3 mt-8">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className={`flex-1 px-3 py-2 rounded text-sm font-medium ${
+                className={`flex-1 px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
                   currentPage === 1
                     ? resolvedTheme === "dark"
                       ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : resolvedTheme === "dark"
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : "bg-blue-500 hover:bg-blue-600 text-white"
-                } transition-colors`}
+                    ? "bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg"
+                    : "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg"
+                }`}
               >
                 Previous
               </button>
               <span
-                className={`px-3 py-2 text-xs text-center ${
+                className={`px-4 py-3 text-xs text-center font-semibold uppercase tracking-wide ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -420,15 +459,15 @@ function ExecutiveAssistantHistory() {
                   setCurrentPage(Math.min(totalPages, currentPage + 1))
                 }
                 disabled={currentPage === totalPages}
-                className={`flex-1 px-3 py-2 rounded text-sm font-medium ${
+                className={`flex-1 px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
                   currentPage === totalPages
                     ? resolvedTheme === "dark"
                       ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : resolvedTheme === "dark"
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : "bg-blue-500 hover:bg-blue-600 text-white"
-                } transition-colors`}
+                    ? "bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:shadow-lg"
+                    : "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg"
+                }`}
               >
                 Next
               </button>
