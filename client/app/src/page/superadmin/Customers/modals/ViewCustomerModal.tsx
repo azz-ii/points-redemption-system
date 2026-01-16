@@ -55,6 +55,21 @@ export function ViewCustomerModal({
         {/* Content */}
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ID */}
+            <div>
+              <label className="block text-sm font-medium mb-2">ID</label>
+              <input
+                type="text"
+                value={customer.id}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
+            </div>
+
             {/* Name */}
             <div>
               <label className="block text-sm font-medium mb-2">Name</label>

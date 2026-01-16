@@ -76,29 +76,35 @@ const legendToCategoryMap: Record<string, string> = {
 
 // Transform backend variant data to frontend format
 export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
+  console.log("[API] Transforming variant:", variant);
+  
   // Parse points - handle both numeric and formula strings
   let pointsValue = 0;
   try {
+    // Try to parse as number first
     const parsed = parseFloat(variant.points);
     if (!isNaN(parsed)) {
       pointsValue = parsed;
+    } else {
+      console.warn(`[API] Could not parse points value: ${variant.points}`);
+      pointsValue = 0;
     }
   } catch (error) {
+    console.error("[API] Error parsing points:", error);
     pointsValue = 0;
   }
 
   // Use placeholder image if no image_url provided
-  const imageUrl =
-    variant.image_url && variant.image_url.trim() !== ""
-      ? variant.image_url
-      : "/images/tshirt.png";
+  const imageUrl = variant.image_url && variant.image_url.trim() !== "" 
+    ? variant.image_url 
+    : "/images/tshirt.png";
+
+  console.log(`[API] Image URL for ${variant.catalogue_item.item_name}: ${imageUrl}`);
 
   // Get category from legend
-  const category =
-    legendToCategoryMap[variant.catalogue_item.legend] ||
-    variant.catalogue_item.legend;
+  const category = legendToCategoryMap[variant.catalogue_item.legend] || variant.catalogue_item.legend;
 
-  return {
+  const transformed: RedeemItemData = {
     id: variant.id.toString(),
     name: variant.catalogue_item.item_name,
     points: pointsValue,
@@ -106,100 +112,91 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
     category: category,
     needs_driver: variant.catalogue_item.needs_driver,
   };
+
+  console.log("[API] Transformed item:", transformed);
+  return transformed;
 }
 
-// Paginated catalogue items response for frontend
-export interface PaginatedRedeemItemsResponse {
-  items: RedeemItemData[];
-  totalCount: number;
-  totalPages: number;
-  currentPage: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
-}
-
-export interface FetchCatalogueItemsParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  category?: string;
-}
-
-// Fetch catalogue items from backend with pagination and filtering
-export async function fetchCatalogueItems(
-  params: FetchCatalogueItemsParams = {}
-): Promise<PaginatedRedeemItemsResponse> {
-  const { page = 1, pageSize = 6, search = '', category = 'All' } = params;
-  
-  // Build query string
-  const queryParams = new URLSearchParams();
-  queryParams.set('page', page.toString());
-  queryParams.set('page_size', pageSize.toString());
-  if (search) queryParams.set('search', search);
-  if (category && category !== 'All') queryParams.set('category', category);
-  
-  const url = `${API_BASE_URL}/catalogue/?${queryParams.toString()}`;
-  console.log("[API] Fetching catalogue items from:", url);
+// Fetch catalogue items from backend
+export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
+  console.log("[API] Fetching catalogue items from:", `${API_BASE_URL}/catalogue/`);
   
   try {
-    const response = await fetch(url, {
+    // Fetch all items with a large page_size to get everything at once
+    const response = await fetch(`${API_BASE_URL}/catalogue/?page_size=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
+      credentials: "include", // Include cookies for session authentication
     });
 
     console.log("[API] Response status:", response.status);
+    console.log("[API] Response ok:", response.ok);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch catalogue items: ${response.status}`);
+      const errorText = await response.text();
+      console.error("[API] Error response:", errorText);
+      throw new Error(`Failed to fetch catalogue items: ${response.status} ${response.statusText}`);
     }
 
     const data: CatalogueItemsResponse = await response.json();
-    console.log("[API] Received data - count:", data.count, "results:", data.results?.length);
+    console.log("[API] Received data:", data);
+    console.log("[API] Number of items:", data.results?.length || 0);
 
     if (!data.results || !Array.isArray(data.results)) {
+      console.error("[API] Invalid response format - results not found or not an array");
       throw new Error("Invalid response format from server");
     }
 
-    // Transform to frontend format
-    const transformedItems = data.results.map(transformVariantToRedeemItem);
-    
-    const totalPages = Math.ceil(data.count / pageSize);
+    // Filter out archived items
+    const activeItems = data.results.filter(variant => !variant.catalogue_item.is_archived);
+    console.log("[API] Active (non-archived) items:", activeItems.length);
 
-    return {
-      items: transformedItems,
-      totalCount: data.count,
-      totalPages,
-      currentPage: page,
-      hasNext: data.next !== null,
-      hasPrevious: data.previous !== null,
-    };
+    // Transform to frontend format
+    const transformedItems = activeItems.map(transformVariantToRedeemItem);
+    console.log("[API] Transformed items:", transformedItems);
+
+    return transformedItems;
   } catch (error) {
     console.error("[API] Error fetching catalogue items:", error);
+    if (error instanceof Error) {
+      console.error("[API] Error message:", error.message);
+      console.error("[API] Error stack:", error.stack);
+    }
     throw error;
   }
 }
 
 // Fetch current user profile
 export async function fetchCurrentUser(): Promise<UserProfile> {
+  console.log("[API] Fetching current user profile from:", `${API_BASE_URL}/users/me/`);
+  
   try {
     const response = await fetch(`${API_BASE_URL}/users/me/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
+      credentials: "include", // Include cookies for session authentication
     });
 
+    console.log("[API] User profile response status:", response.status);
+    console.log("[API] User profile response ok:", response.ok);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch user profile: ${response.status}`);
+      const errorText = await response.text();
+      console.error("[API] Error response:", errorText);
+      throw new Error(`Failed to fetch user profile: ${response.status} ${response.statusText}`);
     }
 
-    return await response.json();
+    const userData: UserProfile = await response.json();
+    console.log("[API] Received user profile:", userData);
+    console.log("[API] User points:", userData.points || userData.profile?.points);
+
+    return userData;
   } catch (error) {
-    console.error("Error fetching current user:", error);
+    console.error("[API] Error fetching current user:", error);
     if (error instanceof Error) {
       console.error("[API] Error message:", error.message);
       console.error("[API] Error stack:", error.stack);
@@ -216,21 +213,21 @@ export async function fetchCurrentUser(): Promise<UserProfile> {
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
   return null;
 }
 
 // Helper to get headers with CSRF token
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
-
-  const csrfToken = getCookie("csrftoken");
+  
+  const csrfToken = getCookie('csrftoken');
   if (csrfToken) {
-    headers["X-CSRFToken"] = csrfToken;
+    headers['X-CSRFToken'] = csrfToken;
   }
-
+  
   return headers;
 }
 
@@ -241,13 +238,13 @@ export interface RedemptionRequestItem {
 
 export interface CreateRedemptionRequestData {
   requested_for: number; // Distributor ID
-  points_deducted_from: "SELF" | "DISTRIBUTOR";
+  points_deducted_from: 'SELF' | 'DISTRIBUTOR';
   remarks?: string;
   items: RedemptionRequestItem[];
   // Service Vehicle Use fields (optional)
   svc_date?: string; // ISO date string (YYYY-MM-DD)
   svc_time?: string; // Time string (HH:MM)
-  svc_driver?: "WITH_DRIVER" | "WITHOUT_DRIVER";
+  svc_driver?: 'WITH_DRIVER' | 'WITHOUT_DRIVER';
 }
 
 export interface RedemptionRequestResponse {
@@ -263,15 +260,10 @@ export interface RedemptionRequestResponse {
   total_points: number;
   status: string;
   status_display: string;
-  processing_status: string;
-  processing_status_display: string;
   date_requested: string;
   reviewed_by: number | null;
   reviewed_by_name: string | null;
   date_reviewed: string | null;
-  processed_by: number | null;
-  processed_by_name: string | null;
-  date_processed: string | null;
   remarks: string | null;
   rejection_reason: string | null;
   // Service Vehicle Use fields
@@ -293,42 +285,36 @@ export interface RedemptionRequestResponse {
 }
 
 export const redemptionRequestsApi = {
-  async createRequest(
-    data: CreateRedemptionRequestData
-  ): Promise<RedemptionRequestResponse> {
-    console.log("[Redemption API] Creating request:", data);
-
+  async createRequest(data: CreateRedemptionRequestData): Promise<RedemptionRequestResponse> {
+    console.log('[Redemption API] Creating request:', data);
+    
     const response = await fetch(`${API_BASE_URL}/redemption-requests/`, {
-      method: "POST",
+      method: 'POST',
       headers: getHeaders(),
-      credentials: "include",
+      credentials: 'include',
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error("[Redemption API] Error creating request:", errorData);
-      throw new Error(
-        errorData.detail ||
-          errorData.error ||
-          "Failed to create redemption request"
-      );
+      console.error('[Redemption API] Error creating request:', errorData);
+      throw new Error(errorData.detail || errorData.error || 'Failed to create redemption request');
     }
 
     const result = await response.json();
-    console.log("[Redemption API] Request created successfully:", result);
+    console.log('[Redemption API] Request created successfully:', result);
     return result;
   },
 
   async getRequests(): Promise<RedemptionRequestResponse[]> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch redemption requests");
+      throw new Error('Failed to fetch redemption requests');
     }
 
     return response.json();
@@ -336,121 +322,81 @@ export const redemptionRequestsApi = {
 
   async getRequest(id: number): Promise<RedemptionRequestResponse> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch redemption request");
+      throw new Error('Failed to fetch redemption request');
     }
 
     return response.json();
   },
 
-  async approveRequest(
-    id: number,
-    remarks?: string
-  ): Promise<RedemptionRequestResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/redemption-requests/${id}/approve/`,
-      {
-        method: "POST",
-        headers: getHeaders(),
-        credentials: "include",
-        body: JSON.stringify({ remarks }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to approve request");
-    }
-
-    return response.json();
-  },
-
-  async rejectRequest(
-    id: number,
-    rejection_reason: string,
-    remarks?: string
-  ): Promise<RedemptionRequestResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/redemption-requests/${id}/reject/`,
-      {
-        method: "POST",
-        headers: getHeaders(),
-        credentials: "include",
-        body: JSON.stringify({ rejection_reason, remarks }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to reject request");
-    }
-
-    return response.json();
-  },
-
-  async markAsProcessed(
-    id: number,
-    remarks?: string
-  ): Promise<RedemptionRequestResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/redemption-requests/${id}/mark_as_processed/`,
-      {
-        method: "POST",
-        headers: getHeaders(),
-        credentials: "include",
-        body: JSON.stringify({ remarks }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to mark request as processed");
-    }
-
-    return response.json();
-  },
-
-  async cancelRequest(
-    id: number,
-    cancellation_reason: string,
-    remarks?: string
-  ): Promise<RedemptionRequestResponse> {
-    const response = await fetch(
-      `${API_BASE_URL}/redemption-requests/${id}/cancel_request/`,
-      {
-        method: "POST",
-        headers: getHeaders(),
-        credentials: "include",
-        body: JSON.stringify({ cancellation_reason, remarks }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to cancel request");
-    }
-
-    return response.json();
-  },
-
-  async withdrawRequest(id: number, withdrawal_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/withdraw_request/`, {
+  async approveRequest(id: number, remarks?: string): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/approve/`, {
       method: 'POST',
       headers: getHeaders(),
       credentials: 'include',
-      body: JSON.stringify({ withdrawal_reason, remarks }),
+      body: JSON.stringify({ remarks }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to withdraw request');
+      throw new Error(errorData.error || 'Failed to approve request');
+    }
+
+    return response.json();
+  },
+
+  async rejectRequest(id: number, rejection_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/reject/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ rejection_reason, remarks }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to reject request');
+    }
+
+    return response.json();
+  },
+
+  async markAsProcessed(id: number, remarks?: string): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/mark_as_processed/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ remarks }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to mark request as processed');
+    }
+
+    return response.json();
+  },
+
+  async cancelRequest(id: number, cancellation_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/cancel_request/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ cancellation_reason, remarks }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to cancel request');
     }
 
     return response.json();
   },
 };
+
+

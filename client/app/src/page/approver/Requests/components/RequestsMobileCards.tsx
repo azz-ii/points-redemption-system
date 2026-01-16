@@ -32,19 +32,6 @@ export function RequestsMobileCards({
     }
   };
 
-  const getProcessingStatusBadgeColor = (status: string) => {
-    const statusUpper = status?.toUpperCase() || "";
-    switch (statusUpper) {
-      case "PROCESSED":
-        return "bg-green-600 text-white";
-      case "CANCELLED":
-        return "bg-red-600 text-white";
-      case "NOT_PROCESSED":
-      default:
-        return "bg-yellow-500 text-gray-900";
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -69,21 +56,21 @@ export function RequestsMobileCards({
       {requests.map((request) => (
         <div
           key={request.id}
-          className={`p-4 rounded-xl border shadow-sm ${
+          className={`p-4 rounded-lg border ${
             resolvedTheme === "dark"
-              ? "bg-neutral-900/80 border-neutral-800"
+              ? "bg-gray-800 border-gray-700"
               : "bg-white border-gray-200"
           }`}
         >
           <div className="flex justify-between items-start mb-3">
             <div>
               <p className="font-semibold text-sm">#{request.id}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {request.requested_by_name}
               </p>
             </div>
             <span
-              className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+              className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
                 request.status
               )}`}
             >
@@ -91,49 +78,27 @@ export function RequestsMobileCards({
             </span>
           </div>
 
-          <div className="space-y-2 mb-4 text-xs">
+          <div className="space-y-1 mb-3 text-xs">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Team</span>
+              <span className="text-gray-500 dark:text-gray-400">Team:</span>
               <span className="font-medium">
-                {request.team_name || (
-                  <span className="text-muted-foreground/70 italic">
-                    No Team
-                  </span>
-                )}
+                {request.team_name || <span className="text-gray-400 italic">No Team</span>}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">For</span>
+              <span className="text-gray-500 dark:text-gray-400">For:</span>
               <span className="font-medium">{request.requested_for_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Points</span>
-              <span className="font-semibold">
+              <span className="text-gray-500 dark:text-gray-400">Points:</span>
+              <span className="font-medium">
                 {request.total_points.toLocaleString()} pts
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Processing Status</span>
-              <span
-                className={`px-2 py-1 rounded text-xs font-semibold ${getProcessingStatusBadgeColor(
-                  request.processing_status
-                )}`}
-              >
-                {request.processing_status_display || "Not Processed"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Date Requested</span>
+              <span className="text-gray-500 dark:text-gray-400">Date:</span>
               <span className="font-medium">
                 {new Date(request.date_requested).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Processing Date</span>
-              <span className="font-medium">
-                {request.date_processed
-                  ? new Date(request.date_processed).toLocaleDateString()
-                  : <span className="text-gray-400 italic">N/A</span>}
               </span>
             </div>
           </div>
@@ -143,8 +108,8 @@ export function RequestsMobileCards({
               onClick={() => onView(request)}
               className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
                 resolvedTheme === "dark"
-                  ? "bg-neutral-800 hover:bg-neutral-700 text-white"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-900"
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
               }`}
             >
               <Eye className="h-4 w-4" />

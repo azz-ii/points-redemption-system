@@ -26,7 +26,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -78,12 +78,7 @@ export function Sidebar() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -138,7 +133,7 @@ export function Sidebar() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -164,7 +159,7 @@ export function Sidebar() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -189,7 +184,7 @@ export function Sidebar() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -204,7 +199,7 @@ export function SidebarSuperAdmin() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -256,12 +251,7 @@ export function SidebarSuperAdmin() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -316,7 +306,7 @@ export function SidebarSuperAdmin() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -342,7 +332,7 @@ export function SidebarSuperAdmin() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -367,7 +357,7 @@ export function SidebarSuperAdmin() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -382,7 +372,7 @@ export function SidebarSales() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -429,12 +419,7 @@ export function SidebarSales() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -489,7 +474,7 @@ export function SidebarSales() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -515,7 +500,7 @@ export function SidebarSales() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -540,7 +525,7 @@ export function SidebarSales() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -555,7 +540,7 @@ export function SidebarApprover() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -602,12 +587,7 @@ export function SidebarApprover() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -662,7 +642,7 @@ export function SidebarApprover() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -688,7 +668,7 @@ export function SidebarApprover() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -713,7 +693,7 @@ export function SidebarApprover() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -728,7 +708,7 @@ export function SidebarMarketing() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -774,12 +754,7 @@ export function SidebarMarketing() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{
-        transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-      }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -834,7 +809,7 @@ export function SidebarMarketing() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -860,7 +835,7 @@ export function SidebarMarketing() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -885,7 +860,7 @@ export function SidebarMarketing() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -900,7 +875,7 @@ export function SidebarReception() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -946,10 +921,7 @@ export function SidebarReception() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -1004,7 +976,7 @@ export function SidebarReception() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -1030,7 +1002,7 @@ export function SidebarReception() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -1055,7 +1027,7 @@ export function SidebarReception() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -1070,7 +1042,7 @@ export function SidebarExecutiveAssistant() {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [username, setUsername] = useState<string | null>(() => {
     try {
       return localStorage.getItem("username");
@@ -1116,10 +1088,7 @@ export function SidebarExecutiveAssistant() {
         resolvedTheme === "dark"
           ? "bg-gray-900 border-r border-gray-700"
           : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-500`}
-      style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
-      onMouseEnter={() => setSidebarExpanded(true)}
-      onMouseLeave={() => setSidebarExpanded(false)}
+      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-3">
@@ -1174,7 +1143,7 @@ export function SidebarExecutiveAssistant() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-500 inline-block">
+                <span className="transition-all duration-300 inline-block">
                   {label}
                 </span>
               )}
@@ -1200,7 +1169,7 @@ export function SidebarExecutiveAssistant() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-500">
+            <div className="transition-all duration-300">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -1225,7 +1194,7 @@ export function SidebarExecutiveAssistant() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-500 inline-block">
+            <span className="transition-all duration-300 inline-block">
               Log Out
             </span>
           )}
@@ -1234,4 +1203,3 @@ export function SidebarExecutiveAssistant() {
     </div>
   );
 }
-
