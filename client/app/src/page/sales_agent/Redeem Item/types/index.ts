@@ -13,22 +13,18 @@ export interface RedeemItemHeaderProps {
   cartItemsCount: number;
   onCartClick: () => void;
   onNotificationClick: () => void;
-  onHistoryClick?: () => void;
 }
 
 export interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  onClear?: () => void;
-  suggestions?: string[];
 }
 
 export interface CategoryFiltersProps {
   categories: string[];
   activeCategory: string;
   onCategoryChange: (category: string) => void;
-  counts?: Record<string, number>;
 }
 
 export interface ItemsGridProps {
@@ -39,7 +35,6 @@ export interface ItemsGridProps {
   activeCategory: string;
   onAddToCart: (item: RedeemItem) => void;
   onRetry?: () => void;
-  onResetFilters?: () => void;
 }
 
 export interface ItemCardProps {
@@ -65,5 +60,4 @@ export interface ItemsErrorStateProps {
 export interface ItemsEmptyStateProps {
   searchQuery: string;
   activeCategory: string;
-  onResetFilters?: () => void;
 }

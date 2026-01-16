@@ -37,12 +37,9 @@ class CatalogueItemListCreateView(APIView):
         """Get paginated list of catalogue variants with nested catalogue_item"""
         # Get query parameters
         search = request.query_params.get('search', '').strip()
-        category = request.query_params.get('category', '').strip().upper()
         
-        # Start with all non-archived variants
-        variants = Variant.objects.select_related('catalogue_item').filter(
-            catalogue_item__is_archived=False
-        )
+        # Start with all variants
+        variants = Variant.objects.select_related('catalogue_item').all()
         
         # Apply search filter if provided
         if search:
@@ -52,10 +49,6 @@ class CatalogueItemListCreateView(APIView):
                 Q(catalogue_item__legend__icontains=search) |
                 Q(catalogue_item__reward__icontains=search)
             )
-        
-        # Apply category filter if provided (and not 'ALL')
-        if category and category != 'ALL':
-            variants = variants.filter(catalogue_item__legend=category)
         
         # Order by catalogue_item and then by variant id for consistent pagination
         variants = variants.order_by('catalogue_item__id', 'id')

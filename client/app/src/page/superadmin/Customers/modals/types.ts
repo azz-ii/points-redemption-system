@@ -17,7 +17,6 @@ export interface CustomerFormData {
   contact_email: string;
   phone: string;
   location: string;
-  points: number;
 }
 
 export interface ModalBaseProps {

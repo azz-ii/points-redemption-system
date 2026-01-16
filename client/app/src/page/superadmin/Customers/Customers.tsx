@@ -13,7 +13,6 @@ import {
   Plus,
   Users,
   LogOut,
-  Upload,
 } from "lucide-react";
 
 import { customersApi, type Customer } from "@/lib/customers-api";
@@ -22,7 +21,6 @@ import {
   EditCustomerModal,
   ViewCustomerModal,
   DeleteCustomerModal,
-  BulkUploadModal,
 } from "./modals";
 import { CustomersTable, CustomersMobileCards } from "./components";
 
@@ -93,7 +91,6 @@ function Customers() {
     contact_email: "",
     phone: "",
     location: "",
-    points: 0,
   });
 
   const [editCustomer, setEditCustomer] = useState({
@@ -101,7 +98,6 @@ function Customers() {
     contact_email: "",
     phone: "",
     location: "",
-    points: 0,
   });
 
   // Modal state for edit/view/delete
@@ -113,9 +109,6 @@ function Customers() {
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
-
-  // Bulk upload modal state
-  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
 
   // Handle create customer submission
   const handleCreateCustomer = async () => {
@@ -148,7 +141,6 @@ function Customers() {
         contact_email: "",
         phone: "",
         location: "",
-        points: 0,
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -168,7 +160,6 @@ function Customers() {
       contact_email: customer.contact_email,
       phone: customer.phone,
       location: customer.location,
-      points: customer.points,
     });
     setShowEditModal(true);
     setEditError(null);
@@ -366,7 +357,6 @@ function Customers() {
               onCreateNew={() => setShowCreateModal(true)}
               onRefresh={fetchCustomers}
               refreshing={loading}
-              onBulkUpload={() => setShowBulkUploadModal(true)}
             />
           )}
         </div>
@@ -405,10 +395,10 @@ function Customers() {
             </div>
           </div>
 
-          <div className="mb-4 flex gap-2">
+          <div className="mb-4">
             <button
               onClick={() => setShowCreateModal(true)}
-              className={`flex-1 px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
+              className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
                 resolvedTheme === "dark"
                   ? "bg-white text-gray-900 border-gray-200 hover:bg-gray-200"
                   : "bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
@@ -416,16 +406,6 @@ function Customers() {
             >
               <Plus className="h-4 w-4" />
               Add Customer
-            </button>
-            <button
-              onClick={() => setShowBulkUploadModal(true)}
-              className={`px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
-                  : "bg-gray-200 text-gray-900 border-gray-300 hover:bg-gray-300"
-              }`}
-            >
-              <Upload className="h-4 w-4" />
             </button>
           </div>
 
@@ -506,13 +486,6 @@ function Customers() {
         onClose={() => setShowDeleteModal(false)}
         customer={deleteTarget}
         onConfirm={confirmDelete}
-      />
-
-      {/* Bulk Upload Modal */}
-      <BulkUploadModal
-        isOpen={showBulkUploadModal}
-        onClose={() => setShowBulkUploadModal(false)}
-        onUploadComplete={fetchCustomers}
       />
     </div>
   );

@@ -22,13 +22,6 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
-    --brand: 222 85% 55%;
-    --brand-strong: 222 82% 46%;
-    --brand-soft: 222 65% 92%;
-    --surface: 210 40% 98%;
-    --surface-muted: 214 31% 94%;
-    --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.08);
-    --shadow-strong: 0 14px 50px rgba(0, 0, 0, 0.12);
   }
 
   .dark {
@@ -51,13 +44,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --brand: 222 92% 70%;
-    --brand-strong: 222 93% 64%;
-    --brand-soft: 222 40% 20%;
-    --surface: 220 27% 12%;
-    --surface-muted: 220 25% 16%;
-    --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.4);
-    --shadow-strong: 0 14px 50px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -68,34 +54,12 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: "Inter", "Segoe UI", system-ui, -apple-system,
-      BlinkMacSystemFont, Roboto, sans-serif;
-    font-feature-settings: "ss01" on, "cv05" on;
-    letter-spacing: 0.01em;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, sans-serif;
   }
 }
 
 @layer utilities {
-  .bg-brand {
-    background-color: hsl(var(--brand));
-  }
-
-  .bg-brand-soft {
-    background-color: hsl(var(--brand-soft));
-  }
-
-  .text-brand {
-    color: hsl(var(--brand));
-  }
-
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
-
-  .shadow-strong {
-    box-shadow: var(--shadow-strong);
-  }
-
   @keyframes fadeIn {
     from {
       opacity: 0;

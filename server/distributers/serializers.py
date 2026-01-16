@@ -1,20 +1,6 @@
 from rest_framework import serializers
 from .models import Distributor
 
-
-class BulkDistributorUploadSerializer(serializers.Serializer):
-    """
-    Serializer for bulk distributor upload from Excel files.
-    """
-    file = serializers.FileField(
-        help_text='Excel file (.xlsx) with "LIST OF DISTRIBUTORS" column'
-    )
-    skip_duplicates = serializers.BooleanField(
-        default=True,
-        help_text='Skip distributors with duplicate names'
-    )
-
-
 class DistributorSerializer(serializers.ModelSerializer):
     added_by_name = serializers.SerializerMethodField()
     

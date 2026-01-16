@@ -52,15 +52,6 @@ export function ViewRedemptionStatusModal({
       };
     }
 
-    if (normalizedStatus === "WITHDRAWN") {
-      return {
-        label: "Withdrawn",
-        colorClass: isDark ? "bg-gray-500 text-white" : "bg-gray-200 text-gray-700",
-        withTooltip: true,
-        tooltipText: "You withdrew this request",
-      };
-    }
-
     return {
       label: "Rejected",
       colorClass: isDark ? "bg-red-500 text-white" : "bg-red-100 text-red-700",
@@ -170,12 +161,6 @@ export function ViewRedemptionStatusModal({
                   <div>
                     <p className="text-sm font-semibold">Rejection Reason</p>
                     <p className="text-sm">{request.rejection_reason}</p>
-                  </div>
-                )}
-                {request.withdrawal_reason && (
-                  <div>
-                    <p className="text-sm font-semibold">Withdrawal Reason</p>
-                    <p className="text-sm">{request.withdrawal_reason}</p>
                   </div>
                 )}
                 {request.remarks && (

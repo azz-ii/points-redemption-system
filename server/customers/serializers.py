@@ -1,20 +1,6 @@
 from rest_framework import serializers
 from .models import Customer
 
-
-class BulkCustomerUploadSerializer(serializers.Serializer):
-    """
-    Serializer for bulk customer upload from Excel files.
-    """
-    file = serializers.FileField(
-        help_text='Excel file (.xlsx) with "LIST OF CUSTOMERS" column'
-    )
-    skip_duplicates = serializers.BooleanField(
-        default=True,
-        help_text='Skip customers with duplicate names'
-    )
-
-
 class CustomerSerializer(serializers.ModelSerializer):
     added_by_name = serializers.SerializerMethodField()
     

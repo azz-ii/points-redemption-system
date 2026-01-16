@@ -12,7 +12,6 @@ interface DistributorsTableProps {
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
-  onBulkUpload?: () => void;
 }
 
 export function DistributorsTable({
@@ -25,7 +24,6 @@ export function DistributorsTable({
   onCreateNew,
   onRefresh,
   refreshing,
-  onBulkUpload,
 }: DistributorsTableProps) {
   const columns = createColumns({
     onView,
@@ -43,7 +41,6 @@ export function DistributorsTable({
       createButtonLabel="Add Distributor"
       onRefresh={onRefresh}
       refreshing={refreshing}
-      onBulkUpload={onBulkUpload}
     />
   );
 }

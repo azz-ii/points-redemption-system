@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, UserPlus, RotateCw, Upload } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2, Settings2, UserPlus, RotateCw } from "lucide-react"
 
 import {
   Table,
@@ -46,7 +46,6 @@ interface DataTableProps<TData, TValue> {
   createButtonLabel?: string
   onRefresh?: () => void
   refreshing?: boolean
-  onBulkUpload?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -58,7 +57,6 @@ export function DataTable<TData, TValue>({
   createButtonLabel = "Add New",
   onRefresh,
   refreshing = false,
-  onBulkUpload,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -174,34 +172,19 @@ export function DataTable<TData, TValue>({
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {onBulkUpload && (
-            <button
-              onClick={onBulkUpload}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-              } transition-colors font-semibold`}
-            >
-              <Upload className="h-4 w-4" />
-              <span>Bulk Upload</span>
-            </button>
-          )}
-          {onCreateNew && (
-            <button
-              onClick={onCreateNew}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              } transition-colors font-semibold`}
-            >
-              <UserPlus className="h-5 w-5" />
-              <span>{createButtonLabel}</span>
-            </button>
-          )}
-        </div>
+        {onCreateNew && (
+          <button
+            onClick={onCreateNew}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+              resolvedTheme === "dark"
+                ? "bg-white text-black hover:bg-gray-200"
+                : "bg-gray-900 text-white hover:bg-gray-700"
+            } transition-colors font-semibold ml-auto`}
+          >
+            <UserPlus className="h-5 w-5" />
+            <span>{createButtonLabel}</span>
+          </button>
+        )}
       </div>
 
       <div className="border rounded-lg overflow-hidden" style={{ height: "70vh", display: "flex", flexDirection: "column" }}>

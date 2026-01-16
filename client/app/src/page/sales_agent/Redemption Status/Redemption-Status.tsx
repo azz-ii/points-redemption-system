@@ -9,7 +9,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Bell, Search, ShoppingCart } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal } from "./modals/ViewRedemptionStatusModal";
-import { CancelRedemptionModal } from "./modals/CancelRedemptionModal";
 import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
 import {
   RedemptionStatusTable,
@@ -31,7 +30,6 @@ export default function RedemptionStatus() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<RedemptionRequestItem | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RedemptionRequest | null>(null);
-  const [withdrawRequest, setWithdrawRequest] = useState<RedemptionRequest | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Only for mobile view
   const [requests, setRequests] = useState<RedemptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,30 +38,30 @@ export default function RedemptionStatus() {
 
   // Fetch redemption requests from API
   useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch("/api/redemption-requests/", {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch requests: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setRequests(data);
+      } catch (err) {
+        console.error("Error fetching redemption requests:", err);
+        setError(err instanceof Error ? err.message : "Failed to load requests");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchRequests();
   }, []);
-
-  const fetchRequests = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch("/api/redemption-requests/", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch requests: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setRequests(data);
-    } catch (err) {
-      console.error("Error fetching redemption requests:", err);
-      setError(err instanceof Error ? err.message : "Failed to load requests");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Flatten request items for display
   const flattenedItems = requests.flatMap((request) =>
@@ -103,17 +101,6 @@ export default function RedemptionStatus() {
   const closeDetails = () => {
     setSelectedItem(null);
     setSelectedRequest(null);
-  };
-
-  const openWithdraw = (item: RedemptionRequestItem & { request: RedemptionRequest }) => {
-    setWithdrawRequest(item.request);
-  };
-  const closeWithdraw = () => {
-    setWithdrawRequest(null);
-  };
-  const handleWithdrawSuccess = () => {
-    // Refresh the requests list after successful withdrawal
-    fetchRequests();
   };
 
   return (
@@ -194,7 +181,6 @@ export default function RedemptionStatus() {
             <RedemptionStatusTable
               items={flattenedItems}
               onViewItem={openDetails}
-              onWithdrawItem={openWithdraw}
               isDark={isDark}
               loading={loading}
               error={error}
@@ -204,7 +190,6 @@ export default function RedemptionStatus() {
               items={paginatedItems}
               filteredCount={filtered.length}
               onViewItem={openDetails}
-              onWithdrawItem={openWithdraw}
               isDark={isDark}
               currentPage={safePage}
               totalPages={totalPages}
@@ -227,13 +212,6 @@ export default function RedemptionStatus() {
         onClose={closeDetails}
         item={selectedItem}
         request={selectedRequest}
-      />
-
-      <CancelRedemptionModal
-        isOpen={!!withdrawRequest}
-        onClose={closeWithdraw}
-        request={withdrawRequest}
-        onSuccess={handleWithdrawSuccess}
       />
 
       {/* Mobile Bottom Navigation */}

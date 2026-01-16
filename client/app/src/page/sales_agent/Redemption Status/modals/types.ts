@@ -35,7 +35,7 @@ export interface RedemptionRequest {
   points_deducted_from: "SELF" | "DISTRIBUTOR";
   points_deducted_from_display: string;
   total_points: number;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+  status: "PENDING" | "APPROVED" | "REJECTED";
   status_display: string;
   processing_status: "NOT_PROCESSED" | "PROCESSED" | "CANCELLED";
   processing_status_display: string;
@@ -43,12 +43,8 @@ export interface RedemptionRequest {
   reviewed_by: number | null;
   reviewed_by_name: string | null;
   date_reviewed: string | null;
-  processed_by: number | null;
-  processed_by_name: string | null;
-  date_processed: string | null;
   remarks: string | null;
   rejection_reason: string | null;
-  withdrawal_reason: string | null;
   items: RedemptionRequestItem[];
 }
 
