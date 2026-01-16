@@ -12,6 +12,7 @@ export function ItemsGrid({
   activeCategory,
   onAddToCart,
   onRetry,
+  onResetFilters,
 }: ItemsGridProps) {
   if (loading) {
     return <ItemsLoadingState />;
@@ -22,7 +23,13 @@ export function ItemsGrid({
   }
 
   if (items.length === 0) {
-    return <ItemsEmptyState searchQuery={searchQuery} activeCategory={activeCategory} />;
+    return (
+      <ItemsEmptyState
+        searchQuery={searchQuery}
+        activeCategory={activeCategory}
+        onResetFilters={onResetFilters}
+      />
+    );
   }
 
   return (

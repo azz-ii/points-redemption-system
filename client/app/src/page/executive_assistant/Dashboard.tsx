@@ -107,42 +107,57 @@ function ExecutiveAssistantDashboard() {
           </div>
 
           {/* Search Bar */}
-          <div className="mb-6">
+          <div className="mb-8">
             <div
-              className={`relative flex items-center rounded-lg border ${
+              className={`relative flex items-center rounded-xl border-2 transition-all duration-300 hover:shadow-md focus-within:shadow-lg ${
                 resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
+                  ? "bg-gray-900 border-gray-700 hover:border-gray-600"
+                  : "bg-white border-gray-200 hover:border-gray-300"
               }`}
             >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
+              <Search
+                className={`absolute left-4 h-5 w-5 ${
+                  resolvedTheme === "dark" ? "text-gray-500" : "text-gray-400"
+                }`}
+              />
               <Input
                 placeholder="Search by ID, Name....."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 w-full h-12 text-base ${
+                className={`pl-12 w-full h-12 text-base font-medium ${
                   resolvedTheme === "dark"
                     ? "bg-transparent border-0 text-white placeholder:text-gray-500"
                     : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
+                } focus:outline-none`}
               />
             </div>
           </div>
 
           {/* Edit Approval Requests Table */}
           <div
-            className={`border rounded-lg overflow-hidden ${
+            className={`border-2 rounded-xl overflow-hidden transition-all duration-300 ${
               resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
+                ? "bg-gray-900 border-gray-700 shadow-xl"
+                : "bg-white border-gray-200 shadow-soft"
+            }`}
           >
             <div
-              className={`px-6 py-4 border-b ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              className={`px-8 py-6 border-b-2 bg-gradient-to-r ${
+                resolvedTheme === "dark"
+                  ? "border-gray-700 from-gray-800 to-gray-900"
+                  : "border-gray-100 from-gray-50 to-white"
               }`}
             >
-              <h2 className="text-xl font-semibold">Edit Approval Requests</h2>
+              <h2 className="text-xl font-bold tracking-tight">
+                Edit Approval Requests
+              </h2>
+              <p
+                className={`text-xs mt-1 ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Manage pending approvals and requests
+              </p>
             </div>
             <table className="w-full">
               <thead
@@ -153,25 +168,25 @@ function ExecutiveAssistantDashboard() {
                 }`}
               >
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    <input type="checkbox" className="rounded" />
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
+                    <input type="checkbox" className="rounded cursor-pointer" />
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Submitter
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                  <th className="px-8 py-5 text-left text-xs font-bold uppercase tracking-wider">
                     Approval Status
                   </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
+                  <th className="px-8 py-5 text-right text-xs font-bold uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -180,7 +195,7 @@ function ExecutiveAssistantDashboard() {
                 className={`divide-y ${
                   resolvedTheme === "dark"
                     ? "divide-gray-700"
-                    : "divide-gray-200"
+                    : "divide-gray-100"
                 }`}
               >
                 {approvalItems.map((item) => (
@@ -188,39 +203,52 @@ function ExecutiveAssistantDashboard() {
                     key={item.id}
                     className={`hover:${
                       resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors`}
+                    } transition-all duration-200 hover:shadow-sm`}
                   >
-                    <td className="px-6 py-4">
-                      <input type="checkbox" className="rounded" />
+                    <td className="px-8 py-5">
+                      <input
+                        type="checkbox"
+                        className="rounded cursor-pointer w-4 h-4"
+                      />
                     </td>
-                    <td className="px-6 py-4 text-sm">{item.id}</td>
-                    <td className="px-6 py-4 text-sm">{item.submitter}</td>
-                    <td className="px-6 py-4 text-sm">{item.date}</td>
-                    <td className="px-6 py-4 text-sm">{item.category}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-5 text-sm font-semibold text-brand">
+                      {item.id}
+                    </td>
+                    <td className="px-8 py-5 text-sm font-medium">
+                      {item.submitter}
+                    </td>
+                    <td className="px-8 py-5 text-sm">{item.date}</td>
+                    <td className="px-8 py-5 text-sm">{item.category}</td>
+                    <td className="px-8 py-5">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-transform duration-200 ${
                           item.approvalStatus === "Pending"
-                            ? "bg-yellow-400 text-black"
+                            ? resolvedTheme === "dark"
+                              ? "bg-yellow-900 text-yellow-200"
+                              : "bg-yellow-100 text-yellow-800"
                             : item.approvalStatus === "Approved"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
+                            ? resolvedTheme === "dark"
+                              ? "bg-green-900 text-green-200"
+                              : "bg-green-100 text-green-800"
+                            : resolvedTheme === "dark"
+                            ? "bg-red-900 text-red-200"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {item.approvalStatus}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex gap-2 justify-end">
+                    <td className="px-8 py-5 text-right">
+                      <div className="flex gap-3 justify-end">
                         <button
-                          className="flex items-center gap-1 px-3 py-1 rounded text-sm font-medium bg-green-500 hover:bg-green-600 text-white transition-colors"
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
                           onClick={() => console.log("Confirm", item.id)}
                         >
                           <Check className="h-4 w-4" />
                           Confirm
                         </button>
                         <button
-                          className="flex items-center gap-1 px-3 py-1 rounded text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
                           onClick={() => console.log("Reject", item.id)}
                         >
                           <X className="h-4 w-4" />
@@ -237,22 +265,26 @@ function ExecutiveAssistantDashboard() {
 
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto pb-20 p-4">
-          <h2 className="text-2xl font-semibold mb-4">
+          <h2 className="text-2xl font-bold mb-6 tracking-tight">
             Edit Approval Requests
           </h2>
           <div
-            className={`relative flex items-center rounded-lg border mb-4 ${
+            className={`relative flex items-center rounded-xl border-2 mb-6 transition-all duration-300 ${
               resolvedTheme === "dark"
                 ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-300"
+                : "bg-white border-gray-200"
             }`}
           >
-            <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+            <Search
+              className={`absolute left-3 h-4 w-4 ${
+                resolvedTheme === "dark" ? "text-gray-500" : "text-gray-400"
+              }`}
+            />
             <Input
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-10 w-full text-sm ${
+              className={`pl-10 w-full text-sm font-medium ${
                 resolvedTheme === "dark"
                   ? "bg-transparent border-0 text-white placeholder:text-gray-500"
                   : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
@@ -261,53 +293,65 @@ function ExecutiveAssistantDashboard() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="space-y-3">
+          <div className="space-y-4">
             {approvalItems.map((item) => (
               <div
                 key={item.id}
-                className={`p-4 rounded-lg border ${
+                className={`p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-md ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
+                    ? "bg-gray-900 border-gray-700 hover:border-gray-600"
+                    : "bg-white border-gray-200 hover:border-gray-300"
                 }`}
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="font-semibold text-sm">{item.id}</p>
-                    <p className="text-xs text-gray-500">{item.submitter}</p>
+                    <p className="font-bold text-sm text-brand">{item.id}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {item.submitter}
+                    </p>
                   </div>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${
                       item.approvalStatus === "Pending"
-                        ? "bg-yellow-400 text-black"
+                        ? resolvedTheme === "dark"
+                          ? "bg-yellow-900 text-yellow-200"
+                          : "bg-yellow-100 text-yellow-800"
                         : item.approvalStatus === "Approved"
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
+                        ? resolvedTheme === "dark"
+                          ? "bg-green-900 text-green-200"
+                          : "bg-green-100 text-green-800"
+                        : resolvedTheme === "dark"
+                        ? "bg-red-900 text-red-200"
+                        : "bg-red-100 text-red-800"
                     }`}
                   >
                     {item.approvalStatus}
                   </span>
                 </div>
-                <div className="flex justify-between mb-3 text-sm">
+                <div className="flex justify-between mb-4 text-sm">
                   <div>
-                    <p className="text-gray-500 text-xs">Date</p>
-                    <p className="font-semibold">{item.date}</p>
+                    <p className="text-gray-500 text-xs uppercase font-semibold">
+                      Date
+                    </p>
+                    <p className="font-semibold mt-1">{item.date}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-gray-500 text-xs">Category</p>
-                    <p className="font-semibold">{item.category}</p>
+                    <p className="text-gray-500 text-xs uppercase font-semibold">
+                      Category
+                    </p>
+                    <p className="font-semibold mt-1">{item.category}</p>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   <button
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded text-sm font-medium bg-green-500 hover:bg-green-600 text-white transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white transition-all duration-200 hover:shadow-lg active:scale-95 uppercase tracking-wide"
                     onClick={() => console.log("Confirm", item.id)}
                   >
                     <Check className="h-4 w-4" />
                     Confirm
                   </button>
                   <button
-                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-colors"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white transition-all duration-200 hover:shadow-lg active:scale-95 uppercase tracking-wide"
                     onClick={() => console.log("Reject", item.id)}
                   >
                     <X className="h-4 w-4" />

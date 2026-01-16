@@ -1,4 +1,5 @@
 import { useTheme } from "next-themes";
+import { useState, useMemo } from "react";
 import { X, Clock, CheckCircle, AlertCircle, Info } from "lucide-react";
 
 interface Notification {
@@ -17,9 +18,7 @@ interface NotificationPanelProps {
 
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const { resolvedTheme } = useTheme();
-
-  // Dummy notification data
-  const notifications: Notification[] = [
+  const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
       type: "success",
@@ -68,7 +67,22 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       time: "1 day ago",
       read: true,
     },
-  ];
+  ]);
+
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
+
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const toggleRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
 
   const getIcon = (type: Notification["type"]) => {
     switch (type) {
@@ -109,17 +123,39 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
             resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
           }`}
         >
-          <h2 className="text-xl font-semibold">Notifications</h2>
-          <button
-            onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            }`}
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold">Notifications</h2>
+            {unreadCount > 0 && (
+              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-brand-soft text-brand">
+                {unreadCount} new
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={markAllRead}
+              disabled={unreadCount === 0}
+              className={`text-xs font-semibold px-3 py-2 rounded-lg border ${
+                unreadCount === 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : resolvedTheme === "dark"
+                  ? "border-gray-700 text-gray-100 hover:bg-gray-800"
+                  : "border-gray-200 text-gray-800 hover:bg-gray-100"
+              }`}
+            >
+              Mark all read
+            </button>
+            <button
+              onClick={onClose}
+              className={`p-2 rounded-lg transition-colors ${
+                resolvedTheme === "dark"
+                  ? "hover:bg-gray-800"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Notifications List */}
@@ -155,6 +191,15 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                         : "bg-blue-50/50"
                       : ""
                   }`}
+                  onClick={() => toggleRead(notification.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleRead(notification.id);
+                    }
+                  }}
                 >
                   <div className="flex gap-3">
                     <div className="shrink-0 mt-1">

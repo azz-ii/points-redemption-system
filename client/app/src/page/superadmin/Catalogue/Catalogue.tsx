@@ -111,25 +111,21 @@ function Catalogue() {
       if (rowsPerPage !== "ALL") {
         params.append("page_size", rowsPerPage.toString());
       } else {
-        params.append("page_size", "1000"); // Large number for "ALL"
+        params.append("page_size", "1000");
       }
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
       }
 
-      const url = `/api/catalogue/?${params.toString()}`;
-      console.log("[Catalogue] Fetching catalogue items (GET) -> url=", url);
-      const response = await fetch(url, {
+      const response = await fetch(`/api/catalogue/?${params.toString()}`, {
         credentials: "include",
       });
-      console.log("[Catalogue] GET response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to fetch catalogue items");
       }
 
       const data = await response.json();
-      // Handle paginated response format: { count, next, previous, results }
       const variants = data.results || [];
       setTotalCount(data.count || 0);
 
@@ -360,7 +356,6 @@ function Catalogue() {
           image_url: v.image_url || null,
         })),
       };
-      console.log("[Catalogue] Creating item (POST) payload:", payload);
       const response = await fetch("/api/catalogue/", {
         method: "POST",
         credentials: "include",
@@ -369,7 +364,6 @@ function Catalogue() {
         },
         body: JSON.stringify(payload),
       });
-      console.log("[Catalogue] POST response status:", response.status);
 
       if (!response.ok) {
         const data = await response.json();
@@ -525,12 +519,6 @@ function Catalogue() {
           image_url: v.image_url || null,
         })),
       };
-      console.log(
-        "[Catalogue] Updating item (PUT) id=",
-        editingCatalogueItemId,
-        " payload:",
-        updatePayload
-      );
       const response = await fetch(
         `/api/catalogue/item/${editingCatalogueItemId}/`,
         {
@@ -542,7 +530,6 @@ function Catalogue() {
           body: JSON.stringify(updatePayload),
         }
       );
-      console.log("[Catalogue] PUT response status:", response.status);
 
       if (!response.ok) {
         const data = await response.json();
@@ -642,12 +629,10 @@ function Catalogue() {
     if (!deleteTarget) return;
 
     try {
-      console.log("[Catalogue] Deleting item (DELETE) id=", deleteTarget.id);
       const response = await fetch(`/api/catalogue/${deleteTarget.id}/`, {
         method: "DELETE",
         credentials: "include",
       });
-      console.log("[Catalogue] DELETE response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to delete item");
