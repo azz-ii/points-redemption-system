@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { StatusChip } from "./StatusChip";
 import type { RedemptionRequestItem, RedemptionRequest } from "../modals/types";
 
@@ -6,6 +6,7 @@ interface RedemptionStatusMobileCardsProps {
   items: (RedemptionRequestItem & { requestId: number; status: string; status_display: string; processing_status: string; date_requested: string; request: RedemptionRequest })[];
   filteredCount: number;
   onViewItem: (item: RedemptionRequestItem & { request: RedemptionRequest }) => void;
+  onWithdrawItem?: (item: RedemptionRequestItem & { request: RedemptionRequest }) => void;
   isDark: boolean;
   currentPage: number;
   totalPages: number;
@@ -18,6 +19,7 @@ export function RedemptionStatusMobileCards({
   items,
   filteredCount,
   onViewItem,
+  onWithdrawItem,
   isDark,
   currentPage,
   totalPages,
@@ -85,17 +87,33 @@ export function RedemptionStatusMobileCards({
                   {new Date(item.date_requested).toLocaleDateString()}
                 </span>
               </div>
-              <button
-                onClick={() => onViewItem(item)}
-                className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                  isDark
-                    ? "bg-white text-gray-900 hover:bg-gray-200"
-                    : "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
-                }`}
-                aria-label={`View details for ${item.catalogue_item_name}`}
-              >
-                View Details
-              </button>
+              <div className="flex gap-2">
+                {item.status === "PENDING" && onWithdrawItem && (
+                  <button
+                    onClick={() => onWithdrawItem(item)}
+                    className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+                      isDark
+                        ? "bg-red-600 text-white hover:bg-red-500"
+                        : "bg-red-600 text-white hover:bg-red-700"
+                    }`}
+                    aria-label={`Withdraw request for ${item.catalogue_item_name}`}
+                  >
+                    <X className="h-4 w-4" />
+                    Withdraw
+                  </button>
+                )}
+                <button
+                  onClick={() => onViewItem(item)}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                    isDark
+                      ? "bg-white text-gray-900 hover:bg-gray-200"
+                      : "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                  aria-label={`View details for ${item.catalogue_item_name}`}
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           ))}
         </div>

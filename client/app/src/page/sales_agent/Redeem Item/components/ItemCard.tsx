@@ -10,7 +10,7 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
 
   return (
     <div
-      className={`rounded-lg overflow-hidden border ${
+      className={`rounded-lg overflow-hidden border transition-all duration-300 hover:scale-101 hover:shadow-lg ${
         isDark
           ? "bg-gray-900 border-gray-800"
           : "bg-white border-gray-200"
@@ -60,7 +60,7 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
           {/* Add button */}
           <button
             onClick={() => onAddToCart(item)}
-            className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+            className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-200 hover:scale-110 ${
               isDark
                 ? "bg-yellow-400 text-black hover:bg-yellow-300"
                 : "bg-yellow-400 text-black hover:bg-yellow-300"

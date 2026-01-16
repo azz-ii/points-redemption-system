@@ -157,6 +157,30 @@ export function EditDistributorModal({
                 placeholder="City, Province"
               />
             </div>
+
+            {/* Points */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Points
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={editDistributor.points}
+                onChange={(e) =>
+                  setEditDistributor({
+                    ...editDistributor,
+                    points: parseInt(e.target.value) || 0,
+                  })
+                }
+                className={`w-full px-3 py-2 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500`}
+                placeholder="0"
+              />
+            </div>
           </div>
         </div>
 

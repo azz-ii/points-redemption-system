@@ -21,6 +21,7 @@ import {
   EditDistributorModal,
   ViewDistributorModal,
   DeleteDistributorModal,
+  BulkUploadModal,
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
 
@@ -93,6 +94,7 @@ function Distributors() {
     phone: "",
     location: "",
     region: "",
+    points: 0,
   });
 
   const [editDistributor, setEditDistributor] = useState({
@@ -101,6 +103,7 @@ function Distributors() {
     phone: "",
     location: "",
     region: "",
+    points: 0,
   });
 
   // Modal state for edit/view/delete
@@ -112,6 +115,9 @@ function Distributors() {
   const [deleteTarget, setDeleteTarget] = useState<Distributor | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+
+  // Bulk upload modal state
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
 
   // Handle create distributor submission
   const handleCreateDistributor = async () => {
@@ -149,6 +155,7 @@ function Distributors() {
         phone: "",
         location: "",
         region: "",
+        points: 0,
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -169,6 +176,7 @@ function Distributors() {
       phone: distributor.phone,
       location: distributor.location,
       region: distributor.region,
+      points: distributor.points,
     });
     setShowEditModal(true);
     setEditError(null);
@@ -370,6 +378,7 @@ function Distributors() {
               onCreateNew={() => setShowCreateModal(true)}
               onRefresh={fetchDistributors}
               refreshing={loading}
+              onBulkUpload={() => setShowBulkUploadModal(true)}
             />
           )}
         </div>
@@ -499,6 +508,13 @@ function Distributors() {
         onClose={() => setShowDeleteModal(false)}
         distributor={deleteTarget}
         onConfirm={confirmDelete}
+      />
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        isOpen={showBulkUploadModal}
+        onClose={() => setShowBulkUploadModal(false)}
+        onUploadComplete={fetchDistributors}
       />
     </div>
   );

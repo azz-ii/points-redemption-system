@@ -32,6 +32,19 @@ export function RequestsTable({
     }
   };
 
+  const getProcessingStatusBadgeColor = (status: string) => {
+    const statusUpper = status?.toUpperCase() || "";
+    switch (statusUpper) {
+      case "PROCESSED":
+        return "bg-green-600 text-white";
+      case "CANCELLED":
+        return "bg-red-600 text-white";
+      case "NOT_PROCESSED":
+      default:
+        return "bg-yellow-500 text-gray-900";
+    }
+  };
+
   return (
     <div
       className={`rounded-lg border ${
@@ -52,22 +65,25 @@ export function RequestsTable({
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
-                Team
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold">
                 Requested By
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
                 Requested For
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
+                Date Requested
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold">
                 Total Points
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
-                Status
+                Request Status
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
-                Date
+                Processing Status
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold">
+                Processing Date
               </th>
               <th className="px-6 py-4 text-right text-sm font-semibold">
                 Actions
@@ -77,7 +93,7 @@ export function RequestsTable({
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
+                <td colSpan={9} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     <p className="text-sm text-gray-500">Loading requests...</p>
@@ -86,7 +102,7 @@ export function RequestsTable({
               </tr>
             ) : requests.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
+                <td colSpan={9} className="px-6 py-12 text-center">
                   <p className="text-sm text-gray-500">No requests found</p>
                 </td>
               </tr>
@@ -100,13 +116,13 @@ export function RequestsTable({
                 >
                   <td className="px-6 py-4 text-sm">#{request.id}</td>
                   <td className="px-6 py-4 text-sm">
-                    {request.team_name || <span className="text-gray-400 italic">No Team</span>}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
                     {request.requested_by_name}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {request.requested_for_name}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {new Date(request.date_requested).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {request.total_points.toLocaleString()} pts
@@ -120,8 +136,19 @@ export function RequestsTable({
                       {request.status_display}
                     </span>
                   </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getProcessingStatusBadgeColor(
+                        request.processing_status
+                      )}`}
+                    >
+                      {request.processing_status_display || "Not Processed"}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-sm">
-                    {new Date(request.date_requested).toLocaleDateString()}
+                    {request.date_processed
+                      ? new Date(request.date_processed).toLocaleDateString()
+                      : <span className="text-gray-400 italic">N/A</span>}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">

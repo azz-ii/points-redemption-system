@@ -1,7 +1,7 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StatusChipProps {
-  status: "PENDING" | "APPROVED" | "REJECTED" | "Pending" | "Approved" | "Rejected";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN" | "Pending" | "Approved" | "Rejected" | "Withdrawn";
   processingStatus?: "NOT_PROCESSED" | "PROCESSED" | "CANCELLED";
   isDark: boolean;
 }
@@ -65,6 +65,24 @@ export function StatusChip({ status, processingStatus, isDark }: StatusChipProps
       >
         Pending
       </span>
+    );
+  }
+  
+  // Handle WITHDRAWN status
+  if (normalizedStatus === "WITHDRAWN") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={`${base} cursor-help ${
+              isDark ? "bg-red-500 text-white" : "bg-red-100 text-red-700"
+            }`}
+          >
+            Withdrawn
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>You withdrew this request</TooltipContent>
+      </Tooltip>
     );
   }
   

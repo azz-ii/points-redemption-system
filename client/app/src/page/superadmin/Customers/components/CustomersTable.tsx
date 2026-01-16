@@ -12,6 +12,7 @@ interface CustomersTableProps {
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onBulkUpload?: () => void;
 }
 
 export function CustomersTable({
@@ -24,6 +25,7 @@ export function CustomersTable({
   onCreateNew,
   onRefresh,
   refreshing,
+  onBulkUpload,
 }: CustomersTableProps) {
   const columns = createColumns({
     onView,
@@ -41,6 +43,7 @@ export function CustomersTable({
       createButtonLabel="Add Customer"
       onRefresh={onRefresh}
       refreshing={refreshing}
+      onBulkUpload={onBulkUpload}
     />
   );
 }

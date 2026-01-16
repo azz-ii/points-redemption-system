@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
@@ -7,6 +7,7 @@ import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import CartModal, { type CartItem } from "@/components/cart-modal";
 import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser } from "@/lib/api";
+import { useDebounce } from "@/lib/useDebounce";
 import { toast } from "sonner";
 import {
   RedeemItemHeader,
@@ -16,6 +17,9 @@ import {
   Pagination,
 } from "./components";
 import type { SalesPages } from "./types";
+
+// Static categories since they are defined in the backend model
+const CATEGORIES = ["All", "Collateral", "Giveaway", "Asset", "Benefit"];
 
 export default function RedeemItem() {
   const navigate = useNavigate();
@@ -35,36 +39,50 @@ export default function RedeemItem() {
   const [error, setError] = useState<string | null>(null);
   const [userPoints, setUserPoints] = useState<number>(0);
   const [userLoading, setUserLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 6;
 
-  // Fetch items and user profile on component mount
-  useEffect(() => {
-    console.log("[Redeem-Item] Component mounted, fetching catalogue items and user profile...");
-    
-    const loadData = async () => {
-      try {
-        // Fetch catalogue items
-        setLoading(true);
-        setError(null);
-        console.log("[Redeem-Item] Starting API fetch for items...");
-        
-        const fetchedItems = await fetchCatalogueItems();
-        console.log("[Redeem-Item] Successfully fetched items:", fetchedItems);
-        
-        setItems(fetchedItems);
-        console.log("[Redeem-Item] State updated with items");
-      } catch (err) {
-        console.error("[Redeem-Item] Error loading catalogue items:", err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to load catalogue items";
-        setError(errorMessage);
-        console.error("[Redeem-Item] Error state set:", errorMessage);
-      } finally {
-        setLoading(false);
-        console.log("[Redeem-Item] Loading complete");
-      }
+  // Debounce search query to avoid excessive API calls (300ms delay)
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
+  // Fetch catalogue items with server-side pagination
+  const fetchItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("[Redeem-Item] Fetching items - page:", currentPage_num, "search:", debouncedSearch, "category:", activeCategory);
+      
+      const response = await fetchCatalogueItems({
+        page: currentPage_num,
+        pageSize: itemsPerPage,
+        search: debouncedSearch,
+        category: activeCategory,
+      });
+      
+      console.log("[Redeem-Item] Received", response.items.length, "items, total:", response.totalCount);
+      
+      setItems(response.items);
+      setTotalPages(response.totalPages);
+      setTotalCount(response.totalCount);
+    } catch (err) {
+      console.error("[Redeem-Item] Error loading catalogue items:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to load catalogue items";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage_num, debouncedSearch, activeCategory, itemsPerPage]);
+
+  // Fetch items when page, search, or category changes
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
       try {
-        // Fetch user profile
         setUserLoading(true);
         console.log("[Redeem-Item] Starting API fetch for user profile...");
         
@@ -77,34 +95,22 @@ export default function RedeemItem() {
         console.log("[Redeem-Item] User points set to:", points);
       } catch (err) {
         console.error("[Redeem-Item] Error loading user profile:", err);
-        // Don't set error state for user profile, just keep default points
         setUserPoints(0);
-        console.error("[Redeem-Item] User points defaulted to 0");
       } finally {
         setUserLoading(false);
-        console.log("[Redeem-Item] User profile loading complete");
       }
     };
 
-    loadData();
+    loadUserProfile();
   }, []);
 
-  // Extract unique categories from items
-  const categories = ["All", ...Array.from(new Set(items.map(item => item.category)))];
+  // Use static categories
+  const categories = CATEGORIES;
 
-  const filtered = items.filter((item) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = item.name.toLowerCase().includes(q);
-    const matchesCategory =
-      activeCategory === "All" || item.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedItems = filtered.slice(
-    (currentPage_num - 1) * itemsPerPage,
-    currentPage_num * itemsPerPage
-  );
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage_num(1);
+  }, [debouncedSearch]);
 
   const handleAddToCart = (item: RedeemItemData) => {
     setCartItems((prevItems) => {
@@ -176,10 +182,10 @@ export default function RedeemItem() {
           />
 
           <ItemsGrid
-            items={paginatedItems}
+            items={items}
             loading={loading}
             error={error}
-            searchQuery={searchQuery}
+            searchQuery={debouncedSearch}
             activeCategory={activeCategory}
             onAddToCart={handleAddToCart}
           />

@@ -117,22 +117,49 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
   return transformed;
 }
 
-// Fetch catalogue items from backend
-export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
-  console.log("[API] Fetching catalogue items from:", `${API_BASE_URL}/catalogue/`);
+// Paginated catalogue items response for frontend
+export interface PaginatedRedeemItemsResponse {
+  items: RedeemItemData[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface FetchCatalogueItemsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  category?: string;
+}
+
+// Fetch catalogue items from backend with pagination
+export async function fetchCatalogueItems(
+  params: FetchCatalogueItemsParams = {}
+): Promise<PaginatedRedeemItemsResponse> {
+  const { page = 1, pageSize = 6, search = '', category = 'All' } = params;
+  
+  // Build query string
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', page.toString());
+  queryParams.set('page_size', pageSize.toString());
+  if (search) queryParams.set('search', search);
+  if (category && category !== 'All') queryParams.set('category', category);
+  
+  const url = `${API_BASE_URL}/catalogue/?${queryParams.toString()}`;
+  console.log("[API] Fetching catalogue items from:", url);
   
   try {
-    // Fetch all items with a large page_size to get everything at once
-    const response = await fetch(`${API_BASE_URL}/catalogue/?page_size=1000`, {
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include", // Include cookies for session authentication
+      credentials: "include",
     });
 
     console.log("[API] Response status:", response.status);
-    console.log("[API] Response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -141,29 +168,28 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     }
 
     const data: CatalogueItemsResponse = await response.json();
-    console.log("[API] Received data:", data);
-    console.log("[API] Number of items:", data.results?.length || 0);
+    console.log("[API] Received data - count:", data.count, "results:", data.results?.length);
 
     if (!data.results || !Array.isArray(data.results)) {
       console.error("[API] Invalid response format - results not found or not an array");
       throw new Error("Invalid response format from server");
     }
 
-    // Filter out archived items
-    const activeItems = data.results.filter(variant => !variant.catalogue_item.is_archived);
-    console.log("[API] Active (non-archived) items:", activeItems.length);
-
     // Transform to frontend format
-    const transformedItems = activeItems.map(transformVariantToRedeemItem);
-    console.log("[API] Transformed items:", transformedItems);
+    const transformedItems = data.results.map(transformVariantToRedeemItem);
+    
+    const totalPages = Math.ceil(data.count / pageSize);
 
-    return transformedItems;
+    return {
+      items: transformedItems,
+      totalCount: data.count,
+      totalPages,
+      currentPage: page,
+      hasNext: data.next !== null,
+      hasPrevious: data.previous !== null,
+    };
   } catch (error) {
     console.error("[API] Error fetching catalogue items:", error);
-    if (error instanceof Error) {
-      console.error("[API] Error message:", error.message);
-      console.error("[API] Error stack:", error.stack);
-    }
     throw error;
   }
 }
@@ -260,10 +286,15 @@ export interface RedemptionRequestResponse {
   total_points: number;
   status: string;
   status_display: string;
+  processing_status: string;
+  processing_status_display: string;
   date_requested: string;
   reviewed_by: number | null;
   reviewed_by_name: string | null;
   date_reviewed: string | null;
+  processed_by: number | null;
+  processed_by_name: string | null;
+  date_processed: string | null;
   remarks: string | null;
   rejection_reason: string | null;
   // Service Vehicle Use fields
@@ -393,6 +424,22 @@ export const redemptionRequestsApi = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || 'Failed to cancel request');
+    }
+
+    return response.json();
+  },
+
+  async withdrawRequest(id: number, withdrawal_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/withdraw_request/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ withdrawal_reason, remarks }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to withdraw request');
     }
 
     return response.json();

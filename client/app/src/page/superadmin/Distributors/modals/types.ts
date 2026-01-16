@@ -17,6 +17,7 @@ export interface DistributorFormData {
   contact_email: string;
   phone: string;
   location: string;
+  points: number;
 }
 
 export interface ModalBaseProps {

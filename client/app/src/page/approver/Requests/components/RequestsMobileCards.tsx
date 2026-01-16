@@ -32,6 +32,19 @@ export function RequestsMobileCards({
     }
   };
 
+  const getProcessingStatusBadgeColor = (status: string) => {
+    const statusUpper = status?.toUpperCase() || "";
+    switch (statusUpper) {
+      case "PROCESSED":
+        return "bg-green-600 text-white";
+      case "CANCELLED":
+        return "bg-red-600 text-white";
+      case "NOT_PROCESSED":
+      default:
+        return "bg-yellow-500 text-gray-900";
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -69,22 +82,9 @@ export function RequestsMobileCards({
                 {request.requested_by_name}
               </p>
             </div>
-            <span
-              className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
-                request.status
-              )}`}
-            >
-              {request.status_display}
-            </span>
           </div>
 
           <div className="space-y-1 mb-3 text-xs">
-            <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Team:</span>
-              <span className="font-medium">
-                {request.team_name || <span className="text-gray-400 italic">No Team</span>}
-              </span>
-            </div>
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">For:</span>
               <span className="font-medium">{request.requested_for_name}</span>
@@ -96,9 +96,37 @@ export function RequestsMobileCards({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Date:</span>
+              <span className="text-gray-500 dark:text-gray-400">Request Status:</span>
+              <span
+                className={`px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
+                  request.status
+                )}`}
+              >
+                {request.status_display}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Processing Status:</span>
+              <span
+                className={`px-2 py-1 rounded text-xs font-semibold ${getProcessingStatusBadgeColor(
+                  request.processing_status
+                )}`}
+              >
+                {request.processing_status_display || "Not Processed"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Date Requested:</span>
               <span className="font-medium">
                 {new Date(request.date_requested).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Processing Date:</span>
+              <span className="font-medium">
+                {request.date_processed
+                  ? new Date(request.date_processed).toLocaleDateString()
+                  : <span className="text-gray-400 italic">N/A</span>}
               </span>
             </div>
           </div>
