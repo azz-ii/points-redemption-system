@@ -33,6 +33,7 @@ import Inventory from "../page/superadmin/Inventory/Inventory";
 import Distributors from "../page/superadmin/Distributors/Distributors";
 import Customers from "../page/superadmin/Customers/Customers";
 import Teams from "../page/superadmin/Teams/Teams";
+import Marketing from "../page/superadmin/Marketing/Marketing";
 
 // Components
 import { useAuth } from "../context/AuthContext";
@@ -106,6 +107,7 @@ export function AppRoutes() {
           <Route path="/admin/catalogue" element={<Catalogue />} />
           <Route path="/admin/redemption" element={<Redemption />} />
           <Route path="/admin/inventory" element={<Inventory />} />
+          <Route path="/admin/marketing" element={<Marketing />} />
           <Route path="/admin/distributors" element={<Distributors />} />
           <Route path="/admin/customers" element={<Customers />} />
           <Route path="/admin/teams" element={<Teams />} />

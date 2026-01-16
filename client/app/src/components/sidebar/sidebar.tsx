@@ -17,6 +17,7 @@ import {
   FileBox,
   Users,
   UserCircle,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/context/AuthContext";
@@ -51,6 +52,7 @@ export function Sidebar() {
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
     { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
+    { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
   ] as const;
 
   const getCurrentPage = () => {
@@ -224,6 +226,7 @@ export function SidebarSuperAdmin() {
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
     { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
+    { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
   ] as const;
 
   const getCurrentPage = () => {
