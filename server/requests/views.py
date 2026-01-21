@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.hashers import check_password
 import logging
-from .models import RedemptionRequest, RedemptionRequestItem, ApprovalStatusChoice, RequestStatus
+from .models import RedemptionRequest, RedemptionRequestItem, ApprovalStatusChoice, RequestStatus, RequestedForType
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
@@ -22,6 +22,7 @@ from utils.email_service import (
 )
 from users.models import UserProfile
 from distributers.models import Distributor
+from customers.models import Customer
 
 # Configure logger for request operations
 logger = logging.getLogger('email')
@@ -150,9 +151,10 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             if hasattr(team_approver, 'profile') and team_approver.profile.email:
                 approver_email = team_approver.profile.email
                 logger.info(f"New request #{redemption_request.id} created, sending notification to team approver...")
+                entity = redemption_request.get_requested_for_entity()
                 email_sent = send_request_submitted_email(
                     request_obj=redemption_request,
-                    distributor=redemption_request.requested_for,
+                    distributor=entity,
                     approvers_emails=[approver_email]
                 )
                 
@@ -171,7 +173,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             if approvers_emails:
                 send_request_submitted_email(
                     request_obj=redemption_request,
-                    distributor=redemption_request.requested_for,
+                    distributor=redemption_request.get_requested_for_entity(),
                     approvers_emails=approvers_emails
                 )
         
@@ -252,7 +254,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     logger.info(f"Request #{redemption_request.id} approved, sending email notification...")
                     email_sent = send_request_approved_email(
                         request_obj=redemption_request,
-                        distributor=redemption_request.requested_for,
+                        distributor=redemption_request.get_requested_for_entity(),
                         approved_by=request.user
                     )
                     
@@ -264,7 +266,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     # Send notification to superadmins that request is ready for processing
                     admin_email_sent = send_approved_request_notification_to_admin(
                         request_obj=redemption_request,
-                        distributor=redemption_request.requested_for,
+                        distributor=redemption_request.get_requested_for_entity(),
                         approved_by=request.user
                     )
                     
@@ -358,7 +360,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         logger.info(f"Request #{redemption_request.id} rejected, sending email notification...")
         email_sent = send_request_rejected_email(
             request_obj=redemption_request,
-            distributor=redemption_request.requested_for,
+            distributor=redemption_request.get_requested_for_entity(),
             rejected_by=request.user
         )
         
@@ -426,7 +428,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         logger.info(f"Request #{redemption_request.id} processed, sending email notification...")
         email_sent = send_request_processed_email(
             request_obj=redemption_request,
-            distributor=redemption_request.requested_for,
+            distributor=redemption_request.get_requested_for_entity(),
             processed_by=user
         )
         
@@ -488,11 +490,18 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     user_profile.points += redemption_request.total_points
                     user_profile.save()
                     logger.info(f"Refunded {redemption_request.total_points} points to sales agent {redemption_request.requested_by.username}")
-                else:  # DISTRIBUTOR
+                elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
                     distributor = redemption_request.requested_for
-                    distributor.points += redemption_request.total_points
-                    distributor.save()
-                    logger.info(f"Refunded {redemption_request.total_points} points to distributor {distributor.name}")
+                    if distributor:
+                        distributor.points += redemption_request.total_points
+                        distributor.save()
+                        logger.info(f"Refunded {redemption_request.total_points} points to distributor {distributor.name}")
+                elif redemption_request.points_deducted_from == 'CUSTOMER':
+                    customer = redemption_request.requested_for_customer
+                    if customer:
+                        customer.points += redemption_request.total_points
+                        customer.save()
+                        logger.info(f"Refunded {redemption_request.total_points} points to customer {customer.name}")
                 
                 # Restore stock for all requested items
                 for item in redemption_request.items.all():
@@ -575,7 +584,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             if hasattr(approver, 'profile') and approver.profile.email:
                 email_sent = send_request_withdrawn_email(
                     request_obj=redemption_request,
-                    distributor=redemption_request.requested_for,
+                    distributor=redemption_request.get_requested_for_entity(),
                     withdrawn_by=user
                 )
                 if email_sent:
@@ -586,7 +595,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         # Send confirmation email to the sales agent
         confirmation_sent = send_request_withdrawn_confirmation_email(
             request_obj=redemption_request,
-            distributor=redemption_request.requested_for,
+            distributor=redemption_request.get_requested_for_entity(),
             withdrawn_by=user
         )
         if confirmation_sent:
@@ -614,13 +623,33 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        else:  # DISTRIBUTOR
+        elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
             distributor = redemption_request.requested_for
+            if not distributor:
+                return False, Response(
+                    {'error': 'No distributor assigned to this request'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             if distributor.points < redemption_request.total_points:
                 return False, Response(
                     {
                         'error': 'Insufficient points',
                         'detail': f'Distributor has {distributor.points} points but needs {redemption_request.total_points} points'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        elif redemption_request.points_deducted_from == 'CUSTOMER':
+            customer = redemption_request.requested_for_customer
+            if not customer:
+                return False, Response(
+                    {'error': 'No customer assigned to this request'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if customer.points < redemption_request.total_points:
+                return False, Response(
+                    {
+                        'error': 'Insufficient points',
+                        'detail': f'Customer has {customer.points} points but needs {redemption_request.total_points} points'
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
@@ -653,10 +682,14 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             user_profile = redemption_request.requested_by.profile
             user_profile.points -= redemption_request.total_points
             user_profile.save()
-        else:  # DISTRIBUTOR
+        elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
             distributor = redemption_request.requested_for
             distributor.points -= redemption_request.total_points
             distributor.save()
+        elif redemption_request.points_deducted_from == 'CUSTOMER':
+            customer = redemption_request.requested_for_customer
+            customer.points -= redemption_request.total_points
+            customer.save()
         
         # Deduct stock from all requested items
         for item in redemption_request.items.all():
@@ -730,12 +763,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     logger.info(f"Request #{redemption_request.id} fully approved, sending notifications...")
                     send_request_approved_email(
                         request_obj=redemption_request,
-                        distributor=redemption_request.requested_for,
+                        distributor=redemption_request.get_requested_for_entity(),
                         approved_by=user
                     )
                     send_approved_request_notification_to_admin(
                         request_obj=redemption_request,
-                        distributor=redemption_request.requested_for,
+                        distributor=redemption_request.get_requested_for_entity(),
                         approved_by=user
                     )
                 else:
@@ -810,7 +843,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         logger.info(f"Request #{redemption_request.id} sales rejected, sending notification...")
         send_request_rejected_email(
             request_obj=redemption_request,
-            distributor=redemption_request.requested_for,
+            distributor=redemption_request.get_requested_for_entity(),
             rejected_by=user
         )
         
@@ -874,12 +907,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     logger.info(f"Request #{redemption_request.id} fully approved, sending notifications...")
                     send_request_approved_email(
                         request_obj=redemption_request,
-                        distributor=redemption_request.requested_for,
+                        distributor=redemption_request.get_requested_for_entity(),
                         approved_by=user
                     )
                     send_approved_request_notification_to_admin(
                         request_obj=redemption_request,
-                        distributor=redemption_request.requested_for,
+                        distributor=redemption_request.get_requested_for_entity(),
                         approved_by=user
                     )
                 else:
@@ -947,7 +980,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         logger.info(f"Request #{redemption_request.id} marketing rejected, sending notification...")
         send_request_rejected_email(
             request_obj=redemption_request,
-            distributor=redemption_request.requested_for,
+            distributor=redemption_request.get_requested_for_entity(),
             rejected_by=user
         )
         
@@ -1020,7 +1053,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             # Send processed email notification
             email_sent = send_request_processed_email(
                 request_obj=redemption_request,
-                distributor=redemption_request.requested_for,
+                distributor=redemption_request.get_requested_for_entity(),
                 processed_by=user
             )
             if email_sent:
@@ -1091,9 +1124,11 @@ class DashboardStatsView(APIView):
             not_processed_count = RedemptionRequest.objects.filter(processing_status='NOT_PROCESSED').count()
             cancelled_count = RedemptionRequest.objects.filter(processing_status='CANCELLED').count()
             
-            # Get on-board distributors count
+            # Get on-board distributors and customers count
             from distributers.models import Distributor
+            from customers.models import Customer
             on_board_count = Distributor.objects.count()
+            customers_count = Customer.objects.count()
             
             return Response({
                 'total_requests': total_requests,
@@ -1104,6 +1139,7 @@ class DashboardStatsView(APIView):
                 'not_processed_count': not_processed_count,
                 'cancelled_count': cancelled_count,
                 'on_board_count': on_board_count,
+                'customers_count': customers_count,
             })
         except Exception as e:
             logger.error(f"Error fetching dashboard stats: {str(e)}")

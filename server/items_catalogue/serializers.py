@@ -33,9 +33,7 @@ class CatalogueItemSerializer(serializers.ModelSerializer):
     added_by = UserRelatedField(read_only=True)
     archived_by = UserRelatedField(read_only=True)
     mktg_admin = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
-    approver = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
     mktg_admin_name = serializers.SerializerMethodField()
-    approver_name = serializers.SerializerMethodField()
     variants = VariantNestedSerializer(many=True, read_only=True)
     
     def get_mktg_admin_name(self, obj):
@@ -45,19 +43,12 @@ class CatalogueItemSerializer(serializers.ModelSerializer):
             return obj.mktg_admin.profile.full_name or obj.mktg_admin.username
         return obj.mktg_admin.username
     
-    def get_approver_name(self, obj):
-        if not obj.approver:
-            return None
-        if hasattr(obj.approver, 'profile') and obj.approver.profile:
-            return obj.approver.profile.full_name or obj.approver.username
-        return obj.approver.username
-    
     class Meta:
         model = CatalogueItem
         fields = [
             'id', 'reward', 'item_name', 'description',
             'purpose', 'specifications', 'legend', 'approval_type', 'needs_driver',
-            'added_by', 'mktg_admin', 'mktg_admin_name', 'approver', 'approver_name',
+            'added_by', 'mktg_admin', 'mktg_admin_name',
             'is_archived', 'date_archived', 'archived_by', 'variants'
         ]
 

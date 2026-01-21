@@ -22,6 +22,40 @@ export interface CatalogueItem {
   archived_by: number | null;
 }
 
+export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';
+
+export const PRICING_TYPE_LABELS: Record<PricingType, string> = {
+  FIXED: 'Fixed',
+  PER_SQFT: 'Per Sq Ft',
+  PER_INVOICE: 'Per Invoice Amount',
+  PER_DAY: 'Per Day',
+  PER_EU_SRP: 'Per EU SRP',
+};
+
+export const DYNAMIC_QUANTITY_LABELS: Record<PricingType, string> = {
+  FIXED: 'Quantity',
+  PER_SQFT: 'Total Square Footage',
+  PER_INVOICE: 'Invoice Amount',
+  PER_DAY: 'Number of Days',
+  PER_EU_SRP: 'End User SRP Amount',
+};
+
+export const PRICING_TYPE_DESCRIPTIONS: Record<PricingType, string> = {
+  FIXED: 'Standard fixed-price item. Points are calculated per unit.',
+  PER_SQFT: 'Points calculated based on total square footage. Enter the area measurement to calculate total points.',
+  PER_INVOICE: 'Points calculated as a percentage of the invoice amount. Enter the invoice total (in currency) to calculate points.',
+  PER_DAY: 'Points calculated per day. Enter the number of days to calculate total points.',
+  PER_EU_SRP: 'Points calculated as a percentage of End User Suggested Retail Price (EU SRP). Enter the SRP amount to calculate points.',
+};
+
+export const PRICING_TYPE_INPUT_HINTS: Record<PricingType, string> = {
+  FIXED: '',
+  PER_SQFT: 'sq ft',
+  PER_INVOICE: 'USD',
+  PER_DAY: 'days',
+  PER_EU_SRP: 'USD',
+};
+
 export interface Variant {
   id: number;
   catalogue_item: CatalogueItem;
@@ -31,6 +65,9 @@ export interface Variant {
   points: string;
   price: string;
   image_url: string | null;
+  pricing_type: PricingType | null;
+  points_multiplier: string | null;
+  price_multiplier: string | null;
 }
 
 export interface CatalogueItemsResponse {
@@ -44,10 +81,12 @@ export interface CatalogueItemsResponse {
 export interface RedeemItemData {
   id: string;
   name: string;
-  points: number;
+  points: number; // For FIXED items: per-unit points. For dynamic: the multiplier
   image: string;
   category: string;
   needs_driver: boolean;
+  pricing_type: PricingType;
+  points_multiplier: number | null; // For dynamic items: points per unit (sq ft, invoice, etc.)
 }
 
 export interface UserProfile {
@@ -104,6 +143,16 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
   // Get category from legend
   const category = legendToCategoryMap[variant.catalogue_item.legend] || variant.catalogue_item.legend;
 
+  // Parse pricing type and multiplier
+  const pricingType: PricingType = (variant.pricing_type as PricingType) || 'FIXED';
+  let pointsMultiplier: number | null = null;
+  if (variant.points_multiplier) {
+    const parsed = parseFloat(variant.points_multiplier);
+    if (!isNaN(parsed)) {
+      pointsMultiplier = parsed;
+    }
+  }
+
   const transformed: RedeemItemData = {
     id: variant.id.toString(),
     name: variant.catalogue_item.item_name,
@@ -111,6 +160,8 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
     image: imageUrl,
     category: category,
     needs_driver: variant.catalogue_item.needs_driver,
+    pricing_type: pricingType,
+    points_multiplier: pointsMultiplier,
   };
 
   console.log("[API] Transformed item:", transformed);
@@ -233,12 +284,17 @@ function getHeaders(): HeadersInit {
 
 export interface RedemptionRequestItem {
   variant_id: string;
-  quantity: number;
+  quantity?: number; // For FIXED pricing items
+  dynamic_quantity?: number; // For dynamic pricing items (PER_SQFT, etc.)
 }
 
+export type RequestedForType = 'DISTRIBUTOR' | 'CUSTOMER';
+
 export interface CreateRedemptionRequestData {
-  requested_for: number; // Distributor ID
-  points_deducted_from: 'SELF' | 'DISTRIBUTOR';
+  requested_for?: number; // Distributor ID (optional when type is CUSTOMER)
+  requested_for_customer?: number; // Customer ID (optional when type is DISTRIBUTOR)
+  requested_for_type: RequestedForType;
+  points_deducted_from: 'SELF' | 'DISTRIBUTOR' | 'CUSTOMER';
   remarks?: string;
   items: RedemptionRequestItem[];
   // Service Vehicle Use fields (optional)
@@ -251,8 +307,11 @@ export interface RedemptionRequestResponse {
   id: number;
   requested_by: number;
   requested_by_name: string;
-  requested_for: number;
+  requested_for: number | null;
   requested_for_name: string;
+  requested_for_customer: number | null;
+  requested_for_customer_name: string | null;
+  requested_for_type: RequestedForType;
   team: number | null;
   team_name: string | null;
   points_deducted_from: string;

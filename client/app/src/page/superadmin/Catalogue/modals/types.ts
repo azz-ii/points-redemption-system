@@ -19,8 +19,6 @@ export interface CatalogueItem {
   added_by: number | null;
   mktg_admin: number | null;
   mktg_admin_name: string | null;
-  approver: number | null;
-  approver_name: string | null;
   is_archived: boolean;
   date_archived: string | null;
   archived_by: number | null;
@@ -60,8 +58,6 @@ export interface CatalogueVariant {
   date_added: string;
   mktg_admin: number | null;
   mktg_admin_name: string | null;
-  approver: number | null;
-  approver_name: string | null;
   pricing_type?: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
   points_multiplier?: string | null;
   price_multiplier?: string | null;

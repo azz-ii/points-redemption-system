@@ -21,6 +21,7 @@ export interface DashboardStats {
   not_processed_count: number;
   cancelled_count: number;
   on_board_count: number;
+  customers_count: number;
 }
 
 export interface RedemptionRequest {

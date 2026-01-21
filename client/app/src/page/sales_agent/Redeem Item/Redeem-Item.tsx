@@ -110,9 +110,14 @@ export default function RedeemItem() {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id);
       if (existingItem) {
-        return prevItems.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
+        // For FIXED items, increment quantity. For dynamic, just update
+        if (item.pricing_type === 'FIXED') {
+          return prevItems.map((i) =>
+            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          );
+        }
+        // Dynamic item already in cart - just return existing
+        return prevItems;
       }
       return [
         ...prevItems,
@@ -123,6 +128,9 @@ export default function RedeemItem() {
           image: item.image,
           quantity: 1,
           needs_driver: item.needs_driver,
+          pricing_type: item.pricing_type,
+          points_multiplier: item.points_multiplier,
+          dynamic_quantity: item.pricing_type === 'FIXED' ? undefined : 0,
         },
       ];
     });
@@ -134,6 +142,12 @@ export default function RedeemItem() {
   const handleUpdateQuantity = (itemId: string, quantity: number) => {
     setCartItems((prevItems) =>
       prevItems.map((i) => (i.id === itemId ? { ...i, quantity } : i))
+    );
+  };
+
+  const handleUpdateDynamicQuantity = (itemId: string, dynamicQuantity: number) => {
+    setCartItems((prevItems) =>
+      prevItems.map((i) => (i.id === itemId ? { ...i, dynamic_quantity: dynamicQuantity } : i))
     );
   };
 
@@ -204,6 +218,7 @@ export default function RedeemItem() {
         onClose={() => setCartOpen(false)}
         items={cartItems}
         onUpdateQuantity={handleUpdateQuantity}
+        onUpdateDynamicQuantity={handleUpdateDynamicQuantity}
         onRemoveItem={handleRemoveFromCart}
         availablePoints={userPoints}
       />

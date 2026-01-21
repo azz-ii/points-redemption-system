@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Plus } from "lucide-react";
+import { Plus, Info } from "lucide-react";
+import { DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS } from "@/lib/api";
 import type { ItemCardProps } from "../types";
 
 export function ItemCard({ item, onAddToCart }: ItemCardProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const [imageLoading, setImageLoading] = useState(true);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Determine if this is a dynamic pricing item
+  const isDynamicPricing = item.pricing_type && item.pricing_type !== 'FIXED';
+  const multiplier = item.points_multiplier || item.points;
 
   return (
     <div
@@ -34,6 +40,35 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
           }`}
           loading="lazy"
         />
+        {/* Dynamic pricing badge */}
+        {isDynamicPricing && (
+          <div className="absolute top-2 left-2 flex items-center gap-1">
+            <div className={`px-2 py-0.5 rounded text-xs font-medium ${
+              isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+            }`}>
+              {DYNAMIC_QUANTITY_LABELS[item.pricing_type]}
+            </div>
+            <div className="relative">
+              <button
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+                className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                  isDark ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600'
+                }`}
+                aria-label="Pricing info"
+              >
+                <Info className="h-3 w-3" />
+              </button>
+              {showTooltip && (
+                <div className={`absolute top-6 left-0 z-10 w-64 p-2 rounded shadow-lg text-xs ${
+                  isDark ? 'bg-gray-800 text-gray-200 border border-gray-700' : 'bg-white text-gray-800 border border-gray-200'
+                }`}>
+                  {PRICING_TYPE_DESCRIPTIONS[item.pricing_type]}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       {/* Info */}
       <div className="p-4 relative">
@@ -42,13 +77,19 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
             <h3 className="font-semibold text-sm md:text-base">
               {item.name}
             </h3>
-            <p
-              className={`text-xs md:text-sm ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              {item.points.toLocaleString()} pts
-            </p>
+            {isDynamicPricing ? (
+              <p className={`text-xs md:text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                {multiplier.toLocaleString()} pts / {DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
+              </p>
+            ) : (
+              <p
+                className={`text-xs md:text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                {item.points.toLocaleString()} pts
+              </p>
+            )}
             <p
               className={`text-xs mt-1 ${
                 isDark ? "text-gray-500" : "text-gray-500"

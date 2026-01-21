@@ -64,8 +64,6 @@ function Catalogue() {
       date_added: new Date().toISOString().split("T")[0],
       mktg_admin: null,
       mktg_admin_name: null,
-      approver: null,
-      approver_name: null,
     },
   ]);
 
@@ -153,8 +151,6 @@ function Catalogue() {
           date_added: variant.catalogue_item.date_added,
           mktg_admin: variant.catalogue_item.mktg_admin,
           mktg_admin_name: variant.catalogue_item.mktg_admin_name,
-          approver: variant.catalogue_item.approver,
-          approver_name: variant.catalogue_item.approver_name,
           pricing_type: variant.pricing_type,
           points_multiplier: variant.points_multiplier,
           price_multiplier: variant.price_multiplier,
@@ -188,8 +184,6 @@ function Catalogue() {
           date_added: item.date_added,
           mktg_admin: item.mktg_admin,
           mktg_admin_name: item.mktg_admin_name,
-          approver: item.approver,
-          approver_name: item.approver_name,
         },
         variants: [],
       };
@@ -338,17 +332,29 @@ function Catalogue() {
     }
     for (let i = 0; i < newItem.variants.length; i++) {
       const variant = newItem.variants[i];
+      const isFixed = variant.pricing_type === "FIXED";
       if (!variant.item_code.trim()) {
         setCreateError(`Variant ${i + 1}: Item code is required`);
         return;
       }
-      if (!variant.points.trim()) {
-        setCreateError(`Variant ${i + 1}: Points is required`);
-        return;
-      }
-      if (!variant.price.trim()) {
-        setCreateError(`Variant ${i + 1}: Price is required`);
-        return;
+      if (isFixed) {
+        if (!variant.points.trim()) {
+          setCreateError(`Variant ${i + 1}: Points is required`);
+          return;
+        }
+        if (!variant.price.trim()) {
+          setCreateError(`Variant ${i + 1}: Price is required`);
+          return;
+        }
+      } else {
+        if (!variant.points_multiplier.trim()) {
+          setCreateError(`Variant ${i + 1}: Points multiplier is required`);
+          return;
+        }
+        if (!variant.price_multiplier.trim()) {
+          setCreateError(`Variant ${i + 1}: Price multiplier is required`);
+          return;
+        }
       }
     }
 
@@ -364,16 +370,20 @@ function Catalogue() {
         needs_driver: newItem.needs_driver,
         mktg_admin: newItem.mktg_admin,
         approver: newItem.approver,
-        variants: newItem.variants.map((v) => ({
-          item_code: v.item_code,
-          option_description: v.option_description || null,
-          points: v.points,
-          price: v.price,
-          image_url: v.image_url || null,
-          pricing_type: v.pricing_type || "FIXED",
-          points_multiplier: v.points_multiplier || null,
-          price_multiplier: v.price_multiplier || null,
-        })),
+        variants: newItem.variants.map((v) => {
+          const isFixed = v.pricing_type === "FIXED";
+          return {
+            item_code: v.item_code,
+            option_description: v.option_description || null,
+            image_url: v.image_url || null,
+            pricing_type: v.pricing_type || "FIXED",
+            // For FIXED: use points/price. For dynamic: use multiplier values for both fields
+            points: isFixed ? v.points : v.points_multiplier,
+            price: isFixed ? v.price : v.price_multiplier,
+            points_multiplier: isFixed ? null : v.points_multiplier,
+            price_multiplier: isFixed ? null : v.price_multiplier,
+          };
+        }),
       };
       console.log("[Catalogue] Creating item (POST) payload:", payload);
       const response = await fetch("/api/catalogue/", {
@@ -511,17 +521,29 @@ function Catalogue() {
     }
     for (let i = 0; i < editItem.variants.length; i++) {
       const variant = editItem.variants[i];
+      const isFixed = variant.pricing_type === "FIXED";
       if (!variant.item_code.trim()) {
         setEditError(`Variant ${i + 1}: Item code is required`);
         return;
       }
-      if (!variant.points.trim()) {
-        setEditError(`Variant ${i + 1}: Points is required`);
-        return;
-      }
-      if (!variant.price.trim()) {
-        setEditError(`Variant ${i + 1}: Price is required`);
-        return;
+      if (isFixed) {
+        if (!variant.points.toString().trim()) {
+          setEditError(`Variant ${i + 1}: Points is required`);
+          return;
+        }
+        if (!variant.price.toString().trim()) {
+          setEditError(`Variant ${i + 1}: Price is required`);
+          return;
+        }
+      } else {
+        if (!variant.points_multiplier.toString().trim()) {
+          setEditError(`Variant ${i + 1}: Points multiplier is required`);
+          return;
+        }
+        if (!variant.price_multiplier.toString().trim()) {
+          setEditError(`Variant ${i + 1}: Price multiplier is required`);
+          return;
+        }
       }
     }
 
@@ -537,17 +559,21 @@ function Catalogue() {
         needs_driver: editItem.needs_driver,
         mktg_admin: editItem.mktg_admin,
         approver: editItem.approver,
-        variants: editItem.variants.map((v) => ({
-          id: v.id,
-          item_code: v.item_code,
-          option_description: v.option_description || null,
-          points: v.points,
-          price: v.price,
-          image_url: v.image_url || null,
-          pricing_type: v.pricing_type || "FIXED",
-          points_multiplier: v.points_multiplier || null,
-          price_multiplier: v.price_multiplier || null,
-        })),
+        variants: editItem.variants.map((v) => {
+          const isFixed = v.pricing_type === "FIXED";
+          return {
+            id: v.id,
+            item_code: v.item_code,
+            option_description: v.option_description || null,
+            image_url: v.image_url || null,
+            pricing_type: v.pricing_type || "FIXED",
+            // For FIXED: use points/price. For dynamic: use multiplier values for both fields
+            points: isFixed ? v.points : v.points_multiplier,
+            price: isFixed ? v.price : v.price_multiplier,
+            points_multiplier: isFixed ? null : v.points_multiplier,
+            price_multiplier: isFixed ? null : v.price_multiplier,
+          };
+        }),
       };
       console.log(
         "[Catalogue] Updating item (PUT) id=",
@@ -718,37 +744,66 @@ function Catalogue() {
   const handleUpdateVariant = async () => {
     if (!editVariantTarget) return;
     setEditVariantError(null);
+    
+    const isFixed = editVariantData.pricing_type === "FIXED";
+    
     // Validation
     if (!editVariantData.item_code.trim()) {
       setEditVariantError("Item code is required");
       return;
     }
-    if (!editVariantData.points.trim()) {
-      setEditVariantError("Points is required");
-      return;
+    
+    // Validate based on pricing type
+    if (isFixed) {
+      if (!editVariantData.points.toString().trim()) {
+        setEditVariantError("Points is required");
+        return;
+      }
+      if (!editVariantData.price.toString().trim()) {
+        setEditVariantError("Price is required");
+        return;
+      }
+    } else {
+      if (!editVariantData.points_multiplier.toString().trim()) {
+        setEditVariantError("Points multiplier is required");
+        return;
+      }
+      if (!editVariantData.price_multiplier.toString().trim()) {
+        setEditVariantError("Price multiplier is required");
+        return;
+      }
     }
-    if (!editVariantData.price.trim()) {
-      setEditVariantError("Price is required");
-      return;
-    }
+    
     try {
       setUpdatingVariant(true);
+      
+      // Build payload based on pricing type
+      const payload: Record<string, any> = {
+        item_code: editVariantData.item_code,
+        option_description: editVariantData.option_description || null,
+        image_url: editVariantData.image_url || null,
+        pricing_type: editVariantData.pricing_type || "FIXED",
+      };
+      
+      if (isFixed) {
+        payload.points = editVariantData.points;
+        payload.price = editVariantData.price;
+        payload.points_multiplier = null;
+        payload.price_multiplier = null;
+      } else {
+        payload.points = editVariantData.points_multiplier; // Backend may use points field
+        payload.price = editVariantData.price_multiplier;   // Backend may use price field
+        payload.points_multiplier = editVariantData.points_multiplier;
+        payload.price_multiplier = editVariantData.price_multiplier;
+      }
+      
       const response = await fetch(`/api/catalogue/${editVariantTarget.id}/`, {
         method: "PUT",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          item_code: editVariantData.item_code,
-          option_description: editVariantData.option_description || null,
-          points: editVariantData.points,
-          price: editVariantData.price,
-          image_url: editVariantData.image_url || null,
-          pricing_type: editVariantData.pricing_type || "FIXED",
-          points_multiplier: editVariantData.points_multiplier || null,
-          price_multiplier: editVariantData.price_multiplier || null,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const data = await response.json();

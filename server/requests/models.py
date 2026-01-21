@@ -2,12 +2,18 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 from distributers.models import Distributor
+from customers.models import Customer
 from items_catalogue.models import Variant
 from teams.models import Team
 
 class PointsDeductionChoice(models.TextChoices):
     SELF = 'SELF', 'Self (Sales Agent)'
     DISTRIBUTOR = 'DISTRIBUTOR', 'Distributor'
+    CUSTOMER = 'CUSTOMER', 'Customer'
+
+class RequestedForType(models.TextChoices):
+    DISTRIBUTOR = 'DISTRIBUTOR', 'Distributor'
+    CUSTOMER = 'CUSTOMER', 'Customer'
 
 class RequestStatus(models.TextChoices):
     PENDING = 'PENDING', 'Pending'
@@ -43,7 +49,23 @@ class RedemptionRequest(models.Model):
         Distributor,
         on_delete=models.CASCADE,
         related_name='redemption_requests',
+        null=True,
+        blank=True,
         help_text='Distributor for whom the items are being redeemed'
+    )
+    requested_for_customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name='redemption_requests',
+        null=True,
+        blank=True,
+        help_text='Customer for whom the items are being redeemed'
+    )
+    requested_for_type = models.CharField(
+        max_length=20,
+        choices=RequestedForType.choices,
+        default=RequestedForType.DISTRIBUTOR,
+        help_text='Type of entity this request is for (Distributor or Customer)'
     )
     team = models.ForeignKey(
         'teams.Team',
@@ -217,7 +239,19 @@ class RedemptionRequest(models.Model):
     )
 
     def __str__(self):
-        return f"Request #{self.id} by {self.requested_by.username} for {self.requested_for.name}"
+        entity_name = self.get_requested_for_name()
+        return f"Request #{self.id} by {self.requested_by.username} for {entity_name}"
+
+    def get_requested_for_entity(self):
+        """Get the entity (Distributor or Customer) this request is for."""
+        if self.requested_for_type == RequestedForType.CUSTOMER:
+            return self.requested_for_customer
+        return self.requested_for
+
+    def get_requested_for_name(self):
+        """Get the name of the entity this request is for."""
+        entity = self.get_requested_for_entity()
+        return entity.name if entity else 'Unknown'
 
     def compute_approval_requirements(self):
         """

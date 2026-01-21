@@ -307,36 +307,6 @@ export function EditItemModal({
                   </select>
                 </div>
 
-                {/* Approver */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Approver (Optional)
-                  </label>
-                  <select
-                    value={editItem.approver || ""}
-                    onChange={(e) =>
-                      setEditItem({
-                        ...editItem,
-                        approver: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                    className={`w-full px-3 py-2 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
-                  >
-                    <option value="">Select Approver</option>
-                    {users
-                      .filter((u) => u.position === "Approver")
-                      .map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.full_name || user.username}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
                 {/* Needs Driver */}
                 <div>
                   <label className="flex items-center gap-3 cursor-pointer">

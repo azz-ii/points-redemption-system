@@ -294,40 +294,6 @@ export function CreateItemModal({
               </select>
             </div>
 
-            {/* Approver */}
-            <div>
-              <label
-                htmlFor="approver-select"
-                className="block text-sm font-medium mb-2"
-              >
-                Approver (Optional)
-              </label>
-              <select
-                id="approver-select"
-                value={newItem.approver || ""}
-                onChange={(e) =>
-                  setNewItem({
-                    ...newItem,
-                    approver: e.target.value ? parseInt(e.target.value) : null,
-                  })
-                }
-                className={`w-full px-4 py-3 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
-              >
-                <option value="">Select Approver</option>
-                {users
-                  .filter((u) => u.position === "Approver")
-                  .map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.full_name || user.username}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
             {/* Needs Driver */}
             <div>
               <label className="flex items-center gap-3 cursor-pointer">

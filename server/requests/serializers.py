@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import RedemptionRequest, RedemptionRequestItem
+from .models import RedemptionRequest, RedemptionRequestItem, RequestedForType
 from items_catalogue.models import Variant
 from distributers.models import Distributor
+from customers.models import Customer
 
 
 class RedemptionRequestItemSerializer(serializers.ModelSerializer):
@@ -91,6 +92,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     items = RedemptionRequestItemSerializer(many=True, read_only=True)
     requested_by_name = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
+    requested_for_customer_name = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
     processed_by_name = serializers.SerializerMethodField()
     cancelled_by_name = serializers.SerializerMethodField()
@@ -111,7 +113,8 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
         model = RedemptionRequest
         fields = [
             'id', 'requested_by', 'requested_by_name', 'requested_for', 
-            'requested_for_name', 'team', 'team_name', 'points_deducted_from', 
+            'requested_for_name', 'requested_for_customer', 'requested_for_customer_name',
+            'requested_for_type', 'team', 'team_name', 'points_deducted_from', 
             'points_deducted_from_display', 'total_points', 'status', 'status_display',
             'processing_status', 'processing_status_display', 'date_requested', 
             'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
@@ -141,7 +144,11 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
         return None
 
     def get_requested_for_name(self, obj):
-        return obj.requested_for.name if obj.requested_for else None
+        # Returns name based on the entity type
+        return obj.get_requested_for_name()
+
+    def get_requested_for_customer_name(self, obj):
+        return obj.requested_for_customer.name if obj.requested_for_customer else None
 
     def get_team_name(self, obj):
         return obj.team.name if obj.team else None
@@ -195,8 +202,21 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
 
 
 class CreateRedemptionRequestSerializer(serializers.Serializer):
-    requested_for = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
-    points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR'])
+    requested_for = serializers.PrimaryKeyRelatedField(
+        queryset=Distributor.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    requested_for_customer = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    requested_for_type = serializers.ChoiceField(
+        choices=['DISTRIBUTOR', 'CUSTOMER'],
+        default='DISTRIBUTOR'
+    )
+    points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR', 'CUSTOMER'])
     remarks = serializers.CharField(required=False, allow_blank=True)
     items = serializers.ListField(
         child=serializers.DictField(),
@@ -210,6 +230,40 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         required=False,
         allow_null=True
     )
+
+    def validate(self, data):
+        """Validate that exactly one of requested_for or requested_for_customer is provided based on type."""
+        requested_for_type = data.get('requested_for_type', 'DISTRIBUTOR')
+        requested_for = data.get('requested_for')
+        requested_for_customer = data.get('requested_for_customer')
+        points_deducted_from = data.get('points_deducted_from')
+        
+        if requested_for_type == 'DISTRIBUTOR':
+            if not requested_for:
+                raise serializers.ValidationError({
+                    'requested_for': 'Distributor is required when requested_for_type is DISTRIBUTOR'
+                })
+            # Clear customer field if type is DISTRIBUTOR
+            data['requested_for_customer'] = None
+        elif requested_for_type == 'CUSTOMER':
+            if not requested_for_customer:
+                raise serializers.ValidationError({
+                    'requested_for_customer': 'Customer is required when requested_for_type is CUSTOMER'
+                })
+            # Clear distributor field if type is CUSTOMER
+            data['requested_for'] = None
+        
+        # Validate points_deducted_from matches the entity type
+        if points_deducted_from == 'DISTRIBUTOR' and requested_for_type != 'DISTRIBUTOR':
+            raise serializers.ValidationError({
+                'points_deducted_from': 'Cannot deduct from distributor when request is for a customer'
+            })
+        if points_deducted_from == 'CUSTOMER' and requested_for_type != 'CUSTOMER':
+            raise serializers.ValidationError({
+                'points_deducted_from': 'Cannot deduct from customer when request is for a distributor'
+            })
+        
+        return data
 
     def validate_items(self, value):
         """Validate that each item has required fields based on pricing type"""
@@ -291,7 +345,14 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             requires_marketing_approval=requires_marketing,
             sales_approval_status=ApprovalStatusChoice.PENDING if requires_sales else ApprovalStatusChoice.NOT_REQUIRED,
             marketing_approval_status=ApprovalStatusChoice.PENDING if requires_marketing else ApprovalStatusChoice.NOT_REQUIRED,
-            **validated_data
+            requested_for=validated_data.get('requested_for'),
+            requested_for_customer=validated_data.get('requested_for_customer'),
+            requested_for_type=validated_data.get('requested_for_type', 'DISTRIBUTOR'),
+            points_deducted_from=validated_data.get('points_deducted_from'),
+            remarks=validated_data.get('remarks', ''),
+            svc_date=validated_data.get('svc_date'),
+            svc_time=validated_data.get('svc_time'),
+            svc_driver=validated_data.get('svc_driver'),
         )
         
         # Create the request items and calculate total points
