@@ -8,11 +8,16 @@ export interface RequestItem {
   team_name: string | null;
   status: string;
   status_display: string;
+  processing_status: string;
+  processing_status_display: string;
   total_points: number;
   date_requested: string;
   reviewed_by?: number;
   reviewed_by_name?: string;
   date_reviewed?: string;
+  processed_by?: number;
+  processed_by_name?: string;
+  date_processed?: string;
   remarks?: string;
   rejection_reason?: string;
   points_deducted_from: string;

@@ -13,13 +13,17 @@ import ExecutiveAssistantDashboard from "../page/executive_assistant/Dashboard";
 import SuperAdminDashboard from "../page/superadmin/Dashboard";
 
 // History pages
-import ApproverHistory from "../page/approver/History";
+import ApproverHistory from "../page/approver/History/History";
 import MarketingHistory from "../page/marketing/History";
 import ReceptionHistory from "../page/reception/History";
 import ExecutiveAssistantHistory from "../page/executive_assistant/History";
+import RequestHistory from "../page/superadmin/RequestHistory/RequestHistory";
 
 // Approver pages
 import ApproverRequests from "../page/approver/Requests/Requests";
+
+// Marketing pages
+import MarketingProcessRequests from "../page/marketing/ProcessRequests/ProcessRequests";
 
 // Sales Agent pages
 import RedeemItem from "../page/sales_agent/Redeem Item/Redeem-Item";
@@ -106,6 +110,7 @@ export function AppRoutes() {
           <Route path="/admin/accounts" element={<Accounts />} />
           <Route path="/admin/catalogue" element={<Catalogue />} />
           <Route path="/admin/redemption" element={<Redemption />} />
+          <Route path="/admin/request-history" element={<RequestHistory />} />
           <Route path="/admin/inventory" element={<Inventory />} />
           <Route path="/admin/marketing" element={<Marketing />} />
           <Route path="/admin/distributors" element={<Distributors />} />
@@ -130,6 +135,7 @@ export function AppRoutes() {
         {/* Marketing routes */}
         <Route element={<ProtectedRoute allowedRoles={["Marketing"]} />}>
           <Route path="/marketing/dashboard" element={<MarketingDashboard />} />
+          <Route path="/marketing/process-requests" element={<MarketingProcessRequests />} />
           <Route path="/marketing/history" element={<MarketingHistory />} />
         </Route>
 

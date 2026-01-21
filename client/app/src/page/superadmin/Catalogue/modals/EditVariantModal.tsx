@@ -1,6 +1,7 @@
 import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { ModalBaseProps, CatalogueVariant } from "./types";
+import { PRICING_TYPE_OPTIONS } from "./types";
 
 interface EditVariantData {
   item_code: string;
@@ -8,6 +9,9 @@ interface EditVariantData {
   points: string;
   price: string;
   image_url: string;
+  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  points_multiplier: string;
+  price_multiplier: string;
 }
 
 interface EditVariantModalProps extends ModalBaseProps {
@@ -132,22 +136,55 @@ export function EditVariantModal({
               />
             </div>
 
-            {/* Points */}
+            {/* Pricing Type */}
+            <div className="md:col-span-2">
+              <label
+                htmlFor="edit-variant-pricing-type"
+                className="block text-sm font-medium mb-2"
+              >
+                Pricing Type *
+              </label>
+              <select
+                id="edit-variant-pricing-type"
+                value={data.pricing_type}
+                onChange={(e) =>
+                  setData({
+                    ...data,
+                    pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+                  })
+                }
+                className={`w-full px-3 py-2 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500`}
+              >
+                {PRICING_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} - {option.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Points - Label changes based on pricing type */}
             <div>
               <label
                 htmlFor="edit-variant-points"
                 className="block text-sm font-medium mb-2"
               >
-                Points Required *
+                {data.pricing_type === "FIXED"
+                  ? "Points Required *"
+                  : "Points Multiplier *"}
               </label>
               <input
                 id="edit-variant-points"
                 type="text"
-                value={data.points}
+                value={data.pricing_type === "FIXED" ? data.points : data.points_multiplier}
                 onChange={(e) =>
                   setData({
                     ...data,
-                    points: e.target.value,
+                    [data.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
                 className={`w-full px-3 py-2 rounded border ${
@@ -155,26 +192,43 @@ export function EditVariantModal({
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500`}
-                placeholder="e.g., 500"
+                placeholder={
+                  data.pricing_type === "FIXED"
+                    ? "e.g., 500"
+                    : "e.g., 25 (for 25 points per unit)"
+                }
               />
+              {data.pricing_type !== "FIXED" && (
+                <p
+                  className={`text-xs mt-1 ${
+                    resolvedTheme === "dark"
+                      ? "text-gray-400"
+                      : "text-gray-500"
+                  }`}
+                >
+                  Points: {data.pricing_type === "PER_SQFT" ? "sq ft" : data.pricing_type === "PER_INVOICE" ? "invoice amount" : data.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
+                </p>
+              )}
             </div>
 
-            {/* Price */}
+            {/* Price - Label changes based on pricing type */}
             <div>
               <label
                 htmlFor="edit-variant-price"
                 className="block text-sm font-medium mb-2"
               >
-                Price *
+                {data.pricing_type === "FIXED"
+                  ? "Price *"
+                  : "Price Multiplier *"}
               </label>
               <input
                 id="edit-variant-price"
                 type="text"
-                value={data.price}
+                value={data.pricing_type === "FIXED" ? data.price : data.price_multiplier}
                 onChange={(e) =>
                   setData({
                     ...data,
-                    price: e.target.value,
+                    [data.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
                 className={`w-full px-3 py-2 rounded border ${
@@ -182,7 +236,11 @@ export function EditVariantModal({
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500`}
-                placeholder="e.g., ₱130.00"
+                placeholder={
+                  data.pricing_type === "FIXED"
+                    ? "e.g., ₱130.00"
+                    : "e.g., 25.00 (for ₱25.00 per unit)"
+                }
               />
             </div>
 

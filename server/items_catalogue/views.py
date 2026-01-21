@@ -10,7 +10,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
 from .models import CatalogueItem, Variant
-from .serializers import CatalogueItemSerializer, VariantSerializer, InventoryVariantSerializer
+from .serializers import CatalogueItemSerializer, VariantSerializer, InventoryVariantSerializer, BulkApprovalTypeSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -409,3 +409,179 @@ class InventoryDetailView(APIView):
             return Response({
                 "error": "Variant not found"
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class BulkApprovalTypeUpdateView(APIView):
+    """Bulk update approval_type for multiple catalogue items"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    
+    def post(self, request):
+        """
+        Bulk update approval_type for catalogue items.
+        
+        Can update by:
+        - item_ids: List of specific catalogue item IDs
+        - legend: All items with a specific legend (e.g., 'GIVEAWAY')
+        
+        Request body:
+        {
+            "item_ids": [1, 2, 3],  // OR
+            "legend": "GIVEAWAY",   // Update all items with this legend
+            "approval_type": "MARKETING"  // SALES, MARKETING, or BOTH
+        }
+        """
+        serializer = BulkApprovalTypeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                "error": "Invalid request",
+                "details": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        data = serializer.validated_data
+        approval_type = data['approval_type']
+        
+        # Build queryset based on provided filters
+        queryset = CatalogueItem.objects.all()
+        
+        if data.get('item_ids'):
+            queryset = queryset.filter(id__in=data['item_ids'])
+        elif data.get('legend'):
+            queryset = queryset.filter(legend=data['legend'])
+        
+        # Update all matching items
+        updated_count = queryset.update(approval_type=approval_type)
+        
+        return Response({
+            "message": f"Successfully updated {updated_count} catalogue item(s)",
+            "updated_count": updated_count,
+            "approval_type": approval_type
+        }, status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        """
+        Get summary of approval types by legend.
+        Useful for seeing current distribution before bulk updates.
+        """
+        from django.db.models import Count
+        
+        # Get counts by legend and approval_type
+        summary = CatalogueItem.objects.values('legend', 'approval_type').annotate(
+            count=Count('id')
+        ).order_by('legend', 'approval_type')
+        
+        # Also get legend totals
+        legend_totals = CatalogueItem.objects.values('legend').annotate(
+            total=Count('id')
+        ).order_by('legend')
+        
+        return Response({
+            "by_legend_and_approval_type": list(summary),
+            "legend_totals": list(legend_totals)
+        }, status=status.HTTP_200_OK)
+
+
+class BulkAssignMarketingView(APIView):
+    """Bulk assign mktg_admin (Marketing user) to catalogue items"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    
+    def post(self, request):
+        """
+        Bulk assign a Marketing user to catalogue items.
+        
+        Can assign by:
+        - item_ids: List of specific catalogue item IDs
+        - legend: All items with a specific legend (e.g., 'GIVEAWAY')
+        
+        Request body:
+        {
+            "item_ids": [1, 2, 3],  // OR
+            "legend": "GIVEAWAY",   // Assign to all items with this legend
+            "mktg_admin_id": 5      // User ID of the Marketing user (null to unassign)
+        }
+        """
+        from django.contrib.auth import get_user_model
+        from users.models import UserProfile
+        
+        User = get_user_model()
+        
+        mktg_admin_id = request.data.get('mktg_admin_id')
+        item_ids = request.data.get('item_ids')
+        legend = request.data.get('legend')
+        
+        if not item_ids and not legend:
+            return Response({
+                "error": "Either 'item_ids' or 'legend' must be provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate mktg_admin_id if provided (can be null to unassign)
+        mktg_admin = None
+        if mktg_admin_id is not None:
+            try:
+                mktg_admin = User.objects.get(id=mktg_admin_id)
+                # Verify user has Marketing or Admin position
+                profile = getattr(mktg_admin, 'profile', None)
+                if not profile or profile.position not in ['Marketing', 'Admin']:
+                    return Response({
+                        "error": "The specified user is not a Marketing or Admin user"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                return Response({
+                    "error": "User not found"
+                }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Build queryset based on provided filters
+        queryset = CatalogueItem.objects.all()
+        
+        if item_ids:
+            queryset = queryset.filter(id__in=item_ids)
+        elif legend:
+            queryset = queryset.filter(legend=legend)
+        
+        # Update all matching items
+        updated_count = queryset.update(mktg_admin=mktg_admin)
+        
+        action = "assigned" if mktg_admin else "unassigned"
+        return Response({
+            "message": f"Successfully {action} {updated_count} catalogue item(s)",
+            "updated_count": updated_count,
+            "mktg_admin_id": mktg_admin_id
+        }, status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        """
+        Get summary of marketing assignments by legend.
+        Shows which Marketing users are assigned to which legends.
+        """
+        from django.db.models import Count
+        
+        # Get counts by legend and mktg_admin
+        summary = CatalogueItem.objects.values(
+            'legend', 
+            'mktg_admin__id', 
+            'mktg_admin__username'
+        ).annotate(
+            count=Count('id')
+        ).order_by('legend', 'mktg_admin__username')
+        
+        # Format the response
+        formatted = []
+        for item in summary:
+            formatted.append({
+                'legend': item['legend'],
+                'mktg_admin_id': item['mktg_admin__id'],
+                'mktg_admin_username': item['mktg_admin__username'] or 'Unassigned',
+                'item_count': item['count']
+            })
+        
+        # Get legend totals
+        legend_totals = CatalogueItem.objects.values('legend').annotate(
+            total=Count('id'),
+            assigned=Count('mktg_admin')
+        ).order_by('legend')
+        
+        return Response({
+            "assignments": formatted,
+            "legend_totals": list(legend_totals)
+        }, status=status.HTTP_200_OK)

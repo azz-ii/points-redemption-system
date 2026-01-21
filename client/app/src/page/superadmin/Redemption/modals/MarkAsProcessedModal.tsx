@@ -1,32 +1,45 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import type { ModalBaseProps, RedemptionItem } from "./types";
+import { Package, CheckCircle, Loader2 } from "lucide-react";
+import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types";
 
 interface MarkAsProcessedModalProps extends ModalBaseProps {
   item: RedemptionItem | null;
-  onConfirm: (remarks: string) => void;
+  myItems: RequestItemVariant[];
+  pendingCount: number;
+  onConfirm: () => Promise<void>;
 }
 
 export function MarkAsProcessedModal({
   isOpen,
   onClose,
   item,
+  myItems,
+  pendingCount,
   onConfirm,
 }: MarkAsProcessedModalProps) {
   const { resolvedTheme } = useTheme();
-  const [remarks, setRemarks] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen || !item) return null;
 
-  const handleConfirm = () => {
-    onConfirm(remarks);
-    setRemarks("");
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
-    setRemarks("");
-    onClose();
+    if (!isSubmitting) {
+      onClose();
+    }
   };
+
+  // Filter to show only pending items
+  const pendingItems = myItems.filter(it => !it.item_processed_by);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -43,40 +56,59 @@ export function MarkAsProcessedModal({
         aria-labelledby="mark-processed-title"
       >
         <div className="p-8">
-          <h2 id="mark-processed-title" className="text-xl font-semibold mb-4">
-            Mark as Processed
-          </h2>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900">
+              <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h2 id="mark-processed-title" className="text-xl font-semibold">
+              Mark Items as Processed
+            </h2>
+          </div>
+
           <p className="text-sm mb-4">
-            Are you sure you want to mark this request for{" "}
-            <span className="font-semibold">{item.requested_for_name}</span> as processed?
+            You are about to mark <span className="font-semibold">{pendingCount} item(s)</span> as processed for request{" "}
+            <span className="font-semibold">#{item.id}</span>.
           </p>
 
           <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-2"
-              htmlFor="processed-remarks"
-            >
-              Remarks (Optional)
-            </label>
-            <textarea
-              id="processed-remarks"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              placeholder="Add any remarks..."
-              className={`w-full px-4 py-3 rounded border text-base resize-none ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              }`}
-              rows={3}
-            />
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Items to be processed:
+            </p>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {pendingItems.map((it) => (
+                <div
+                  key={it.id}
+                  className={`p-2 rounded border text-sm ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <p className="font-medium">{it.catalogue_item_name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Qty: {it.quantity} • {it.variant_code}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`p-3 rounded text-sm ${
+            resolvedTheme === "dark"
+              ? "bg-blue-900/30 border border-blue-800"
+              : "bg-blue-50 border border-blue-200"
+          }`}>
+            <p className="text-blue-700 dark:text-blue-300">
+              This action will mark all your pending items in this request as processed.
+            </p>
           </div>
         </div>
 
         <div className="p-8 border-t flex gap-3">
           <button
             onClick={handleClose}
-            className={`flex-1 py-3 rounded font-semibold transition-colors ${
+            disabled={isSubmitting}
+            className={`flex-1 py-3 rounded font-semibold transition-colors disabled:opacity-50 ${
               resolvedTheme === "dark"
                 ? "bg-gray-800 hover:bg-gray-700 text-white"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-900"
@@ -86,9 +118,20 @@ export function MarkAsProcessedModal({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-3 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+            disabled={isSubmitting}
+            className="flex-1 py-3 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Mark as Processed
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Mark as Processed
+              </>
+            )}
           </button>
         </div>
       </div>

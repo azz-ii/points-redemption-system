@@ -17,7 +17,10 @@ class VariantNestedSerializer(serializers.ModelSerializer):
     """Serializer for Variant when nested in CatalogueItem"""
     class Meta:
         model = Variant
-        fields = ['id', 'item_code', 'option_description', 'points', 'price', 'image_url', 'stock', 'reorder_level']
+        fields = [
+            'id', 'item_code', 'option_description', 'points', 'price', 'image_url', 
+            'stock', 'reorder_level', 'pricing_type', 'points_multiplier', 'price_multiplier'
+        ]
         extra_kwargs = {
             'item_code': {'required': True},
             'points': {'required': True},
@@ -53,10 +56,36 @@ class CatalogueItemSerializer(serializers.ModelSerializer):
         model = CatalogueItem
         fields = [
             'id', 'reward', 'item_name', 'description',
-            'purpose', 'specifications', 'legend', 'needs_driver',
+            'purpose', 'specifications', 'legend', 'approval_type', 'needs_driver',
             'added_by', 'mktg_admin', 'mktg_admin_name', 'approver', 'approver_name',
             'is_archived', 'date_archived', 'archived_by', 'variants'
         ]
+
+
+class BulkApprovalTypeSerializer(serializers.Serializer):
+    """Serializer for bulk updating approval_type on multiple items"""
+    item_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        help_text='List of catalogue item IDs to update'
+    )
+    legend = serializers.ChoiceField(
+        choices=['COLLATERAL', 'GIVEAWAY', 'ASSET', 'BENEFIT'],
+        required=False,
+        help_text='Update all items with this legend'
+    )
+    approval_type = serializers.ChoiceField(
+        choices=['SALES', 'MARKETING', 'BOTH'],
+        required=True,
+        help_text='The approval type to set'
+    )
+    
+    def validate(self, data):
+        if not data.get('item_ids') and not data.get('legend'):
+            raise serializers.ValidationError(
+                "Either 'item_ids' or 'legend' must be provided"
+            )
+        return data
 
 
 class VariantSerializer(serializers.ModelSerializer):
@@ -68,7 +97,8 @@ class VariantSerializer(serializers.ModelSerializer):
         model = Variant
         fields = [
             'id', 'catalogue_item', 'catalogue_item_id', 'item_code', 'option_description',
-            'points', 'price', 'image_url', 'stock', 'reorder_level'
+            'points', 'price', 'image_url', 'stock', 'reorder_level',
+            'pricing_type', 'points_multiplier', 'price_multiplier'
         ]
         
     def create(self, validated_data):
@@ -101,7 +131,8 @@ class InventoryVariantSerializer(serializers.ModelSerializer):
         model = Variant
         fields = [
             'id', 'catalogue_item_id', 'item_name', 'item_code', 'option_description',
-            'points', 'price', 'image_url', 'stock', 'reorder_level', 'legend', 'stock_status'
+            'points', 'price', 'image_url', 'stock', 'reorder_level', 'legend', 'stock_status',
+            'pricing_type', 'points_multiplier', 'price_multiplier'
         ]
     
     def get_stock_status(self, obj):

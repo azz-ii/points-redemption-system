@@ -36,6 +36,9 @@ export interface Variant {
   image_url: string | null;
   stock: number;
   reorder_level: number;
+  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  points_multiplier: string | null;
+  price_multiplier: string | null;
 }
 
 export interface CatalogueVariant {
@@ -59,6 +62,9 @@ export interface CatalogueVariant {
   mktg_admin_name: string | null;
   approver: number | null;
   approver_name: string | null;
+  pricing_type?: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  points_multiplier?: string | null;
+  price_multiplier?: string | null;
 }
 
 export interface ModalBaseProps {
@@ -71,6 +77,14 @@ export const LEGEND_OPTIONS = [
   { value: "GIVEAWAY", label: "Giveaway (Blue)" },
   { value: "ASSET", label: "Asset (Yellow)" },
   { value: "BENEFIT", label: "Benefit (Green)" },
+] as const;
+
+export const PRICING_TYPE_OPTIONS = [
+  { value: "FIXED", label: "Fixed (Quantity-based)", description: "Standard quantity × points" },
+  { value: "PER_SQFT", label: "Per Square Foot", description: "Square footage × multiplier" },
+  { value: "PER_INVOICE", label: "Per Invoice Amount", description: "Invoice amount × multiplier" },
+  { value: "PER_DAY", label: "Per Day", description: "Number of days × multiplier" },
+  { value: "PER_EU_SRP", label: "Per EU SRP", description: "EU SRP value × multiplier" },
 ] as const;
 
 export const getLegendColor = (legend: string): string => {

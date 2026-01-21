@@ -27,12 +27,14 @@ export function MobileBottomNavMarketing({
 
   const navItems = [
     { id: "dashboard", icon: Home, label: "Dashboard", path: "/marketing/dashboard" },
+    { id: "process-requests", icon: ClipboardCheck, label: "Requests", path: "/marketing/process-requests" },
     { id: "history", icon: HistoryIcon, label: "History", path: "/marketing/history" },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
   const getCurrentPage = () => {
     const path = location.pathname;
+    if (path.includes("/process-requests")) return "process-requests";
     if (path.includes("/history")) return "history";
     return "dashboard";
   };

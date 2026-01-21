@@ -260,10 +260,15 @@ export interface RedemptionRequestResponse {
   total_points: number;
   status: string;
   status_display: string;
+  processing_status: string;
+  processing_status_display: string;
   date_requested: string;
   reviewed_by: number | null;
   reviewed_by_name: string | null;
   date_reviewed: string | null;
+  processed_by: number | null;
+  processed_by_name: string | null;
+  date_processed: string | null;
   remarks: string | null;
   rejection_reason: string | null;
   // Service Vehicle Use fields
@@ -399,4 +404,123 @@ export const redemptionRequestsApi = {
   },
 };
 
+// ============================================
+// Marketing Requests API (for Marketing users)
+// ============================================
+
+export interface MarketingProcessingStatusItem {
+  id: number;
+  variant: number;
+  variant_name: string;
+  variant_code: string;
+  variant_option: string | null;
+  catalogue_item_name: string;
+  catalogue_item_legend?: string;
+  quantity: number;
+  points_per_item: number;
+  total_points: number;
+  image_url: string | null;
+  item_processed_by?: number | null;
+  item_processed_by_name?: string | null;
+  item_processed_at?: string | null;
+}
+
+export interface MarketingProcessingStatus {
+  request_id: number;
+  total_assigned_items: number;
+  pending_items: number;
+  processed_items: number;
+  all_my_items_processed: boolean;
+  overall_processing_complete: boolean;
+  items: MarketingProcessingStatusItem[];
+}
+
+export interface MarkItemsProcessedResponse {
+  message: string;
+  processed_count: number;
+  all_processing_complete: boolean;
+  request: RedemptionRequestResponse;
+}
+
+export const marketingRequestsApi = {
+  /**
+   * Get all redemption requests that have items assigned to the current marketing user.
+   * Backend filters to show only APPROVED requests with items this user is assigned to.
+   */
+  async getRequests(): Promise<RedemptionRequestResponse[]> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch requests');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get the current user's processing status for a specific request.
+   * Shows which items are assigned to them and their processed status.
+   */
+  async getMyProcessingStatus(requestId: number): Promise<MarketingProcessingStatus> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/my_processing_status/`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch processing status');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Mark the current marketing user's assigned items as processed.
+   * Each Marketing user must process their own assigned items.
+   */
+  async markItemsProcessed(requestId: number): Promise<MarkItemsProcessedResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/mark_items_processed/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to mark items as processed');
+    }
+
+    return response.json();
+  },
+};
+
+// Request History API - Admin only, shows all processed requests
+export const requestHistoryApi = {
+  /**
+   * Get all processed redemption requests (Admin only).
+   * Returns all requests with processing_status='PROCESSED' regardless of assignment.
+   */
+  async getProcessedRequests(): Promise<RedemptionRequestResponse[]> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/history/`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch processed requests');
+    }
+
+    return response.json();
+  },
+};
 

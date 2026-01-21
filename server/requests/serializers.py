@@ -10,13 +10,23 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
     variant_option = serializers.SerializerMethodField()
     catalogue_item_name = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
+    pricing_type_display = serializers.SerializerMethodField()
+    item_processed_by_name = serializers.SerializerMethodField()
+    mktg_admin_id = serializers.SerializerMethodField()
+    mktg_admin_name = serializers.SerializerMethodField()
+    item_legend = serializers.SerializerMethodField()
 
     class Meta:
         model = RedemptionRequestItem
         fields = [
             'id', 'variant', 'variant_name', 'variant_code', 'variant_option',
             'catalogue_item_name', 'quantity', 'points_per_item', 
-            'total_points', 'image_url'
+            'total_points', 'image_url',
+            # Dynamic pricing fields
+            'pricing_type', 'pricing_type_display', 'dynamic_quantity', 'points_multiplier',
+            # Item-level processing fields
+            'item_processed_by', 'item_processed_by_name', 'item_processed_at',
+            'mktg_admin_id', 'mktg_admin_name', 'item_legend'
         ]
         read_only_fields = ['id']
 
@@ -35,6 +45,47 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         return obj.variant.image_url if obj.variant else None
 
+    def get_pricing_type_display(self, obj):
+        """Human-readable pricing type"""
+        pricing_labels = {
+            'FIXED': 'Fixed',
+            'PER_SQFT': 'Per Sq Ft',
+            'PER_INVOICE': 'Per Invoice Amount',
+            'PER_DAY': 'Per Day',
+            'PER_EU_SRP': 'Per EU SRP',
+        }
+        return pricing_labels.get(obj.pricing_type, obj.pricing_type) if obj.pricing_type else 'Fixed'
+
+    def get_item_processed_by_name(self, obj):
+        if obj.item_processed_by:
+            profile = getattr(obj.item_processed_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.item_processed_by.username
+            return obj.item_processed_by.username
+        return None
+
+    def get_mktg_admin_id(self, obj):
+        """Get the mktg_admin user ID from the catalogue item"""
+        if obj.variant and obj.variant.catalogue_item.mktg_admin:
+            return obj.variant.catalogue_item.mktg_admin.id
+        return None
+
+    def get_mktg_admin_name(self, obj):
+        """Get the mktg_admin name from the catalogue item"""
+        if obj.variant and obj.variant.catalogue_item.mktg_admin:
+            mktg_admin = obj.variant.catalogue_item.mktg_admin
+            profile = getattr(mktg_admin, 'profile', None)
+            if profile:
+                return profile.full_name or mktg_admin.username
+            return mktg_admin.username
+        return None
+
+    def get_item_legend(self, obj):
+        """Get the legend of the catalogue item"""
+        if obj.variant and obj.variant.catalogue_item:
+            return obj.variant.catalogue_item.legend
+        return None
+
 
 class RedemptionRequestSerializer(serializers.ModelSerializer):
     items = RedemptionRequestItemSerializer(many=True, read_only=True)
@@ -47,6 +98,14 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     processing_status_display = serializers.CharField(source='get_processing_status_display', read_only=True)
     points_deducted_from_display = serializers.CharField(source='get_points_deducted_from_display', read_only=True)
+    
+    # Dual approval fields
+    sales_approved_by_name = serializers.SerializerMethodField()
+    marketing_approved_by_name = serializers.SerializerMethodField()
+    pending_approvals = serializers.SerializerMethodField()
+    
+    # Marketing processing status
+    marketing_processing_status = serializers.SerializerMethodField()
 
     class Meta:
         model = RedemptionRequest
@@ -59,6 +118,14 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'processed_by', 'processed_by_name', 'date_processed',
             'cancelled_by', 'cancelled_by_name', 'date_cancelled',
             'remarks', 'rejection_reason', 'withdrawal_reason',
+            # Dual approval fields
+            'requires_sales_approval', 'requires_marketing_approval',
+            'sales_approval_status', 'sales_approved_by', 'sales_approved_by_name',
+            'sales_approval_date', 'sales_rejection_reason',
+            'marketing_approval_status', 'marketing_approved_by', 'marketing_approved_by_name',
+            'marketing_approval_date', 'marketing_rejection_reason',
+            'pending_approvals', 'marketing_processing_status',
+            # SVC fields
             'svc_date', 'svc_time', 'svc_driver',
             'items'
         ]
@@ -103,6 +170,29 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             return obj.cancelled_by.username
         return None
 
+    def get_sales_approved_by_name(self, obj):
+        if obj.sales_approved_by:
+            profile = getattr(obj.sales_approved_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.sales_approved_by.username
+            return obj.sales_approved_by.username
+        return None
+
+    def get_marketing_approved_by_name(self, obj):
+        if obj.marketing_approved_by:
+            profile = getattr(obj.marketing_approved_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.marketing_approved_by.username
+            return obj.marketing_approved_by.username
+        return None
+
+    def get_pending_approvals(self, obj):
+        return obj.get_pending_approvals()
+
+    def get_marketing_processing_status(self, obj):
+        """Get the marketing processing status for this request"""
+        return obj.get_marketing_processing_status()
+
 
 class CreateRedemptionRequestSerializer(serializers.Serializer):
     requested_for = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
@@ -122,25 +212,55 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
     )
 
     def validate_items(self, value):
-        """Validate that each item has required fields"""
+        """Validate that each item has required fields based on pricing type"""
         for item in value:
             if 'variant_id' not in item:
                 raise serializers.ValidationError("Each item must have a variant_id")
-            if 'quantity' not in item:
-                raise serializers.ValidationError("Each item must have a quantity")
-            if item['quantity'] <= 0:
-                raise serializers.ValidationError("Quantity must be greater than 0")
             
-            # Validate variant exists
+            # Validate variant exists and get pricing type
             try:
-                Variant.objects.get(id=item['variant_id'])
+                variant = Variant.objects.get(id=item['variant_id'])
             except Variant.DoesNotExist:
                 raise serializers.ValidationError(f"Variant with id {item['variant_id']} does not exist")
+            
+            # Check requirements based on pricing type
+            pricing_type = variant.pricing_type or 'FIXED'
+            
+            if pricing_type == 'FIXED':
+                # Fixed pricing requires quantity
+                if 'quantity' not in item:
+                    raise serializers.ValidationError("Each FIXED pricing item must have a quantity")
+                if item['quantity'] <= 0:
+                    raise serializers.ValidationError("Quantity must be greater than 0")
+            else:
+                # Dynamic pricing requires dynamic_quantity
+                if 'dynamic_quantity' not in item:
+                    raise serializers.ValidationError(
+                        f"Item '{variant.catalogue_item.item_name}' uses {pricing_type} pricing and requires a dynamic_quantity value"
+                    )
+                try:
+                    dq = float(item['dynamic_quantity'])
+                    if dq <= 0:
+                        raise serializers.ValidationError(
+                            f"dynamic_quantity must be greater than 0 for '{variant.catalogue_item.item_name}'"
+                        )
+                except (ValueError, TypeError):
+                    raise serializers.ValidationError(
+                        f"dynamic_quantity must be a valid number for '{variant.catalogue_item.item_name}'"
+                    )
+                
+                # Validate that variant has points_multiplier set
+                if not variant.points_multiplier:
+                    raise serializers.ValidationError(
+                        f"Item '{variant.catalogue_item.item_name}' has dynamic pricing but no points_multiplier configured"
+                    )
         
         return value
 
     def create(self, validated_data):
         from teams.models import TeamMembership
+        from items_catalogue.models import ApprovalType
+        from .models import ApprovalStatusChoice
         
         items_data = validated_data.pop('items')
         requested_by = self.context['request'].user
@@ -148,10 +268,29 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         # Get the user's team membership
         membership = TeamMembership.objects.filter(user=requested_by).first()
         
-        # Create the main request with team assignment
+        # Pre-compute approval requirements from items
+        requires_sales = False
+        requires_marketing = False
+        
+        for item_data in items_data:
+            variant = Variant.objects.select_related('catalogue_item').get(id=item_data['variant_id'])
+            approval_type = variant.catalogue_item.approval_type
+            if approval_type == ApprovalType.SALES_ONLY:
+                requires_sales = True
+            elif approval_type == ApprovalType.MARKETING_ONLY:
+                requires_marketing = True
+            elif approval_type == ApprovalType.BOTH:
+                requires_sales = True
+                requires_marketing = True
+        
+        # Create the main request with team assignment and approval requirements
         redemption_request = RedemptionRequest.objects.create(
             requested_by=requested_by,
             team=membership.team if membership else None,
+            requires_sales_approval=requires_sales,
+            requires_marketing_approval=requires_marketing,
+            sales_approval_status=ApprovalStatusChoice.PENDING if requires_sales else ApprovalStatusChoice.NOT_REQUIRED,
+            marketing_approval_status=ApprovalStatusChoice.PENDING if requires_marketing else ApprovalStatusChoice.NOT_REQUIRED,
             **validated_data
         )
         
@@ -159,24 +298,48 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         total_points = 0
         for item_data in items_data:
             variant = Variant.objects.get(id=item_data['variant_id'])
-            quantity = item_data['quantity']
+            pricing_type = variant.pricing_type or 'FIXED'
             
-            # Parse points (handle numeric strings)
-            try:
-                points_per_item = int(float(variant.points))
-            except (ValueError, TypeError):
-                points_per_item = 0
-            
-            item_total = quantity * points_per_item
-            total_points += item_total
-            
-            RedemptionRequestItem.objects.create(
-                request=redemption_request,
-                variant=variant,
-                quantity=quantity,
-                points_per_item=points_per_item,
-                total_points=item_total
-            )
+            if pricing_type == 'FIXED':
+                # Fixed pricing: quantity * points_per_item
+                quantity = item_data['quantity']
+                try:
+                    points_per_item = int(float(variant.points))
+                except (ValueError, TypeError):
+                    points_per_item = 0
+                
+                item_total = quantity * points_per_item
+                total_points += item_total
+                
+                RedemptionRequestItem.objects.create(
+                    request=redemption_request,
+                    variant=variant,
+                    quantity=quantity,
+                    points_per_item=points_per_item,
+                    total_points=item_total,
+                    pricing_type=pricing_type,
+                    dynamic_quantity=None,
+                    points_multiplier=None
+                )
+            else:
+                # Dynamic pricing: dynamic_quantity * points_multiplier
+                from decimal import Decimal
+                dynamic_qty = Decimal(str(item_data['dynamic_quantity']))
+                points_multiplier = variant.points_multiplier or Decimal('0')
+                
+                item_total = int(dynamic_qty * points_multiplier)
+                total_points += item_total
+                
+                RedemptionRequestItem.objects.create(
+                    request=redemption_request,
+                    variant=variant,
+                    quantity=1,  # Default to 1 for dynamic pricing items
+                    points_per_item=None,
+                    total_points=item_total,
+                    pricing_type=pricing_type,
+                    dynamic_quantity=dynamic_qty,
+                    points_multiplier=points_multiplier
+                )
         
         # Update total points on the request
         redemption_request.total_points = total_points

@@ -8,6 +8,19 @@ class ItemLegend(models.TextChoices):
     ASSET = 'ASSET', 'Asset'
     BENEFIT = 'BENEFIT', 'Benefit'
 
+class ApprovalType(models.TextChoices):
+    SALES_ONLY = 'SALES', 'Sales Approver Only'
+    MARKETING_ONLY = 'MARKETING', 'Marketing Only'
+    BOTH = 'BOTH', 'Both Sales & Marketing'
+
+class PricingType(models.TextChoices):
+    """Pricing types for dynamic point/price calculation"""
+    FIXED = 'FIXED', 'Fixed (standard quantity-based)'
+    PER_SQFT = 'PER_SQFT', 'Per Square Foot'
+    PER_INVOICE = 'PER_INVOICE', 'Per Invoice Amount'
+    PER_DAY = 'PER_DAY', 'Per Day'
+    PER_EU_SRP = 'PER_EU_SRP', 'Per EU SRP'
+
 class CatalogueItem(models.Model):
     id = models.AutoField(primary_key=True)
     reward = models.CharField(max_length=255, blank=True, null=True, help_text="Reward category, if applicable (e.g., 'SIGNAGE')")
@@ -20,6 +33,12 @@ class CatalogueItem(models.Model):
         choices=ItemLegend.choices,
         default=ItemLegend.GIVEAWAY,
         help_text="Category legend: Collateral (red), Giveaway (blue), Asset (yellow), Benefit (green)"
+    )
+    approval_type = models.CharField(
+        max_length=20,
+        choices=ApprovalType.choices,
+        default=ApprovalType.SALES_ONLY,
+        help_text="Who needs to approve requests for this item: Sales Approver, Marketing, or Both"
     )
     needs_driver = models.BooleanField(default=False, help_text='Whether this item requires a driver')
     date_added = models.DateField(default=timezone.now, help_text="Date the item was added to the catalogue")
@@ -75,6 +94,28 @@ class Variant(models.Model):
     image_url = models.URLField(max_length=500, blank=True, null=True, help_text='URL to the variant image')
     stock = models.IntegerField(default=0, help_text='Current stock quantity available')
     reorder_level = models.IntegerField(default=10, help_text='Stock level at which to trigger low stock alert')
+    
+    # Dynamic pricing fields
+    pricing_type = models.CharField(
+        max_length=20,
+        choices=PricingType.choices,
+        default=PricingType.FIXED,
+        help_text='Type of pricing calculation: Fixed, Per Sq Ft, Per Invoice Amount, etc.'
+    )
+    points_multiplier = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Multiplier for dynamic pricing (e.g., 25 for "25/sq ft" means 25 points per sq ft)'
+    )
+    price_multiplier = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Price multiplier for dynamic pricing (e.g., 25.00 for "25.00/sq ft")'
+    )
 
     def __str__(self):
         return f"{self.catalogue_item.item_name} - {self.item_code} ({self.option_description})"

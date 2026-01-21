@@ -1,6 +1,7 @@
 import { useTheme } from "next-themes";
 import { X, Plus, Trash2 } from "lucide-react";
 import type { ModalBaseProps, User } from "./types";
+import { PRICING_TYPE_OPTIONS } from "./types";
 
 interface EditItemVariant {
   id: number | null;
@@ -9,6 +10,9 @@ interface EditItemVariant {
   points: string;
   price: string;
   image_url: string;
+  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  points_multiplier: string;
+  price_multiplier: string;
 }
 
 interface EditItem {
@@ -436,43 +440,98 @@ export function EditItemModal({
                         />
                       </div>
 
-                      {/* Points */}
-                      <div>
+                      {/* Pricing Type */}
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-2">
-                          Points Required *
+                          Pricing Type *
                         </label>
-                        <input
-                          type="text"
-                          value={variant.points}
+                        <select
+                          value={variant.pricing_type}
                           onChange={(e) =>
-                            onUpdateVariant(index, "points", e.target.value)
+                            onUpdateVariant(index, "pricing_type", e.target.value)
                           }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
                               : "bg-white border-gray-300 text-gray-900"
                           } focus:outline-none focus:border-blue-500`}
-                          placeholder="e.g., 500"
-                        />
+                        >
+                          {PRICING_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label} - {option.description}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
-                      {/* Price */}
+                      {/* Points - Label changes based on pricing type */}
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          Price *
+                          {variant.pricing_type === "FIXED"
+                            ? "Points Required *"
+                            : "Points Multiplier *"}
                         </label>
                         <input
                           type="text"
-                          value={variant.price}
+                          value={variant.pricing_type === "FIXED" ? variant.points : variant.points_multiplier}
                           onChange={(e) =>
-                            onUpdateVariant(index, "price", e.target.value)
+                            onUpdateVariant(
+                              index,
+                              variant.pricing_type === "FIXED" ? "points" : "points_multiplier",
+                              e.target.value
+                            )
                           }
                           className={`w-full px-3 py-2 rounded border ${
                             resolvedTheme === "dark"
                               ? "bg-gray-800 border-gray-600 text-white"
                               : "bg-white border-gray-300 text-gray-900"
                           } focus:outline-none focus:border-blue-500`}
-                          placeholder="e.g., ₱130.00"
+                          placeholder={
+                            variant.pricing_type === "FIXED"
+                              ? "e.g., 500"
+                              : "e.g., 25 (for 25 points per unit)"
+                          }
+                        />
+                        {variant.pricing_type !== "FIXED" && (
+                          <p
+                            className={`text-xs mt-1 ${
+                              resolvedTheme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Points: {variant.pricing_type === "PER_SQFT" ? "sq ft" : variant.pricing_type === "PER_INVOICE" ? "invoice amount" : variant.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Price - Label changes based on pricing type */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          {variant.pricing_type === "FIXED"
+                            ? "Price *"
+                            : "Price Multiplier *"}
+                        </label>
+                        <input
+                          type="text"
+                          value={variant.pricing_type === "FIXED" ? variant.price : variant.price_multiplier}
+                          onChange={(e) =>
+                            onUpdateVariant(
+                              index,
+                              variant.pricing_type === "FIXED" ? "price" : "price_multiplier",
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-3 py-2 rounded border ${
+                            resolvedTheme === "dark"
+                              ? "bg-gray-800 border-gray-600 text-white"
+                              : "bg-white border-gray-300 text-gray-900"
+                          } focus:outline-none focus:border-blue-500`}
+                          placeholder={
+                            variant.pricing_type === "FIXED"
+                              ? "e.g., ₱130.00"
+                              : "e.g., 25.00 (for ₱25.00 per unit)"
+                          }
                         />
                       </div>
 

@@ -155,6 +155,9 @@ function Catalogue() {
           mktg_admin_name: variant.catalogue_item.mktg_admin_name,
           approver: variant.catalogue_item.approver,
           approver_name: variant.catalogue_item.approver_name,
+          pricing_type: variant.pricing_type,
+          points_multiplier: variant.points_multiplier,
+          price_multiplier: variant.price_multiplier,
         })
       );
       setItems(flattenedItems);
@@ -245,6 +248,9 @@ function Catalogue() {
         points: "",
         price: "",
         image_url: "",
+        pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+        points_multiplier: "",
+        price_multiplier: "",
       },
     ],
   });
@@ -267,6 +273,9 @@ function Catalogue() {
         points: "",
         price: "",
         image_url: "",
+        pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+        points_multiplier: "",
+        price_multiplier: "",
       },
     ],
   });
@@ -305,6 +314,9 @@ function Catalogue() {
     points: "",
     price: "",
     image_url: "",
+    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    points_multiplier: "",
+    price_multiplier: "",
   });
 
   // Handle create item submission
@@ -358,6 +370,9 @@ function Catalogue() {
           points: v.points,
           price: v.price,
           image_url: v.image_url || null,
+          pricing_type: v.pricing_type || "FIXED",
+          points_multiplier: v.points_multiplier || null,
+          price_multiplier: v.price_multiplier || null,
         })),
       };
       console.log("[Catalogue] Creating item (POST) payload:", payload);
@@ -399,6 +414,9 @@ function Catalogue() {
             points: "",
             price: "",
             image_url: "",
+            pricing_type: "FIXED",
+            points_multiplier: "",
+            price_multiplier: "",
           },
         ],
       });
@@ -458,6 +476,9 @@ function Catalogue() {
             points: v.points,
             price: v.price,
             image_url: v.image_url || "",
+            pricing_type: v.pricing_type || "FIXED",
+            points_multiplier: v.points_multiplier || "",
+            price_multiplier: v.price_multiplier || "",
           })),
         });
       }
@@ -523,6 +544,9 @@ function Catalogue() {
           points: v.points,
           price: v.price,
           image_url: v.image_url || null,
+          pricing_type: v.pricing_type || "FIXED",
+          points_multiplier: v.points_multiplier || null,
+          price_multiplier: v.price_multiplier || null,
         })),
       };
       console.log(
@@ -617,6 +641,9 @@ function Catalogue() {
           points: "",
           price: "",
           image_url: "",
+          pricing_type: "FIXED",
+          points_multiplier: "",
+          price_multiplier: "",
         },
       ],
     });
@@ -675,6 +702,9 @@ function Catalogue() {
       points: variant.points,
       price: variant.price,
       image_url: variant.image_url || "",
+      pricing_type: variant.pricing_type || "FIXED",
+      points_multiplier: variant.points_multiplier || "",
+      price_multiplier: variant.price_multiplier || "",
     });
     setShowEditVariantModal(true);
     setEditVariantError(null);
@@ -715,6 +745,9 @@ function Catalogue() {
           points: editVariantData.points,
           price: editVariantData.price,
           image_url: editVariantData.image_url || null,
+          pricing_type: editVariantData.pricing_type || "FIXED",
+          points_multiplier: editVariantData.points_multiplier || null,
+          price_multiplier: editVariantData.price_multiplier || null,
         }),
       });
       if (!response.ok) {
@@ -768,6 +801,9 @@ function Catalogue() {
           points: "",
           price: "",
           image_url: "",
+          pricing_type: "FIXED",
+          points_multiplier: "",
+          price_multiplier: "",
         },
       ],
     });

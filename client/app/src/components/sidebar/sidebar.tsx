@@ -50,7 +50,8 @@ export function Sidebar() {
     { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
     { id: "customers", label: "Customers", icon: UserCircle, path: "/admin/customers" },
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
-    { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
+    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/admin/redemption" },
+    { id: "request-history", label: "Request History", icon: History, path: "/admin/request-history" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
     { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
   ] as const;
@@ -224,7 +225,8 @@ export function SidebarSuperAdmin() {
     { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
     { id: "customers", label: "Customers", icon: UserCircle, path: "/admin/customers" },
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
-    { id: "redemption", label: "Redemption", icon: ClipboardList, path: "/admin/redemption" },
+    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/admin/redemption" },
+    { id: "request-history", label: "Request History", icon: History, path: "/admin/request-history" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
     { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
   ] as const;
@@ -729,6 +731,7 @@ export function SidebarMarketing() {
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
+    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/marketing/process-requests" },
     { id: "history", label: "History", icon: History, path: "/marketing/history" },
   ] as const;
 

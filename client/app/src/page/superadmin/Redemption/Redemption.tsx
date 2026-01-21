@@ -1,12 +1,8 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
 import { Sidebar } from "@/components/sidebar";
-import {
-  redemptionRequestsApi,
-  type RedemptionRequestResponse,
-} from "@/lib/api";
+import { marketingRequestsApi } from "@/lib/api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -14,130 +10,128 @@ import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
   Search,
-  Sliders,
-  Filter,
-  Warehouse,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
   LogOut,
 } from "lucide-react";
-import { ViewRedemptionModal, EditRedemptionModal, MarkAsProcessedModal, CancelRequestModal, type RedemptionItem } from "./modals";
+import { ViewRedemptionModal, MarkAsProcessedModal, type RedemptionItem, type MyProcessingStatus } from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
-import { toast } from "react-hot-toast";
-
-// Using the API response type directly
-type RedemptionItemAPI = RedemptionRequestResponse;
+import { toast } from "sonner";
 
 function Redemption() {
-  const navigate = useNavigate();
   const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [currentPageIndex, setCurrentPageIndex] = useState(1);
-  const itemsPerPage = 7;
-  const [selectedItem, setSelectedItem] = useState<RedemptionItem | null>(null);
-  const [editItem, setEditItem] = useState<RedemptionItem | null>(null);
-  const [processItem, setProcessItem] = useState<RedemptionItem | null>(null);
-  const [cancelItem, setCancelItem] = useState<RedemptionItem | null>(null);
-  const [items, setItems] = useState<RedemptionItemAPI[]>([]);
-  const [searchQuery, setSearchQuery] = useState(""); // Only for mobile view
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [requests, setRequests] = useState<RedemptionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch redemption requests on mount
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
+  // Modal states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
+  const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+
+  const fetchRequests = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
         setLoading(true);
-        setError(null);
-        const requests = await redemptionRequestsApi.getRequests();
-        setItems(requests);
-      } catch (err) {
-        console.error("Error fetching redemption requests:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load redemption requests"
-        );
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchRequests();
+      setError(null);
+      const data = await marketingRequestsApi.getRequests();
+      setRequests(data as unknown as RedemptionItem[]);
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+      setError(err instanceof Error ? err.message : "Failed to load requests");
+      toast.error("Failed to load requests");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  // Filtering and pagination for mobile only
-  // Filter and pagination for mobile view only
-  const filteredItems = items.filter((item) => {
+  // Fetch requests on mount
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const fetchMyProcessingStatus = useCallback(async (requestId: number) => {
+    try {
+      const status = await marketingRequestsApi.getMyProcessingStatus(requestId);
+      setMyProcessingStatus(status);
+      return status;
+    } catch (err) {
+      console.error("Error fetching processing status:", err);
+      toast.error("Failed to load processing status");
+      return null;
+    }
+  }, []);
+
+  const pageSize = 7;
+  const filteredRequests = requests.filter((request) => {
     if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase();
     return (
-      item.id.toString().includes(q) ||
-      item.requested_for_name.toLowerCase().includes(q) ||
-      item.requested_by_name.toLowerCase().includes(q) ||
-      item.status.toLowerCase().includes(q)
+      request.id.toString().includes(query) ||
+      request.requested_by_name.toLowerCase().includes(query) ||
+      request.requested_for_name.toLowerCase().includes(query) ||
+      request.status.toLowerCase().includes(query)
     );
   });
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredItems.length / itemsPerPage)
-  );
-  const safePage = Math.min(currentPageIndex, totalPages);
-  const startIndex = (safePage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
-  const fetchRequests = async () => {
+  const handleViewClick = useCallback(async (request: RedemptionItem) => {
+    setSelectedRequest(request);
+    await fetchMyProcessingStatus(request.id);
+    setShowViewModal(true);
+  }, [fetchMyProcessingStatus]);
+
+  const handleMarkProcessedClick = useCallback(async (request: RedemptionItem) => {
+    setSelectedRequest(request);
+    const status = await fetchMyProcessingStatus(request.id);
+    if (status && status.pending_items > 0) {
+      setShowProcessModal(true);
+    } else {
+      toast.info("All your items have already been processed");
+    }
+  }, [fetchMyProcessingStatus]);
+
+  const handleMarkProcessedConfirm = async () => {
+    if (!selectedRequest) return;
+
     try {
-      setLoading(true);
-      setError(null);
-      const requests = await redemptionRequestsApi.getRequests();
-      setItems(requests);
+      await marketingRequestsApi.markItemsProcessed(selectedRequest.id);
+      toast.success("Items marked as processed successfully");
+      setShowProcessModal(false);
+      setSelectedRequest(null);
+      setMyProcessingStatus(null);
+      fetchRequests(true);
     } catch (err) {
-      console.error("Error fetching redemption requests:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load redemption requests"
-      );
-    } finally {
-      setLoading(false);
+      console.error("Error marking items as processed:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
     }
   };
 
-  const handleMarkAsProcessed = async (remarks: string) => {
-    if (!processItem) return;
-
-    setProcessItem(null);
-    toast.success("Request marked as processed successfully");
-
-    redemptionRequestsApi
-      .markAsProcessed(processItem.id, remarks)
-      .then(() => {
-        fetchRequests();
-      })
-      .catch((err) => {
-        toast.error(err.message || "Failed to mark request as processed");
-        fetchRequests();
-      });
-  };
-
-  const handleCancelRequest = async (reason: string, remarks: string) => {
-    if (!cancelItem) return;
-
-    setCancelItem(null);
-    toast.success("Request cancelled successfully");
-
-    redemptionRequestsApi
-      .cancelRequest(cancelItem.id, reason, remarks)
-      .then(() => {
-        fetchRequests();
-      })
-      .catch((err) => {
-        toast.error(err.message || "Failed to cancel request");
-        fetchRequests();
-      });
-  };
+  // Check if the current user can mark this request's items as processed
+  const canMarkProcessed = useCallback((request: RedemptionItem): boolean => {
+    // Only approved requests that aren't cancelled can be processed
+    return (
+      request.status === "APPROVED" &&
+      request.processing_status !== "CANCELLED" &&
+      request.processing_status !== "PROCESSED"
+    );
+  }, []);
 
   return (
     <div
@@ -165,11 +159,23 @@ function Redemption() {
                 resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
               } flex items-center justify-center`}
             >
-              <span className="text-white font-semibold text-xs">I</span>
+              <span className="text-white font-semibold text-xs">A</span>
             </div>
-            <span className="text-sm font-medium">Izza</span>
+            <span className="text-sm font-medium">Process Requests</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => fetchRequests(true)}
+              disabled={refreshing}
+              className={`p-2 rounded-lg ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 hover:bg-gray-800"
+                  : "bg-gray-100 hover:bg-gray-200"
+              } transition-colors ${refreshing ? "opacity-50" : ""}`}
+              title="Refresh"
+            >
+              <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+            </button>
             <button
               onClick={() => setIsNotificationOpen(true)}
               className={`p-2 rounded-lg ${
@@ -179,16 +185,6 @@ function Redemption() {
               } transition-colors`}
             >
               <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Warehouse className="h-5 w-5" />
             </button>
             <ThemeToggle />
             <button
@@ -207,8 +203,29 @@ function Redemption() {
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-semibold">Redemption Request</h1>
-            <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-3xl font-semibold">Process Requests</h1>
+              <p
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                View and process approved redemption requests for your assigned items
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => fetchRequests(true)}
+                disabled={refreshing}
+                className={`p-2 rounded-lg ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 hover:bg-gray-800"
+                    : "bg-gray-100 hover:bg-gray-200"
+                } transition-colors ${refreshing ? "opacity-50" : ""}`}
+                title="Refresh"
+              >
+                <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+              </button>
               <button
                 onClick={() => setIsNotificationOpen(true)}
                 className={`p-2 rounded-lg ${
@@ -223,86 +240,148 @@ function Redemption() {
             </div>
           </div>
 
-          <RedemptionTable
-            redemptions={items as unknown as RedemptionItem[]}
-            loading={loading}
-            onView={(item) => setSelectedItem(item)}
-            onEdit={(item) => setEditItem(item)}
-            onMarkAsProcessed={(item) => setProcessItem(item)}
-            onCancelRequest={(item) => setCancelItem(item)}
-            onCreateNew={() => console.log("Create new redemption request")}
-            onRefresh={fetchRequests}
-            refreshing={loading}
-          />
+          {/* Search */}
+          <div className="mb-6">
+            <div
+              className={`relative flex items-center h-12 rounded-md border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-900 border-gray-700"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
+              <Input
+                placeholder="Search by ID, Requested By, Requested For, or Status..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`pl-10 w-full h-full ${
+                  resolvedTheme === "dark"
+                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
+                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
+                }`}
+              />
+            </div>
+          </div>
+
+          {error ? (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+              {error}
+            </div>
+          ) : (
+            <RedemptionTable
+              redemptions={paginatedRequests}
+              loading={loading}
+              onView={handleViewClick}
+              onMarkAsProcessed={handleMarkProcessedClick}
+              canMarkProcessed={canMarkProcessed}
+              onRefresh={() => fetchRequests(true)}
+              refreshing={refreshing}
+            />
+          )}
+
+          {/* Desktop Pagination */}
+          {!loading && !error && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24 space-y-4">
-          <h2 className="text-2xl font-semibold">Redemption Request</h2>
-          <div
-            className={`relative flex items-center rounded-lg border ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 border-gray-700"
-                : "bg-white border-gray-300"
-            }`}
-          >
-            <Search className="absolute left-3 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPageIndex(1);
-              }}
-              className={`pl-10 w-full text-sm ${
-                resolvedTheme === "dark"
-                  ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                  : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-              }`}
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              className={`flex-1 p-3 rounded-lg border text-sm font-semibold ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-black border-black text-white"
-              } transition-colors flex items-center justify-center gap-2`}
-            >
-              <Sliders className="h-4 w-4" />
-              Filter
-            </button>
-            <button
-              className={`flex-1 p-3 rounded-lg border text-sm font-semibold ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              } transition-colors flex items-center justify-center gap-2`}
-            >
-              <Filter className="h-4 w-4" />
-              Sort
-            </button>
-          </div>
-          <button
-            className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border transition-colors font-semibold text-sm ${
-              resolvedTheme === "dark"
-                ? "bg-white text-gray-900 border-gray-300 hover:bg-gray-200"
-                : "bg-black text-white border-black hover:bg-gray-900"
-            }`}
-          >
-            New Request
-          </button>
+        <div className="md:hidden flex-1 overflow-y-auto pb-20">
+          <div className="p-4">
+            {/* Search */}
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <Input
+                placeholder="Search requests..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className={`pl-10 h-12 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+                    : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
+                }`}
+              />
+            </div>
 
-          <RedemptionMobileCards
-            paginatedItems={paginatedItems as unknown as RedemptionItem[]}
-            filteredItems={filteredItems as unknown as RedemptionItem[]}
-            loading={loading}
-            currentPage={safePage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPageIndex}
-            onView={(item) => setSelectedItem(item)}
-            onEdit={(item) => setEditItem(item)}
-          />
+            <RedemptionMobileCards
+              paginatedItems={paginatedRequests}
+              filteredItems={filteredRequests}
+              loading={loading}
+              currentPage={safePage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              onView={handleViewClick}
+              onMarkProcessed={handleMarkProcessedClick}
+              canMarkProcessed={canMarkProcessed}
+            />
+
+            {/* Mobile Pagination */}
+            <div className="flex items-center justify-between mt-6">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </button>
+              <span className="text-xs font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
+                    : "bg-white border border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -313,29 +392,27 @@ function Redemption() {
       />
 
       <ViewRedemptionModal
-        isOpen={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
-        item={selectedItem as RedemptionItem}
-      />
-
-      <EditRedemptionModal
-        isOpen={!!editItem}
-        onClose={() => setEditItem(null)}
-        item={editItem as RedemptionItem}
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedRequest(null);
+          setMyProcessingStatus(null);
+        }}
+        item={selectedRequest}
+        myItems={myProcessingStatus?.items}
       />
 
       <MarkAsProcessedModal
-        isOpen={!!processItem}
-        onClose={() => setProcessItem(null)}
-        item={processItem as RedemptionItem}
-        onConfirm={handleMarkAsProcessed}
-      />
-
-      <CancelRequestModal
-        isOpen={!!cancelItem}
-        onClose={() => setCancelItem(null)}
-        item={cancelItem as RedemptionItem}
-        onConfirm={handleCancelRequest}
+        isOpen={showProcessModal}
+        onClose={() => {
+          setShowProcessModal(false);
+          setSelectedRequest(null);
+          setMyProcessingStatus(null);
+        }}
+        item={selectedRequest}
+        myItems={myProcessingStatus?.items || []}
+        pendingCount={myProcessingStatus?.pending_items || 0}
+        onConfirm={handleMarkProcessedConfirm}
       />
     </div>
   );

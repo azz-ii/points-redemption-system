@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarApprover } from "@/components/sidebar";
@@ -25,8 +23,6 @@ import { RequestsTable, RequestsMobileCards } from "./components";
 type RequestItemAPI = RedemptionRequestResponse;
 
 function ApproverRequests() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +48,11 @@ function ApproverRequests() {
       setLoading(true);
       setError(null);
       const data = await redemptionRequestsApi.getRequests();
-      setRequests(data);
+      // Filter to show only NOT_PROCESSED requests (pending processing)
+      const nonProcessedRequests = data.filter(
+        (req) => req.processing_status === "NOT_PROCESSED" || !req.processing_status
+      );
+      setRequests(nonProcessedRequests);
     } catch (err) {
       console.error("Error fetching redemption requests:", err);
       setError(err instanceof Error ? err.message : "Failed to load requests");
@@ -79,18 +79,6 @@ function ApproverRequests() {
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
-
-  const handleNavigate = (
-    page: "dashboard" | "approver-requests" | "history" | "requests"
-  ) => {
-    if (page === "history") {
-      navigate("/approver/history");
-    } else if (page === "approver-requests" || page === "requests") {
-      navigate("/approver/requests");
-    } else {
-      navigate("/approver/dashboard");
-    }
-  };
 
   const handleViewClick = (request: RequestItem) => {
     setSelectedRequest(request);
@@ -168,19 +156,6 @@ function ApproverRequests() {
         // Refresh to show current state
         fetchRequests();
       });
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-400 text-black";
-      case "APPROVED":
-        return "bg-green-500 text-white";
-      case "REJECTED":
-        return "bg-red-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
   };
 
   return (
