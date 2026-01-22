@@ -80,26 +80,22 @@ export function BulkDeleteAccountModal({
           </div>
         </div>
 
-        <div className="p-8 border-t flex gap-3">
+        {/* Footer */}
+        <div className="p-8 flex justify-end gap-3">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded font-semibold transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
               resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
             }`}
           >
             Cancel
           </button>
-
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`px-6 py-3 rounded font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
-                : "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
           >
             {loading
               ? "Deleting..."

@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export type StockStatus = "In Stock" | "Low Stock" | "Out of Stock";
 
 export interface InventoryItem {
@@ -13,11 +15,6 @@ export interface InventoryItem {
   reorder_level: number;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
   stock_status: StockStatus;
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }
 
 export const getStatusColor = (status: StockStatus): string => {

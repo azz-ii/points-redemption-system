@@ -1,9 +1,6 @@
 ﻿// Shared types for Teams modals
 
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+export type { ModalBaseProps } from "@/components/modals";
 
 export interface ApproverDetails {
   id: number;

@@ -128,14 +128,7 @@ export default function RedemptionStatus() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                className={`relative p-2 rounded-lg transition-colors ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
-                aria-label="Cart"
-              >
-                <ShoppingCart className="h-6 w-6" />
-              </button>
+              
               <button
                 onClick={() => setNotificationOpen(!notificationOpen)}
                 className={`p-2 rounded-lg transition-colors ${

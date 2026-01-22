@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,12 @@ import {
   EditAccountModal,
   type Account,
 } from "./modals";
-import { AccountsTable, AccountsMobileCards } from "../Accounts/components";
+import { MarketingUsersTable, MarketingUsersMobileCards, type MarketingUser, type LegendAssignment } from "./components";
 
 function Marketing() {
   const handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -35,18 +35,48 @@ function Marketing() {
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  // Fetch accounts - filtered for Marketing position
-  const fetchAccounts = async () => {
+  // Fetch accounts and assignments
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users/");
-      const data = await response.json();
+      
+      // Fetch users and assignments in parallel
+      const [usersResponse, assignmentsResponse] = await Promise.all([
+        fetch("/api/users/"),
+        fetch("/api/catalogue/bulk-assign-marketing/")
+      ]);
+      
+      const usersData = await usersResponse.json();
+      const assignmentsData = await assignmentsResponse.json();
 
-      if (response.ok) {
-        const marketingUsers = (data.accounts || []).filter(
+      if (usersResponse.ok) {
+        const accounts = (usersData.accounts || []).filter(
           (account: Account) => account.position === "Marketing" || account.position === "Admin"
         );
-        setAccounts(marketingUsers);
+        
+        // Build assignments map by user ID
+        const assignmentsByUser: Record<number, LegendAssignment[]> = {};
+        if (assignmentsResponse.ok && assignmentsData.assignments) {
+          for (const assignment of assignmentsData.assignments) {
+            if (assignment.mktg_admin_id) {
+              if (!assignmentsByUser[assignment.mktg_admin_id]) {
+                assignmentsByUser[assignment.mktg_admin_id] = [];
+              }
+              assignmentsByUser[assignment.mktg_admin_id].push({
+                legend: assignment.legend,
+                item_count: assignment.item_count,
+              });
+            }
+          }
+        }
+        
+        // Merge users with their assignments
+        const usersWithAssignments: MarketingUser[] = accounts.map((account: Account) => ({
+          ...account,
+          assigned_legends: assignmentsByUser[account.id] || [],
+        }));
+        
+        setMarketingUsers(usersWithAssignments);
       } else {
         setError("Failed to load marketing users");
       }
@@ -56,11 +86,11 @@ function Marketing() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchAccounts();
-  }, []);
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     if (toast) {
@@ -69,9 +99,33 @@ function Marketing() {
     }
   }, [toast]);
 
-  const handleEditClick = (account: Account) => {
-    setEditingAccount(account);
+  const handleEditClick = (user: MarketingUser) => {
+    // Convert MarketingUser to Account for the modal
+    setEditingAccount({
+      id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+      email: user.email,
+      position: user.position,
+      points: user.points,
+      is_activated: user.is_activated,
+      is_banned: user.is_banned,
+    });
     setShowEditModal(true);
+  };
+
+  const handleViewClick = (user: MarketingUser) => {
+    setViewTarget({
+      id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+      email: user.email,
+      position: user.position,
+      points: user.points,
+      is_activated: user.is_activated,
+      is_banned: user.is_banned,
+    });
+    setShowViewModal(true);
   };
 
   const handleEditSuccess = () => {
@@ -79,29 +133,29 @@ function Marketing() {
       message: "Item legend assignment updated successfully!",
       type: "success",
     });
-    fetchAccounts();
+    fetchData();
   };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   
-  const filteredAccounts = accounts.filter(
-    (account) =>
-      account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.id.toString().includes(searchQuery)
+  const filteredUsers = marketingUsers.filter(
+    (user) =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.id.toString().includes(searchQuery)
   );
   
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredAccounts.length / itemsPerPage)
+    Math.ceil(filteredUsers.length / itemsPerPage)
   );
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   return (
     <div
@@ -184,17 +238,12 @@ function Marketing() {
             </div>
           )}
 
-          <AccountsTable
-            accounts={accounts}
+          <MarketingUsersTable
+            users={marketingUsers}
             loading={loading}
-            onViewAccount={(account) => {
-              setViewTarget(account);
-              setShowViewModal(true);
-            }}
+            onViewAccount={handleViewClick}
             onEditAccount={handleEditClick}
-            onBanAccount={() => {}}
-            onDeleteAccount={() => {}}
-            onRefresh={fetchAccounts}
+            onRefresh={fetchData}
             refreshing={loading}
           />
         </div>
@@ -204,7 +253,7 @@ function Marketing() {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Marketing Users</h1>
             <button
-              onClick={fetchAccounts}
+              onClick={fetchData}
               disabled={loading}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
@@ -236,21 +285,14 @@ function Marketing() {
             className="mb-4"
           />
 
-          <AccountsMobileCards
-            accounts={accounts}
-            paginatedAccounts={paginatedAccounts}
-            filteredAccounts={filteredAccounts}
+          <MarketingUsersMobileCards
+            paginatedUsers={paginatedUsers}
             loading={loading}
-            resolvedTheme={resolvedTheme}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            onViewAccount={(account) => {
-              setViewTarget(account);
-              setShowViewModal(true);
-            }}
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onViewAccount={handleViewClick}
             onEditAccount={handleEditClick}
-            onBanAccount={() => {}}
-            onDeleteAccount={() => {}}
           />
         </div>
       </div>

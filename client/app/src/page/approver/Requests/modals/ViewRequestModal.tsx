@@ -42,153 +42,148 @@ export function ViewRequestModal({
         aria-modal="true"
         aria-labelledby="view-request-title"
       >
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-4">
+        {/* Header */}
+        <div className="flex justify-between items-center p-8">
+          <div>
             <h2 id="view-request-title" className="text-xl font-semibold">
               Request Details
             </h2>
-            <button
-              onClick={onClose}
-              className={`p-1 rounded hover:${
-                resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              } transition-colors`}
-              aria-label="Close dialog"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <p className="text-sm text-gray-500 mt-1">
+              Request #{request.id}
+            </p>
           </div>
+          <button
+            onClick={onClose}
+            className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          <div className="space-y-6 text-base max-h-[70vh] overflow-y-auto">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Request ID
-              </p>
-              <p className="font-semibold">#{request.id}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Requested By
-              </p>
-              <p className="font-semibold">{request.requested_by_name}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Requested For
-              </p>
-              <p className="font-semibold">{request.requested_for_name}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Total Points
-              </p>
-              <p className="font-semibold">
-                {request.total_points.toLocaleString()} pts
-              </p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Status</p>
-              <span
-                className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
-                  request.status
-                )}`}
-              >
-                {request.status_display}
-              </span>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Date Requested
-              </p>
-              <p className="font-semibold">
-                {new Date(request.date_requested).toLocaleString()}
-              </p>
-            </div>
-
-            {request.reviewed_by_name && (
+        {/* Content */}
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Request Info */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Request Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Reviewed By
-                </p>
-                <p className="font-semibold">{request.reviewed_by_name}</p>
+                <label className="block text-xs text-gray-500 mb-1">Requested By</label>
+                <p className="font-semibold">{request.requested_by_name}</p>
               </div>
-            )}
-
-            {request.date_reviewed && (
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Date Reviewed
-                </p>
+                <label className="block text-xs text-gray-500 mb-1">Requested For</label>
+                <p className="font-semibold">{request.requested_for_name}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+                <p className="font-semibold">{request.total_points.toLocaleString()} pts</p>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Date Requested</label>
                 <p className="font-semibold">
-                  {new Date(request.date_reviewed).toLocaleString()}
+                  {new Date(request.date_requested).toLocaleString()}
                 </p>
-              </div>
-            )}
-
-            {request.remarks && (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
-                <p className="font-semibold">{request.remarks}</p>
-              </div>
-            )}
-
-            {request.rejection_reason && (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Rejection Reason
-                </p>
-                <p className="font-semibold text-red-500">
-                  {request.rejection_reason}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-2">
-                Items ({request.items.length})
-              </p>
-              <div className="space-y-2">
-                {request.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-3 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <p className="font-semibold">{item.catalogue_item_name}</p>
-                    {item.variant_name && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.variant_name}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Qty: {item.quantity} × {item.points_per_item} pts ={" "}
-                      {item.total_points} pts
-                    </p>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
 
-          <div className="flex gap-2 mt-6">
-            <button
-              onClick={onClose}
-              className={`flex-1 py-2 rounded font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              }`}
+          {/* Status */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Status
+            </h3>
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+                request.status
+              )}`}
             >
-              Close
-            </button>
+              {request.status_display}
+            </span>
           </div>
+
+          {/* Review Info */}
+          {(request.reviewed_by_name || request.date_reviewed || request.remarks || request.rejection_reason) && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                Review Information
+              </h3>
+              {request.reviewed_by_name && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Reviewed By</label>
+                  <p className="font-semibold">{request.reviewed_by_name}</p>
+                </div>
+              )}
+              {request.date_reviewed && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Date Reviewed</label>
+                  <p className="font-semibold">
+                    {new Date(request.date_reviewed).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {request.remarks && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Remarks</label>
+                  <p className="font-semibold">{request.remarks}</p>
+                </div>
+              )}
+              {request.rejection_reason && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Rejection Reason</label>
+                  <p className="font-semibold text-red-500">{request.rejection_reason}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Items */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Items ({request.items.length})
+            </h3>
+            <div className="space-y-2">
+              {request.items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`p-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <p className="font-semibold">{item.catalogue_item_name}</p>
+                  {item.variant_name && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {item.variant_name}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Qty: {item.quantity} × {item.points_per_item} pts ={" "}
+                    {item.total_points} pts
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-8 flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              resolvedTheme === "dark"
+                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+            }`}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

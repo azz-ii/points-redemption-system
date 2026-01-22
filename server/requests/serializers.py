@@ -230,6 +230,8 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         required=False,
         allow_null=True
     )
+    plate_number = serializers.CharField(max_length=20, required=False, allow_blank=True, allow_null=True)
+    driver_name = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
 
     def validate(self, data):
         """Validate that exactly one of requested_for or requested_for_customer is provided based on type."""
@@ -353,6 +355,8 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             svc_date=validated_data.get('svc_date'),
             svc_time=validated_data.get('svc_time'),
             svc_driver=validated_data.get('svc_driver'),
+            plate_number=validated_data.get('plate_number'),
+            driver_name=validated_data.get('driver_name'),
         )
         
         # Create the request items and calculate total points

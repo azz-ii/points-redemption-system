@@ -53,82 +53,82 @@ export function ViewHistoryModal({
         aria-modal="true"
         aria-labelledby="view-history-title"
       >
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-4">
+        {/* Header */}
+        <div className="flex justify-between items-center p-8">
+          <div>
             <h2 id="view-history-title" className="text-xl font-semibold">
               Request History Details
             </h2>
-            <button
-              onClick={onClose}
-              className={`p-1 rounded hover:${
-                resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              } transition-colors`}
-              aria-label="Close dialog"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <p className="text-sm text-gray-500 mt-1">
+              Request #{item.id}
+            </p>
           </div>
+          <button
+            onClick={onClose}
+            className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          <div className="space-y-6 text-base max-h-[70vh] overflow-y-auto">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Request ID
-              </p>
-              <p className="font-semibold">#{item.id}</p>
-            </div>
-
+        {/* Content */}
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Request Info */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Request Information
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Requested By
-                </p>
+                <label className="block text-xs text-gray-500 mb-1">Requested By</label>
                 <p className="font-semibold">{item.requested_by_name}</p>
               </div>
-
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Requested For
-                </p>
+                <label className="block text-xs text-gray-500 mb-1">Requested For</label>
                 <p className="font-semibold">{item.requested_for_name}</p>
               </div>
             </div>
-
             <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Team</p>
+              <label className="block text-xs text-gray-500 mb-1">Team</label>
               <p className="font-semibold">
                 {item.team_name || <span className="text-gray-400 italic">No Team</span>}
               </p>
             </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Total Points
-              </p>
-              <p className="font-semibold">
-                {item.total_points.toLocaleString()} pts
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+                <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Date Requested</label>
+                <p className="font-semibold">
+                  {new Date(item.date_requested).toLocaleString()}
+                </p>
+              </div>
             </div>
+          </div>
 
+          {/* Status */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Status
+            </h3>
             <div className="flex gap-4">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Approval Status
-                </p>
+                <label className="block text-xs text-gray-500 mb-1">Approval Status</label>
                 <span
-                  className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
                     item.status
                   )}`}
                 >
                   {item.status_display}
                 </span>
               </div>
-
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Processing Status
-                </p>
+                <label className="block text-xs text-gray-500 mb-1">Processing Status</label>
                 <span
-                  className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getProcessingStatusBadgeColor(
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getProcessingStatusBadgeColor(
                     item.processing_status
                   )}`}
                 >
@@ -136,136 +136,120 @@ export function ViewHistoryModal({
                 </span>
               </div>
             </div>
+          </div>
 
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">
-                Date Requested
-              </p>
-              <p className="font-semibold">
-                {new Date(item.date_requested).toLocaleString()}
-              </p>
+          {/* Review Info */}
+          {(item.reviewed_by_name || item.processed_by_name || item.remarks || item.rejection_reason) && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                Review Information
+              </h3>
+              {item.reviewed_by_name && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Reviewed By</label>
+                    <p className="font-semibold">{item.reviewed_by_name}</p>
+                  </div>
+                  {item.date_reviewed && (
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Date Reviewed</label>
+                      <p className="font-semibold">
+                        {new Date(item.date_reviewed).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {item.processed_by_name && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Processed By</label>
+                    <p className="font-semibold">{item.processed_by_name}</p>
+                  </div>
+                  {item.date_processed && (
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Date Processed</label>
+                      <p className="font-semibold">
+                        {new Date(item.date_processed).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {item.remarks && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Remarks</label>
+                  <p className="font-semibold">{item.remarks}</p>
+                </div>
+              )}
+              {item.rejection_reason && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Rejection Reason</label>
+                  <p className="font-semibold text-red-500">{item.rejection_reason}</p>
+                </div>
+              )}
             </div>
+          )}
 
-            {item.reviewed_by_name && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 mb-1">
-                    Reviewed By
-                  </p>
-                  <p className="font-semibold">{item.reviewed_by_name}</p>
-                </div>
-
-                {item.date_reviewed && (
-                  <div>
-                    <p className="text-gray-500 dark:text-gray-400 mb-1">
-                      Date Reviewed
-                    </p>
-                    <p className="font-semibold">
-                      {new Date(item.date_reviewed).toLocaleString()}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {item.processed_by_name && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 mb-1">
-                    Processed By
-                  </p>
-                  <p className="font-semibold">{item.processed_by_name}</p>
-                </div>
-
-                {item.date_processed && (
-                  <div>
-                    <p className="text-gray-500 dark:text-gray-400 mb-1">
-                      Date Processed
-                    </p>
-                    <p className="font-semibold">
-                      {new Date(item.date_processed).toLocaleString()}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {item.remarks && (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
-                <p className="font-semibold">{item.remarks}</p>
-              </div>
-            )}
-
-            {item.rejection_reason && (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">
-                  Rejection Reason
-                </p>
-                <p className="font-semibold text-red-500">
-                  {item.rejection_reason}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-2">
-                Items ({item.items.length})
-              </p>
-              <div className="space-y-2">
-                {item.items.map((requestItem) => (
-                  <div
-                    key={requestItem.id}
-                    className={`p-3 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      {requestItem.image_url && (
-                        <img
-                          src={requestItem.image_url}
-                          alt={requestItem.catalogue_item_name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
+          {/* Items */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Items ({item.items.length})
+            </h3>
+            <div className="space-y-2">
+              {item.items.map((requestItem) => (
+                <div
+                  key={requestItem.id}
+                  className={`p-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    {requestItem.image_url && (
+                      <img
+                        src={requestItem.image_url}
+                        alt={requestItem.catalogue_item_name}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold">
+                        {requestItem.catalogue_item_name}
+                      </p>
+                      {requestItem.variant_option && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {requestItem.variant_option}
+                        </p>
                       )}
-                      <div className="flex-1">
-                        <p className="font-semibold">
-                          {requestItem.catalogue_item_name}
-                        </p>
-                        {requestItem.variant_option && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {requestItem.variant_option}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Code: {requestItem.variant_code}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Qty: {requestItem.quantity} × {requestItem.points_per_item} pts ={" "}
-                          {requestItem.total_points} pts
-                        </p>
-                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Code: {requestItem.variant_code}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Qty: {requestItem.quantity} × {requestItem.points_per_item} pts ={" "}
+                        {requestItem.total_points} pts
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          <div className="flex gap-2 mt-6">
-            <button
-              onClick={onClose}
-              className={`flex-1 py-2 rounded font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              }`}
-            >
-              Close
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="p-8 flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              resolvedTheme === "dark"
+                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+            }`}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

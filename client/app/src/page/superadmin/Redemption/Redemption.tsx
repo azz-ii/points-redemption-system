@@ -240,31 +240,7 @@ function Redemption() {
             </div>
           </div>
 
-          {/* Search */}
-          <div className="mb-6">
-            <div
-              className={`relative flex items-center h-12 rounded-md border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search by ID, Requested By, Requested For, or Status..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 w-full h-full ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
-          </div>
+          
 
           {error ? (
             <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">

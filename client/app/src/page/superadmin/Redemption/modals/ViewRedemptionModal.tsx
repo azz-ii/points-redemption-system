@@ -60,48 +60,66 @@ export function ViewRedemptionModal({
         aria-modal="true"
         aria-labelledby="view-redemption-title"
       >
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-4">
+        {/* Header */}
+        <div className="flex justify-between items-center p-8">
+          <div>
             <h2 id="view-redemption-title" className="text-xl font-semibold">
               Request Details
             </h2>
-            <button
-              onClick={onClose}
-              className={`p-1 rounded hover:${
-                resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              } transition-colors`}
-              aria-label="Close dialog"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <p className="text-sm text-gray-500 mt-1">
+              Request #{item.id}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Request Info */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Request Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Requested By</label>
+                <p className="font-semibold">{item.requested_by_name}</p>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Requested For</label>
+                <p className="font-semibold">{item.requested_for_name}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+                <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Date Requested</label>
+                <p className="font-semibold">
+                  {new Date(item.date_requested).toLocaleString()}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-6 text-base max-h-[70vh] overflow-y-auto">
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Request ID</p>
-              <p className="font-semibold">#{item.id}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Requested By</p>
-              <p className="font-semibold">{item.requested_by_name}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Requested For</p>
-              <p className="font-semibold">{item.requested_for_name}</p>
-            </div>
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Total Points</p>
-              <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
-            </div>
-
+          {/* Status */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Status
+            </h3>
             <div className="flex gap-4">
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                <label className="block text-xs text-gray-500 mb-1">Approval Status</label>
                 <span
-                  className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
                     item.status
                   )}`}
                 >
@@ -109,9 +127,9 @@ export function ViewRedemptionModal({
                 </span>
               </div>
               <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Processing</p>
+                <label className="block text-xs text-gray-500 mb-1">Processing Status</label>
                 <span
-                  className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getProcessingStatusColor(
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getProcessingStatusColor(
                     item.processing_status
                   )}`}
                 >
@@ -119,80 +137,82 @@ export function ViewRedemptionModal({
                 </span>
               </div>
             </div>
+          </div>
 
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-1">Date Requested</p>
-              <p className="font-semibold">
-                {new Date(item.date_requested).toLocaleString()}
-              </p>
+          {/* Additional Info */}
+          {(item.reviewed_by_name || item.remarks) && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                Additional Information
+              </h3>
+              {item.reviewed_by_name && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Approved By</label>
+                  <p className="font-semibold">{item.reviewed_by_name}</p>
+                </div>
+              )}
+              {item.remarks && (
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Remarks</label>
+                  <p className="font-semibold">{item.remarks}</p>
+                </div>
+              )}
             </div>
+          )}
 
-            {item.reviewed_by_name && (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Approved By</p>
-                <p className="font-semibold">{item.reviewed_by_name}</p>
-              </div>
-            )}
-
-            {item.remarks && (
-              <div>
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
-                <p className="font-semibold">{item.remarks}</p>
-              </div>
-            )}
-
-            <div>
-              <p className="text-gray-500 dark:text-gray-400 mb-2">
-                <Package className="inline h-4 w-4 mr-1" />
-                {myItems ? "My Assigned Items" : "Items"} ({displayItems.length})
-              </p>
-              <div className="space-y-2">
-                {displayItems.map((it) => (
-                  <div
-                    key={it.id}
-                    className={`p-3 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold">{it.catalogue_item_name}</p>
-                        {it.variant_name && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {it.variant_name}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Qty: {it.quantity} × {it.points_per_item} pts = {it.total_points} pts
+          {/* Items */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              <Package className="inline h-4 w-4 mr-1" />
+              {myItems ? "My Assigned Items" : "Items"} ({displayItems.length})
+            </h3>
+            <div className="space-y-2">
+              {displayItems.map((it) => (
+                <div
+                  key={it.id}
+                  className={`p-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold">{it.catalogue_item_name}</p>
+                      {it.variant_name && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {it.variant_name}
                         </p>
-                      </div>
-                      {it.item_processed_by && (
-                        <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                          <CheckCircle className="h-4 w-4" />
-                          Processed
-                        </span>
                       )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Qty: {it.quantity} × {it.points_per_item} pts = {it.total_points} pts
+                      </p>
                     </div>
+                    {it.item_processed_by && (
+                      <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                        <CheckCircle className="h-4 w-4" />
+                        Processed
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          <div className="flex gap-2 mt-6">
-            <button
-              onClick={onClose}
-              className={`flex-1 py-2 rounded font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              }`}
-            >
-              Close
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="p-8 flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              resolvedTheme === "dark"
+                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+            }`}
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface Distributor {
   id: number;
   name: string;
@@ -17,9 +19,4 @@ export interface DistributorFormData {
   contact_email: string;
   phone: string;
   location: string;
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }

@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface Account {
   id: number;
   username: string;
@@ -7,11 +9,6 @@ export interface Account {
   points: number;
   is_activated: boolean;
   is_banned: boolean;
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }
 
 export interface LegendAssignment {

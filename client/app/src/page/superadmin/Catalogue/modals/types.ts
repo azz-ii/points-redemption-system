@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface User {
   id: number;
   username: string;
@@ -61,11 +63,6 @@ export interface CatalogueVariant {
   pricing_type?: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
   points_multiplier?: string | null;
   price_multiplier?: string | null;
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }
 
 export const LEGEND_OPTIONS = [

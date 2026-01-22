@@ -43,7 +43,9 @@ export default function CartModal({
   const [remarks, setRemarks] = useState("");
   const [svcDate, setSvcDate] = useState<string>("");
   const [svcTime, setSvcTime] = useState<string>("");
-  const [svcDriver, setSvcDriver] = useState<string>("");
+  const [svcDriver, setSvcDriver] = useState<string>("without");
+  const [plateNumber, setPlateNumber] = useState<string>("");
+  const [driverName, setDriverName] = useState<string>("");
   
   // Entity type selection (Distributor or Customer)
   const [entityType, setEntityType] = useState<RequestedForType>('DISTRIBUTOR');
@@ -270,6 +272,8 @@ export default function CartModal({
         svc_date: svcDate,
         svc_time: svcTime || undefined,
         svc_driver: svcDriver === 'with' ? 'WITH_DRIVER' : svcDriver === 'without' ? 'WITHOUT_DRIVER' : undefined,
+        plate_number: plateNumber || undefined,
+        driver_name: driverName || undefined,
       }),
     };
 
@@ -287,7 +291,9 @@ export default function CartModal({
     setSelectedCustomer(null);
     setSvcDate("");
     setSvcTime("");
-    setSvcDriver("");
+    setSvcDriver("without");
+    setPlateNumber("");
+    setDriverName("");
     setPointsDeductedFrom('SELF');
     setEntityType('DISTRIBUTOR');
     onClose();
@@ -926,7 +932,7 @@ export default function CartModal({
                         (Required for selected items)
                       </span>
                     </div>
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label
                           className={`text-sm ${
@@ -966,6 +972,28 @@ export default function CartModal({
                           }`}
                         />
                       </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label
+                          className={`text-sm ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Plate Number
+                        </label>
+                        <input
+                          type="text"
+                          value={plateNumber}
+                          onChange={(e) => setPlateNumber(e.target.value)}
+                          placeholder="e.g., ABC 1234"
+                          className={`w-full px-3 py-2 rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                      </div>
                       <div className="space-y-1">
                         <label
                           className={`text-sm ${
@@ -983,11 +1011,35 @@ export default function CartModal({
                               : "bg-gray-100 border border-gray-200"
                           }`}
                         >
-                          <option value="with">With Driver</option>
                           <option value="without">Without Driver</option>
+                          <option value="with">With Driver</option>
                         </select>
                       </div>
                     </div>
+                    {svcDriver === 'with' && (
+                      <div className="mt-4">
+                        <div className="space-y-1">
+                          <label
+                            className={`text-sm ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Driver Name
+                          </label>
+                          <input
+                            type="text"
+                            value={driverName}
+                            onChange={(e) => setDriverName(e.target.value)}
+                            placeholder="Enter driver name"
+                            className={`w-full px-3 py-2 rounded-md outline-none ${
+                              isDark
+                                ? "bg-gray-800 border border-gray-700"
+                                : "bg-gray-100 border border-gray-200"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1507,7 +1559,7 @@ export default function CartModal({
                         (Required)
                       </span>
                     </div>
-                    <div className="mt-3 space-y-3">
+                    <div className="mt-3 grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label
                           className={`text-xs ${
@@ -1546,6 +1598,28 @@ export default function CartModal({
                           }`}
                         />
                       </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label
+                          className={`text-xs ${
+                            isDark ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Plate Number
+                        </label>
+                        <input
+                          type="text"
+                          value={plateNumber}
+                          onChange={(e) => setPlateNumber(e.target.value)}
+                          placeholder="e.g., ABC 1234"
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
+                            isDark
+                              ? "bg-gray-800 border border-gray-700"
+                              : "bg-gray-100 border border-gray-200"
+                          }`}
+                        />
+                      </div>
                       <div className="space-y-1">
                         <label
                           className={`text-xs ${
@@ -1563,12 +1637,35 @@ export default function CartModal({
                               : "bg-gray-100 border border-gray-200"
                           }`}
                         >
-                          <option value="">Select...</option>
-                          <option value="with">With Driver</option>
                           <option value="without">Without Driver</option>
+                          <option value="with">With Driver</option>
                         </select>
                       </div>
                     </div>
+                    {svcDriver === 'with' && (
+                      <div className="mt-3">
+                        <div className="space-y-1">
+                          <label
+                            className={`text-xs ${
+                              isDark ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Driver Name
+                          </label>
+                          <input
+                            type="text"
+                            value={driverName}
+                            onChange={(e) => setDriverName(e.target.value)}
+                            placeholder="Enter driver name"
+                            className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
+                              isDark
+                                ? "bg-gray-800 border border-gray-700"
+                                : "bg-gray-100 border border-gray-200"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface Customer {
   id: number;
   name: string;
@@ -17,9 +19,4 @@ export interface CustomerFormData {
   contact_email: string;
   phone: string;
   location: string;
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }

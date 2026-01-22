@@ -175,7 +175,7 @@ export function EditAccountModal({
               resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
             }`}
           >
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-2 text-sm">
               <div>
                 <span className="text-gray-500">Username:</span>
                 <span className="ml-2 font-medium">{account.username}</span>

@@ -549,16 +549,16 @@ export function ViewTeamModal({
               <p className="text-sm">{errorDialog.message}</p>
             </div>
 
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-gray-700 flex justify-end">
               <button
                 onClick={() => {
                   console.log("DEBUG ViewTeamModal: Closing error dialog");
                   setErrorDialog({ show: false, title: "", message: "" });
                 }}
-                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "bg-white hover:bg-gray-100 text-gray-900"
-                    : "bg-gray-900 hover:bg-gray-800 text-white"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
                 }`}
               >
                 Got it

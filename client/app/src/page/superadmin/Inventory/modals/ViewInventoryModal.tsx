@@ -1,5 +1,5 @@
 import { useTheme } from "next-themes";
-import { X, Package } from "lucide-react";
+import { X } from "lucide-react";
 import type { InventoryItem, ModalBaseProps } from "./types";
 import { getStatusColor, getLegendColor } from "./types";
 
@@ -17,175 +17,184 @@ export function ViewInventoryModal({
   if (!isOpen || !item) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div
-        className={`relative w-full max-w-md rounded-lg shadow-lg ${
+        className={`${
+          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
           resolvedTheme === "dark"
-            ? "bg-gray-900 text-white"
-            : "bg-white text-gray-900"
-        } transition-colors`}
+            ? "border-gray-700 divide-gray-700"
+            : "border-gray-200 divide-gray-200"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-inventory-title"
       >
-        {/* Modal Header */}
-        <div
-          className={`flex justify-between items-center p-6 border-b ${
-            resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
-            >
-              <Package className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Inventory Details</h2>
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                View stock information
-              </p>
-            </div>
+        {/* Header */}
+        <div className="flex justify-between items-center p-8">
+          <div>
+            <h2 id="view-inventory-title" className="text-xl font-semibold">
+              Inventory Details
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              View stock information for {item.item_name}
+            </p>
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+            className="hover:opacity-70 transition-opacity"
+            aria-label="Close dialog"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
-          <div>
-            <p
-              className={`text-sm mb-1 ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              Item Name
-            </p>
-            <p className="font-semibold text-lg">{item.item_name}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p
-                className={`text-sm mb-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Item Code
-              </p>
-              <p className="font-mono font-semibold">{item.item_code}</p>
+        {/* Content */}
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Item Info Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Item Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Item Name
+                </label>
+                <input
+                  type="text"
+                  value={item.item_name}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Item Code
+                </label>
+                <input
+                  type="text"
+                  value={item.item_code}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-mono ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
+              </div>
             </div>
-            <div>
-              <p
-                className={`text-sm mb-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Category
-              </p>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
-                  item.legend
-                )}`}
-              >
-                {item.legend}
-              </span>
-            </div>
-          </div>
-
-          {item.option_description && (
-            <div>
-              <p
-                className={`text-sm mb-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Variant
-              </p>
-              <p className="font-medium">{item.option_description}</p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p
-                className={`text-sm mb-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Points
-              </p>
-              <p className="font-semibold">{item.points}</p>
-            </div>
-            <div>
-              <p
-                className={`text-sm mb-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Price
-              </p>
-              <p className="font-semibold">{item.price}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Category
+                </label>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
+                    item.legend
+                  )}`}
+                >
+                  {item.legend}
+                </span>
+              </div>
+              {item.option_description && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Variant
+                  </label>
+                  <input
+                    type="text"
+                    value={item.option_description}
+                    disabled
+                    className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-300"
+                        : "bg-gray-100 border-gray-300 text-gray-600"
+                    } focus:outline-none`}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          <div
-            className={`p-4 rounded-lg ${
-              resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-            }`}
-          >
-            <p
-              className={`text-sm mb-3 font-medium ${
-                resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
+          {/* Pricing Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Pricing
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Points</label>
+                <input
+                  type="text"
+                  value={item.points}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Price</label>
+                <input
+                  type="text"
+                  value={item.price}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Stock Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Stock Information
-            </p>
-            <div className="grid grid-cols-2 gap-4">
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p
-                  className={`text-sm mb-1 ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
+                <label className="block text-sm font-medium mb-2">
                   Current Stock
-                </p>
-                <p className="font-semibold text-2xl">{item.stock}</p>
+                </label>
+                <input
+                  type="text"
+                  value={item.stock.toString()}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
               <div>
-                <p
-                  className={`text-sm mb-1 ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
+                <label className="block text-sm font-medium mb-2">
                   Reorder Level
-                </p>
-                <p className="font-semibold text-2xl">{item.reorder_level}</p>
+                </label>
+                <input
+                  type="text"
+                  value={item.reorder_level.toString()}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
             </div>
-            <div className="mt-3">
-              <p
-                className={`text-sm mb-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Status
-              </p>
+            <div>
+              <label className="block text-sm font-medium mb-2">Status</label>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
                   item.stock_status
@@ -197,19 +206,15 @@ export function ViewInventoryModal({
           </div>
         </div>
 
-        {/* Modal Footer */}
-        <div
-          className={`p-6 border-t ${
-            resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
-        >
+        {/* Footer */}
+        <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className={`w-full px-4 py-3 rounded-lg font-semibold text-sm ${
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
               resolvedTheme === "dark"
-                ? "bg-gray-700 hover:bg-gray-600 text-white"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-            } transition-colors`}
+                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
+            }`}
           >
             Close
           </button>

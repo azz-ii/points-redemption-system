@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface RequestItemVariant {
   id: number;
   variant: number;
@@ -40,11 +42,6 @@ export interface RequestItem {
   points_deducted_from: string;
   points_deducted_from_display: string;
   items: RequestItemVariant[];
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }
 
 export interface MyProcessingStatus {

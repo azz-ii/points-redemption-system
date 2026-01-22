@@ -1,3 +1,5 @@
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface RequestItem {
   id: number;
   requested_by: number;
@@ -36,7 +38,3 @@ export interface RequestItem {
   }>;
 }
 
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
-}

@@ -237,6 +237,18 @@ class RedemptionRequest(models.Model):
         null=True,
         help_text='Whether the service vehicle includes a driver'
     )
+    plate_number = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text='Vehicle plate number for service delivery'
+    )
+    driver_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Name of the driver for service delivery'
+    )
 
     def __str__(self):
         entity_name = self.get_requested_for_name()

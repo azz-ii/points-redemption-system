@@ -1,4 +1,6 @@
 // Type definitions for Request History
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface RequestHistoryItem {
   id: number;
   requested_by: number;

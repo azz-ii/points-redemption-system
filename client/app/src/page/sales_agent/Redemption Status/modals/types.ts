@@ -1,4 +1,6 @@
 // Backend API response types (mirroring Django serializers)
+export type { ModalBaseProps } from "@/components/modals";
+
 export interface CatalogueItem {
   id: number;
   item_name: string;
@@ -46,11 +48,6 @@ export interface RedemptionRequest {
   remarks: string | null;
   rejection_reason: string | null;
   items: RedemptionRequestItem[];
-}
-
-export interface ModalBaseProps {
-  isOpen: boolean;
-  onClose: () => void;
 }
 
 export interface ViewRedemptionStatusModalProps extends ModalBaseProps {

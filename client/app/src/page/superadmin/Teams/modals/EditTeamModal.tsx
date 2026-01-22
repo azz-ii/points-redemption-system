@@ -623,7 +623,7 @@ export function EditTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-700">
+        <div className="p-8 flex justify-end">
           {error && (
             <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
@@ -632,11 +632,7 @@ export function EditTeamModal({
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
           >
             {loading ? "Updating..." : "Update Team"}
           </button>
@@ -713,7 +709,7 @@ export function EditTeamModal({
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-700 flex gap-3">
+            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
               <button
                 onClick={() => {
                   console.log(
@@ -724,10 +720,10 @@ export function EditTeamModal({
                   // Clear the approver selection (revert to previous value)
                   setEditTeam({ ...editTeam, approver: team.approver });
                 }}
-                className={`flex-1 px-4 py-2 rounded font-semibold transition-colors ${
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
                 }`}
               >
                 Cancel
@@ -742,7 +738,7 @@ export function EditTeamModal({
                   setShowConfirmation(false);
                   setPendingApproverId(null);
                 }}
-                className="flex-1 px-4 py-2 rounded font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
+                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
               >
                 Yes, Assign Anyway
               </button>
@@ -821,7 +817,7 @@ export function EditTeamModal({
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-700 flex gap-3">
+            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
               <button
                 onClick={() => {
                   console.log(
@@ -831,10 +827,10 @@ export function EditTeamModal({
                   setPendingMarketingAdminId(null);
                   setEditTeam({ ...editTeam, marketing_admin: team.marketing_admin });
                 }}
-                className={`flex-1 px-4 py-2 rounded font-semibold transition-colors ${
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700 text-white"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
                 }`}
               >
                 Cancel
@@ -849,7 +845,7 @@ export function EditTeamModal({
                   setShowMarketingConfirmation(false);
                   setPendingMarketingAdminId(null);
                 }}
-                className="flex-1 px-4 py-2 rounded font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
+                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
               >
                 Yes, Assign Anyway
               </button>
@@ -895,16 +891,16 @@ export function EditTeamModal({
               <p className="text-sm">{errorDialog.message}</p>
             </div>
 
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-gray-700 flex justify-end">
               <button
                 onClick={() => {
                   console.log("DEBUG EditTeamModal: Closing error dialog");
                   setErrorDialog({ show: false, title: "", message: "" });
                 }}
-                className={`w-full px-4 py-2 rounded font-semibold transition-colors ${
+                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
                   resolvedTheme === "dark"
-                    ? "bg-white hover:bg-gray-100 text-gray-900"
-                    : "bg-gray-900 hover:bg-gray-800 text-white"
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
                 }`}
               >
                 Got it
