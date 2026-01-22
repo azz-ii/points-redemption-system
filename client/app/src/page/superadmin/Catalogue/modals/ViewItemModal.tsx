@@ -1,6 +1,6 @@
 import { useTheme } from "next-themes";
-import { X } from "lucide-react";
-import { Image } from "@/components/ui/image";
+import { X, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import type { ModalBaseProps, Variant } from "./types";
 import { getLegendColor } from "./types";
 
@@ -16,6 +16,7 @@ export function ViewItemModal({
   loading,
 }: ViewItemModalProps) {
   const { resolvedTheme } = useTheme();
+  const [variantsOpen, setVariantsOpen] = useState(true);
 
   if (!isOpen) return null;
 
@@ -171,80 +172,95 @@ export function ViewItemModal({
 
               {/* Variants */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => setVariantsOpen(!variantsOpen)}
+                  className="w-full flex justify-between items-center p-4 rounded border hover:bg-opacity-50 transition-colors"
+                >
                   <h3 className="text-lg font-medium">
                     Variants ({viewVariants.length})
                   </h3>
-                </div>
-
-                {viewVariants.map((variant, index) => (
-                  <div
-                    key={variant.id}
-                    className={`border rounded p-4 space-y-4 ${
-                      resolvedTheme === "dark"
-                        ? "border-gray-700"
-                        : "border-gray-200"
+                  <ChevronDown
+                    className={`h-5 w-5 transition-transform ${
+                      variantsOpen ? "transform rotate-180" : ""
                     }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-md font-medium">
-                        Variant {index + 1}
-                      </h4>
-                      <span className="text-xs text-gray-500">
-                        ID: {variant.id}
-                      </span>
-                    </div>
+                  />
+                </button>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Item Code */}
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Item Code</p>
-                        <p className="font-mono font-semibold text-sm">
-                          {variant.item_code}
-                        </p>
-                      </div>
+                {variantsOpen && (
+                  <div className="space-y-4">
+                    {viewVariants.map((variant, index) => (
+                      <div
+                        key={variant.id}
+                        className={`border rounded p-4 space-y-4 ${
+                          resolvedTheme === "dark"
+                            ? "border-gray-700"
+                            : "border-gray-200"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-md font-medium">
+                            Variant {index + 1}
+                          </h4>
+                          <span className="text-xs text-gray-500">
+                            ID: {variant.id}
+                          </span>
+                        </div>
 
-                      {/* Option Description */}
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">
-                          Variant Description
-                        </p>
-                        <p className="font-semibold text-sm">
-                          {variant.option_description || "-"}
-                        </p>
-                      </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Item Code */}
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Item Code</p>
+                            <p className="font-mono font-semibold text-sm">
+                              {variant.item_code}
+                            </p>
+                          </div>
 
-                      {/* Points */}
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">
-                          Points Required
-                        </p>
-                        <p className="font-semibold">{variant.points}</p>
-                      </div>
+                          {/* Option Description */}
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Variant Description
+                            </p>
+                            <p className="font-semibold text-sm">
+                              {variant.option_description || "-"}
+                            </p>
+                          </div>
 
-                      {/* Price */}
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Price</p>
-                        <p className="font-semibold">{variant.price}</p>
-                      </div>
+                          {/* Points */}
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Points Required
+                            </p>
+                            <p className="font-semibold">{variant.points}</p>
+                          </div>
 
-                      {/* Image */}
-                      <div className="md:col-span-2">
-                        <p className="text-xs text-gray-500 mb-1">Image</p>
-                        <div className="bg-gray-300 aspect-video overflow-hidden rounded">
-                          <Image
-                            src={variant.image_url || ""}
-                            alt={`${variant.item_code} - ${
-                              variant.option_description || "Variant"
-                            }`}
-                            fallback="/images/tshirt.png"
-                            className="w-full h-full object-cover"
-                          />
+                          {/* Price */}
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Price</p>
+                            <p className="font-semibold">{variant.price}</p>
+                          </div>
+
+                          {/* Image */}
+                          <div className="md:col-span-2">
+                            <p className="text-xs text-gray-500 mb-1">Image</p>
+                            <div className="bg-gray-300 aspect-video overflow-hidden rounded">
+                              <img
+                                src={variant.image_url || "/images/tshirt.png"}
+                                alt={`${variant.item_code} - ${
+                                  variant.option_description || "Variant"
+                                }`}
+                                onError={(e) => {
+                                  e.currentTarget.src = "/images/tshirt.png";
+                                }}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </>
           ) : (

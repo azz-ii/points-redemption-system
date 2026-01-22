@@ -1,5 +1,6 @@
 import { useTheme } from "next-themes";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import type { ModalBaseProps, User } from "./types";
 import { PRICING_TYPE_OPTIONS } from "./types";
 
@@ -56,6 +57,7 @@ export function EditItemModal({
   users,
 }: EditItemModalProps) {
   const { resolvedTheme } = useTheme();
+  const [variantsOpen, setVariantsOpen] = useState(true);
 
   if (!isOpen) return null;
 
@@ -73,13 +75,13 @@ export function EditItemModal({
         aria-modal="true"
         aria-labelledby="edit-item-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-item-title" className="text-xl font-semibold">
+            <h2 id="edit-item-title" className="text-lg font-semibold">
               Edit Catalogue Item
             </h2>
             <p
-              className={`text-sm ${
+              className={`text-xs ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
@@ -95,33 +97,33 @@ export function EditItemModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[75vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
+            <div className="p-2 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-xs">
               {error}
             </div>
           )}
 
           {/* Loading State */}
           {loading && (
-            <div className="flex flex-col items-center justify-center gap-4 py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <p className="text-gray-500">Loading variants...</p>
+            <div className="flex flex-col items-center justify-center gap-2 py-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <p className="text-xs text-gray-500">Loading variants...</p>
             </div>
           )}
 
           {!loading && (
             <>
               {/* Shared Fields */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Item Details</h3>
+              <div className="space-y-2">
+                <h3 className="text-base font-medium">Item Details</h3>
 
                 {/* Reward */}
                 <div>
                   <label
                     htmlFor="edit-reward"
-                    className="block text-sm font-medium mb-2"
+                    className="block text-xs font-medium mb-1"
                   >
                     Reward Category (Optional)
                   </label>
@@ -132,11 +134,11 @@ export function EditItemModal({
                     onChange={(e) =>
                       setEditItem({ ...editItem, reward: e.target.value })
                     }
-                    className={`w-full px-4 py-3 rounded border ${
+                    className={`w-full px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 text-base`}
+                    } focus:outline-none focus:border-blue-500`}
                     placeholder="e.g., PLATINUM, GOLD, SILVER"
                   />
                 </div>
@@ -145,7 +147,7 @@ export function EditItemModal({
                 <div>
                   <label
                     htmlFor="edit-item-name"
-                    className="block text-sm font-medium mb-2"
+                    className="block text-xs font-medium mb-1"
                   >
                     Item Name *
                   </label>
@@ -159,11 +161,11 @@ export function EditItemModal({
                         item_name: e.target.value,
                       })
                     }
-                    className={`w-full px-4 py-3 rounded border ${
+                    className={`w-full px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 text-base`}
+                    } focus:outline-none focus:border-blue-500`}
                     placeholder="e.g., Platinum Polo Shirt"
                     aria-required="true"
                   />
@@ -173,7 +175,7 @@ export function EditItemModal({
                 <div>
                   <label
                     htmlFor="edit-description"
-                    className="block text-sm font-medium mb-2"
+                    className="block text-xs font-medium mb-1"
                   >
                     Description
                   </label>
@@ -186,12 +188,12 @@ export function EditItemModal({
                         description: e.target.value,
                       })
                     }
-                    className={`w-full px-4 py-3 rounded border ${
+                    className={`w-full px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 resize-none text-base`}
-                    rows={3}
+                    } focus:outline-none focus:border-blue-500 resize-none`}
+                    rows={2}
                     placeholder="Detailed description of the item"
                   />
                 </div>
@@ -200,7 +202,7 @@ export function EditItemModal({
                 <div>
                   <label
                     htmlFor="edit-purpose"
-                    className="block text-sm font-medium mb-2"
+                    className="block text-xs font-medium mb-1"
                   >
                     Purpose
                   </label>
@@ -210,11 +212,11 @@ export function EditItemModal({
                     onChange={(e) =>
                       setEditItem({ ...editItem, purpose: e.target.value })
                     }
-                    className={`w-full px-4 py-3 rounded border ${
+                    className={`w-full px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 resize-none text-base`}
+                    } focus:outline-none focus:border-blue-500 resize-none`}
                     rows={2}
                     placeholder="Purpose of the item"
                   />
@@ -224,7 +226,7 @@ export function EditItemModal({
                 <div>
                   <label
                     htmlFor="edit-specs"
-                    className="block text-sm font-medium mb-2"
+                    className="block text-xs font-medium mb-1"
                   >
                     Specifications
                   </label>
@@ -237,11 +239,11 @@ export function EditItemModal({
                         specifications: e.target.value,
                       })
                     }
-                    className={`w-full px-4 py-3 rounded border ${
+                    className={`w-full px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500 resize-none text-base`}
+                    } focus:outline-none focus:border-blue-500 resize-none`}
                     rows={2}
                     placeholder="Specifications (e.g., 100% cotton, XS-XXL)"
                   />
@@ -249,7 +251,7 @@ export function EditItemModal({
 
                 {/* Legend */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-xs font-medium mb-1">
                     Category *
                   </label>
                   <select
@@ -264,7 +266,7 @@ export function EditItemModal({
                           | "BENEFIT",
                       })
                     }
-                    className={`w-full px-3 py-2 rounded border ${
+                    className={`w-full px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
@@ -277,55 +279,25 @@ export function EditItemModal({
                   </select>
                 </div>
 
-                {/* Marketing Admin */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Marketing Admin (Optional)
-                  </label>
-                  <select
-                    value={editItem.mktg_admin || ""}
-                    onChange={(e) =>
-                      setEditItem({
-                        ...editItem,
-                        mktg_admin: e.target.value ? parseInt(e.target.value) : null,
-                      })
-                    }
-                    className={`w-full px-3 py-2 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
-                  >
-                    <option value="">Select Marketing Admin</option>
-                    {users
-                      .filter((u) => u.position === "Marketing")
-                      .map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.full_name || user.username}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
                 {/* Needs Driver */}
                 <div>
-                  <label className="flex items-center gap-3 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={editItem.needs_driver}
                       onChange={(e) =>
                         setEditItem({ ...editItem, needs_driver: e.target.checked })
                       }
-                      className={`w-5 h-5 rounded border ${
+                      className={`w-4 h-4 rounded border ${
                         resolvedTheme === "dark"
                           ? "bg-gray-800 border-gray-600"
                           : "bg-white border-gray-300"
                       } focus:ring-blue-500 accent-blue-600`}
                     />
-                    <span className="text-sm font-medium">Needs Driver</span>
+                    <span className="text-xs font-medium">Needs Driver</span>
                   </label>
                   <p
-                    className={`text-xs mt-1 ${
+                    className={`text-xs mt-0.5 ${
                       resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
@@ -335,221 +307,239 @@ export function EditItemModal({
               </div>
 
               {/* Variants */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Variants</h3>
-                  <button
-                    type="button"
-                    onClick={onAddVariant}
-                    className="px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors"
-                  >
-                    <Plus className="h-4 w-4 inline mr-1" />
-                    Add Variant
-                  </button>
-                </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setVariantsOpen(!variantsOpen)}
+                  className="w-full flex justify-between items-center p-3 rounded border hover:bg-opacity-50 transition-colors"
+                >
+                  <h3 className="text-base font-medium">Variants</h3>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddVariant();
+                      }}
+                      className="px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold transition-colors"
+                    >
+                      <Plus className="h-3 w-3 inline mr-0.5" />
+                      Add
+                    </button>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        variantsOpen ? "transform rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+                </button>
 
-                {editItem.variants.map((variant, index) => (
-                  <div key={index} className="border rounded p-4 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-md font-medium">
-                        Variant {index + 1}
-                      </h4>
-                      {editItem.variants.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => onRemoveVariant(index)}
-                          className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-sm transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
+                {variantsOpen && (
+                  <div className="space-y-2">
+                    {editItem.variants.map((variant, index) => (
+                      <div key={index} className="border rounded p-3 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-sm font-medium">
+                            Variant {index + 1}
+                          </h4>
+                          {editItem.variants.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => onRemoveVariant(index)}
+                              className="px-1.5 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Item Code */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Item Code *
-                        </label>
-                        <input
-                          type="text"
-                          value={variant.item_code}
-                          onChange={(e) =>
-                            onUpdateVariant(index, "item_code", e.target.value)
-                          }
-                          className={`w-full px-3 py-2 rounded border ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 border-gray-600 text-white"
-                              : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:border-blue-500`}
-                          placeholder="e.g., MC0001"
-                        />
-                      </div>
-
-                      {/* Option Description */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Variant Description (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={variant.option_description}
-                          onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              "option_description",
-                              e.target.value
-                            )
-                          }
-                          className={`w-full px-3 py-2 rounded border ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 border-gray-600 text-white"
-                              : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:border-blue-500`}
-                          placeholder="e.g., Size S, Color Blue"
-                        />
-                      </div>
-
-                      {/* Pricing Type */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-2">
-                          Pricing Type *
-                        </label>
-                        <select
-                          value={variant.pricing_type}
-                          onChange={(e) =>
-                            onUpdateVariant(index, "pricing_type", e.target.value)
-                          }
-                          className={`w-full px-3 py-2 rounded border ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 border-gray-600 text-white"
-                              : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:border-blue-500`}
-                        >
-                          {PRICING_TYPE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label} - {option.description}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Points - Label changes based on pricing type */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          {variant.pricing_type === "FIXED"
-                            ? "Points Required *"
-                            : "Points Multiplier *"}
-                        </label>
-                        <input
-                          type="text"
-                          value={variant.pricing_type === "FIXED" ? variant.points : variant.points_multiplier}
-                          onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              variant.pricing_type === "FIXED" ? "points" : "points_multiplier",
-                              e.target.value
-                            )
-                          }
-                          className={`w-full px-3 py-2 rounded border ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 border-gray-600 text-white"
-                              : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:border-blue-500`}
-                          placeholder={
-                            variant.pricing_type === "FIXED"
-                              ? "e.g., 500"
-                              : "e.g., 25 (for 25 points per unit)"
-                          }
-                        />
-                        {variant.pricing_type !== "FIXED" && (
-                          <p
-                            className={`text-xs mt-1 ${
-                              resolvedTheme === "dark"
-                                ? "text-gray-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            Points: {variant.pricing_type === "PER_SQFT" ? "sq ft" : variant.pricing_type === "PER_INVOICE" ? "invoice amount" : variant.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Price - Label changes based on pricing type */}
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          {variant.pricing_type === "FIXED"
-                            ? "Price *"
-                            : "Price Multiplier *"}
-                        </label>
-                        <input
-                          type="text"
-                          value={variant.pricing_type === "FIXED" ? variant.price : variant.price_multiplier}
-                          onChange={(e) =>
-                            onUpdateVariant(
-                              index,
-                              variant.pricing_type === "FIXED" ? "price" : "price_multiplier",
-                              e.target.value
-                            )
-                          }
-                          className={`w-full px-3 py-2 rounded border ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 border-gray-600 text-white"
-                              : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:border-blue-500`}
-                          placeholder={
-                            variant.pricing_type === "FIXED"
-                              ? "e.g., ₱130.00"
-                              : "e.g., 25.00 (for ₱25.00 per unit)"
-                          }
-                        />
-                      </div>
-
-                      {/* Image URL */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-2">
-                          Image URL (Optional)
-                        </label>
-                        <input
-                          type="url"
-                          value={variant.image_url}
-                          onChange={(e) =>
-                            onUpdateVariant(index, "image_url", e.target.value)
-                          }
-                          className={`w-full px-3 py-2 rounded border ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 border-gray-600 text-white"
-                              : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:border-blue-500`}
-                          placeholder="https://example.com/image.jpg"
-                        />
-                        {/* Image Preview */}
-                        {variant.image_url && (
-                          <div className="mt-2 bg-gray-300 aspect-video overflow-hidden rounded">
-                            <img
-                              src={variant.image_url || "/images/tshirt.png"}
-                              alt="Preview"
-                              onError={(e) => {
-                                e.currentTarget.src = "/images/tshirt.png";
-                              }}
-                              className="w-full h-full object-cover"
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {/* Item Code */}
+                          <div>
+                            <label className="block text-xs font-medium mb-0.5">
+                              Item Code *
+                            </label>
+                            <input
+                              type="text"
+                              value={variant.item_code}
+                              onChange={(e) =>
+                                onUpdateVariant(index, "item_code", e.target.value)
+                              }
+                              className={`w-full px-2 py-1.5 rounded border text-sm ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-800 border-gray-600 text-white"
+                                  : "bg-white border-gray-300 text-gray-900"
+                              } focus:outline-none focus:border-blue-500`}
+                              placeholder="e.g., MC0001"
                             />
                           </div>
-                        )}
+
+                          {/* Option Description */}
+                          <div>
+                            <label className="block text-xs font-medium mb-0.5">
+                              Variant Description (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={variant.option_description}
+                              onChange={(e) =>
+                                onUpdateVariant(
+                                  index,
+                                  "option_description",
+                                  e.target.value
+                                )
+                              }
+                              className={`w-full px-2 py-1.5 rounded border text-sm ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-800 border-gray-600 text-white"
+                                  : "bg-white border-gray-300 text-gray-900"
+                              } focus:outline-none focus:border-blue-500`}
+                              placeholder="e.g., Size S, Color Blue"
+                            />
+                          </div>
+
+                          {/* Pricing Type */}
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium mb-0.5">
+                              Pricing Type *
+                            </label>
+                            <select
+                              value={variant.pricing_type}
+                              onChange={(e) =>
+                                onUpdateVariant(index, "pricing_type", e.target.value)
+                              }
+                              className={`w-full px-2 py-1.5 rounded border text-sm ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-800 border-gray-600 text-white"
+                                  : "bg-white border-gray-300 text-gray-900"
+                              } focus:outline-none focus:border-blue-500`}
+                            >
+                              {PRICING_TYPE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label} - {option.description}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Points - Label changes based on pricing type */}
+                          <div>
+                            <label className="block text-xs font-medium mb-0.5">
+                              {variant.pricing_type === "FIXED"
+                                ? "Points Required *"
+                                : "Points Multiplier *"}
+                            </label>
+                            <input
+                              type="text"
+                              value={variant.pricing_type === "FIXED" ? variant.points : variant.points_multiplier}
+                              onChange={(e) =>
+                                onUpdateVariant(
+                                  index,
+                                  variant.pricing_type === "FIXED" ? "points" : "points_multiplier",
+                                  e.target.value
+                                )
+                              }
+                              className={`w-full px-2 py-1.5 rounded border text-sm ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-800 border-gray-600 text-white"
+                                  : "bg-white border-gray-300 text-gray-900"
+                              } focus:outline-none focus:border-blue-500`}
+                              placeholder={
+                                variant.pricing_type === "FIXED"
+                                  ? "e.g., 500"
+                                  : "e.g., 25"
+                              }
+                            />
+                            {variant.pricing_type !== "FIXED" && (
+                              <p
+                                className={`text-xs mt-0.5 ${
+                                  resolvedTheme === "dark"
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                Points: {variant.pricing_type === "PER_SQFT" ? "sq ft" : variant.pricing_type === "PER_INVOICE" ? "invoice amount" : variant.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Price - Label changes based on pricing type */}
+                          <div>
+                            <label className="block text-xs font-medium mb-0.5">
+                              {variant.pricing_type === "FIXED"
+                                ? "Price *"
+                                : "Price Multiplier *"}
+                            </label>
+                            <input
+                              type="text"
+                              value={variant.pricing_type === "FIXED" ? variant.price : variant.price_multiplier}
+                              onChange={(e) =>
+                                onUpdateVariant(
+                                  index,
+                                  variant.pricing_type === "FIXED" ? "price" : "price_multiplier",
+                                  e.target.value
+                                )
+                              }
+                              className={`w-full px-2 py-1.5 rounded border text-sm ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-800 border-gray-600 text-white"
+                                  : "bg-white border-gray-300 text-gray-900"
+                              } focus:outline-none focus:border-blue-500`}
+                              placeholder={
+                                variant.pricing_type === "FIXED"
+                                  ? "e.g., ₱130.00"
+                                  : "e.g., 25.00"
+                              }
+                            />
+                          </div>
+
+                          {/* Image URL */}
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium mb-0.5">
+                              Image URL (Optional)
+                            </label>
+                            <input
+                              type="url"
+                              value={variant.image_url}
+                              onChange={(e) =>
+                                onUpdateVariant(index, "image_url", e.target.value)
+                              }
+                              className={`w-full px-2 py-1.5 rounded border text-sm ${
+                                resolvedTheme === "dark"
+                                  ? "bg-gray-800 border-gray-600 text-white"
+                                  : "bg-white border-gray-300 text-gray-900"
+                              } focus:outline-none focus:border-blue-500`}
+                              placeholder="https://example.com/image.jpg"
+                            />
+                            {/* Image Preview */}
+                            {variant.image_url && (
+                              <div className="mt-1 bg-gray-300 aspect-video overflow-hidden rounded">
+                                <img
+                                  src={variant.image_url || "/images/tshirt.png"}
+                                  alt="Preview"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/images/tshirt.png";
+                                  }}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </>
           )}
         </div>
 
-        <div className="p-6 border-t border-gray-700 flex gap-2 justify-end">
+        <div className="p-3 border-t border-gray-700 flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={updating}
-            className={`px-6 py-2 rounded-lg border transition-colors ${
+            className={`px-4 py-1.5 rounded-lg border text-sm transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
@@ -560,7 +550,7 @@ export function EditItemModal({
           <button
             onClick={onConfirm}
             disabled={updating}
-            className="px-6 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updating ? "Updating..." : "Update Item"}
           </button>
