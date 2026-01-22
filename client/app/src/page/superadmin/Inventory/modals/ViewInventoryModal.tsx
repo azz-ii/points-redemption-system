@@ -33,9 +33,18 @@ export function ViewInventoryModal({
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="view-inventory-title" className="text-xl font-semibold">
-              Inventory Details
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 id="view-inventory-title" className="text-xl font-semibold">
+                Inventory Details
+              </h2>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                  item.stock_status
+                )}`}
+              >
+                {item.stock_status}
+              </span>
+            </div>
             <p className="text-sm text-gray-500 mt-1">
               View stock information for {item.item_name}
             </p>
@@ -192,16 +201,6 @@ export function ViewInventoryModal({
                   } focus:outline-none`}
                 />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Status</label>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                  item.stock_status
-                )}`}
-              >
-                {item.stock_status}
-              </span>
             </div>
           </div>
         </div>

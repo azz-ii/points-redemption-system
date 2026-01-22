@@ -59,9 +59,18 @@ export function EditStockModal({
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="edit-stock-title" className="text-xl font-semibold">
-              Update Stock
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 id="edit-stock-title" className="text-xl font-semibold">
+                Update Stock
+              </h2>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                  previewStatus
+                )}`}
+              >
+                {previewStatus}
+              </span>
+            </div>
             <p className="text-sm text-gray-500 mt-1">
               Modify stock levels for {item.item_name}
             </p>
@@ -175,20 +184,6 @@ export function EditStockModal({
                 Low stock alert triggers when stock falls to this level
               </p>
             </div>
-          </div>
-
-          {/* Status Preview */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-              Status Preview
-            </h3>
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                previewStatus
-              )}`}
-            >
-              {previewStatus}
-            </span>
           </div>
         </div>
 

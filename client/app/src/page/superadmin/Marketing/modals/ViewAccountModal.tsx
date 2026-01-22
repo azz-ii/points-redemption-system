@@ -73,7 +73,7 @@ export function ViewAccountModal({
         aria-labelledby="view-account-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
+        } rounded-lg shadow-2xl max-w-2xl w-full border divide-y ${
           resolvedTheme === "dark"
             ? "border-gray-700 divide-gray-700"
             : "border-gray-200 divide-gray-200"
