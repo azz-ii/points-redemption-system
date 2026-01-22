@@ -15,6 +15,7 @@ import {
   Warehouse,
   LogOut,
   RotateCw,
+  Download,
 } from "lucide-react";
 import type { CatalogueItem, Variant, CatalogueVariant, User } from "./modals";
 import {
@@ -25,6 +26,7 @@ import {
   ViewVariantModal,
   EditVariantModal,
   DeleteVariantModal,
+  ExportModal,
 } from "./modals";
 import {
   CatalogueTable,
@@ -223,6 +225,7 @@ function Catalogue() {
 
   // Modal and form state for creating new item
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({
@@ -1020,6 +1023,17 @@ function Catalogue() {
                 <span>Filter</span>
               </button>
               <button
+                onClick={() => setShowExportModal(true)}
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
+                  resolvedTheme === "dark"
+                    ? "border-gray-700 hover:bg-gray-900"
+                    : "border-gray-300 hover:bg-gray-100"
+                } transition-colors`}
+              >
+                <Download className="h-5 w-5" />
+                <span>Export</span>
+              </button>
+              <button
                 onClick={() => setShowCreateModal(true)}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors border ${
                   resolvedTheme === "dark"
@@ -1219,6 +1233,12 @@ function Catalogue() {
         onClose={() => setShowDeleteVariantModal(false)}
         variant={deleteVariantTarget}
         onConfirm={confirmDeleteVariant}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        items={items}
       />
     </div>
   );

@@ -21,6 +21,7 @@ import {
   EditCustomerModal,
   ViewCustomerModal,
   DeleteCustomerModal,
+  ExportModal,
 } from "./modals";
 import { CustomersTable, CustomersMobileCards } from "./components";
 
@@ -109,6 +110,7 @@ function Customers() {
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Handle create customer submission
   const handleCreateCustomer = async () => {
@@ -357,6 +359,7 @@ function Customers() {
               onCreateNew={() => setShowCreateModal(true)}
               onRefresh={fetchCustomers}
               refreshing={loading}
+              onExport={() => setShowExportModal(true)}
             />
           )}
         </div>
@@ -486,6 +489,13 @@ function Customers() {
         onClose={() => setShowDeleteModal(false)}
         customer={deleteTarget}
         onConfirm={confirmDelete}
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        customers={customers}
       />
     </div>
   );

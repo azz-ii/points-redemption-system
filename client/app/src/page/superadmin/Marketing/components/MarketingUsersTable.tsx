@@ -10,6 +10,7 @@ interface MarketingUsersTableProps {
   onEditAccount: (user: MarketingUser) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onExport?: () => void;
 }
 
 export function MarketingUsersTable({
@@ -19,6 +20,7 @@ export function MarketingUsersTable({
   onEditAccount,
   onRefresh,
   refreshing,
+  onExport,
 }: MarketingUsersTableProps) {
   const columns = useMemo(
     () =>
@@ -36,6 +38,7 @@ export function MarketingUsersTable({
       loading={loading}
       onRefresh={onRefresh}
       refreshing={refreshing}
+      onExport={onExport}
     />
   );
 }

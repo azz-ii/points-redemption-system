@@ -7,4 +7,5 @@ router.register(r'distributors', views.DistributorViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/distributors/export/', views.DistributorExportView.as_view(), name='distributor-export'),
 ]

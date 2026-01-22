@@ -5,5 +5,6 @@ export { DeleteItemModal } from "./DeleteItemModal";
 export { ViewVariantModal } from "./ViewVariantModal";
 export { EditVariantModal } from "./EditVariantModal";
 export { DeleteVariantModal } from "./DeleteVariantModal";
+export { ExportModal } from "./ExportModal";
 export type { CatalogueItem, Variant, CatalogueVariant, User } from "./types";
 export { getLegendColor } from "./types";

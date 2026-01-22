@@ -5,4 +5,5 @@ export { BanAccountModal } from "./BanAccountModal";
 export { DeleteAccountModal } from "./DeleteAccountModal";
 export { BulkBanAccountModal } from "./BulkBanAccountModal";
 export { BulkDeleteAccountModal } from "./BulkDeleteAccountModal";
+export { ExportModal } from "./ExportModal";
 export type { Account } from "./types";

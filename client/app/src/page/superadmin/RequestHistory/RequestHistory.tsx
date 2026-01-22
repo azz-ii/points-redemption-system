@@ -14,8 +14,9 @@ import {
   ChevronRight,
   RefreshCw,
   LogOut,
+  Download,
 } from "lucide-react";
-import { ViewRequestModal, type RequestHistoryItem } from "./modals";
+import { ViewRequestModal, ExportModal, type RequestHistoryItem } from "./modals";
 import { RequestHistoryTable, RequestHistoryMobileCards } from "./components";
 import { toast } from "sonner";
 
@@ -33,6 +34,7 @@ function RequestHistory() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestHistoryItem | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchRequests = useCallback(async (isRefresh = false) => {
     try {
@@ -199,6 +201,7 @@ function RequestHistory() {
               onView={handleViewClick}
               onRefresh={() => fetchRequests(true)}
               refreshing={refreshing}
+              onExport={() => setShowExportModal(true)}
             />
           )}
 
@@ -316,6 +319,12 @@ function RequestHistory() {
           setSelectedRequest(null);
         }}
         item={selectedRequest}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        requests={requests}
       />
     </div>
   );

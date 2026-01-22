@@ -11,10 +11,12 @@ import {
   LogOut,
   X,
   RotateCw,
+  Download,
 } from "lucide-react";
 import {
   ViewAccountModal,
   EditAccountModal,
+  ExportModal,
   type Account,
 } from "./modals";
 import { MarketingUsersTable, MarketingUsersMobileCards, type MarketingUser, type LegendAssignment } from "./components";
@@ -32,6 +34,8 @@ function Marketing() {
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTarget, setViewTarget] = useState<Account | null>(null);
+
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -245,6 +249,7 @@ function Marketing() {
             onEditAccount={handleEditClick}
             onRefresh={fetchData}
             refreshing={loading}
+            onExport={() => setShowExportModal(true)}
           />
         </div>
 
@@ -330,9 +335,14 @@ function Marketing() {
         onClose={() => {
           setShowEditModal(false);
           setEditingAccount(null);
-        }}
-        account={editingAccount}
+        }}        account={editingAccount}
         onSuccess={handleEditSuccess}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        users={marketingUsers}
       />
     </div>
   );

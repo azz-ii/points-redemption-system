@@ -23,6 +23,7 @@ import {
   Settings2,
   Plus,
   RotateCw,
+  Download,
 } from "lucide-react";
 
 import {
@@ -53,6 +54,7 @@ interface DataTableProps<TData, TValue> {
   createButtonLabel?: string;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onExport?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -64,6 +66,7 @@ export function DataTable<TData, TValue>({
   createButtonLabel = "Add New",
   onRefresh,
   refreshing = false,
+  onExport,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -128,7 +131,8 @@ export function DataTable<TData, TValue>({
   const hasSelection = selectedRows.length > 0;
 
   return (
-    <div className="space-y-4">
+    <>
+      <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Input
@@ -149,7 +153,19 @@ export function DataTable<TData, TValue>({
               Refresh
             </Button>
           )}
-          <DropdownMenu>
+          {onExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExport}
+              className="h-9 flex gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+        </div>
+        <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 flex gap-2">
                 <Settings2 className="h-4 w-4" />
@@ -192,20 +208,20 @@ export function DataTable<TData, TValue>({
               Delete {selectedRows.length}
             </Button>
           )}
+          {onCreateNew && (
+            <button
+              onClick={onCreateNew}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                resolvedTheme === "dark"
+                  ? "bg-white text-black hover:bg-gray-200"
+                  : "bg-gray-900 text-white hover:bg-gray-700"
+              } transition-colors font-semibold ml-auto`}
+            >
+              <Plus className="h-5 w-5" />
+              <span>{createButtonLabel}</span>
+            </button>
+          )}
         </div>
-        {onCreateNew && (
-          <button
-            onClick={onCreateNew}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-              resolvedTheme === "dark"
-                ? "bg-white text-black hover:bg-gray-200"
-                : "bg-gray-900 text-white hover:bg-gray-700"
-            } transition-colors font-semibold ml-auto`}
-          >
-            <Plus className="h-5 w-5" />
-            <span>{createButtonLabel}</span>
-          </button>
-        )}
       </div>
 
       <div
@@ -313,6 +329,6 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus, RotateCw } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus, RotateCw, Download } from "lucide-react"
 
 import {
   Table,
@@ -47,6 +47,7 @@ interface DataTableProps<TData, TValue> {
   createButtonLabel?: string
   onRefresh?: () => void
   refreshing?: boolean
+  onExport?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -59,6 +60,7 @@ export function DataTable<TData, TValue>({
   createButtonLabel = "Add New",
   onRefresh,
   refreshing = false,
+  onExport,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -163,6 +165,17 @@ export function DataTable<TData, TValue>({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
+          {onExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExport}
+              className="h-9 flex gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
           {hasSelection && onBanSelected && (
             <Button
               variant="outline"

@@ -11,6 +11,7 @@ interface RedemptionTableProps {
   canMarkProcessed: (item: RedemptionItem) => boolean;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onExport?: () => void;
 }
 
 export function RedemptionTable({
@@ -21,6 +22,7 @@ export function RedemptionTable({
   canMarkProcessed,
   onRefresh,
   refreshing,
+  onExport,
 }: RedemptionTableProps) {
   const columns = useMemo(
     () =>
@@ -39,6 +41,7 @@ export function RedemptionTable({
       loading={loading}
       onRefresh={onRefresh}
       refreshing={refreshing}
+      onExport={onExport}
     />
   );
 }

@@ -14,6 +14,7 @@ interface AccountsTableProps {
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onExport?: () => void;
 }
 
 export function AccountsTable({
@@ -28,6 +29,7 @@ export function AccountsTable({
   onCreateNew,
   onRefresh,
   refreshing,
+  onExport,
 }: AccountsTableProps) {
   const columns = createColumns({
     onViewAccount,
@@ -47,6 +49,7 @@ export function AccountsTable({
       createButtonLabel="Add User"
       onRefresh={onRefresh}
       refreshing={refreshing}
+      onExport={onExport}
     />
   );
 }

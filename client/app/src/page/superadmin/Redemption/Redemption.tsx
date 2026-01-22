@@ -14,8 +14,9 @@ import {
   ChevronRight,
   RefreshCw,
   LogOut,
+  Download,
 } from "lucide-react";
-import { ViewRedemptionModal, MarkAsProcessedModal, type RedemptionItem, type MyProcessingStatus } from "./modals";
+import { ViewRedemptionModal, MarkAsProcessedModal, ExportModal, type RedemptionItem, type MyProcessingStatus } from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
 import { toast } from "sonner";
 
@@ -35,6 +36,7 @@ function Redemption() {
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchRequests = useCallback(async (isRefresh = false) => {
     try {
@@ -255,6 +257,7 @@ function Redemption() {
               canMarkProcessed={canMarkProcessed}
               onRefresh={() => fetchRequests(true)}
               refreshing={refreshing}
+              onExport={() => setShowExportModal(true)}
             />
           )}
 
@@ -389,6 +392,12 @@ function Redemption() {
         myItems={myProcessingStatus?.items || []}
         pendingCount={myProcessingStatus?.pending_items || 0}
         onConfirm={handleMarkProcessedConfirm}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        redemptions={requests}
       />
     </div>
   );

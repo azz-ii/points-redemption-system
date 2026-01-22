@@ -9,6 +9,7 @@ interface RequestHistoryTableProps {
   onView: (item: RequestHistoryItem) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onExport?: () => void;
 }
 
 export function RequestHistoryTable({
@@ -17,6 +18,7 @@ export function RequestHistoryTable({
   onView,
   onRefresh,
   refreshing,
+  onExport,
 }: RequestHistoryTableProps) {
   const columns = useMemo(
     () =>
@@ -33,6 +35,7 @@ export function RequestHistoryTable({
       loading={loading}
       onRefresh={onRefresh}
       refreshing={refreshing}
+      onExport={onExport}
     />
   );
 }

@@ -24,6 +24,7 @@ import {
   DeleteAccountModal,
   BulkBanAccountModal,
   BulkDeleteAccountModal,
+  ExportModal,
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
@@ -79,6 +80,7 @@ function Accounts() {
   const [bulkBanDuration, setBulkBanDuration] = useState<"1" | "7" | "30" | "permanent">("1");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   // Fetch accounts on component mount
@@ -643,6 +645,7 @@ function Accounts() {
             onCreateNew={() => setShowCreateModal(true)}
             onRefresh={fetchAccounts}
             refreshing={loading}
+            onExport={() => setShowExportModal(true)}
           />
         </div>
 
@@ -804,6 +807,12 @@ function Accounts() {
         accounts={bulkDeleteTargets}
         loading={loading}
         onConfirm={handleBulkDeleteConfirm}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        accounts={accounts}
       />
 
       {/* Toast Notification */}

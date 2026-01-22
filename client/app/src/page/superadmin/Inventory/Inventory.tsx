@@ -15,9 +15,10 @@ import {
   LogOut,
   RotateCw,
   BookOpen,
+  Download,
 } from "lucide-react";
 import type { InventoryItem, StockStatus } from "./modals";
-import { ViewInventoryModal, EditStockModal, STATUS_OPTIONS } from "./modals";
+import { ViewInventoryModal, EditStockModal, ExportModal, STATUS_OPTIONS } from "./modals";
 import {
   InventoryTable,
   InventoryMobileCards,
@@ -59,6 +60,7 @@ function Inventory() {
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [viewTarget, setViewTarget] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
@@ -405,6 +407,17 @@ function Inventory() {
                   </div>
                 )}
               </div>
+              <button
+                onClick={() => setShowExportModal(true)}
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
+                  resolvedTheme === "dark"
+                    ? "border-gray-700 hover:bg-gray-900"
+                    : "border-gray-300 hover:bg-gray-100"
+                } transition-colors`}
+              >
+                <Download className="h-5 w-5" />
+                <span>Export</span>
+              </button>
             </div>
           </div>
 
@@ -549,6 +562,12 @@ function Inventory() {
         updating={updating}
         error={editError}
         onConfirm={handleUpdateStock}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        items={items}
       />
     </div>
   );

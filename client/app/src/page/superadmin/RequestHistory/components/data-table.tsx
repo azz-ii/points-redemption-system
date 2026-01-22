@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Settings2,
   RotateCw,
+  Download,
 } from "lucide-react";
 
 import {
@@ -48,6 +49,7 @@ interface DataTableProps<TData, TValue> {
   loading?: boolean;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onExport?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -56,6 +58,7 @@ export function DataTable<TData, TValue>({
   loading = false,
   onRefresh,
   refreshing = false,
+  onExport,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -128,7 +131,19 @@ export function DataTable<TData, TValue>({
               Refresh
             </Button>
           )}
-          <DropdownMenu>
+          {onExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExport}
+              className="h-9 flex gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+        </div>
+        <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 flex gap-2">
                 <Settings2 className="h-4 w-4" />
@@ -161,7 +176,6 @@ export function DataTable<TData, TValue>({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
       </div>
 
       <div

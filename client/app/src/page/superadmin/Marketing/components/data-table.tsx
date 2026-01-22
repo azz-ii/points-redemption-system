@@ -15,7 +15,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Settings2, RotateCw } from "lucide-react"
+import { ChevronLeft, ChevronRight, Settings2, RotateCw, Download } from "lucide-react"
 
 import {
   Table,
@@ -42,6 +42,7 @@ interface DataTableProps<TData, TValue> {
   loading?: boolean
   onRefresh?: () => void
   refreshing?: boolean
+  onExport?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -50,6 +51,7 @@ export function DataTable<TData, TValue>({
   loading = false,
   onRefresh,
   refreshing = false,
+  onExport,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -114,6 +116,17 @@ export function DataTable<TData, TValue>({
             >
               <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
+            </Button>
+          )}
+          {onExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExport}
+              className="h-9 flex gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
             </Button>
           )}
           <DropdownMenu>

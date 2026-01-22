@@ -21,6 +21,7 @@ import {
   EditDistributorModal,
   ViewDistributorModal,
   DeleteDistributorModal,
+  ExportModal,
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
 
@@ -112,6 +113,7 @@ function Distributors() {
   const [deleteTarget, setDeleteTarget] = useState<Distributor | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Handle create distributor submission
   const handleCreateDistributor = async () => {
@@ -370,6 +372,7 @@ function Distributors() {
               onCreateNew={() => setShowCreateModal(true)}
               onRefresh={fetchDistributors}
               refreshing={loading}
+              onExport={() => setShowExportModal(true)}
             />
           )}
         </div>
@@ -499,6 +502,13 @@ function Distributors() {
         onClose={() => setShowDeleteModal(false)}
         distributor={deleteTarget}
         onConfirm={confirmDelete}
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        distributors={distributors}
       />
     </div>
   );
