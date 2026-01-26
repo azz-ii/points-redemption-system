@@ -559,6 +559,25 @@ export const marketingRequestsApi = {
 
     return response.json();
   },
+
+  /**
+   * Get the marketing user's history of processed requests.
+   * Shows all requests where the current user has processed items.
+   */
+  async getHistory(): Promise<RedemptionRequestResponse[]> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/marketing-history/`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch marketing history');
+    }
+
+    return response.json();
+  },
 };
 
 // Request History API - Admin only, shows all processed requests

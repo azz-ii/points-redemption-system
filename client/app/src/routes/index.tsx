@@ -14,7 +14,7 @@ import SuperAdminDashboard from "../page/superadmin/Dashboard";
 
 // History pages
 import ApproverHistory from "../page/approver/History/History";
-import MarketingHistory from "../page/marketing/History";
+import MarketingHistory from "../page/marketing/History/History";
 import ReceptionHistory from "../page/reception/History";
 import ExecutiveAssistantHistory from "../page/executive_assistant/History";
 import RequestHistory from "../page/superadmin/RequestHistory/RequestHistory";

@@ -1353,3 +1353,33 @@ class ProcessedRequestHistoryView(APIView):
         
         serializer = RedemptionRequestSerializer(processed_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MarketingHistoryView(APIView):
+    """View for getting processed requests where the current marketing user has processed items"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get all requests where the current marketing user has processed items"""
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        
+        # Only allow Marketing position users
+        if profile and profile.position != 'Marketing':
+            return Response({
+                'error': 'Access denied. Marketing role required.'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get all requests where this user has processed at least one item
+        # This shows history regardless of current item legend assignment
+        # (item_processed_by tracks who actually processed the item)
+        processed_requests = RedemptionRequest.objects.filter(
+            items__item_processed_by=user
+        ).distinct().prefetch_related(
+            'items',
+            'items__variant',
+            'items__variant__catalogue_item'
+        ).order_by('-date_requested')
+        
+        serializer = RedemptionRequestSerializer(processed_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
