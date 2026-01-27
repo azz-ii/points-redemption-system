@@ -16,6 +16,7 @@ export interface CartItem {
   pricing_type: PricingType;
   points_multiplier: number | null; // For dynamic items
   dynamic_quantity?: number; // For dynamic items (sqft, invoice amount, etc.)
+  available_stock: number; // Available stock for validation
 }
 
 interface CartModalProps {
@@ -422,37 +423,45 @@ export default function CartModal({
                         </td>
                         <td className="py-4 px-4 text-center">
                           {item.pricing_type === 'FIXED' ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() =>
-                                  onUpdateQuantity(
-                                    item.id,
-                                    Math.max(1, item.quantity - 1)
-                                  )
-                                }
-                                className={`px-2 py-1 rounded ${
-                                  isDark
-                                    ? "bg-gray-800 hover:bg-gray-700"
-                                    : "bg-gray-200 hover:bg-gray-300"
-                                }`}
-                              >
-                                −
-                              </button>
-                              <span className="w-8 text-center">
-                                {item.quantity}
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    onUpdateQuantity(
+                                      item.id,
+                                      Math.max(1, item.quantity - 1)
+                                    )
+                                  }
+                                  className={`px-2 py-1 rounded ${
+                                    isDark
+                                      ? "bg-gray-800 hover:bg-gray-700"
+                                      : "bg-gray-200 hover:bg-gray-300"
+                                  }`}
+                                >
+                                  −
+                                </button>
+                                <span className="w-8 text-center">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    onUpdateQuantity(item.id, Math.min(item.quantity + 1, item.available_stock))
+                                  }
+                                  disabled={item.quantity >= item.available_stock}
+                                  className={`px-2 py-1 rounded ${
+                                    item.quantity >= item.available_stock
+                                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                      : isDark
+                                        ? "bg-gray-800 hover:bg-gray-700"
+                                        : "bg-gray-200 hover:bg-gray-300"
+                                  }`}
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <span className={`text-xs ${item.quantity >= item.available_stock ? 'text-amber-500' : isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                {item.quantity}/{item.available_stock} available
                               </span>
-                              <button
-                                onClick={() =>
-                                  onUpdateQuantity(item.id, item.quantity + 1)
-                                }
-                                className={`px-2 py-1 rounded ${
-                                  isDark
-                                    ? "bg-gray-800 hover:bg-gray-700"
-                                    : "bg-gray-200 hover:bg-gray-300"
-                                }`}
-                              >
-                                +
-                              </button>
                             </div>
                           ) : (
                             <div className="flex flex-col items-center gap-1 relative">
@@ -1125,10 +1134,10 @@ export default function CartModal({
                             </p>
                             <p
                               className={`text-xs mt-1 ${
-                                isDark ? "text-gray-400" : "text-gray-600"
+                                item.quantity >= item.available_stock ? 'text-amber-500' : isDark ? "text-gray-400" : "text-gray-600"
                               }`}
                             >
-                              Qty: {item.quantity}
+                              Qty: {item.quantity}/{item.available_stock} available
                             </p>
                           </>
                         ) : (

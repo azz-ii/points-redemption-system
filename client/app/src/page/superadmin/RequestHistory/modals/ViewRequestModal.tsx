@@ -1,5 +1,6 @@
 import { X, Package, CheckCircle } from "lucide-react";
 import { useTheme } from "next-themes";
+import { RequestTimeline } from "@/components/modals";
 import type { RequestHistoryItem } from "./types";
 
 interface ViewRequestModalProps {
@@ -72,24 +73,12 @@ export function ViewRequestModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Requested By</label>
-                <p className="font-semibold">{item.requested_by_name}</p>
-              </div>
-              <div>
                 <label className="block text-xs text-gray-500 mb-1">Requested For</label>
                 <p className="font-semibold">{item.requested_for_name}</p>
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Total Points</label>
                 <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Date Requested</label>
-                <p className="font-semibold">
-                  {new Date(item.date_requested).toLocaleString()}
-                </p>
               </div>
             </div>
           </div>
@@ -118,6 +107,36 @@ export function ViewRequestModal({
               </div>
             </div>
           </div>
+
+          {/* Request Timeline */}
+          <RequestTimeline
+            data={{
+              requested_by_name: item.requested_by_name,
+              date_requested: item.date_requested,
+              reviewed_by_name: item.reviewed_by_name,
+              date_reviewed: item.date_reviewed,
+              requires_sales_approval: item.requires_sales_approval,
+              sales_approval_status: item.sales_approval_status,
+              sales_approved_by_name: item.sales_approved_by_name,
+              sales_approval_date: item.sales_approval_date,
+              sales_rejection_reason: item.sales_rejection_reason,
+              requires_marketing_approval: item.requires_marketing_approval,
+              marketing_approval_status: item.marketing_approval_status,
+              marketing_approved_by_name: item.marketing_approved_by_name,
+              marketing_approval_date: item.marketing_approval_date,
+              marketing_rejection_reason: item.marketing_rejection_reason,
+              processed_by_name: item.processed_by_name,
+              date_processed: item.date_processed,
+              cancelled_by_name: item.cancelled_by_name,
+              date_cancelled: item.date_cancelled,
+              remarks: item.remarks,
+              rejection_reason: item.rejection_reason,
+              status: item.status,
+              processing_status: item.processing_status,
+            }}
+            showProcessing={true}
+            showCancellation={true}
+          />
 
           {/* Items */}
           <div className="space-y-4">

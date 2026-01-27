@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
+import { RequestTimeline } from "@/components/modals";
 import type { HistoryItem } from "../types";
 
 interface ViewHistoryModalProps {
@@ -81,31 +82,19 @@ export function ViewHistoryModal({
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Requested By</label>
-                <p className="font-semibold">{item.requested_by_name}</p>
-              </div>
-              <div>
                 <label className="block text-xs text-gray-500 mb-1">Requested For</label>
                 <p className="font-semibold">{item.requested_for_name}</p>
               </div>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Team</label>
-              <p className="font-semibold">
-                {item.team_name || <span className="text-gray-400 italic">No Team</span>}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
-                <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Date Requested</label>
+                <label className="block text-xs text-gray-500 mb-1">Team</label>
                 <p className="font-semibold">
-                  {new Date(item.date_requested).toLocaleString()}
+                  {item.team_name || <span className="text-gray-400 italic">No Team</span>}
                 </p>
               </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+              <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
             </div>
           </div>
 
@@ -138,58 +127,35 @@ export function ViewHistoryModal({
             </div>
           </div>
 
-          {/* Review Info */}
-          {(item.reviewed_by_name || item.processed_by_name || item.remarks || item.rejection_reason) && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                Review Information
-              </h3>
-              {item.reviewed_by_name && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Reviewed By</label>
-                    <p className="font-semibold">{item.reviewed_by_name}</p>
-                  </div>
-                  {item.date_reviewed && (
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Date Reviewed</label>
-                      <p className="font-semibold">
-                        {new Date(item.date_reviewed).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {item.processed_by_name && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Processed By</label>
-                    <p className="font-semibold">{item.processed_by_name}</p>
-                  </div>
-                  {item.date_processed && (
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Date Processed</label>
-                      <p className="font-semibold">
-                        {new Date(item.date_processed).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {item.remarks && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Remarks</label>
-                  <p className="font-semibold">{item.remarks}</p>
-                </div>
-              )}
-              {item.rejection_reason && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Rejection Reason</label>
-                  <p className="font-semibold text-red-500">{item.rejection_reason}</p>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Request Timeline */}
+          <RequestTimeline
+            data={{
+              requested_by_name: item.requested_by_name,
+              date_requested: item.date_requested,
+              reviewed_by_name: item.reviewed_by_name,
+              date_reviewed: item.date_reviewed,
+              requires_sales_approval: item.requires_sales_approval,
+              sales_approval_status: item.sales_approval_status,
+              sales_approved_by_name: item.sales_approved_by_name,
+              sales_approval_date: item.sales_approval_date,
+              sales_rejection_reason: item.sales_rejection_reason,
+              requires_marketing_approval: item.requires_marketing_approval,
+              marketing_approval_status: item.marketing_approval_status,
+              marketing_approved_by_name: item.marketing_approved_by_name,
+              marketing_approval_date: item.marketing_approval_date,
+              marketing_rejection_reason: item.marketing_rejection_reason,
+              processed_by_name: item.processed_by_name,
+              date_processed: item.date_processed,
+              cancelled_by_name: item.cancelled_by_name,
+              date_cancelled: item.date_cancelled,
+              remarks: item.remarks,
+              rejection_reason: item.rejection_reason,
+              status: item.status,
+              processing_status: item.processing_status,
+            }}
+            showProcessing={true}
+            showCancellation={true}
+          />
 
           {/* Items */}
           <div className="space-y-4">

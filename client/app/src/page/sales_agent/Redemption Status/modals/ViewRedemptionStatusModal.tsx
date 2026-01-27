@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { RequestTimeline } from "@/components/modals";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export function ViewRedemptionStatusModal({
@@ -83,7 +84,7 @@ export function ViewRedemptionStatusModal({
                 Redemption Item Details
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                View item information and status
+                Request #{request.id}
               </p>
             </div>
             <button
@@ -181,27 +182,6 @@ export function ViewRedemptionStatusModal({
                     </span>
                   )}
                 </div>
-
-                {/* Additional Info */}
-                {(request.rejection_reason || request.remarks) && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                      Additional Information
-                    </h3>
-                    {request.rejection_reason && (
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Rejection Reason</label>
-                        <p className="text-sm">{request.rejection_reason}</p>
-                      </div>
-                    )}
-                    {request.remarks && (
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Remarks</label>
-                        <p className="text-sm">{request.remarks}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -222,6 +202,36 @@ export function ViewRedemptionStatusModal({
                 {item.total_points} Points
               </p>
             </div>
+
+            {/* Request Timeline */}
+            <RequestTimeline
+              data={{
+                requested_by_name: request.requested_by_name,
+                date_requested: request.date_requested,
+                reviewed_by_name: request.reviewed_by_name,
+                date_reviewed: request.date_reviewed,
+                requires_sales_approval: request.requires_sales_approval,
+                sales_approval_status: request.sales_approval_status,
+                sales_approved_by_name: request.sales_approved_by_name,
+                sales_approval_date: request.sales_approval_date,
+                sales_rejection_reason: request.sales_rejection_reason,
+                requires_marketing_approval: request.requires_marketing_approval,
+                marketing_approval_status: request.marketing_approval_status,
+                marketing_approved_by_name: request.marketing_approved_by_name,
+                marketing_approval_date: request.marketing_approval_date,
+                marketing_rejection_reason: request.marketing_rejection_reason,
+                processed_by_name: request.processed_by_name,
+                date_processed: request.date_processed,
+                cancelled_by_name: request.cancelled_by_name,
+                date_cancelled: request.date_cancelled,
+                remarks: request.remarks,
+                rejection_reason: request.rejection_reason,
+                status: request.status,
+                processing_status: request.processing_status,
+              }}
+              showProcessing={true}
+              showCancellation={true}
+            />
           </div>
 
           {/* Footer */}

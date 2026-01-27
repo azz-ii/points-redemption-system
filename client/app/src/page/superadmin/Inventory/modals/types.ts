@@ -12,6 +12,8 @@ export interface InventoryItem {
   price: string;
   image_url: string | null;
   stock: number;
+  committed_stock: number;
+  available_stock: number;
   reorder_level: number;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
   stock_status: StockStatus;

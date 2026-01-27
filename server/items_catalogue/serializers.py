@@ -15,11 +15,14 @@ class UserRelatedField(serializers.PrimaryKeyRelatedField):
 
 class VariantNestedSerializer(serializers.ModelSerializer):
     """Serializer for Variant when nested in CatalogueItem"""
+    available_stock = serializers.IntegerField(read_only=True)
+    
     class Meta:
         model = Variant
         fields = [
             'id', 'item_code', 'option_description', 'points', 'price', 'image_url', 
-            'stock', 'reorder_level', 'pricing_type', 'points_multiplier', 'price_multiplier'
+            'stock', 'committed_stock', 'available_stock', 'reorder_level', 
+            'pricing_type', 'points_multiplier', 'price_multiplier'
         ]
         extra_kwargs = {
             'item_code': {'required': True},
@@ -83,12 +86,13 @@ class VariantSerializer(serializers.ModelSerializer):
     """Serializer for Variant model with nested CatalogueItem"""
     catalogue_item = CatalogueItemSerializer(read_only=True)
     catalogue_item_id = serializers.IntegerField(write_only=True, required=True)
+    available_stock = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Variant
         fields = [
             'id', 'catalogue_item', 'catalogue_item_id', 'item_code', 'option_description',
-            'points', 'price', 'image_url', 'stock', 'reorder_level',
+            'points', 'price', 'image_url', 'stock', 'committed_stock', 'available_stock', 'reorder_level',
             'pricing_type', 'points_multiplier', 'price_multiplier'
         ]
         
@@ -116,21 +120,24 @@ class InventoryVariantSerializer(serializers.ModelSerializer):
     item_name = serializers.CharField(source='catalogue_item.item_name', read_only=True)
     legend = serializers.CharField(source='catalogue_item.legend', read_only=True)
     catalogue_item_id = serializers.IntegerField(source='catalogue_item.id', read_only=True)
+    available_stock = serializers.IntegerField(read_only=True)
     stock_status = serializers.SerializerMethodField()
     
     class Meta:
         model = Variant
         fields = [
             'id', 'catalogue_item_id', 'item_name', 'item_code', 'option_description',
-            'points', 'price', 'image_url', 'stock', 'reorder_level', 'legend', 'stock_status',
+            'points', 'price', 'image_url', 'stock', 'committed_stock', 'available_stock',
+            'reorder_level', 'legend', 'stock_status',
             'pricing_type', 'points_multiplier', 'price_multiplier'
         ]
     
     def get_stock_status(self, obj):
-        """Calculate stock status based on stock and reorder_level"""
-        if obj.stock == 0:
+        """Calculate stock status based on available_stock (stock - committed) and reorder_level"""
+        available = obj.available_stock
+        if available == 0:
             return 'Out of Stock'
-        elif obj.stock <= obj.reorder_level:
+        elif available <= obj.reorder_level:
             return 'Low Stock'
         else:
             return 'In Stock'

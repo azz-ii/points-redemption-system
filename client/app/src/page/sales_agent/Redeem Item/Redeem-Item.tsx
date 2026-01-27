@@ -98,6 +98,11 @@ export default function RedeemItem() {
     const matchesCategory =
       activeCategory === "All" || item.category === activeCategory;
     return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    // Sort by available_stock descending (in-stock items first, out-of-stock last)
+    if (a.available_stock === 0 && b.available_stock > 0) return 1;
+    if (a.available_stock > 0 && b.available_stock === 0) return -1;
+    return 0;
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -107,13 +112,27 @@ export default function RedeemItem() {
   );
 
   const handleAddToCart = (item: RedeemItemData) => {
+    // Check if item has available stock
+    if (item.available_stock <= 0) {
+      toast.error("Out of stock", {
+        description: `${item.name} is currently unavailable`,
+      });
+      return;
+    }
+
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id);
       if (existingItem) {
-        // For FIXED items, increment quantity. For dynamic, just update
+        // For FIXED items, increment quantity up to available stock
         if (item.pricing_type === 'FIXED') {
+          if (existingItem.quantity >= item.available_stock) {
+            toast.error("Maximum quantity reached", {
+              description: `Only ${item.available_stock} available for ${item.name}`,
+            });
+            return prevItems;
+          }
           return prevItems.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+            i.id === item.id ? { ...i, quantity: Math.min(i.quantity + 1, item.available_stock) } : i
           );
         }
         // Dynamic item already in cart - just return existing
@@ -131,6 +150,7 @@ export default function RedeemItem() {
           pricing_type: item.pricing_type,
           points_multiplier: item.points_multiplier,
           dynamic_quantity: item.pricing_type === 'FIXED' ? undefined : 0,
+          available_stock: item.available_stock,
         },
       ];
     });

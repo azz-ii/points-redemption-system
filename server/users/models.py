@@ -24,7 +24,8 @@ class UserProfile(models.Model):
     ban_date = models.DateTimeField(blank=True, null=True)
     unban_date = models.DateTimeField(blank=True, null=True)
     uses_points = models.BooleanField(default=False, help_text='Whether this user uses the points system')
-    points = models.PositiveIntegerField(default=0, help_text='Current points balance for the user')
+    points = models.IntegerField(default=0, help_text='Current points balance for the user (can be negative)')
+    profile_picture = models.ImageField(upload_to='profile_pictures/%Y/%m/', blank=True, null=True, help_text='User profile picture')
     is_archived = models.BooleanField(default=False, help_text='Whether this user profile is archived')
     date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the user profile was archived')
     archived_by = models.ForeignKey(

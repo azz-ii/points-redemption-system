@@ -9,6 +9,7 @@ export interface Account {
   points: number;
   is_activated: boolean;
   is_banned: boolean;
+  profile_picture?: string | null;
 }
 
 export const POSITION_OPTIONS = [

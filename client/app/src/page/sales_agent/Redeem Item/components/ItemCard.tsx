@@ -92,10 +92,14 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
             )}
             <p
               className={`text-xs mt-1 ${
-                isDark ? "text-gray-500" : "text-gray-500"
+                item.available_stock === 0 
+                  ? 'text-red-500 font-medium'
+                  : item.available_stock < 10
+                    ? 'text-amber-500'
+                    : isDark ? "text-gray-500" : "text-gray-500"
               }`}
             >
-              {item.category}
+              {item.available_stock === 0 ? 'Out of stock' : `${item.available_stock} available`} • {item.category}
             </p>
           </div>
           {/* Add button */}

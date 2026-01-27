@@ -22,6 +22,7 @@ import {
   ViewDistributorModal,
   DeleteDistributorModal,
   ExportModal,
+  SetPointsModal,
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
 
@@ -114,6 +115,8 @@ function Distributors() {
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [settingPoints, setSettingPoints] = useState(false);
 
   // Handle create distributor submission
   const handleCreateDistributor = async () => {
@@ -247,6 +250,39 @@ function Distributors() {
     }
   };
 
+  // Handle set points submission
+  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+    try {
+      setSettingPoints(true);
+      
+      // Update points for all distributors
+      const updateResults = await Promise.allSettled(
+        updates.map(update =>
+          distributorsApi.update(update.id, { points: update.points })
+        )
+      );
+
+      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
+      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      
+      setShowSetPointsModal(false);
+      
+      if (failCount === 0) {
+        alert(`Successfully updated points for ${successCount} distributor(s)`);
+      } else {
+        alert(`Updated ${successCount} of ${updates.length} distributor(s). ${failCount} failed.`);
+      }
+      
+      // Refresh distributors list
+      fetchDistributors();
+    } catch (err) {
+      console.error("Error updating points:", err);
+      alert("Error updating points");
+    } finally {
+      setSettingPoints(false);
+    }
+  };
+
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -373,6 +409,7 @@ function Distributors() {
               onRefresh={fetchDistributors}
               refreshing={loading}
               onExport={() => setShowExportModal(true)}
+              onSetPoints={() => setShowSetPointsModal(true)}
             />
           )}
         </div>
@@ -509,6 +546,15 @@ function Distributors() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         distributors={distributors}
+      />
+
+      {/* Set Points Modal */}
+      <SetPointsModal
+        isOpen={showSetPointsModal}
+        onClose={() => setShowSetPointsModal(false)}
+        distributors={distributors}
+        loading={settingPoints}
+        onSubmit={handleSetPoints}
       />
     </div>
   );

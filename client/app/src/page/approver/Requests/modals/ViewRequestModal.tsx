@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useTheme } from "next-themes";
+import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RequestItem } from "./types";
 
 interface ViewRequestModalProps extends ModalBaseProps {
@@ -70,24 +71,12 @@ export function ViewRequestModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Requested By</label>
-                <p className="font-semibold">{request.requested_by_name}</p>
-              </div>
-              <div>
                 <label className="block text-xs text-gray-500 mb-1">Requested For</label>
                 <p className="font-semibold">{request.requested_for_name}</p>
               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Total Points</label>
                 <p className="font-semibold">{request.total_points.toLocaleString()} pts</p>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Date Requested</label>
-                <p className="font-semibold">
-                  {new Date(request.date_requested).toLocaleString()}
-                </p>
               </div>
             </div>
           </div>
@@ -106,40 +95,35 @@ export function ViewRequestModal({
             </span>
           </div>
 
-          {/* Review Info */}
-          {(request.reviewed_by_name || request.date_reviewed || request.remarks || request.rejection_reason) && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                Review Information
-              </h3>
-              {request.reviewed_by_name && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Reviewed By</label>
-                  <p className="font-semibold">{request.reviewed_by_name}</p>
-                </div>
-              )}
-              {request.date_reviewed && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Date Reviewed</label>
-                  <p className="font-semibold">
-                    {new Date(request.date_reviewed).toLocaleString()}
-                  </p>
-                </div>
-              )}
-              {request.remarks && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Remarks</label>
-                  <p className="font-semibold">{request.remarks}</p>
-                </div>
-              )}
-              {request.rejection_reason && (
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Rejection Reason</label>
-                  <p className="font-semibold text-red-500">{request.rejection_reason}</p>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Request Timeline */}
+          <RequestTimeline
+            data={{
+              requested_by_name: request.requested_by_name,
+              date_requested: request.date_requested,
+              reviewed_by_name: request.reviewed_by_name,
+              date_reviewed: request.date_reviewed,
+              requires_sales_approval: request.requires_sales_approval,
+              sales_approval_status: request.sales_approval_status,
+              sales_approved_by_name: request.sales_approved_by_name,
+              sales_approval_date: request.sales_approval_date,
+              sales_rejection_reason: request.sales_rejection_reason,
+              requires_marketing_approval: request.requires_marketing_approval,
+              marketing_approval_status: request.marketing_approval_status,
+              marketing_approved_by_name: request.marketing_approved_by_name,
+              marketing_approval_date: request.marketing_approval_date,
+              marketing_rejection_reason: request.marketing_rejection_reason,
+              processed_by_name: request.processed_by_name,
+              date_processed: request.date_processed,
+              cancelled_by_name: request.cancelled_by_name,
+              date_cancelled: request.date_cancelled,
+              remarks: request.remarks,
+              rejection_reason: request.rejection_reason,
+              status: request.status,
+              processing_status: request.processing_status,
+            }}
+            showProcessing={true}
+            showCancellation={true}
+          />
 
           {/* Items */}
           <div className="space-y-4">

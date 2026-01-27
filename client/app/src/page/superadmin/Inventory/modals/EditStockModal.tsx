@@ -134,12 +134,53 @@ export function EditStockModal({
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Stock Levels
             </h3>
+            
+            {/* Current Stock Info (Read-only) */}
+            <div
+              className={`p-3 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800/50 border-gray-700"
+                  : "bg-blue-50 border-blue-200"
+              }`}
+            >
+              <p className="text-xs text-gray-500 mb-2">Current Stock Breakdown</p>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-500 text-xs">Total:</span>
+                  <p className="font-semibold">{item.stock}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 text-xs">Committed:</span>
+                  <p className="font-semibold text-orange-500">{item.committed_stock}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500 text-xs">Available:</span>
+                  <p
+                    className={`font-semibold ${
+                      item.available_stock === 0
+                        ? "text-red-500"
+                        : item.available_stock <= item.reorder_level
+                        ? "text-yellow-500"
+                        : "text-green-500"
+                    }`}
+                  >
+                    {item.available_stock}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {item.committed_stock > 0
+                  ? `${item.committed_stock} unit${item.committed_stock > 1 ? 's' : ''} reserved for pending/approved requests`
+                  : 'No units currently committed'}
+              </p>
+            </div>
+
             <div>
               <label
                 htmlFor="stock-input"
                 className="text-xs text-gray-500 mb-2 block"
               >
-                Current Stock *
+                New Total Stock *
               </label>
               <input
                 id="stock-input"
@@ -155,6 +196,9 @@ export function EditStockModal({
                 placeholder="Enter stock quantity"
                 aria-required="true"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Ensure total stock ≥ committed stock ({item.committed_stock}) to avoid issues
+              </p>
             </div>
 
             <div>
@@ -181,7 +225,7 @@ export function EditStockModal({
                 aria-required="true"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Low stock alert triggers when stock falls to this level
+                Low stock alert triggers when available stock falls to this level
               </p>
             </div>
           </div>

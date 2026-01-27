@@ -36,7 +36,12 @@ class UserListCreateView(APIView):
     
     def post(self, request):
         """Create a new user with profile"""
-        serializer = UserSerializer(data=request.data)
+        # Handle both JSON and multipart form data
+        data = request.data.copy()
+        if 'profile_picture' in request.FILES:
+            data['profile_picture'] = request.FILES['profile_picture']
+        
+        serializer = UserSerializer(data=data)
         if serializer.is_valid():
             # Save the password before hashing for email
             plain_password = request.data.get('password', '')
@@ -92,7 +97,13 @@ class UserDetailView(APIView):
         """Update a user's details"""
         try:
             user = User.objects.select_related('profile').get(id=user_id)
-            serializer = UserSerializer(user, data=request.data, partial=True)
+            
+            # Handle both JSON and multipart form data
+            data = request.data.copy()
+            if 'profile_picture' in request.FILES:
+                data['profile_picture'] = request.FILES['profile_picture']
+            
+            serializer = UserSerializer(user, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({

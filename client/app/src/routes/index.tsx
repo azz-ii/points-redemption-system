@@ -7,7 +7,7 @@ import Login from "../page/login/Login";
 // Dashboard pages
 import ApproverDashboard from "../page/approver/Dashboard";
 import SalesDashboard from "../page/sales_agent/Dashboard";
-import MarketingDashboard from "../page/marketing/Dashboard";
+import MarketingDashboard from "../page/marketing/Dashboard/Dashboard";
 import ReceptionDashboard from "../page/reception/Dashboard";
 import ExecutiveAssistantDashboard from "../page/executive_assistant/Dashboard";
 import SuperAdminDashboard from "../page/superadmin/Dashboard";
@@ -87,6 +87,8 @@ function HistoryRouter() {
 }
 
 export function AppRoutes() {
+  const { userPosition, isLoggedIn } = useAuth();
+
   return (
     <Routes>
       {/* Public routes */}

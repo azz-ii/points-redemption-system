@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
+import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 
 interface EditAccountData {
   username: string;
@@ -22,6 +23,10 @@ interface EditAccountModalProps extends ModalBaseProps {
   error: string;
   setError: Dispatch<SetStateAction<string>>;
   onSubmit: () => void;
+  profileImage: File | null;
+  profileImagePreview: string | null;
+  onImageSelect: (file: File | null) => void;
+  onImageRemove: () => void;
 }
 
 export function EditAccountModal({
@@ -34,6 +39,10 @@ export function EditAccountModal({
   error,
   setError,
   onSubmit,
+  profileImage,
+  profileImagePreview,
+  onImageSelect,
+  onImageRemove,
 }: EditAccountModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -166,6 +175,19 @@ export function EditAccountModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Profile Picture Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Profile Picture
+            </h3>
+            <ProfilePictureUpload
+              currentImage={account?.profile_picture}
+              onImageSelect={onImageSelect}
+              onImageRemove={onImageRemove}
+              preview={profileImagePreview}
+            />
           </div>
 
           {/* Role & Points Section */}

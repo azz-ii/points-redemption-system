@@ -268,7 +268,10 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         return data
 
     def validate_items(self, value):
-        """Validate that each item has required fields based on pricing type"""
+        """Validate that each item has required fields based on pricing type and available stock"""
+        # Aggregate quantities per variant to check total requested
+        variant_quantities = {}
+        
         for item in value:
             if 'variant_id' not in item:
                 raise serializers.ValidationError("Each item must have a variant_id")
@@ -288,6 +291,9 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                     raise serializers.ValidationError("Each FIXED pricing item must have a quantity")
                 if item['quantity'] <= 0:
                     raise serializers.ValidationError("Quantity must be greater than 0")
+                
+                # Track quantity for stock validation
+                qty = item['quantity']
             else:
                 # Dynamic pricing requires dynamic_quantity
                 if 'dynamic_quantity' not in item:
@@ -310,6 +316,41 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                     raise serializers.ValidationError(
                         f"Item '{variant.catalogue_item.item_name}' has dynamic pricing but no points_multiplier configured"
                     )
+                
+                # Dynamic pricing items use quantity=1 for stock purposes
+                qty = 1
+            
+            # Aggregate quantities per variant
+            variant_id = item['variant_id']
+            if variant_id in variant_quantities:
+                variant_quantities[variant_id]['quantity'] += qty
+            else:
+                variant_quantities[variant_id] = {
+                    'variant': variant,
+                    'quantity': qty
+                }
+        
+        # Validate available stock for all variants
+        insufficient_stock_items = []
+        for variant_id, data in variant_quantities.items():
+            variant = data['variant']
+            requested_qty = data['quantity']
+            available = variant.available_stock  # stock - committed_stock
+            
+            if available < requested_qty:
+                insufficient_stock_items.append({
+                    'item_code': variant.item_code,
+                    'item_name': variant.catalogue_item.item_name,
+                    'option': variant.option_description or 'N/A',
+                    'available': available,
+                    'requested': requested_qty
+                })
+        
+        if insufficient_stock_items:
+            raise serializers.ValidationError({
+                'insufficient_stock': insufficient_stock_items,
+                'message': 'Not enough available stock for the following items'
+            })
         
         return value
 
@@ -317,6 +358,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         from teams.models import TeamMembership
         from items_catalogue.models import ApprovalType
         from .models import ApprovalStatusChoice
+        from django.db import transaction
         
         items_data = validated_data.pop('items')
         requested_by = self.context['request'].user
@@ -339,75 +381,83 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                 requires_sales = True
                 requires_marketing = True
         
-        # Create the main request with team assignment and approval requirements
-        redemption_request = RedemptionRequest.objects.create(
-            requested_by=requested_by,
-            team=membership.team if membership else None,
-            requires_sales_approval=requires_sales,
-            requires_marketing_approval=requires_marketing,
-            sales_approval_status=ApprovalStatusChoice.PENDING if requires_sales else ApprovalStatusChoice.NOT_REQUIRED,
-            marketing_approval_status=ApprovalStatusChoice.PENDING if requires_marketing else ApprovalStatusChoice.NOT_REQUIRED,
-            requested_for=validated_data.get('requested_for'),
-            requested_for_customer=validated_data.get('requested_for_customer'),
-            requested_for_type=validated_data.get('requested_for_type', 'DISTRIBUTOR'),
-            points_deducted_from=validated_data.get('points_deducted_from'),
-            remarks=validated_data.get('remarks', ''),
-            svc_date=validated_data.get('svc_date'),
-            svc_time=validated_data.get('svc_time'),
-            svc_driver=validated_data.get('svc_driver'),
-            plate_number=validated_data.get('plate_number'),
-            driver_name=validated_data.get('driver_name'),
-        )
-        
-        # Create the request items and calculate total points
-        total_points = 0
-        for item_data in items_data:
-            variant = Variant.objects.get(id=item_data['variant_id'])
-            pricing_type = variant.pricing_type or 'FIXED'
+        # Use transaction to ensure atomicity for stock commitment
+        with transaction.atomic():
+            # Create the main request with team assignment and approval requirements
+            redemption_request = RedemptionRequest.objects.create(
+                requested_by=requested_by,
+                team=membership.team if membership else None,
+                requires_sales_approval=requires_sales,
+                requires_marketing_approval=requires_marketing,
+                sales_approval_status=ApprovalStatusChoice.PENDING if requires_sales else ApprovalStatusChoice.NOT_REQUIRED,
+                marketing_approval_status=ApprovalStatusChoice.PENDING if requires_marketing else ApprovalStatusChoice.NOT_REQUIRED,
+                requested_for=validated_data.get('requested_for'),
+                requested_for_customer=validated_data.get('requested_for_customer'),
+                requested_for_type=validated_data.get('requested_for_type', 'DISTRIBUTOR'),
+                points_deducted_from=validated_data.get('points_deducted_from'),
+                remarks=validated_data.get('remarks', ''),
+                svc_date=validated_data.get('svc_date'),
+                svc_time=validated_data.get('svc_time'),
+                svc_driver=validated_data.get('svc_driver'),
+                plate_number=validated_data.get('plate_number'),
+                driver_name=validated_data.get('driver_name'),
+            )
             
-            if pricing_type == 'FIXED':
-                # Fixed pricing: quantity * points_per_item
-                quantity = item_data['quantity']
-                try:
-                    points_per_item = int(float(variant.points))
-                except (ValueError, TypeError):
-                    points_per_item = 0
+            # Create the request items, calculate total points, and commit stock
+            total_points = 0
+            for item_data in items_data:
+                variant = Variant.objects.select_for_update().get(id=item_data['variant_id'])
+                pricing_type = variant.pricing_type or 'FIXED'
                 
-                item_total = quantity * points_per_item
-                total_points += item_total
-                
-                RedemptionRequestItem.objects.create(
-                    request=redemption_request,
-                    variant=variant,
-                    quantity=quantity,
-                    points_per_item=points_per_item,
-                    total_points=item_total,
-                    pricing_type=pricing_type,
-                    dynamic_quantity=None,
-                    points_multiplier=None
-                )
-            else:
-                # Dynamic pricing: dynamic_quantity * points_multiplier
-                from decimal import Decimal
-                dynamic_qty = Decimal(str(item_data['dynamic_quantity']))
-                points_multiplier = variant.points_multiplier or Decimal('0')
-                
-                item_total = int(dynamic_qty * points_multiplier)
-                total_points += item_total
-                
-                RedemptionRequestItem.objects.create(
-                    request=redemption_request,
-                    variant=variant,
-                    quantity=1,  # Default to 1 for dynamic pricing items
-                    points_per_item=None,
-                    total_points=item_total,
-                    pricing_type=pricing_type,
-                    dynamic_quantity=dynamic_qty,
-                    points_multiplier=points_multiplier
-                )
-        
-        # Update total points on the request
-        redemption_request.total_points = total_points
-        redemption_request.save()
+                if pricing_type == 'FIXED':
+                    # Fixed pricing: quantity * points_per_item
+                    quantity = item_data['quantity']
+                    try:
+                        points_per_item = int(float(variant.points))
+                    except (ValueError, TypeError):
+                        points_per_item = 0
+                    
+                    item_total = quantity * points_per_item
+                    total_points += item_total
+                    
+                    RedemptionRequestItem.objects.create(
+                        request=redemption_request,
+                        variant=variant,
+                        quantity=quantity,
+                        points_per_item=points_per_item,
+                        total_points=item_total,
+                        pricing_type=pricing_type,
+                        dynamic_quantity=None,
+                        points_multiplier=None
+                    )
+                    
+                    # Commit stock for this item
+                    variant.commit_stock(quantity)
+                else:
+                    # Dynamic pricing: dynamic_quantity * points_multiplier
+                    from decimal import Decimal
+                    dynamic_qty = Decimal(str(item_data['dynamic_quantity']))
+                    points_multiplier = variant.points_multiplier or Decimal('0')
+                    
+                    item_total = int(dynamic_qty * points_multiplier)
+                    total_points += item_total
+                    
+                    RedemptionRequestItem.objects.create(
+                        request=redemption_request,
+                        variant=variant,
+                        quantity=1,  # Default to 1 for dynamic pricing items
+                        points_per_item=None,
+                        total_points=item_total,
+                        pricing_type=pricing_type,
+                        dynamic_quantity=dynamic_qty,
+                        points_multiplier=points_multiplier
+                    )
+                    
+                    # Commit stock for dynamic pricing items (quantity=1)
+                    variant.commit_stock(1)
+            
+            # Update total points on the request
+            redemption_request.total_points = total_points
+            redemption_request.save()
         
         return redemption_request

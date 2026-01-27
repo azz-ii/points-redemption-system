@@ -13,6 +13,7 @@ interface CustomersTableProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
+  onSetPoints?: () => void;
 }
 
 export function CustomersTable({
@@ -26,6 +27,7 @@ export function CustomersTable({
   onRefresh,
   refreshing,
   onExport,
+  onSetPoints,
 }: CustomersTableProps) {
   const columns = createColumns({
     onView,
@@ -44,6 +46,7 @@ export function CustomersTable({
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
+      onSetPoints={onSetPoints}
     />
   );
 }

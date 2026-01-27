@@ -42,6 +42,13 @@ export function Sidebar() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
@@ -153,11 +160,22 @@ export function Sidebar() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -217,6 +235,13 @@ export function SidebarSuperAdmin() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
@@ -241,6 +266,7 @@ export function SidebarSuperAdmin() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
+      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -328,11 +354,22 @@ export function SidebarSuperAdmin() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -392,6 +429,13 @@ export function SidebarSales() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/sales/dashboard" },
@@ -409,6 +453,7 @@ export function SidebarSales() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
+      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -496,11 +541,22 @@ export function SidebarSales() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -560,6 +616,13 @@ export function SidebarApprover() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/approver/dashboard" },
@@ -577,6 +640,7 @@ export function SidebarApprover() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
+      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -664,11 +728,22 @@ export function SidebarApprover() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -728,6 +803,13 @@ export function SidebarMarketing() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
@@ -745,6 +827,7 @@ export function SidebarMarketing() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
+      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -832,11 +915,22 @@ export function SidebarMarketing() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-purple-600" : "bg-purple-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -896,6 +990,13 @@ export function SidebarReception() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/reception/dashboard" },
@@ -912,6 +1013,7 @@ export function SidebarReception() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
+      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -999,11 +1101,22 @@ export function SidebarReception() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1063,6 +1176,13 @@ export function SidebarExecutiveAssistant() {
       return null;
     }
   });
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/executive-assistant/dashboard" },
@@ -1079,6 +1199,7 @@ export function SidebarExecutiveAssistant() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
+      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -1166,11 +1287,22 @@ export function SidebarExecutiveAssistant() {
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 ${
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
               resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-            } flex items-center justify-center`}
+            }`}
           >
-            <span className="text-white font-semibold text-sm">
+            {profilePicture ? (
+              <img
+                src={profilePicture}
+                alt={`${username}'s profile`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>

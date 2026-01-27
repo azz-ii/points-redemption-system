@@ -105,7 +105,7 @@ export function InventoryMobileCards({
           </div>
 
           {/* Stock Info */}
-          <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+          <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
             <div
               className={`p-2 rounded ${
                 resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
@@ -116,7 +116,7 @@ export function InventoryMobileCards({
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                 }
               >
-                Stock
+                Total Stock
               </span>
               <p
                 className={`font-bold text-lg ${
@@ -140,9 +140,9 @@ export function InventoryMobileCards({
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                 }
               >
-                Reorder
+                Committed
               </span>
-              <p className="font-bold text-lg">{item.reorder_level}</p>
+              <p className="font-bold text-lg text-orange-500">{item.committed_stock}</p>
             </div>
             <div
               className={`p-2 rounded ${
@@ -154,17 +154,53 @@ export function InventoryMobileCards({
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                 }
               >
-                Status
+                Available
               </span>
-              <div className="mt-1">
-                <span
-                  className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(
-                    item.stock_status
-                  )}`}
-                >
-                  {item.stock_status}
-                </span>
-              </div>
+              <p
+                className={`font-bold text-lg ${
+                  item.available_stock === 0
+                    ? "text-red-500"
+                    : item.available_stock <= item.reorder_level
+                    ? "text-yellow-500"
+                    : "text-green-500"
+                }`}
+              >
+                {item.available_stock}
+              </p>
+            </div>
+            <div
+              className={`p-2 rounded ${
+                resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
+              }`}
+            >
+              <span
+                className={
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                }
+              >
+                Reorder
+              </span>
+              <p className="font-bold text-lg">{item.reorder_level}</p>
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className="mb-3">
+            <span
+              className={
+                resolvedTheme === "dark" ? "text-gray-400 text-xs" : "text-gray-500 text-xs"
+              }
+            >
+              Status
+            </span>
+            <div className="mt-1">
+              <span
+                className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(
+                  item.stock_status
+                )}`}
+              >
+                {item.stock_status}
+              </span>
             </div>
           </div>
 

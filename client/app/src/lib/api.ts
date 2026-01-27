@@ -65,6 +65,10 @@ export interface Variant {
   points: string;
   price: string;
   image_url: string | null;
+  stock: number;
+  committed_stock: number;
+  available_stock: number;
+  reorder_level: number;
   pricing_type: PricingType | null;
   points_multiplier: string | null;
   price_multiplier: string | null;
@@ -87,6 +91,7 @@ export interface RedeemItemData {
   needs_driver: boolean;
   pricing_type: PricingType;
   points_multiplier: number | null; // For dynamic items: points per unit (sq ft, invoice, etc.)
+  available_stock: number; // Available stock (stock - committed)
 }
 
 export interface UserProfile {
@@ -162,6 +167,7 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
     needs_driver: variant.catalogue_item.needs_driver,
     pricing_type: pricingType,
     points_multiplier: pointsMultiplier,
+    available_stock: variant.available_stock || 0,
   };
 
   console.log("[API] Transformed item:", transformed);

@@ -9,7 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'uses_points', 'points', 'created_at', 'updated_at'
+            'uses_points', 'points', 'profile_picture', 'created_at', 'updated_at'
         ]
 
 class UserSerializer(serializers.ModelSerializer):
@@ -27,13 +27,14 @@ class UserSerializer(serializers.ModelSerializer):
     unban_date = serializers.DateTimeField(write_only=True, required=False, allow_null=True)
     uses_points = serializers.BooleanField(write_only=True, required=False, default=False)
     points = serializers.IntegerField(write_only=True, required=False, default=0)
+    profile_picture = serializers.ImageField(write_only=True, required=False, allow_null=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'password', 'position', 'full_name', 'email',
             'is_activated', 'is_banned', 'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'uses_points', 'points', 'profile', 'is_active', 'date_joined'
+            'uses_points', 'points', 'profile_picture', 'profile', 'is_active', 'date_joined'
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -67,6 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
         unban_date = validated_data.pop('unban_date', None)
         uses_points = validated_data.pop('uses_points', False)
         points = validated_data.pop('points', 0)
+        profile_picture = validated_data.pop('profile_picture', None)
         password = validated_data.pop('password')
         
         # Create user
@@ -89,6 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             unban_date=unban_date,
             uses_points=uses_points,
             points=points,
+            profile_picture=profile_picture,
         )
         
         return user
@@ -107,6 +110,7 @@ class UserSerializer(serializers.ModelSerializer):
         unban_date = validated_data.pop('unban_date', None)
         uses_points = validated_data.pop('uses_points', None)
         points = validated_data.pop('points', None)
+        profile_picture = validated_data.pop('profile_picture', None)
         password = validated_data.pop('password', None)
         
         # Update user fields
@@ -145,6 +149,8 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.profile.uses_points = uses_points
             if points is not None:
                 instance.profile.points = points
+            if profile_picture is not None:
+                instance.profile.profile_picture = profile_picture
             instance.profile.save()
         elif any([position, full_name, email]):
             UserProfile.objects.create(
@@ -179,6 +185,7 @@ class UserListSerializer(serializers.ModelSerializer):
     unban_date = serializers.DateTimeField(source='profile.unban_date', read_only=True)
     uses_points = serializers.BooleanField(source='profile.uses_points', read_only=True)
     points = serializers.IntegerField(source='profile.points', read_only=True)
+    profile_picture = serializers.ImageField(source='profile.profile_picture', read_only=True)
     
     # Team information
     team_id = serializers.SerializerMethodField()
@@ -190,7 +197,7 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'uses_points', 'points', 'is_active', 'date_joined',
+            'uses_points', 'points', 'profile_picture', 'is_active', 'date_joined',
             'team_id', 'team_name', 'is_team_approver'
         ]
     

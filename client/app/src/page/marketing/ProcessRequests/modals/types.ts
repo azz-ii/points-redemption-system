@@ -31,12 +31,32 @@ export interface RequestItem {
   processing_status_display: string;
   total_points: number;
   date_requested: string;
+  // Legacy review fields
   reviewed_by?: number | null;
   reviewed_by_name?: string | null;
   date_reviewed?: string | null;
-  processed_by?: number | null | null;
+  // Dual approval - Sales
+  requires_sales_approval?: boolean;
+  sales_approval_status?: string | null;
+  sales_approved_by?: number | null;
+  sales_approved_by_name?: string | null;
+  sales_approval_date?: string | null;
+  sales_rejection_reason?: string | null;
+  // Dual approval - Marketing
+  requires_marketing_approval?: boolean;
+  marketing_approval_status?: string | null;
+  marketing_approved_by?: number | null;
+  marketing_approved_by_name?: string | null;
+  marketing_approval_date?: string | null;
+  marketing_rejection_reason?: string | null;
+  // Processing fields
+  processed_by?: number | null;
   processed_by_name?: string | null;
   date_processed?: string | null;
+  // Cancellation fields
+  cancelled_by?: number | null;
+  cancelled_by_name?: string | null;
+  date_cancelled?: string | null;
   remarks?: string | null;
   rejection_reason?: string | null;
   points_deducted_from: string;

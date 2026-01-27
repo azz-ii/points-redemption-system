@@ -173,7 +173,7 @@ export function ViewInventoryModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Current Stock
+                  Total Stock
                 </label>
                 <input
                   type="text"
@@ -183,6 +183,42 @@ export function ViewInventoryModal({
                     resolvedTheme === "dark"
                       ? "bg-gray-700 border-gray-600 text-gray-300"
                       : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Committed Stock
+                </label>
+                <input
+                  type="text"
+                  value={item.committed_stock.toString()}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-orange-400"
+                      : "bg-gray-100 border-gray-300 text-orange-600"
+                  } focus:outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Available Stock
+                </label>
+                <input
+                  type="text"
+                  value={item.available_stock.toString()}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600"
+                      : "bg-gray-100 border-gray-300"
+                  } ${
+                    item.available_stock === 0
+                      ? "text-red-500"
+                      : item.available_stock <= item.reorder_level
+                      ? "text-yellow-500"
+                      : "text-green-500"
                   } focus:outline-none`}
                 />
               </div>
@@ -202,6 +238,13 @@ export function ViewInventoryModal({
                 />
               </div>
             </div>
+            <p
+              className={`text-xs ${
+                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Available Stock = Total Stock - Committed Stock (reserved for pending/approved requests)
+            </p>
           </div>
         </div>
 

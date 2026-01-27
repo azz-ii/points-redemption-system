@@ -335,26 +335,39 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Handle dual approval system
-        if redemption_request.requires_sales_approval:
-            if redemption_request.sales_approval_status == ApprovalStatusChoice.PENDING:
-                redemption_request.sales_approval_status = ApprovalStatusChoice.REJECTED
-                redemption_request.sales_approved_by = user
-                redemption_request.sales_approval_date = timezone.now()
-                redemption_request.sales_rejection_reason = rejection_reason
-        
-        # Update request status
-        redemption_request.status = 'REJECTED'
-        redemption_request.reviewed_by = request.user
-        redemption_request.date_reviewed = timezone.now()
-        redemption_request.rejection_reason = rejection_reason
-        
-        # Get remarks if provided
-        if 'remarks' in request.data:
-            redemption_request.remarks = request.data['remarks']
-        
-        redemption_request.save()
-        redemption_request.update_overall_status()
+        # Use transaction to ensure atomicity when uncommitting stock
+        try:
+            with transaction.atomic():
+                # Handle dual approval system
+                if redemption_request.requires_sales_approval:
+                    if redemption_request.sales_approval_status == ApprovalStatusChoice.PENDING:
+                        redemption_request.sales_approval_status = ApprovalStatusChoice.REJECTED
+                        redemption_request.sales_approved_by = user
+                        redemption_request.sales_approval_date = timezone.now()
+                        redemption_request.sales_rejection_reason = rejection_reason
+                
+                # Update request status
+                redemption_request.status = 'REJECTED'
+                redemption_request.reviewed_by = request.user
+                redemption_request.date_reviewed = timezone.now()
+                redemption_request.rejection_reason = rejection_reason
+                
+                # Get remarks if provided
+                if 'remarks' in request.data:
+                    redemption_request.remarks = request.data['remarks']
+                
+                redemption_request.save()
+                redemption_request.update_overall_status()
+                
+                # Release committed stock
+                self._uncommit_stock(redemption_request)
+                
+        except Exception as e:
+            logger.error(f"Failed to process rejection for request #{redemption_request.id}: {str(e)}")
+            return Response(
+                {'error': 'Failed to process rejection', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         # Send rejection email notification
         logger.info(f"Request #{redemption_request.id} rejected, sending email notification...")
@@ -481,7 +494,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Use transaction to ensure atomicity when refunding points and stock
+        # Use transaction to ensure atomicity when refunding points and uncommitting stock
         try:
             with transaction.atomic():
                 # Refund points if the request was approved (points were deducted)
@@ -503,12 +516,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                         customer.save()
                         logger.info(f"Refunded {redemption_request.total_points} points to customer {customer.name}")
                 
-                # Restore stock for all requested items
-                for item in redemption_request.items.all():
-                    variant = item.variant
-                    variant.stock += item.quantity
-                    variant.save()
-                    logger.info(f"Restored {item.quantity} units of {variant.item_code} to stock")
+                # Release committed stock (stock was not deducted at approval, only committed at creation)
+                self._uncommit_stock(redemption_request)
                 
                 # Update processing status
                 redemption_request.processing_status = 'CANCELLED'
@@ -562,17 +571,30 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Update request status to WITHDRAWN
-        redemption_request.status = 'WITHDRAWN'
-        redemption_request.withdrawal_reason = withdrawal_reason
-        redemption_request.cancelled_by = user
-        redemption_request.date_cancelled = timezone.now()
-        
-        # Get remarks if provided
-        if 'remarks' in request.data:
-            redemption_request.remarks = request.data.get('remarks')
-        
-        redemption_request.save()
+        # Use transaction to ensure atomicity when uncommitting stock
+        try:
+            with transaction.atomic():
+                # Update request status to WITHDRAWN
+                redemption_request.status = 'WITHDRAWN'
+                redemption_request.withdrawal_reason = withdrawal_reason
+                redemption_request.cancelled_by = user
+                redemption_request.date_cancelled = timezone.now()
+                
+                # Get remarks if provided
+                if 'remarks' in request.data:
+                    redemption_request.remarks = request.data.get('remarks')
+                
+                redemption_request.save()
+                
+                # Release committed stock
+                self._uncommit_stock(redemption_request)
+                
+        except Exception as e:
+            logger.error(f"Failed to process withdrawal for request #{redemption_request.id}: {str(e)}")
+            return Response(
+                {'error': 'Failed to process withdrawal', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         logger.info(f"Request #{redemption_request.id} withdrawn by sales agent {user.username}")
         
@@ -608,7 +630,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
 
     def _deduct_points_and_stock(self, redemption_request):
         """
-        Helper method to deduct points and stock when a request is fully approved.
+        Helper method to deduct points when a request is fully approved.
+        Stock is committed at request creation and deducted at processing.
         Should only be called within a transaction.
         Returns (success, error_response) tuple.
         """
@@ -654,28 +677,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-        # Check if sufficient stock is available for all requested items
-        insufficient_stock_items = []
-        for item in redemption_request.items.all():
-            variant = item.variant
-            if variant.stock < item.quantity:
-                insufficient_stock_items.append({
-                    'item_code': variant.item_code,
-                    'item_name': variant.catalogue_item.item_name,
-                    'option': variant.option_description or 'N/A',
-                    'available': variant.stock,
-                    'requested': item.quantity
-                })
-        
-        if insufficient_stock_items:
-            return False, Response(
-                {
-                    'error': 'Insufficient stock',
-                    'detail': 'Not enough stock available for the following items',
-                    'items': insufficient_stock_items
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Note: Stock is already committed at request creation.
+        # Stock deduction happens when marketing processes the request.
         
         # Deduct points from the appropriate account
         if redemption_request.points_deducted_from == 'SELF':
@@ -691,13 +694,17 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             customer.points -= redemption_request.total_points
             customer.save()
         
-        # Deduct stock from all requested items
+        return True, None
+    
+    def _uncommit_stock(self, redemption_request):
+        """
+        Helper method to release committed stock when a request is rejected/withdrawn/cancelled.
+        Should only be called within a transaction.
+        """
         for item in redemption_request.items.all():
             variant = item.variant
-            variant.stock -= item.quantity
-            variant.save()
-        
-        return True, None
+            variant.uncommit_stock(item.quantity)
+            logger.info(f"Uncommitted {item.quantity} units of {variant.item_code}")
 
     @action(detail=True, methods=['post'])
     def sales_approve(self, request, pk=None):
@@ -827,17 +834,30 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Update sales rejection
-        redemption_request.sales_approval_status = ApprovalStatusChoice.REJECTED
-        redemption_request.sales_approved_by = user
-        redemption_request.sales_approval_date = timezone.now()
-        redemption_request.sales_rejection_reason = rejection_reason
-        
-        if 'remarks' in request.data:
-            redemption_request.remarks = request.data['remarks']
-        
-        redemption_request.save()
-        redemption_request.update_overall_status()
+        # Use transaction to ensure atomicity when uncommitting stock
+        try:
+            with transaction.atomic():
+                # Update sales rejection
+                redemption_request.sales_approval_status = ApprovalStatusChoice.REJECTED
+                redemption_request.sales_approved_by = user
+                redemption_request.sales_approval_date = timezone.now()
+                redemption_request.sales_rejection_reason = rejection_reason
+                
+                if 'remarks' in request.data:
+                    redemption_request.remarks = request.data['remarks']
+                
+                redemption_request.save()
+                redemption_request.update_overall_status()
+                
+                # Release committed stock
+                self._uncommit_stock(redemption_request)
+                
+        except Exception as e:
+            logger.error(f"Failed to process sales rejection for request #{redemption_request.id}: {str(e)}")
+            return Response(
+                {'error': 'Failed to process rejection', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         # Send rejection email
         logger.info(f"Request #{redemption_request.id} sales rejected, sending notification...")
@@ -1029,37 +1049,57 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Mark all pending items as processed by this user
-        now = timezone.now()
-        processed_count = pending_items.update(
-            item_processed_by=user,
-            item_processed_at=now
-        )
+        # Use transaction to ensure atomicity for stock deduction
+        try:
+            with transaction.atomic():
+                # Process each pending item: mark as processed and deduct stock
+                now = timezone.now()
+                processed_count = 0
+                
+                for item in pending_items:
+                    # Mark item as processed
+                    item.item_processed_by = user
+                    item.item_processed_at = now
+                    item.save()
+                    
+                    # Deduct actual stock and release committed stock
+                    variant = item.variant
+                    variant.deduct_stock(item.quantity)
+                    logger.info(f"Deducted {item.quantity} units from {variant.item_code} stock (processed by {user.username})")
+                    
+                    processed_count += 1
+                
+                logger.info(f"Marketing user {user.username} processed {processed_count} items for request #{redemption_request.id}")
+                
+                # Check if all marketing processing is now complete
+                is_complete = redemption_request.is_marketing_processing_complete()
+                
+                # If all items are processed, automatically update the request's processing_status
+                if is_complete and redemption_request.processing_status != 'PROCESSED':
+                    redemption_request.processing_status = 'PROCESSED'
+                    redemption_request.processed_by = user
+                    redemption_request.date_processed = now
+                    redemption_request.save()
+                    
+                    logger.info(f"Request #{redemption_request.id} auto-marked as PROCESSED (all items complete)")
+                    
+                    # Send processed email notification
+                    email_sent = send_request_processed_email(
+                        request_obj=redemption_request,
+                        distributor=redemption_request.get_requested_for_entity(),
+                        processed_by=user
+                    )
+                    if email_sent:
+                        logger.info(f"✓ Processed email sent for request #{redemption_request.id}")
+                    else:
+                        logger.warning(f"⚠ Failed to send processed email for request #{redemption_request.id}")
         
-        logger.info(f"Marketing user {user.username} processed {processed_count} items for request #{redemption_request.id}")
-        
-        # Check if all marketing processing is now complete
-        is_complete = redemption_request.is_marketing_processing_complete()
-        
-        # If all items are processed, automatically update the request's processing_status
-        if is_complete and redemption_request.processing_status != 'PROCESSED':
-            redemption_request.processing_status = 'PROCESSED'
-            redemption_request.processed_by = user
-            redemption_request.date_processed = now
-            redemption_request.save()
-            
-            logger.info(f"Request #{redemption_request.id} auto-marked as PROCESSED (all items complete)")
-            
-            # Send processed email notification
-            email_sent = send_request_processed_email(
-                request_obj=redemption_request,
-                distributor=redemption_request.get_requested_for_entity(),
-                processed_by=user
+        except Exception as e:
+            logger.error(f"Failed to process items for request #{redemption_request.id}: {str(e)}")
+            return Response(
+                {'error': 'Failed to process items', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            if email_sent:
-                logger.info(f"✓ Processed email sent for request #{redemption_request.id}")
-            else:
-                logger.warning(f"⚠ Failed to send processed email for request #{redemption_request.id}")
         
         serializer = self.get_serializer(redemption_request)
         return Response({

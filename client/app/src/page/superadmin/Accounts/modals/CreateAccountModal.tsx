@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
+import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 
 interface NewAccountData {
   username: string;
@@ -22,6 +23,10 @@ interface CreateAccountModalProps extends ModalBaseProps {
   error: string;
   setError: Dispatch<SetStateAction<string>>;
   onSubmit: () => void;
+  profileImage: File | null;
+  profileImagePreview: string | null;
+  onImageSelect: (file: File | null) => void;
+  onImageRemove: () => void;
 }
 
 export function CreateAccountModal({
@@ -33,6 +38,10 @@ export function CreateAccountModal({
   error,
   setError,
   onSubmit,
+  profileImage,
+  profileImagePreview,
+  onImageSelect,
+  onImageRemove,
 }: CreateAccountModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -188,6 +197,19 @@ export function CreateAccountModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Profile Picture Section */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Profile Picture
+            </h3>
+            <ProfilePictureUpload
+              currentImage={null}
+              onImageSelect={onImageSelect}
+              onImageRemove={onImageRemove}
+              preview={profileImagePreview}
+            />
           </div>
 
           {/* Role & Points Section */}

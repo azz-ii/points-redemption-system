@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
+import { useLogout, useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -25,6 +25,7 @@ import {
   BulkBanAccountModal,
   BulkDeleteAccountModal,
   ExportModal,
+  SetPointsModal,
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
@@ -32,6 +33,7 @@ import { AccountsTable, AccountsMobileCards } from "./components";
 function Accounts() {
   const navigate = useNavigate();
   const handleLogout = useLogout();
+  const { updateProfilePicture, username: loggedInUsername } = useAuth();
   const { resolvedTheme } = useTheme();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,6 +53,8 @@ function Accounts() {
     is_activated: false,
     is_banned: false,
   });
+  const [newAccountImage, setNewAccountImage] = useState<File | null>(null);
+  const [newAccountImagePreview, setNewAccountImagePreview] = useState<string | null>(null);
 
   const [editAccount, setEditAccount] = useState({
     username: "",
@@ -61,6 +65,8 @@ function Accounts() {
     is_activated: false,
     is_banned: false,
   });
+  const [editAccountImage, setEditAccountImage] = useState<File | null>(null);
+  const [editAccountImagePreview, setEditAccountImagePreview] = useState<string | null>(null);
 
   const [showBanModal, setShowBanModal] = useState(false);
   const [banTarget, setBanTarget] = useState<Account | null>(null);
@@ -81,7 +87,46 @@ function Accounts() {
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  // Inline edit state
+  const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const [editedData, setEditedData] = useState<Partial<Account>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Image handling helpers
+  const handleNewAccountImageSelect = (file: File | null) => {
+    setNewAccountImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewAccountImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleNewAccountImageRemove = () => {
+    setNewAccountImage(null);
+    setNewAccountImagePreview(null);
+  };
+
+  const handleEditAccountImageSelect = (file: File | null) => {
+    setEditAccountImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditAccountImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditAccountImageRemove = () => {
+    setEditAccountImage(null);
+    setEditAccountImagePreview(null);
+  };
 
   // Fetch accounts on component mount
   const fetchAccounts = async () => {
@@ -131,6 +176,8 @@ function Accounts() {
 
     // Close modal and reset form immediately
     setShowCreateModal(false);
+    const fullName = newAccount.full_name;
+    const imageFile = newAccountImage;
     setNewAccount({
       username: "",
       password: "",
@@ -140,21 +187,29 @@ function Accounts() {
       is_activated: false,
       is_banned: false,
     });
+    setNewAccountImage(null);
+    setNewAccountImagePreview(null);
     setError("");
 
     // Show optimistic success message
     setToast({
-      message: `Account for ${newAccount.full_name} created successfully!`,
+      message: `Account for ${fullName} created successfully!`,
       type: "success",
     });
+
+    // Prepare form data for file upload
+    const formData = new FormData();
+    Object.entries(newAccount).forEach(([key, value]) => {
+      formData.append(key, String(value));
+    });
+    if (imageFile) {
+      formData.append('profile_picture', imageFile);
+    }
 
     // Execute API call in background without blocking
     fetchWithCsrf("/api/users/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newAccount),
+      body: formData,
     })
       .then((response) => response.json())
       .then((data) => {
@@ -182,6 +237,30 @@ function Accounts() {
       });
   };
 
+  // Handle account update from view modal
+  const handleViewAccountUpdate = (updatedAccount: Account) => {
+    // Update the account in the accounts list
+    setAccounts((prev) =>
+      prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc))
+    );
+
+    // If the updated account is the logged-in user, update sidebar profile picture
+    if (loggedInUsername && updatedAccount.username === loggedInUsername) {
+      if (updatedAccount.profile_picture) {
+        updateProfilePicture(updatedAccount.profile_picture);
+      }
+    }
+
+    // Update the viewTarget to reflect changes in the modal
+    setViewTarget(updatedAccount);
+
+    // Show success toast
+    setToast({
+      message: "Profile picture updated successfully",
+      type: "success",
+    });
+  };
+
   // Open edit modal
   const handleEditClick = (account: Account) => {
     setEditingAccount(account);
@@ -194,6 +273,8 @@ function Accounts() {
       is_activated: account.is_activated,
       is_banned: account.is_banned,
     });
+    setEditAccountImage(null);
+    setEditAccountImagePreview(null);
     setShowEditModal(true);
     setError("");
   };
@@ -214,20 +295,33 @@ function Accounts() {
 
     try {
       setLoading(true);
+      
+      // Prepare form data for file upload
+      const formData = new FormData();
+      Object.entries(editAccount).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+      if (editAccountImage) {
+        formData.append('profile_picture', editAccountImage);
+      }
+      
       const response = await fetchWithCsrf(
         `/api/users/${editingAccount.id}/`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editAccount),
+          body: formData,
         }
       );
 
       const data = await response.json();
 
       if (response.ok) {
+        // If the updated account is the logged-in user, update profile picture in localStorage
+        if (data.user?.username === loggedInUsername) {
+          const updatedProfilePicture = data.user.profile_picture || null;
+          updateProfilePicture(updatedProfilePicture);
+        }
+        
         setShowEditModal(false);
         setEditingAccount(null);
         setError("");
@@ -491,7 +585,166 @@ function Accounts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  
+
+  // Inline edit handlers
+  const handleToggleInlineEdit = useCallback((account: Account) => {
+    setEditingRowId(account.id);
+    setEditedData({
+      username: account.username,
+      full_name: account.full_name,
+      email: account.email,
+      position: account.position,
+      points: account.points,
+    });
+    setFieldErrors({});
+  }, []);
+
+  const handleFieldChange = useCallback((field: string, value: any) => {
+    setEditedData((prev) => {
+      // Only update if value actually changed
+      if (prev[field] === value) {
+        return prev;
+      }
+      return { ...prev, [field]: value };
+    });
+    // Clear field error when user starts typing
+    setFieldErrors((prev) => {
+      if (prev[field]) {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      }
+      return prev;
+    });
+  }, []); // No dependencies needed since we use functional setState
+
+  const handleCancelInlineEdit = useCallback(() => {
+    setEditingRowId(null);
+    setEditedData({});
+    setFieldErrors({});
+  }, []);
+
+  const handleSaveInlineEdit = useCallback(async (accountId: number) => {
+    if (!editingRowId) return;
+
+    // Validate fields
+    const errors: Record<string, string> = {};
+    
+    if (!editedData.username?.trim()) {
+      errors.username = "Username is required";
+    }
+    if (!editedData.full_name?.trim()) {
+      errors.full_name = "Full name is required";
+    }
+    if (!editedData.email?.trim()) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.email)) {
+      errors.email = "Invalid email format";
+    }
+    if (!editedData.position?.trim()) {
+      errors.position = "Position is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetchWithCsrf(`/api/users/${accountId}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editedData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setToast({
+          message: "Account updated successfully",
+          type: "success",
+        });
+        setEditingRowId(null);
+        setEditedData({});
+        setFieldErrors({});
+        // Refresh accounts list
+        fetchAccounts();
+      } else {
+        // Handle server-side validation errors
+        const serverErrors: Record<string, string> = {};
+        if (data.details) {
+          Object.keys(data.details).forEach((key) => {
+            serverErrors[key] = data.details[key][0];
+          });
+        }
+        setFieldErrors(serverErrors);
+        setToast({
+          message: data.error || "Failed to update account",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Error updating account:", err);
+      setToast({
+        message: "Error connecting to server",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [editingRowId, editedData, fetchAccounts]);
+
+  // Handle set points submission
+  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+    try {
+      setLoading(true);
+      
+      // Update points for all users
+      const updateResults = await Promise.allSettled(
+        updates.map(update =>
+          fetchWithCsrf(`/api/users/${update.id}/`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ points: update.points }),
+          })
+        )
+      );
+
+      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
+      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      
+      setShowSetPointsModal(false);
+      
+      if (failCount === 0) {
+        setToast({
+          message: `Successfully updated points for ${successCount} account(s)`,
+          type: "success",
+        });
+      } else {
+        setToast({
+          message: `Updated ${successCount} of ${updates.length} account(s). ${failCount} failed.`,
+          type: "error",
+        });
+      }
+      
+      // Refresh accounts list
+      fetchAccounts();
+    } catch (err) {
+      console.error("Error updating points:", err);
+      setToast({
+        message: "Error updating points",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredAccounts = accounts.filter(
     (account) =>
       account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -643,9 +896,17 @@ function Accounts() {
             onDeleteSelected={handleDeleteSelected}
             onBanSelected={handleBanSelected}
             onCreateNew={() => setShowCreateModal(true)}
+            onSetPoints={() => setShowSetPointsModal(true)}
             onRefresh={fetchAccounts}
             refreshing={loading}
             onExport={() => setShowExportModal(true)}
+            editingRowId={editingRowId}
+            editedData={editedData}
+            onToggleInlineEdit={handleToggleInlineEdit}
+            onSaveInlineEdit={handleSaveInlineEdit}
+            onCancelInlineEdit={handleCancelInlineEdit}
+            onFieldChange={handleFieldChange}
+            fieldErrors={fieldErrors}
           />
         </div>
 
@@ -723,6 +984,10 @@ function Accounts() {
         error={error}
         setError={setError}
         onSubmit={handleCreateAccount}
+        profileImage={newAccountImage}
+        profileImagePreview={newAccountImagePreview}
+        onImageSelect={handleNewAccountImageSelect}
+        onImageRemove={handleNewAccountImageRemove}
       />
 
       <BanAccountModal
@@ -757,6 +1022,10 @@ function Accounts() {
         error={error}
         setError={setError}
         onSubmit={handleUpdateAccount}
+        profileImage={editAccountImage}
+        profileImagePreview={editAccountImagePreview}
+        onImageSelect={handleEditAccountImageSelect}
+        onImageRemove={handleEditAccountImageRemove}
       />
 
       <ViewAccountModal
@@ -766,6 +1035,7 @@ function Accounts() {
           setViewTarget(null);
         }}
         account={viewTarget}
+        onAccountUpdate={handleViewAccountUpdate}
       />
 
       <DeleteAccountModal
@@ -813,6 +1083,14 @@ function Accounts() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         accounts={accounts}
+      />
+
+      <SetPointsModal
+        isOpen={showSetPointsModal}
+        onClose={() => setShowSetPointsModal(false)}
+        accounts={accounts}
+        loading={loading}
+        onSubmit={handleSetPoints}
       />
 
       {/* Toast Notification */}

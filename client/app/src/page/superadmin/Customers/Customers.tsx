@@ -22,6 +22,7 @@ import {
   ViewCustomerModal,
   DeleteCustomerModal,
   ExportModal,
+  SetPointsModal,
 } from "./modals";
 import { CustomersTable, CustomersMobileCards } from "./components";
 
@@ -111,6 +112,8 @@ function Customers() {
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [settingPoints, setSettingPoints] = useState(false);
 
   // Handle create customer submission
   const handleCreateCustomer = async () => {
@@ -231,6 +234,39 @@ function Customers() {
     } catch (err) {
       console.error("Error deleting customer:", err);
       alert("Failed to delete customer. Please try again.");
+    }
+  };
+
+  // Handle set points submission
+  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+    try {
+      setSettingPoints(true);
+      
+      // Update points for all customers
+      const updateResults = await Promise.allSettled(
+        updates.map(update =>
+          customersApi.update(update.id, { points: update.points })
+        )
+      );
+
+      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
+      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      
+      setShowSetPointsModal(false);
+      
+      if (failCount === 0) {
+        alert(`Successfully updated points for ${successCount} customer(s)`);
+      } else {
+        alert(`Updated ${successCount} of ${updates.length} customer(s). ${failCount} failed.`);
+      }
+      
+      // Refresh customers list
+      fetchCustomers();
+    } catch (err) {
+      console.error("Error updating points:", err);
+      alert("Error updating points");
+    } finally {
+      setSettingPoints(false);
     }
   };
 
@@ -360,6 +396,7 @@ function Customers() {
               onRefresh={fetchCustomers}
               refreshing={loading}
               onExport={() => setShowExportModal(true)}
+              onSetPoints={() => setShowSetPointsModal(true)}
             />
           )}
         </div>
@@ -496,6 +533,15 @@ function Customers() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         customers={customers}
+      />
+
+      {/* Set Points Modal */}
+      <SetPointsModal
+        isOpen={showSetPointsModal}
+        onClose={() => setShowSetPointsModal(false)}
+        customers={customers}
+        loading={settingPoints}
+        onSubmit={handleSetPoints}
       />
     </div>
   );

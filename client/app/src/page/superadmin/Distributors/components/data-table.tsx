@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, UserPlus, RotateCw, Download } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2, Settings2, UserPlus, RotateCw, Download, Coins } from "lucide-react"
 
 import {
   Table,
@@ -47,6 +47,7 @@ interface DataTableProps<TData, TValue> {
   onRefresh?: () => void
   refreshing?: boolean
   onExport?: () => void
+  onSetPoints?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -59,6 +60,7 @@ export function DataTable<TData, TValue>({
   onRefresh,
   refreshing = false,
   onExport,
+  onSetPoints,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -172,6 +174,17 @@ export function DataTable<TData, TValue>({
             >
               <Download className="h-4 w-4" />
               Export
+            </Button>
+          )}
+          {onSetPoints && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSetPoints}
+              className="h-9 flex gap-2"
+            >
+              <Coins className="h-4 w-4" />
+              Set Points
             </Button>
           )}
           {hasSelection && onDeleteSelected && (

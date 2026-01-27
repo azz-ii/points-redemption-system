@@ -91,10 +91,16 @@ class LoginView(APIView):
                 # Log the user in to create a session so `request.user` is populated
                 login(request, user)
 
+                # Get profile picture URL if available
+                profile_picture_url = None
+                if profile.profile_picture:
+                    profile_picture_url = profile.profile_picture.url
+
                 response = Response({
                     "message": "Login successful",
                     "position": position,
-                    "username": username
+                    "username": username,
+                    "profile_picture": profile_picture_url
                 }, status=status.HTTP_200_OK)
                 
                 # Ensure CSRF cookie is set

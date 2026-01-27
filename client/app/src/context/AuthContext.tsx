@@ -11,8 +11,10 @@ interface AuthContextType {
   isLoggedIn: boolean;
   userPosition: string;
   username: string;
-  login: (position: string, username: string) => void;
+  profilePicture: string | null;
+  login: (position: string, username: string, profilePicture?: string | null) => void;
   logout: () => void;
+  updateProfilePicture: (profilePicture: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -42,14 +44,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  const login = (position: string, newUsername: string) => {
+  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("profilePicture");
+    } catch {
+      return null;
+    }
+  });
+
+  const login = (position: string, newUsername: string, newProfilePicture?: string | null) => {
     setIsLoggedIn(true);
     setUserPosition(position);
     setUsername(newUsername);
+    setProfilePicture(newProfilePicture || null);
     try {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("position", position);
       localStorage.setItem("username", newUsername);
+      if (newProfilePicture) {
+        localStorage.setItem("profilePicture", newProfilePicture);
+      } else {
+        localStorage.removeItem("profilePicture");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const updateProfilePicture = (newProfilePicture: string | null) => {
+    setProfilePicture(newProfilePicture);
+    try {
+      if (newProfilePicture) {
+        localStorage.setItem("profilePicture", newProfilePicture);
+      } else {
+        localStorage.removeItem("profilePicture");
+      }
+      // Dispatch storage event to sync across components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'profilePicture',
+        newValue: newProfilePicture,
+        oldValue: localStorage.getItem('profilePicture'),
+      }));
     } catch {
       // ignore storage errors
     }
@@ -59,10 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(false);
     setUserPosition("");
     setUsername("");
+    setProfilePicture(null);
     try {
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("username");
       localStorage.removeItem("position");
+      localStorage.removeItem("profilePicture");
     } catch {
       // ignore storage errors
     }
@@ -80,6 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (e.key === "username") {
         setUsername(e.newValue || "");
       }
+      if (e.key === "profilePicture") {
+        setProfilePicture(e.newValue);
+      }
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -88,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ isLoggedIn, userPosition, username, login, logout }}
+      value={{ isLoggedIn, userPosition, username, profilePicture, login, logout, updateProfilePicture }}
     >
       {children}
     </AuthContext.Provider>

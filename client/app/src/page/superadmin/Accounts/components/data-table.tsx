@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus, RotateCw, Download } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2, Settings2, Ban, UserPlus, RotateCw, Download, Coins } from "lucide-react"
 
 import {
   Table,
@@ -45,9 +45,17 @@ interface DataTableProps<TData, TValue> {
   onBanSelected?: (selectedRows: TData[]) => void
   onCreateNew?: () => void
   createButtonLabel?: string
+  onSetPoints?: () => void
   onRefresh?: () => void
   refreshing?: boolean
   onExport?: () => void
+  editingRowId?: number | null
+  editedData?: Record<string, any>
+  onEditRow?: (rowId: number) => void
+  onSaveRow?: (rowId: number) => void
+  onCancelEdit?: () => void
+  onFieldChange?: (field: string, value: any) => void
+  fieldErrors?: Record<string, string>
 }
 
 export function DataTable<TData, TValue>({
@@ -58,11 +66,19 @@ export function DataTable<TData, TValue>({
   onBanSelected,
   onCreateNew,
   createButtonLabel = "Add New",
+  onSetPoints,
   onRefresh,
   refreshing = false,
   onExport,
+  editingRowId = null,
+  editedData = {},
+  onEditRow,
+  onSaveRow,
+  onCancelEdit,
+  onFieldChange,
+  fieldErrors = {},
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "id", desc: false }])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
@@ -78,6 +94,12 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
       globalFilter,
+    },
+    meta: {
+      editingRowId,
+      editedData,
+      onFieldChange,
+      fieldErrors,
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -199,17 +221,32 @@ export function DataTable<TData, TValue>({
           )}
         </div>
         {onCreateNew && (
-          <button
-            onClick={onCreateNew}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-              resolvedTheme === "dark"
-                ? "bg-white text-black hover:bg-gray-200"
-                : "bg-gray-900 text-white hover:bg-gray-700"
-            } transition-colors font-semibold ml-auto`}
-          >
-            <UserPlus className="h-5 w-5" />
+          <div className="flex gap-2">
+            {onSetPoints && (
+              <button
+                onClick={onSetPoints}
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                  resolvedTheme === "dark"
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                } transition-colors font-semibold`}
+              >
+                <Coins className="h-5 w-5" />
+                <span>Set Points</span>
+              </button>
+            )}
+            <button
+              onClick={onCreateNew}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                resolvedTheme === "dark"
+                  ? "bg-white text-black hover:bg-gray-200"
+                  : "bg-gray-900 text-white hover:bg-gray-700"
+              } transition-colors font-semibold`}
+            >
+              <UserPlus className="h-5 w-5" />
             <span>{createButtonLabel}</span>
           </button>
+          </div>
         )}
       </div>
 
@@ -245,21 +282,27 @@ export function DataTable<TData, TValue>({
                   </TableCell>
                 </TableRow>
               ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                table.getRowModel().rows.map((row) => {
+                  const rowId = (row.original as any).id
+                  const isRowEditing = editingRowId === rowId
+                  
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={isRowEditing ? "bg-blue-50 dark:bg-blue-950" : ""}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  )
+                })
               ) : (
                 <TableRow>
                   <TableCell

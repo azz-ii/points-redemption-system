@@ -23,8 +23,8 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLoginSuccess = (position: string) => {
-    login(position, username);
+  const handleLoginSuccess = (position: string, profilePicture?: string | null) => {
+    login(position, username, profilePicture);
     navigate("/dashboard", { replace: true });
   };
 
@@ -52,12 +52,13 @@ function Login() {
         }
         
         const position = data.position || "Admin";
+        const profilePicture = data.profile_picture || null;
         setUsername("");
         setPassword("");
         toast.success("Login successful", {
           description: data.message || "Welcome back!"
         });
-        setTimeout(() => handleLoginSuccess(position), 1000);
+        setTimeout(() => handleLoginSuccess(position, profilePicture), 1000);
       } else {
         console.error("Login failed:", data);
         

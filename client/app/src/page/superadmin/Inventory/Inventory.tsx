@@ -35,6 +35,8 @@ interface ApiInventoryItem {
   price: string;
   image_url: string | null;
   stock: number;
+  committed_stock: number;
+  available_stock: number;
   reorder_level: number;
   legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
   stock_status: string;
@@ -112,6 +114,8 @@ function Inventory() {
           price: item.price,
           image_url: item.image_url,
           stock: item.stock,
+          committed_stock: item.committed_stock,
+          available_stock: item.available_stock,
           reorder_level: item.reorder_level,
           legend: item.legend,
           stock_status: item.stock_status as StockStatus,

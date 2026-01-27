@@ -85,7 +85,13 @@ class Variant(models.Model):
     price = models.CharField(max_length=100, help_text="Price (e.g., '₱130.00' or 'P0.50/inv amt.')")
     image_url = models.URLField(max_length=500, blank=True, null=True, help_text='URL to the variant image')
     stock = models.IntegerField(default=0, help_text='Current stock quantity available')
+    committed_stock = models.IntegerField(default=0, help_text='Stock reserved for pending/approved but unprocessed requests')
     reorder_level = models.IntegerField(default=10, help_text='Stock level at which to trigger low stock alert')
+    
+    @property
+    def available_stock(self):
+        """Returns stock available for new requests (stock minus committed)"""
+        return max(0, self.stock - self.committed_stock)
     
     # Dynamic pricing fields
     pricing_type = models.CharField(
@@ -111,6 +117,22 @@ class Variant(models.Model):
 
     def __str__(self):
         return f"{self.catalogue_item.item_name} - {self.item_code} ({self.option_description})"
+    
+    def commit_stock(self, quantity):
+        """Reserve stock for a pending request"""
+        self.committed_stock += quantity
+        self.save(update_fields=['committed_stock'])
+    
+    def uncommit_stock(self, quantity):
+        """Release reserved stock (on rejection/cancellation)"""
+        self.committed_stock = max(0, self.committed_stock - quantity)
+        self.save(update_fields=['committed_stock'])
+    
+    def deduct_stock(self, quantity):
+        """Deduct actual stock and release committed (on processing)"""
+        self.stock -= quantity
+        self.committed_stock = max(0, self.committed_stock - quantity)
+        self.save(update_fields=['stock', 'committed_stock'])
 
     class Meta:
         verbose_name = "Variant"
