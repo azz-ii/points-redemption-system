@@ -77,3 +77,12 @@ export interface ViewRedemptionStatusModalProps extends ModalBaseProps {
   item: RedemptionRequestItem | null;
   request: RedemptionRequest | null;
 }
+
+export interface WithdrawConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => Promise<void>;
+  isDark: boolean;
+  requestId: number;
+  isSubmitting: boolean;
+}

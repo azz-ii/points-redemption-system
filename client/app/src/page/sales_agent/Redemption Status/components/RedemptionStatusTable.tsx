@@ -14,6 +14,7 @@ type ExtendedItem = RedemptionRequestItem & {
 interface RedemptionStatusTableProps {
   items: ExtendedItem[];
   onViewItem: (item: RedemptionRequestItem & { request: RedemptionRequest }) => void;
+  onCancelRequest: (item: RedemptionRequestItem & { request: RedemptionRequest }) => void;
   isDark: boolean;
   loading: boolean;
   error: string | null;
@@ -22,12 +23,14 @@ interface RedemptionStatusTableProps {
 export function RedemptionStatusTable({
   items,
   onViewItem,
+  onCancelRequest,
   isDark,
   loading,
   error,
 }: RedemptionStatusTableProps) {
   const columns = createColumns({
     onViewItem,
+    onCancelRequest,
     isDark,
   });
 

@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, ArrowUpDown } from "lucide-react"
+import { Eye, ArrowUpDown, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { RedemptionRequestItem, RedemptionRequest } from "../modals/types"
 import { StatusChip } from "./StatusChip"
@@ -17,6 +17,7 @@ type ExtendedItem = RedemptionRequestItem & {
 
 interface ColumnContext {
   onViewItem: (item: ExtendedItem) => void
+  onCancelRequest: (item: ExtendedItem) => void
   isDark: boolean
 }
 
@@ -145,8 +146,27 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
     header: () => <div className="text-right"></div>,
     cell: ({ row }) => {
       const item = row.original
+      const normalizedStatus = item.status.toUpperCase()
+      const canCancel = 
+        normalizedStatus === "PENDING" &&
+        item.request.sales_approval_status !== "APPROVED"
+      
       return (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {canCancel && (
+            <button
+              onClick={() => context.onCancelRequest(item)}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                context.isDark
+                  ? "bg-red-600 text-white hover:bg-red-500"
+                  : "bg-red-600 text-white hover:bg-red-700"
+              }`}
+              aria-label="Cancel request"
+            >
+              <XCircle className="h-4 w-4" />
+              Cancel
+            </button>
+          )}
           <button
             onClick={() => context.onViewItem(item)}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${

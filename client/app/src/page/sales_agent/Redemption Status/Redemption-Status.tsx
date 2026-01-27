@@ -8,8 +8,9 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bell, Search, ShoppingCart } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ViewRedemptionStatusModal } from "./modals/ViewRedemptionStatusModal";
+import { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./modals/ViewRedemptionStatusModal";
 import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
+import { fetchWithCsrf } from "@/lib/csrf";
 import {
   RedemptionStatusTable,
   RedemptionStatusMobileCards,
@@ -30,6 +31,8 @@ export default function RedemptionStatus() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<RedemptionRequestItem | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RedemptionRequest | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(1); // Only for mobile view
   const [requests, setRequests] = useState<RedemptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,29 +40,29 @@ export default function RedemptionStatus() {
   const itemsPerPage = 7; // Only for mobile view
 
   // Fetch redemption requests from API
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch("/api/redemption-requests/", {
-          credentials: "include",
-        });
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch("/api/redemption-requests/", {
+        credentials: "include",
+      });
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch requests: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setRequests(data);
-      } catch (err) {
-        console.error("Error fetching redemption requests:", err);
-        setError(err instanceof Error ? err.message : "Failed to load requests");
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch requests: ${response.statusText}`);
       }
-    };
 
+      const data = await response.json();
+      setRequests(data);
+    } catch (err) {
+      console.error("Error fetching redemption requests:", err);
+      setError(err instanceof Error ? err.message : "Failed to load requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRequests();
   }, []);
 
@@ -101,6 +104,41 @@ export default function RedemptionStatus() {
   const closeDetails = () => {
     setSelectedItem(null);
     setSelectedRequest(null);
+  };
+
+  const openCancelModal = (item: RedemptionRequestItem & { request: RedemptionRequest }) => {
+    setSelectedItem(item);
+    setSelectedRequest(item.request);
+    setShowCancelModal(true);
+  };
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+  };
+
+  const handleWithdraw = async (reason: string) => {
+    if (!selectedRequest) return;
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetchWithCsrf(`/api/redemption-requests/${selectedRequest.id}/withdraw_request/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ withdrawal_reason: reason }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to cancel request");
+      }
+
+      closeCancelModal();
+      fetchRequests();
+    } catch (err) {
+      console.error("Failed to cancel request:", err);
+      alert(err instanceof Error ? err.message : "Failed to cancel request");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -174,6 +212,7 @@ export default function RedemptionStatus() {
             <RedemptionStatusTable
               items={flattenedItems}
               onViewItem={openDetails}
+              onCancelRequest={openCancelModal}
               isDark={isDark}
               loading={loading}
               error={error}
@@ -201,11 +240,23 @@ export default function RedemptionStatus() {
       />
 
       <ViewRedemptionStatusModal
-        isOpen={!!selectedItem}
+        isOpen={!!selectedItem && !showCancelModal}
         onClose={closeDetails}
         item={selectedItem}
         request={selectedRequest}
+        onRequestWithdrawn={fetchRequests}
       />
+
+      {showCancelModal && selectedRequest && (
+        <WithdrawConfirmationModal
+          isOpen={showCancelModal}
+          onClose={closeCancelModal}
+          onConfirm={handleWithdraw}
+          isDark={isDark}
+          requestId={selectedRequest.id}
+          isSubmitting={isSubmitting}
+        />
+      )}
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNavSales />

@@ -563,6 +563,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Cannot withdraw if sales approver has already approved
+        if redemption_request.sales_approval_status == 'APPROVED':
+            return Response(
+                {'error': 'Request cannot be withdrawn after sales approval'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # Withdrawal reason is required
         withdrawal_reason = request.data.get('withdrawal_reason')
         if not withdrawal_reason:
