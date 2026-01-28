@@ -30,7 +30,6 @@ import {
   type NewTeamData,
   type EditTeamData,
   type ApproverOption,
-  type MarketingAdminOption,
 } from "./modals";
 import { TeamsTable } from "./components";
 import type { Team } from "./components/columns";
@@ -61,16 +60,13 @@ function Teams() {
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
   const [approvers, setApprovers] = useState<ApproverOption[]>([]);
-  const [marketingAdmins, setMarketingAdmins] = useState<MarketingAdminOption[]>([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
     approver: null,
-    marketing_admin: null,
   });
   const [editTeam, setEditTeam] = useState<EditTeamData>({
     name: "",
     approver: null,
-    marketing_admin: null,
   });
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -203,9 +199,7 @@ function Teams() {
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.id.toString().includes(searchQuery) ||
       team.approver_details?.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.approver_details?.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.marketing_admin_details?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.marketing_admin_details?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      team.approver_details?.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.max(
@@ -283,7 +277,7 @@ function Teams() {
           type: "success",
         });
         setIsCreateModalOpen(false);
-        setNewTeam({ name: "", approver: null, marketing_admin: null });
+        setNewTeam({ name: "", approver: null });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
@@ -319,7 +313,6 @@ function Teams() {
     setEditTeam({
       name: team.name,
       approver: team.approver_details?.id ?? null,
-      marketing_admin: team.marketing_admin_details?.id ?? null,
     });
     setEditError("");
     setIsEditModalOpen(true);
@@ -371,7 +364,7 @@ function Teams() {
         });
         setIsEditModalOpen(false);
         setTeamToEdit(null);
-        setEditTeam({ name: "", approver: null, marketing_admin: null });
+        setEditTeam({ name: "", approver: null });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
@@ -682,16 +675,6 @@ function Teams() {
                           <span className="font-medium">Approver:</span>{" "}
                           {team.approver_details?.full_name || "No Approver"}
                         </p>
-                        <p
-                          className={`text-xs ${
-                            resolvedTheme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          <span className="font-medium">Marketing:</span>{" "}
-                          {team.marketing_admin_details?.full_name || "No Marketing Admin"}
-                        </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white text-center">
@@ -847,13 +830,12 @@ function Teams() {
         onClose={() => {
           console.log("DEBUG Teams: Closing create modal");
           setIsCreateModalOpen(false);
-          setNewTeam({ name: "", approver: null, marketing_admin: null });
+          setNewTeam({ name: "", approver: null });
           setCreateError("");
         }}
         newTeam={newTeam}
         setNewTeam={setNewTeam}
         approvers={approvers}
-        marketingAdmins={marketingAdmins}
         teams={teams}
         loading={createLoading}
         error={createError}
@@ -878,14 +860,13 @@ function Teams() {
           console.log("DEBUG Teams: Closing edit modal");
           setIsEditModalOpen(false);
           setTeamToEdit(null);
-          setEditTeam({ name: "", approver: null, marketing_admin: null });
+          setEditTeam({ name: "", approver: null });
           setEditError("");
         }}
         team={teamToEdit}
         editTeam={editTeam}
         setEditTeam={setEditTeam}
         approvers={approvers}
-        marketingAdmins={marketingAdmins}
         teams={teams}
         loading={editLoading}
         error={editError}

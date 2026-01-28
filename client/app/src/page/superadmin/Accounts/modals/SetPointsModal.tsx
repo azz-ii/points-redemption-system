@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
-import { X, Save } from "lucide-react";
+import { X, Save, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import type { Account } from "./types";
+import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
 
 interface SetPointsModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface SetPointsModalProps {
   accounts: Account[];
   loading: boolean;
   onSubmit: (updates: { id: number; points: number }[]) => void;
+  onBulkSubmit?: (pointsDelta: number, password: string) => void;
+  onResetAll?: (password: string) => void;
 }
 
 export function SetPointsModal({
@@ -17,25 +20,46 @@ export function SetPointsModal({
   accounts,
   loading,
   onSubmit,
+  onBulkSubmit,
+  onResetAll,
 }: SetPointsModalProps) {
   const { resolvedTheme } = useTheme();
   const [pointsToAdd, setPointsToAdd] = useState<Record<number, number>>({});
+  
+  // Advanced section state
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [bulkPointsDelta, setBulkPointsDelta] = useState<number>(0);
+  const [confirmBulkUpdate, setConfirmBulkUpdate] = useState(false);
 
-  // Filter to only show active and not banned users
-  const activeAccounts = accounts.filter(
-    (account) => account.is_activated && !account.is_banned
+  // Confirmation modal state
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmationType, setConfirmationType] = useState<"bulk" | "reset">("bulk");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Filter to only show active and not banned users (memoized to prevent unnecessary re-renders)
+  const activeAccounts = useMemo(
+    () => accounts.filter((account) => account.is_activated && !account.is_banned),
+    [accounts]
   );
 
   // Initialize points to add (delta) when modal opens
   useEffect(() => {
-    if (isOpen && activeAccounts.length > 0) {
+    if (isOpen) {
       const initialDelta: Record<number, number> = {};
       activeAccounts.forEach((account) => {
         initialDelta[account.id] = 0; // Start with 0 (no change)
       });
       setPointsToAdd(initialDelta);
+      // Reset confirmation modal
+      setShowConfirmModal(false);
+      setConfirmPassword("");
+      // Reset advanced section
+      setShowAdvanced(false);
+      setBulkPointsDelta(0);
+      setConfirmBulkUpdate(false);
     }
-  }, [isOpen, activeAccounts.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only reset when modal opens, not when activeAccounts changes
 
   const handlePointsChange = (accountId: number, value: string) => {
     // Allow empty string, minus sign, or valid numbers
@@ -61,16 +85,49 @@ export function SetPointsModal({
     onSubmit(updates);
   };
 
+  const handleBulkSubmit = () => {
+    if (!onBulkSubmit) return;
+    if (!confirmBulkUpdate) {
+      alert("Please confirm that you understand this will affect all active accounts.");
+      return;
+    }
+    if (bulkPointsDelta === 0) {
+      alert("Points delta cannot be 0.");
+      return;
+    }
+    // Open confirmation modal
+    setConfirmationType("bulk");
+    setShowConfirmModal(true);
+  };
+
+  const handleResetAll = () => {
+    if (!onResetAll) return;
+    // Open confirmation modal
+    setConfirmationType("reset");
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmAction = () => {
+    if (confirmationType === "bulk") {
+      onBulkSubmit?.(bulkPointsDelta, confirmPassword);
+    } else {
+      onResetAll?.(confirmPassword);
+    }
+    setShowConfirmModal(false);
+    setConfirmPassword("");
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div
-        className={`rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col ${
-          resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
-      >
-        {/* Header */}
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div
+          className={`rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col ${
+            resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
+          }`}
+        >
+          {/* Header */}
         <div
           className={`flex justify-between items-center p-6 border-b ${
             resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
@@ -216,6 +273,207 @@ export function SetPointsModal({
           )}
         </div>
 
+        {/* Advanced Section */}
+        {onBulkSubmit && (
+          <div
+            className={`mt-6 border rounded-lg ${
+              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+            }`}
+          >
+            {/* Advanced Section Header */}
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`w-full flex items-center justify-between p-4 transition-colors ${
+                resolvedTheme === "dark"
+                  ? "hover:bg-gray-700/50"
+                  : "hover:bg-gray-50"
+              }`}
+              disabled={loading}
+            >
+              <div className="flex items-center gap-2">
+                <AlertTriangle
+                  className={`h-5 w-5 ${
+                    resolvedTheme === "dark"
+                      ? "text-orange-400"
+                      : "text-orange-500"
+                  }`}
+                />
+                <span
+                  className={`font-semibold ${
+                    resolvedTheme === "dark" ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Advanced Options
+                </span>
+              </div>
+              {showAdvanced ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </button>
+
+            {/* Advanced Section Content */}
+            {showAdvanced && (
+              <div
+                className={`p-4 border-t ${
+                  resolvedTheme === "dark"
+                    ? "border-gray-700 bg-gray-700/30"
+                    : "border-gray-200 bg-gray-50"
+                }`}
+              >
+                {/* Warning Alert */}
+                <div
+                  className={`mb-4 p-3 rounded-lg border-l-4 ${
+                    resolvedTheme === "dark"
+                      ? "bg-orange-900/20 border-orange-500"
+                      : "bg-orange-50 border-orange-500"
+                  }`}
+                >
+                  <p
+                    className={`text-sm font-medium ${
+                      resolvedTheme === "dark"
+                        ? "text-orange-300"
+                        : "text-orange-800"
+                    }`}
+                  >
+                    ⚠️ Warning: Bulk Update
+                  </p>
+                  <p
+                    className={`text-sm mt-1 ${
+                      resolvedTheme === "dark"
+                        ? "text-orange-200"
+                        : "text-orange-700"
+                    }`}
+                  >
+                    This will apply the same points adjustment to all{" "}
+                    {activeAccounts.length} active account(s). This action cannot
+                    be undone.
+                  </p>
+                </div>
+
+                {/* Bulk Points Delta Input */}
+                <div className="mb-4">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-300"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    Points to Add/Subtract
+                  </label>
+                  <input
+                    type="number"
+                    value={bulkPointsDelta === 0 ? "" : bulkPointsDelta}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || value === "-") {
+                        setBulkPointsDelta(0);
+                      } else {
+                        const num = parseInt(value, 10);
+                        if (!isNaN(num)) {
+                          setBulkPointsDelta(num);
+                        }
+                      }
+                    }}
+                    placeholder="Enter positive or negative number"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                    }`}
+                    disabled={loading}
+                  />
+                  <p
+                    className={`text-xs mt-1 ${
+                      resolvedTheme === "dark"
+                        ? "text-gray-400"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    Positive numbers add points, negative numbers subtract
+                  </p>
+                </div>
+
+                {/* Confirmation Checkbox */}
+                <div className="mb-4">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={confirmBulkUpdate}
+                      onChange={(e) => setConfirmBulkUpdate(e.target.checked)}
+                      className="mt-1"
+                      disabled={loading}
+                    />
+                    <span
+                      className={`text-sm ${
+                        resolvedTheme === "dark"
+                          ? "text-gray-300"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      I understand this will affect all {activeAccounts.length}{" "}
+                      active account(s) and cannot be undone
+                    </span>
+                  </label>
+                </div>
+
+                {/* Bulk Submit Button */}
+                <button
+                  onClick={handleBulkSubmit}
+                  disabled={
+                    loading ||
+                    !confirmBulkUpdate ||
+                    bulkPointsDelta === 0
+                  }
+                  className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-orange-600 text-white hover:bg-orange-700"
+                      : "bg-orange-500 text-white hover:bg-orange-600"
+                  }`}
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  {loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All Accounts`}
+                </button>
+
+                {/* Reset All Button */}
+                {onResetAll && (
+                  <>
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className={`w-full border-t ${
+                          resolvedTheme === "dark" ? "border-gray-600" : "border-gray-300"
+                        }`}></div>
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className={`px-2 ${
+                          resolvedTheme === "dark" ? "bg-gray-700/30 text-gray-400" : "bg-gray-50 text-gray-500"
+                        }`}>
+                          Or
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={handleResetAll}
+                      disabled={loading}
+                      className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        resolvedTheme === "dark"
+                          ? "bg-red-600 text-white hover:bg-red-700"
+                          : "bg-red-500 text-white hover:bg-red-600"
+                      }`}
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                      {loading ? "Resetting..." : `Reset All ${activeAccounts.length} Accounts to 0 Points`}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Footer */}
         <div
           className={`flex justify-end gap-3 p-6 border-t ${
@@ -248,5 +506,23 @@ export function SetPointsModal({
         </div>
       </div>
     </div>
+
+    {/* Confirmation Modal */}
+    <SetPointsConfirmationModal
+      isOpen={showConfirmModal}
+      onClose={() => {
+        setShowConfirmModal(false);
+        setConfirmPassword("");
+      }}
+      onConfirm={handleConfirmAction}
+      confirmationType={confirmationType}
+      bulkPointsDelta={bulkPointsDelta}
+      activeAccountsCount={activeAccounts.length}
+      loading={loading}
+      password={confirmPassword}
+      onPasswordChange={setConfirmPassword}
+    />
+    </>
   );
 }
+

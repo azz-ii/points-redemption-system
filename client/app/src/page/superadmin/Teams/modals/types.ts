@@ -15,8 +15,6 @@ export interface Team {
   name: string;
   approver: number | null;
   approver_details?: ApproverDetails;
-  marketing_admin: number | null;
-  marketing_admin_details?: ApproverDetails;
   member_count?: number;
   created_at: string;
   updated_at: string;
@@ -47,22 +45,14 @@ export interface TeamDetail extends Team {
 export interface NewTeamData {
   name: string;
   approver: number | null;
-  marketing_admin: number | null;
 }
 
 export interface EditTeamData {
   name: string;
   approver: number | null;
-  marketing_admin: number | null;
 }
 
 export interface ApproverOption {
-  id: number;
-  full_name: string;
-  email: string;
-}
-
-export interface MarketingAdminOption {
   id: number;
   full_name: string;
   email: string;

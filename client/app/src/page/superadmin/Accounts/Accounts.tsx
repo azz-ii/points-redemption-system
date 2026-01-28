@@ -745,6 +745,94 @@ function Accounts() {
     }
   };
 
+  const handleBulkSetPoints = async (pointsDelta: number, password: string) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetchWithCsrf("/api/users/bulk_update_points/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          points_delta: pointsDelta,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      setShowSetPointsModal(false);
+
+      if (response.ok) {
+        setToast({
+          message: data.message || `Successfully updated points for ${data.updated_count} account(s)`,
+          type: "success",
+        });
+        // Refresh accounts list
+        fetchAccounts();
+      } else {
+        setToast({
+          message: data.error || "Failed to update points",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Error in bulk points update:", err);
+      setShowSetPointsModal(false);
+      setToast({
+        message: "Error updating points. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetAllPoints = async (password: string) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetchWithCsrf("/api/users/bulk_update_points/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reset_to_zero: true,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      setShowSetPointsModal(false);
+
+      if (response.ok) {
+        setToast({
+          message: data.message || `Successfully reset points for ${data.updated_count} account(s)`,
+          type: "success",
+        });
+        // Refresh accounts list
+        fetchAccounts();
+      } else {
+        setToast({
+          message: data.error || "Failed to reset points",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Error resetting points:", err);
+      setShowSetPointsModal(false);
+      setToast({
+        message: "Error resetting points. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredAccounts = accounts.filter(
     (account) =>
       account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1091,6 +1179,8 @@ function Accounts() {
         accounts={accounts}
         loading={loading}
         onSubmit={handleSetPoints}
+        onBulkSubmit={handleBulkSetPoints}
+        onResetAll={handleResetAllPoints}
       />
 
       {/* Toast Notification */}

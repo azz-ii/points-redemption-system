@@ -1,13 +1,12 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { useTheme } from "next-themes";
 import { X, AlertTriangle, UserPlus, Trash2, AlertCircle } from "lucide-react";
-import type { ModalBaseProps, NewTeamData, ApproverOption, MarketingAdminOption, Team, SalesAgentOption } from "./types";
+import type { ModalBaseProps, NewTeamData, ApproverOption, Team, SalesAgentOption } from "./types";
 
 interface CreateTeamModalProps extends ModalBaseProps {
   newTeam: NewTeamData;
   setNewTeam: Dispatch<SetStateAction<NewTeamData>>;
   approvers: ApproverOption[];
-  marketingAdmins: MarketingAdminOption[];
   teams: Team[];
   loading: boolean;
   error: string;
@@ -21,7 +20,6 @@ export function CreateTeamModal({
   newTeam,
   setNewTeam,
   approvers,
-  marketingAdmins,
   teams,
   loading,
   error,
@@ -31,8 +29,6 @@ export function CreateTeamModal({
   const { resolvedTheme } = useTheme();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingApproverId, setPendingApproverId] = useState<number | null>(null);
-  const [showMarketingConfirmation, setShowMarketingConfirmation] = useState(false);
-  const [pendingMarketingAdminId, setPendingMarketingAdminId] = useState<number | null>(null);
   const [availableSalesAgents, setAvailableSalesAgents] = useState<SalesAgentOption[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<SalesAgentOption[]>([]);
   const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
@@ -272,47 +268,6 @@ export function CreateTeamModal({
             </select>
           </div>
 
-          <div>
-            <label className="text-xs text-gray-500 mb-2 block">
-              Marketing Admin (Optional)
-            </label>
-            <select
-              value={newTeam.marketing_admin ?? ""}
-              onChange={(e) => {
-                const value = e.target.value ? Number(e.target.value) : null;
-                console.log("DEBUG CreateTeamModal: Marketing Admin changed", {
-                  rawValue: e.target.value,
-                  parsedValue: value,
-                });
-                
-                // Check if this marketing admin is already assigned to other teams
-                if (value) {
-                  const existingTeams = teams.filter(team => team.marketing_admin === value);
-                  if (existingTeams.length > 0) {
-                    console.log("DEBUG CreateTeamModal: Marketing Admin already assigned to", existingTeams.length, "team(s)");
-                    setPendingMarketingAdminId(value);
-                    setShowMarketingConfirmation(true);
-                    return;
-                  }
-                }
-                
-                setNewTeam({ ...newTeam, marketing_admin: value });
-              }}
-              className={`w-full px-3 py-2 rounded border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:outline-none focus:border-blue-500`}
-            >
-              <option value="">No Marketing Admin</option>
-              {marketingAdmins.map((admin) => (
-                <option key={admin.id} value={admin.id}>
-                  {admin.full_name} ({admin.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Members Section */}
           <div className="pt-4 border-t border-gray-700">
             <div className="flex justify-between items-center mb-3">
@@ -526,88 +481,6 @@ export function CreateTeamModal({
                   setNewTeam({ ...newTeam, approver: pendingApproverId });
                   setShowConfirmation(false);
                   setPendingApproverId(null);
-                }}
-                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
-              >
-                Yes, Assign Anyway
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Marketing Admin Reassignment Confirmation Dialog */}
-      {showMarketingConfirmation && pendingMarketingAdminId && (
-        <div className="fixed inset-0 flex items-center justify-center z-60 p-4 bg-black/50 backdrop-blur-sm">
-          <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
-          >
-            {/* Header */}
-            <div className="flex items-start gap-3 p-6 border-b border-gray-700">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold">Marketing Admin Already Assigned</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  This marketing admin is already assigned to{" "}
-                  {teams.filter(t => t.marketing_admin === pendingMarketingAdminId).length} other team(s)
-                </p>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-6">
-              <p className={resolvedTheme === "dark" ? "text-gray-300" : "text-gray-600"}>
-                {(() => {
-                  const admin = marketingAdmins.find(a => a.id === pendingMarketingAdminId);
-                  const assignedTeams = teams.filter(t => t.marketing_admin === pendingMarketingAdminId);
-                  return (
-                    <>
-                      <span className="font-semibold">{admin?.full_name}</span> is currently the marketing admin for:
-                      <ul className="mt-2 ml-4 space-y-1">
-                        {assignedTeams.map(team => (
-                          <li key={team.id} className="text-sm">
-                            • {team.name}
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="mt-3">
-                        Do you still want to assign them as the marketing admin for this new team?
-                      </p>
-                    </>
-                  );
-                })()}
-              </p>
-            </div>
-
-            {/* Footer */}
-            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  console.log("DEBUG CreateTeamModal: Marketing confirmation cancelled");
-                  setShowMarketingConfirmation(false);
-                  setPendingMarketingAdminId(null);
-                  setNewTeam({ ...newTeam, marketing_admin: null });
-                }}
-                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  console.log("DEBUG CreateTeamModal: Marketing confirmation accepted", pendingMarketingAdminId);
-                  setNewTeam({ ...newTeam, marketing_admin: pendingMarketingAdminId });
-                  setShowMarketingConfirmation(false);
-                  setPendingMarketingAdminId(null);
                 }}
                 className="px-6 py-3 rounded-lg font-semibold transition-colors bg-yellow-600 hover:bg-yellow-700 text-white"
               >

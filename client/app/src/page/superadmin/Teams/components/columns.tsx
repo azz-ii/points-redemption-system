@@ -16,14 +16,6 @@ export interface Team {
     email: string;
     position: string;
   };
-  marketing_admin: number | null;
-  marketing_admin_details?: {
-    id: number;
-    username: string;
-    full_name: string;
-    email: string;
-    position: string;
-  };
   member_count?: number;
   created_at: string;
   updated_at: string;
@@ -109,37 +101,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
     sortingFn: (rowA, rowB) => {
       const a = rowA.original.approver_details?.full_name || ""
       const b = rowB.original.approver_details?.full_name || ""
-      return a.localeCompare(b)
-    },
-  },
-  {
-    accessorKey: "marketing_admin_details",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Marketing Admin
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const marketingAdminDetails = row.getValue("marketing_admin_details") as Team["marketing_admin_details"]
-      return marketingAdminDetails ? (
-        <div>
-          <div className="font-medium">{marketingAdminDetails.full_name}</div>
-          <div className="text-xs text-muted-foreground">{marketingAdminDetails.email}</div>
-        </div>
-      ) : (
-        <span className="text-muted-foreground">No Marketing Admin</span>
-      )
-    },
-    sortingFn: (rowA, rowB) => {
-      const a = rowA.original.marketing_admin_details?.full_name || ""
-      const b = rowB.original.marketing_admin_details?.full_name || ""
       return a.localeCompare(b)
     },
   },

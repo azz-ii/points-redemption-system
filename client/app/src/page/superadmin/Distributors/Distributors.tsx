@@ -283,6 +283,108 @@ function Distributors() {
     }
   };
 
+  // Handle bulk set points (add/subtract to all distributors)
+  const handleBulkSetPoints = async (pointsDelta: number, password: string) => {
+    console.log("[DEBUG] handleBulkSetPoints called with delta:", pointsDelta);
+    try {
+      setSettingPoints(true);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.log("[DEBUG] Request timed out after 30 seconds");
+        controller.abort();
+      }, 30000);
+      
+      console.log("[DEBUG] Sending POST to /api/distributors/bulk_update_points/");
+      const response = await fetch("/api/distributors/bulk_update_points/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        signal: controller.signal,
+        body: JSON.stringify({
+          points_delta: pointsDelta,
+          password: password,
+        }),
+      });
+      clearTimeout(timeoutId);
+      
+      console.log("[DEBUG] Response received:", response.status);
+      const data = await response.json();
+      console.log("[DEBUG] Response data:", data);
+
+      if (!response.ok) {
+        alert(data.error || "Failed to update points");
+        return;
+      }
+
+      setShowSetPointsModal(false);
+      alert(`Successfully updated points for ${data.updated_count} distributor(s)`);
+      fetchDistributors();
+    } catch (err) {
+      console.error("[DEBUG] Error bulk updating points:", err);
+      if (err instanceof Error && err.name === "AbortError") {
+        alert("Request timed out. Please check if the server is running.");
+      } else {
+        alert("Error updating points");
+      }
+    } finally {
+      setSettingPoints(false);
+    }
+  };
+
+  // Handle reset all points to zero
+  const handleResetAllPoints = async (password: string) => {
+    console.log("[DEBUG] handleResetAllPoints called");
+    try {
+      setSettingPoints(true);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.log("[DEBUG] Reset request timed out after 30 seconds");
+        controller.abort();
+      }, 30000);
+      
+      console.log("[DEBUG] Sending POST for reset to /api/distributors/bulk_update_points/");
+      const response = await fetch("/api/distributors/bulk_update_points/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        signal: controller.signal,
+        body: JSON.stringify({
+          reset_to_zero: true,
+          password: password,
+        }),
+      });
+      clearTimeout(timeoutId);
+      
+      console.log("[DEBUG] Reset response received:", response.status);
+      const data = await response.json();
+      console.log("[DEBUG] Reset response data:", data);
+
+      if (!response.ok) {
+        alert(data.error || "Failed to reset points");
+        return;
+      }
+
+      setShowSetPointsModal(false);
+      alert(`Successfully reset points for ${data.updated_count} distributor(s)`);
+      fetchDistributors();
+    } catch (err) {
+      console.error("[DEBUG] Error resetting points:", err);
+      if (err instanceof Error && err.name === "AbortError") {
+        alert("Request timed out. Please check if the server is running.");
+      } else {
+        alert("Error resetting points");
+      }
+    } finally {
+      setSettingPoints(false);
+    }
+  };
+
   return (
     <div
       className={`flex flex-col min-h-screen md:flex-row ${
@@ -555,6 +657,8 @@ function Distributors() {
         distributors={distributors}
         loading={settingPoints}
         onSubmit={handleSetPoints}
+        onBulkSubmit={handleBulkSetPoints}
+        onResetAll={handleResetAllPoints}
       />
     </div>
   );
