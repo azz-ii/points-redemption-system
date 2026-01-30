@@ -2,21 +2,21 @@ from django.shortcuts import render
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.db.models import Q, Case, When, Value, CharField, F
+from django.db.models import Q, Case, When, Value, CharField, F, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from .models import CatalogueItem, Variant
-from .serializers import CatalogueItemSerializer, VariantSerializer, InventoryVariantSerializer, BulkApprovalTypeSerializer
+from .models import Product
+from .serializers import ProductSerializer, ProductInventorySerializer
 
 logger = logging.getLogger(__name__)
 
 
 class CataloguePagination(PageNumberPagination):
-    """Pagination for catalogue items"""
+    """Pagination for catalogue products"""
     page_size = 15
     page_size_query_param = 'page_size'
     max_page_size = 1000
@@ -28,270 +28,97 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return  # Skip CSRF check
 
 
-class CatalogueItemListCreateView(APIView):
-    """List all catalogue variants or create a new item with variant"""
+class ProductListCreateView(APIView):
+    """List all products or create a new product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def get(self, request):
-        """Get paginated list of catalogue variants with nested catalogue_item"""
-        # Get query parameters
+        """Get paginated list of products"""
         search = request.query_params.get('search', '').strip()
-        
-        # Start with all variants
-        variants = Variant.objects.select_related('catalogue_item').all()
-        
-        # Apply search filter if provided
+
+        products = Product.objects.all()
+
         if search:
-            variants = variants.filter(
-                Q(catalogue_item__item_name__icontains=search) |
+            products = products.filter(
+                Q(item_name__icontains=search) |
                 Q(item_code__icontains=search) |
-                Q(catalogue_item__legend__icontains=search) |
-                Q(catalogue_item__reward__icontains=search)
+                Q(legend__icontains=search) |
+                Q(category__icontains=search) |
+                Q(description__icontains=search)
             )
-        
-        # Order by catalogue_item and then by variant id for consistent pagination
-        variants = variants.order_by('catalogue_item__id', 'id')
-        
-        # Apply pagination
+
+        products = products.order_by('item_name', 'id')
+
         paginator = CataloguePagination()
-        paginated_variants = paginator.paginate_queryset(variants, request)
-        serializer = VariantSerializer(paginated_variants, many=True)
-        
-        # Return paginated response
+        paginated_products = paginator.paginate_queryset(products, request)
+        serializer = ProductSerializer(paginated_products, many=True)
+
         return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
-        """Create a new catalogue item and multiple variants"""
-        # Extract catalogue_item data (all fields except variants)
-        catalogue_data = {
-            'reward': request.data.get('reward'),
-            'item_name': request.data.get('item_name'),
-            'description': request.data.get('description'),
-            'purpose': request.data.get('purpose'),
-            'specifications': request.data.get('specifications'),
-            'legend': request.data.get('legend'),
-        }
-        variants_data = request.data.get('variants', [])
-        
-        if not variants_data:
-            return Response({
-                "error": "At least one variant is required"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Create catalogue item
-        catalogue_serializer = CatalogueItemSerializer(data=catalogue_data)
-        if catalogue_serializer.is_valid():
+        """Create a new product"""
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
             user = request.user if request.user.is_authenticated else None
-            catalogue_item = catalogue_serializer.save(added_by=user)
-            
-            # Create variants
-            created_variants = []
-            for variant_data in variants_data:
-                variant_data['catalogue_item_id'] = catalogue_item.id
-                variant_serializer = VariantSerializer(data=variant_data)
-                if variant_serializer.is_valid():
-                    variant = variant_serializer.save()
-                    created_variants.append(variant_serializer.data)
-                else:
-                    # If any variant fails, delete the catalogue_item and any created variants
-                    catalogue_item.delete()
-                    for v in created_variants:
-                        Variant.objects.get(id=v['id']).delete()
-                    return Response({
-                        "error": "Failed to create variants",
-                        "details": variant_serializer.errors
-                    }, status=status.HTTP_400_BAD_REQUEST)
-            
+            product = serializer.save(added_by=user)
             return Response({
-                "message": "Catalogue item and variants created successfully",
-                "item": {
-                    "catalogue_item": catalogue_serializer.data,
-                    "variants": created_variants
-                }
+                "message": "Product created successfully",
+                "product": ProductSerializer(product).data
             }, status=status.HTTP_201_CREATED)
-        else:
-            return Response({
-                "error": "Failed to create catalogue item",
-                "details": catalogue_serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CatalogueItemUpdateView(APIView):
-    """Update a catalogue item and its variants"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
-    
-    def put(self, request, catalogue_item_id):
-        """Update catalogue item and all its variants"""
-        try:
-            catalogue_item = CatalogueItem.objects.get(id=catalogue_item_id)
-        except CatalogueItem.DoesNotExist:
-            return Response({
-                "error": "Catalogue item not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        # Extract catalogue_item data
-        catalogue_data = {
-            'reward': request.data.get('reward'),
-            'item_name': request.data.get('item_name'),
-            'description': request.data.get('description'),
-            'purpose': request.data.get('purpose'),
-            'specifications': request.data.get('specifications'),
-            'legend': request.data.get('legend'),
-            'needs_driver': request.data.get('needs_driver'),
-        }
-        variants_data = request.data.get('variants', [])
-        
-        if not variants_data:
-            return Response({
-                "error": "At least one variant is required"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Update catalogue item
-        catalogue_serializer = CatalogueItemSerializer(catalogue_item, data=catalogue_data, partial=True)
-        if not catalogue_serializer.is_valid():
-            return Response({
-                "error": "Failed to update catalogue item",
-                "details": catalogue_serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        catalogue_serializer.save()
-        
-        # Get existing variant IDs
-        existing_variants = {v.id: v for v in catalogue_item.variants.all()}
-        updated_variant_ids = set()
-        
-        # Update or create variants
-        for variant_data in variants_data:
-            variant_id = variant_data.get('id')
-            
-            if variant_id and variant_id in existing_variants:
-                # Update existing variant
-                variant = existing_variants[variant_id]
-                variant_serializer = VariantSerializer(variant, data={
-                    'catalogue_item_id': catalogue_item.id,
-                    'item_code': variant_data.get('item_code'),
-                    'option_description': variant_data.get('option_description'),
-                    'points': variant_data.get('points'),
-                    'price': variant_data.get('price'),
-                    'image_url': variant_data.get('image_url'),
-                }, partial=True)
-                
-                if variant_serializer.is_valid():
-                    variant_serializer.save()
-                    updated_variant_ids.add(variant_id)
-                else:
-                    return Response({
-                        "error": "Failed to update variant",
-                        "details": variant_serializer.errors
-                    }, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # Create new variant
-                variant_data['catalogue_item_id'] = catalogue_item.id
-                variant_serializer = VariantSerializer(data=variant_data)
-                
-                if variant_serializer.is_valid():
-                    new_variant = variant_serializer.save()
-                    updated_variant_ids.add(new_variant.id)
-                else:
-                    return Response({
-                        "error": "Failed to create new variant",
-                        "details": variant_serializer.errors
-                    }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Delete variants that were not included in the update
-        for variant_id in existing_variants:
-            if variant_id not in updated_variant_ids:
-                existing_variants[variant_id].delete()
-        
         return Response({
-            "message": "Catalogue item and variants updated successfully",
-            "catalogue_item_id": catalogue_item.id
-        }, status=status.HTTP_200_OK)
+            "error": "Failed to create product",
+            "details": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CatalogueItemDetailView(APIView):
-    """Retrieve, update or delete a catalogue variant"""
+class ProductDetailView(APIView):
+    """Retrieve, update or delete a product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
-    def get(self, request, item_id):
-        """Get a specific variant's details"""
+    def get(self, request, product_id):
+        """Get a specific product's details"""
         try:
-            variant = Variant.objects.select_related('catalogue_item').get(id=item_id)
-            serializer = VariantSerializer(variant)
+            product = Product.objects.get(id=product_id)
+            serializer = ProductSerializer(product)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Variant.DoesNotExist:
+        except Product.DoesNotExist:
             return Response({
-                "error": "Variant not found"
+                "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
     
-    def put(self, request, item_id):
-        """Update a variant's details"""
+    def put(self, request, product_id):
+        """Update a product's details"""
         try:
-            variant = Variant.objects.select_related('catalogue_item').get(id=item_id)
-            catalogue_item = variant.catalogue_item
-            
-            # Update catalogue_item fields
-            catalogue_data = {
-                'reward': request.data.get('reward', catalogue_item.reward),
-                'item_name': request.data.get('item_name', catalogue_item.item_name),
-                'description': request.data.get('description', catalogue_item.description),
-                'purpose': request.data.get('purpose', catalogue_item.purpose),
-                'specifications': request.data.get('specifications', catalogue_item.specifications),
-                'legend': request.data.get('legend', catalogue_item.legend),
-            }
-            catalogue_serializer = CatalogueItemSerializer(catalogue_item, data=catalogue_data, partial=True)
-            
-            # Update variant fields
-            variant_data = {
-                'item_code': request.data.get('item_code', variant.item_code),
-                'option_description': request.data.get('option_description', variant.option_description),
-                'points': request.data.get('points', variant.points),
-                'price': request.data.get('price', variant.price),
-                'image_url': request.data.get('image_url', variant.image_url),
-            }
-            variant_serializer = VariantSerializer(variant, data=variant_data, partial=True)
-            
-            if catalogue_serializer.is_valid() and variant_serializer.is_valid():
-                catalogue_serializer.save()
-                variant_serializer.save()
+            product = Product.objects.get(id=product_id)
+            serializer = ProductSerializer(product, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
                 return Response({
-                    "message": "Variant updated successfully",
-                    "item": variant_serializer.data
+                    "message": "Product updated successfully",
+                    "product": serializer.data
                 }, status=status.HTTP_200_OK)
-            else:
-                errors = {}
-                if not catalogue_serializer.is_valid():
-                    errors.update(catalogue_serializer.errors)
-                if not variant_serializer.is_valid():
-                    errors.update(variant_serializer.errors)
-                return Response({
-                    "error": "Failed to update variant",
-                    "details": errors
-                }, status=status.HTTP_400_BAD_REQUEST)
-        except Variant.DoesNotExist:
             return Response({
-                "error": "Variant not found"
+                "error": "Failed to update product",
+                "details": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Product.DoesNotExist:
+            return Response({
+                "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
     
-    def delete(self, request, item_id):
-        """Delete a variant"""
+    def delete(self, request, product_id):
+        """Delete a product"""
         try:
-            variant = Variant.objects.get(id=item_id)
-            catalogue_item = variant.catalogue_item
-            variant.delete()
-            # Optionally, if no variants left, archive or delete catalogue_item
-            if not catalogue_item.variants.exists():
-                catalogue_item.is_archived = True
-                catalogue_item.save()
+            product = Product.objects.get(id=product_id)
+            product.delete()
             return Response({
-                "message": "Variant deleted successfully"
+                "message": "Product deleted successfully"
             }, status=status.HTTP_200_OK)
-        except Variant.DoesNotExist:
+        except Product.DoesNotExist:
             return Response({
-                "error": "Variant not found"
+                "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -303,224 +130,126 @@ class InventoryPagination(PageNumberPagination):
 
 
 class InventoryListView(APIView):
-    """List all inventory items (variants with stock info) or filter by status"""
+    """List all inventory items (products with stock info) or filter by status"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def get(self, request):
         """Get paginated list of inventory items with stock status"""
-        # Get query parameters
         search = request.query_params.get('search', '').strip()
         status_filter = request.query_params.get('status', '').strip()
         
-        # Start with all variants
-        variants = Variant.objects.select_related('catalogue_item').all()
+        products = Product.objects.all()
         
-        # Apply search filter if provided
         if search:
-            variants = variants.filter(
-                Q(catalogue_item__item_name__icontains=search) |
+            products = products.filter(
+                Q(item_name__icontains=search) |
                 Q(item_code__icontains=search) |
-                Q(catalogue_item__legend__icontains=search) |
-                Q(option_description__icontains=search)
+                Q(legend__icontains=search)
             )
         
         # Annotate with stock status for filtering
-        variants = variants.annotate(
+        products = products.annotate(
             stock_status=Case(
                 When(stock=0, then=Value('Out of Stock')),
-                When(stock__lte=F('reorder_level'), then=Value('Low Stock')),
+                When(stock__lte=10, then=Value('Low Stock')),
                 default=Value('In Stock'),
                 output_field=CharField(),
             )
         )
         
-        # Apply status filter if provided
         if status_filter:
             if status_filter.lower() == 'out of stock':
-                variants = variants.filter(stock=0)
+                products = products.filter(stock=0)
             elif status_filter.lower() == 'low stock':
-                variants = variants.filter(stock__gt=0, stock__lte=F('reorder_level'))
+                products = products.filter(stock__gt=0, stock__lte=10)
             elif status_filter.lower() == 'in stock':
-                variants = variants.filter(stock__gt=F('reorder_level'))
+                products = products.filter(stock__gt=10)
         
-        # Order by catalogue_item and then by variant id for consistent pagination
-        variants = variants.order_by('catalogue_item__item_name', 'id')
+        products = products.order_by('item_name', 'id')
         
-        # Apply pagination
         paginator = InventoryPagination()
-        paginated_variants = paginator.paginate_queryset(variants, request)
-        serializer = InventoryVariantSerializer(paginated_variants, many=True)
+        paginated_products = paginator.paginate_queryset(products, request)
+        serializer = ProductInventorySerializer(paginated_products, many=True)
         
-        # Return paginated response
         return paginator.get_paginated_response(serializer.data)
 
 
 class InventoryDetailView(APIView):
-    """Update stock for a specific variant"""
+    """Update stock for a specific product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
-    def get(self, request, variant_id):
-        """Get a specific variant's inventory details"""
+    def get(self, request, product_id):
+        """Get a specific product's inventory details"""
         try:
-            variant = Variant.objects.select_related('catalogue_item').get(id=variant_id)
-            serializer = InventoryVariantSerializer(variant)
+            product = Product.objects.get(id=product_id)
+            serializer = ProductInventorySerializer(product)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Variant.DoesNotExist:
+        except Product.DoesNotExist:
             return Response({
-                "error": "Variant not found"
+                "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
     
-    def patch(self, request, variant_id):
-        """Update stock and/or reorder level for a variant"""
+    def patch(self, request, product_id):
+        """Update stock and/or reorder level for a product"""
         try:
-            variant = Variant.objects.select_related('catalogue_item').get(id=variant_id)
+            product = Product.objects.get(id=product_id)
             
-            # Get the stock and reorder_level from request data
             stock = request.data.get('stock')
-            reorder_level = request.data.get('reorder_level')
             
-            # Update fields if provided
             if stock is not None:
                 try:
-                    variant.stock = int(stock)
+                    product.stock = int(stock)
                 except (ValueError, TypeError):
                     return Response({
                         "error": "Stock must be a valid integer"
                     }, status=status.HTTP_400_BAD_REQUEST)
             
-            if reorder_level is not None:
-                try:
-                    variant.reorder_level = int(reorder_level)
-                except (ValueError, TypeError):
-                    return Response({
-                        "error": "Reorder level must be a valid integer"
-                    }, status=status.HTTP_400_BAD_REQUEST)
+            product.save()
             
-            variant.save()
-            
-            serializer = InventoryVariantSerializer(variant)
+            serializer = ProductInventorySerializer(product)
             return Response({
                 "message": "Stock updated successfully",
                 "item": serializer.data
             }, status=status.HTTP_200_OK)
-        except Variant.DoesNotExist:
+        except Product.DoesNotExist:
             return Response({
-                "error": "Variant not found"
+                "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-class BulkApprovalTypeUpdateView(APIView):
-    """Bulk update approval_type for multiple catalogue items"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
-    
-    def post(self, request):
-        """
-        Bulk update approval_type for catalogue items.
-        
-        Can update by:
-        - item_ids: List of specific catalogue item IDs
-        - legend: All items with a specific legend (e.g., 'GIVEAWAY')
-        
-        Request body:
-        {
-            "item_ids": [1, 2, 3],  // OR
-            "legend": "GIVEAWAY",   // Update all items with this legend
-            "approval_type": "MARKETING"  // SALES, MARKETING, or BOTH
-        }
-        """
-        serializer = BulkApprovalTypeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({
-                "error": "Invalid request",
-                "details": serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        data = serializer.validated_data
-        approval_type = data['approval_type']
-        
-        # Build queryset based on provided filters
-        queryset = CatalogueItem.objects.all()
-        
-        if data.get('item_ids'):
-            queryset = queryset.filter(id__in=data['item_ids'])
-        elif data.get('legend'):
-            queryset = queryset.filter(legend=data['legend'])
-        
-        # Update all matching items
-        updated_count = queryset.update(approval_type=approval_type)
-        
-        return Response({
-            "message": f"Successfully updated {updated_count} catalogue item(s)",
-            "updated_count": updated_count,
-            "approval_type": approval_type
-        }, status=status.HTTP_200_OK)
-    
-    def get(self, request):
-        """
-        Get summary of approval types by legend.
-        Useful for seeing current distribution before bulk updates.
-        """
-        from django.db.models import Count
-        
-        # Get counts by legend and approval_type
-        summary = CatalogueItem.objects.values('legend', 'approval_type').annotate(
-            count=Count('id')
-        ).order_by('legend', 'approval_type')
-        
-        # Also get legend totals
-        legend_totals = CatalogueItem.objects.values('legend').annotate(
-            total=Count('id')
-        ).order_by('legend')
-        
-        return Response({
-            "by_legend_and_approval_type": list(summary),
-            "legend_totals": list(legend_totals)
-        }, status=status.HTTP_200_OK)
-
-
 class BulkAssignMarketingView(APIView):
-    """Bulk assign mktg_admin (Marketing user) to catalogue items"""
+    """Bulk assign mktg_admin (Marketing user) to products by legend"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def post(self, request):
         """
-        Bulk assign a Marketing user to catalogue items.
-        
-        Can assign by:
-        - item_ids: List of specific catalogue item IDs
-        - legend: All items with a specific legend (e.g., 'GIVEAWAY')
+        Bulk assign a Marketing user to all products with a specific legend.
         
         Request body:
         {
-            "item_ids": [1, 2, 3],  // OR
-            "legend": "GIVEAWAY",   // Assign to all items with this legend
-            "mktg_admin_id": 5      // User ID of the Marketing user (null to unassign)
+            "legend": "GIVEAWAY",      // Assign to all products with this legend
+            "mktg_admin_id": 5         // User ID of the Marketing user (null to unassign)
         }
         """
         from django.contrib.auth import get_user_model
-        from users.models import UserProfile
         
         User = get_user_model()
         
         mktg_admin_id = request.data.get('mktg_admin_id')
-        item_ids = request.data.get('item_ids')
         legend = request.data.get('legend')
         
-        if not item_ids and not legend:
+        if not legend:
             return Response({
-                "error": "Either 'item_ids' or 'legend' must be provided"
+                "error": "'legend' must be provided"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Validate mktg_admin_id if provided (can be null to unassign)
         mktg_admin = None
         if mktg_admin_id is not None:
             try:
                 mktg_admin = User.objects.get(id=mktg_admin_id)
-                # Verify user has Marketing or Admin position
                 profile = getattr(mktg_admin, 'profile', None)
                 if not profile or profile.position not in ['Marketing', 'Admin']:
                     return Response({
@@ -531,33 +260,20 @@ class BulkAssignMarketingView(APIView):
                     "error": "User not found"
                 }, status=status.HTTP_404_NOT_FOUND)
         
-        # Build queryset based on provided filters
-        queryset = CatalogueItem.objects.all()
-        
-        if item_ids:
-            queryset = queryset.filter(id__in=item_ids)
-        elif legend:
-            queryset = queryset.filter(legend=legend)
-        
-        # Update all matching items
+        # Update all products with the specified legend
+        queryset = Product.objects.filter(legend=legend)
         updated_count = queryset.update(mktg_admin=mktg_admin)
         
         action = "assigned" if mktg_admin else "unassigned"
         return Response({
-            "message": f"Successfully {action} {updated_count} catalogue item(s)",
+            "message": f"Successfully {action} {updated_count} product(s)",
             "updated_count": updated_count,
             "mktg_admin_id": mktg_admin_id
         }, status=status.HTTP_200_OK)
     
     def get(self, request):
-        """
-        Get summary of marketing assignments by legend.
-        Shows which Marketing users are assigned to which legends.
-        """
-        from django.db.models import Count
-        
-        # Get counts by legend and mktg_admin
-        summary = CatalogueItem.objects.values(
+        """Get summary of marketing assignments by legend."""
+        summary = Product.objects.values(
             'legend', 
             'mktg_admin__id', 
             'mktg_admin__username'
@@ -565,7 +281,6 @@ class BulkAssignMarketingView(APIView):
             count=Count('id')
         ).order_by('legend', 'mktg_admin__username')
         
-        # Format the response
         formatted = []
         for item in summary:
             formatted.append({
@@ -575,8 +290,7 @@ class BulkAssignMarketingView(APIView):
                 'item_count': item['count']
             })
         
-        # Get legend totals
-        legend_totals = CatalogueItem.objects.values('legend').annotate(
+        legend_totals = Product.objects.values('legend').annotate(
             total=Count('id'),
             assigned=Count('mktg_admin')
         ).order_by('legend')
@@ -585,3 +299,9 @@ class BulkAssignMarketingView(APIView):
             "assignments": formatted,
             "legend_totals": list(legend_totals)
         }, status=status.HTTP_200_OK)
+
+
+# Backward-compatible aliases for URL routing
+CatalogueItemListCreateView = ProductListCreateView
+CatalogueItemDetailView = ProductDetailView
+CatalogueItemUpdateView = ProductDetailView  # PUT to /catalogue/<id>/ now handles updates

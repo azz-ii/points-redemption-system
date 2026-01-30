@@ -173,24 +173,17 @@ export function ViewHistoryModal({
                   }`}
                 >
                   <div className="flex gap-3">
-                    {requestItem.image_url && (
-                      <img
-                        src={requestItem.image_url}
-                        alt={requestItem.catalogue_item_name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )}
                     <div className="flex-1">
                       <p className="font-semibold">
-                        {requestItem.catalogue_item_name}
+                        {requestItem.product_name}
                       </p>
-                      {requestItem.variant_option && (
+                      {requestItem.category && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {requestItem.variant_option}
+                          {requestItem.category}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Code: {requestItem.variant_code}
+                        Code: {requestItem.product_code}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Qty: {requestItem.quantity} × {requestItem.points_per_item} pts ={" "}

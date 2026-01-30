@@ -50,10 +50,10 @@ export interface RequestHistoryItem {
 
 export interface RequestHistoryItemVariant {
   id: number;
-  catalogue_item_id: number;
-  catalogue_item_name: string;
-  variant_id: number;
-  variant_name: string;
+  product_id: number;
+  product_name: string;
+  product_code: string;
+  category: string | null;
   quantity: number;
   points_per_item: number;
   total_points: number;

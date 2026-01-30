@@ -42,10 +42,10 @@ export function InventoryTable({
               Item Code
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold">
-              Variant
+              Category
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold">
-              Category
+              Legend
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold">
               Total Stock
@@ -55,9 +55,6 @@ export function InventoryTable({
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold">
               Available
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-semibold">
-              Reorder Level
             </th>
             <th className="px-6 py-4 text-left text-sm font-semibold">
               Status
@@ -74,7 +71,7 @@ export function InventoryTable({
         >
           {loading ? (
             <tr>
-              <td colSpan={10} className="px-6 py-32 text-center">
+              <td colSpan={9} className="px-6 py-32 text-center">
                 <div className="flex flex-col items-center justify-center gap-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                   <p className="text-gray-500">Loading inventory items...</p>
@@ -83,7 +80,7 @@ export function InventoryTable({
             </tr>
           ) : error ? (
             <tr>
-              <td colSpan={10} className="px-6 py-32 text-center">
+              <td colSpan={9} className="px-6 py-32 text-center">
                 <div className="flex flex-col items-center justify-center gap-4">
                   <p className="text-red-500">{error}</p>
                   <button
@@ -97,7 +94,7 @@ export function InventoryTable({
             </tr>
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={10} className="px-6 py-32 text-center">
+              <td colSpan={9} className="px-6 py-32 text-center">
                 <p className="text-gray-500">
                   {searchQuery
                     ? "No items match your search"
@@ -120,7 +117,7 @@ export function InventoryTable({
                   <span className="text-sm font-mono">{item.item_code}</span>
                 </td>
                 <td className="px-6 py-4 text-sm">
-                  {item.option_description || "-"}
+                  {item.category || "-"}
                 </td>
                 <td className="px-6 py-4">
                   <span
@@ -128,7 +125,7 @@ export function InventoryTable({
                       item.legend
                     )}`}
                   >
-                    {item.legend}
+                    {item.legend.replace("_", " ")}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -136,8 +133,6 @@ export function InventoryTable({
                     className={`text-sm font-semibold ${
                       item.stock === 0
                         ? "text-red-500"
-                        : item.stock <= item.reorder_level
-                        ? "text-yellow-500"
                         : ""
                     }`}
                   >
@@ -154,15 +149,12 @@ export function InventoryTable({
                     className={`text-sm font-semibold ${
                       item.available_stock === 0
                         ? "text-red-500"
-                        : item.available_stock <= item.reorder_level
-                        ? "text-yellow-500"
                         : "text-green-500"
                     }`}
                   >
                     {item.available_stock}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm">{item.reorder_level}</td>
                 <td className="px-6 py-4">
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(

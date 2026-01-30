@@ -2,16 +2,13 @@ export type { ModalBaseProps } from "@/components/modals";
 
 export interface RequestItemVariant {
   id: number;
-  variant: number;
-  variant_name: string;
-  variant_code: string;
-  variant_option: string | null;
-  catalogue_item_name: string;
-  catalogue_item_legend?: string;
+  product: number;
+  product_name: string;
+  product_code: string;
+  category: string | null;
   quantity: number;
   points_per_item: number;
   total_points: number;
-  image_url: string | null;
   item_processed_by?: number | null;
   item_processed_by_name?: string | null;
   item_processed_at?: string | null;

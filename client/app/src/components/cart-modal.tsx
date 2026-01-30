@@ -257,13 +257,13 @@ export default function CartModal({
       items: items.map(item => {
         if (item.pricing_type === 'FIXED') {
           return {
-            variant_id: item.id,
+            product_id: item.id,
             quantity: item.quantity,
           };
         } else {
           // Dynamic pricing: send dynamic_quantity instead of quantity
           return {
-            variant_id: item.id,
+            product_id: item.id,
             dynamic_quantity: item.dynamic_quantity || 0,
           };
         }

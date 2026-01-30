@@ -85,13 +85,13 @@ export function InventoryMobileCards({
               >
                 {item.item_code}
               </p>
-              {item.option_description && (
+              {item.category && (
                 <p
                   className={`text-xs mt-1 ${
                     resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  {item.option_description}
+                  {item.category}
                 </p>
               )}
             </div>
@@ -100,12 +100,12 @@ export function InventoryMobileCards({
                 item.legend
               )}`}
             >
-              {item.legend}
+              {item.legend.replace("_", " ")}
             </span>
           </div>
 
           {/* Stock Info */}
-          <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+          <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
             <div
               className={`p-2 rounded ${
                 resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
@@ -122,8 +122,6 @@ export function InventoryMobileCards({
                 className={`font-bold text-lg ${
                   item.stock === 0
                     ? "text-red-500"
-                    : item.stock <= item.reorder_level
-                    ? "text-yellow-500"
                     : ""
                 }`}
               >
@@ -160,27 +158,11 @@ export function InventoryMobileCards({
                 className={`font-bold text-lg ${
                   item.available_stock === 0
                     ? "text-red-500"
-                    : item.available_stock <= item.reorder_level
-                    ? "text-yellow-500"
                     : "text-green-500"
                 }`}
               >
                 {item.available_stock}
               </p>
-            </div>
-            <div
-              className={`p-2 rounded ${
-                resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
-              }`}
-            >
-              <span
-                className={
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }
-              >
-                Reorder
-              </span>
-              <p className="font-bold text-lg">{item.reorder_level}</p>
             </div>
           </div>
 

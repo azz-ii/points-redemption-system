@@ -4,18 +4,15 @@ export type StockStatus = "In Stock" | "Low Stock" | "Out of Stock";
 
 export interface InventoryItem {
   id: number;
-  catalogue_item_id: number;
-  item_name: string;
   item_code: string;
-  option_description: string | null;
+  item_name: string;
+  category: string;
   points: string;
   price: string;
-  image_url: string | null;
   stock: number;
   committed_stock: number;
   available_stock: number;
-  reorder_level: number;
-  legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
   stock_status: StockStatus;
 }
 
@@ -34,14 +31,18 @@ export const getStatusColor = (status: StockStatus): string => {
 
 export const getLegendColor = (legend: string): string => {
   switch (legend) {
-    case "COLLATERAL":
-      return "bg-red-500 text-white";
     case "GIVEAWAY":
       return "bg-blue-500 text-white";
-    case "ASSET":
+    case "MERCH":
+      return "bg-purple-500 text-white";
+    case "PROMO":
+      return "bg-orange-500 text-white";
+    case "AD_MATERIALS":
+      return "bg-red-500 text-white";
+    case "POINT_OF_SALE":
       return "bg-yellow-500 text-black";
-    case "BENEFIT":
-      return "bg-green-500 text-white";
+    case "OTHERS":
+      return "bg-gray-500 text-white";
     default:
       return "bg-gray-500 text-white";
   }

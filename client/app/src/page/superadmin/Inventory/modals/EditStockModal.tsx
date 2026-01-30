@@ -5,7 +5,6 @@ import { getStatusColor, getLegendColor } from "./types";
 
 interface EditStockData {
   stock: string;
-  reorder_level: string;
 }
 
 interface EditStockModalProps extends ModalBaseProps {
@@ -34,9 +33,8 @@ export function EditStockModal({
   // Calculate preview status based on current form values
   const getPreviewStatus = () => {
     const stock = parseInt(data.stock) || 0;
-    const reorderLevel = parseInt(data.reorder_level) || 0;
     if (stock === 0) return "Out of Stock";
-    if (stock <= reorderLevel) return "Low Stock";
+    if (stock <= 10) return "Low Stock"; // Default low stock threshold
     return "In Stock";
   };
 
@@ -114,16 +112,16 @@ export function EditStockModal({
                     item.legend
                   )}`}
                 >
-                  {item.legend}
+                  {item.legend.replace("_", " ")}
                 </span>
               </div>
-              {item.option_description && (
+              {item.category && (
                 <p
                   className={`text-sm ${
                     resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  Variant: {item.option_description}
+                  Category: {item.category}
                 </p>
               )}
             </div>
@@ -159,8 +157,6 @@ export function EditStockModal({
                     className={`font-semibold ${
                       item.available_stock === 0
                         ? "text-red-500"
-                        : item.available_stock <= item.reorder_level
-                        ? "text-yellow-500"
                         : "text-green-500"
                     }`}
                   >
@@ -198,34 +194,6 @@ export function EditStockModal({
               />
               <p className="text-xs text-gray-500 mt-1">
                 Ensure total stock ≥ committed stock ({item.committed_stock}) to avoid issues
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="reorder-level-input"
-                className="text-xs text-gray-500 mb-2 block"
-              >
-                Reorder Level *
-              </label>
-              <input
-                id="reorder-level-input"
-                type="number"
-                value={data.reorder_level}
-                onChange={(e) =>
-                  setData({ ...data, reorder_level: e.target.value })
-                }
-                min="0"
-                className={`w-full px-4 py-3 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
-                placeholder="Enter reorder level"
-                aria-required="true"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Low stock alert triggers when available stock falls to this level
               </p>
             </div>
           </div>

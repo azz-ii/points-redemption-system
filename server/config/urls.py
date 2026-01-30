@@ -29,7 +29,7 @@ from views import (
     ActivateAccountView,
 )
 from users.views import UserListCreateView, UserDetailView, CurrentUserView, UserExportView, BulkUpdatePointsView
-from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView, CatalogueItemUpdateView, InventoryListView, InventoryDetailView, BulkApprovalTypeUpdateView, BulkAssignMarketingView
+from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -47,15 +47,13 @@ urlpatterns = [
     path('api/users/bulk_update_points/', BulkUpdatePointsView.as_view(), name='bulk_update_points'),
     path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     path('api/users/me/', CurrentUserView.as_view(), name='current_user'),
-    # Catalogue Management API
-    path('api/catalogue/', CatalogueItemListCreateView.as_view(), name='catalogue_list_create'),
-    path('api/catalogue/item/<int:catalogue_item_id>/', CatalogueItemUpdateView.as_view(), name='catalogue_item_update'),
-    path('api/catalogue/<int:item_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
-    path('api/catalogue/bulk-approval-type/', BulkApprovalTypeUpdateView.as_view(), name='bulk_approval_type'),
+    # Catalogue/Product Management API
+    path('api/catalogue/', ProductListCreateView.as_view(), name='catalogue_list_create'),
+    path('api/catalogue/<int:product_id>/', ProductDetailView.as_view(), name='catalogue_detail'),
     path('api/catalogue/bulk-assign-marketing/', BulkAssignMarketingView.as_view(), name='bulk_assign_marketing'),
     # Inventory Management API
     path('api/inventory/', InventoryListView.as_view(), name='inventory_list'),
-    path('api/inventory/<int:variant_id>/', InventoryDetailView.as_view(), name='inventory_detail'),
+    path('api/inventory/<int:product_id>/', InventoryDetailView.as_view(), name='inventory_detail'),
     # Distributor Management API
     path('', include('distributers.urls')),
     # Customer Management API

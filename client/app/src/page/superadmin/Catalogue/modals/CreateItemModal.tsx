@@ -1,28 +1,22 @@
 import { useTheme } from "next-themes";
-import { X, Plus, Trash2 } from "lucide-react";
-import type { ModalBaseProps, User } from "./types";
+import { X } from "lucide-react";
+import type { ModalBaseProps } from "./types";
 import { PRICING_TYPE_OPTIONS } from "./types";
 
 interface NewItem {
-  reward: string;
+  item_code: string;
   item_name: string;
+  category: string;
   description: string;
   purpose: string;
   specifications: string;
-  legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
-  needs_driver: boolean;
-  mktg_admin: number | null;
-  approver: number | null;
-  variants: Array<{
-    item_code: string;
-    option_description: string;
-    points: string;
-    price: string;
-    image_url: string;
-    pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
-    points_multiplier: string;
-    price_multiplier: string;
-  }>;
+  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
+  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  points: string;
+  price: string;
+  stock: string;
+  points_multiplier: string;
+  price_multiplier: string;
 }
 
 interface CreateItemModalProps extends ModalBaseProps {
@@ -31,10 +25,6 @@ interface CreateItemModalProps extends ModalBaseProps {
   creating: boolean;
   error: string | null;
   onConfirm: () => void;
-  onAddVariant: () => void;
-  onRemoveVariant: (index: number) => void;
-  onUpdateVariant: (index: number, field: string, value: string) => void;
-  users: User[];
 }
 
 export function CreateItemModal({
@@ -45,10 +35,6 @@ export function CreateItemModal({
   creating,
   error,
   onConfirm,
-  onAddVariant,
-  onRemoveVariant,
-  onUpdateVariant,
-  users,
 }: CreateItemModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -72,14 +58,14 @@ export function CreateItemModal({
         <div className="flex justify-between items-center p-8">
           <div>
             <h2 id="create-item-title" className="text-xl font-semibold">
-              Add Catalogue Item
+              Add Catalogue Product
             </h2>
             <p
               className={`text-sm ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              Create a new redeemable item with variants
+              Create a new product in the catalogue
             </p>
           </div>
           <button
@@ -102,29 +88,30 @@ export function CreateItemModal({
 
           {/* Shared Fields */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Item Details</h3>
+            <h3 className="text-lg font-medium">Product Information</h3>
 
-            {/* Reward */}
+            {/* Item Code */}
             <div>
               <label
-                htmlFor="reward-input"
+                htmlFor="item-code-input"
                 className="block text-sm font-medium mb-2"
               >
-                Reward Category (Optional)
+                Item Code *
               </label>
               <input
-                id="reward-input"
+                id="item-code-input"
                 type="text"
-                value={newItem.reward}
+                value={newItem.item_code}
                 onChange={(e) =>
-                  setNewItem({ ...newItem, reward: e.target.value })
+                  setNewItem({ ...newItem, item_code: e.target.value })
                 }
                 className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500 text-base`}
-                placeholder="e.g., PLATINUM, GOLD, SILVER"
+                placeholder="e.g., MC0001"
+                aria-required="true"
               />
             </div>
 
@@ -150,6 +137,30 @@ export function CreateItemModal({
                 } focus:outline-none focus:border-blue-500 text-base`}
                 placeholder="e.g., Platinum Polo Shirt"
                 aria-required="true"
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label
+                htmlFor="category-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Category
+              </label>
+              <input
+                id="category-input"
+                type="text"
+                value={newItem.category}
+                onChange={(e) =>
+                  setNewItem({ ...newItem, category: e.target.value })
+                }
+                className={`w-full px-4 py-3 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500 text-base`}
+                placeholder="e.g., Size M, Color Blue"
               />
             </div>
 
@@ -231,7 +242,7 @@ export function CreateItemModal({
                 htmlFor="legend-select"
                 className="block text-sm font-medium mb-2"
               >
-                Category *
+                Legend *
               </label>
               <select
                 id="legend-select"
@@ -240,10 +251,12 @@ export function CreateItemModal({
                   setNewItem({
                     ...newItem,
                     legend: e.target.value as
-                      | "COLLATERAL"
                       | "GIVEAWAY"
-                      | "ASSET"
-                      | "BENEFIT",
+                      | "MERCH"
+                      | "PROMO"
+                      | "AD_MATERIALS"
+                      | "POINT_OF_SALE"
+                      | "OTHERS",
                   })
                 }
                 className={`w-full px-4 py-3 rounded border ${
@@ -253,28 +266,30 @@ export function CreateItemModal({
                 } focus:outline-none focus:border-blue-500 text-base`}
                 aria-required="true"
               >
-                <option value="COLLATERAL">Collateral (Red)</option>
-                <option value="GIVEAWAY">Giveaway (Blue)</option>
-                <option value="ASSET">Asset (Yellow)</option>
-                <option value="BENEFIT">Benefit (Green)</option>
+                <option value="GIVEAWAY">Giveaway</option>
+                <option value="MERCH">Merch</option>
+                <option value="PROMO">Promo</option>
+                <option value="AD_MATERIALS">Ad Materials</option>
+                <option value="POINT_OF_SALE">Point of Sale</option>
+                <option value="OTHERS">Others</option>
               </select>
             </div>
 
-            {/* Marketing Admin */}
+            {/* Pricing Type */}
             <div>
               <label
-                htmlFor="mktg-admin-select"
+                htmlFor="pricing-type-select"
                 className="block text-sm font-medium mb-2"
               >
-                Marketing Admin (Optional)
+                Pricing Type *
               </label>
               <select
-                id="mktg-admin-select"
-                value={newItem.mktg_admin || ""}
+                id="pricing-type-select"
+                value={newItem.pricing_type}
                 onChange={(e) =>
                   setNewItem({
                     ...newItem,
-                    mktg_admin: e.target.value ? parseInt(e.target.value) : null,
+                    pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
                 className={`w-full px-4 py-3 rounded border ${
@@ -282,271 +297,119 @@ export function CreateItemModal({
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
                 } focus:outline-none focus:border-blue-500 text-base`}
+                aria-required="true"
               >
-                <option value="">Select Marketing Admin</option>
-                {users
-                  .filter((u) => u.position === "Marketing")
-                  .map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.full_name || user.username}
-                    </option>
-                  ))}
+                {PRICING_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label} - {option.description}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Needs Driver */}
+            {/* Points */}
             <div>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={newItem.needs_driver}
-                  onChange={(e) =>
-                    setNewItem({ ...newItem, needs_driver: e.target.checked })
-                  }
-                  className={`w-5 h-5 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600"
-                      : "bg-white border-gray-300"
-                  } focus:ring-blue-500 accent-blue-600`}
-                />
-                <span className="text-sm font-medium">Needs Driver</span>
+              <label
+                htmlFor="points-input"
+                className="block text-sm font-medium mb-2"
+              >
+                {newItem.pricing_type === "FIXED"
+                  ? "Points Required *"
+                  : "Points Multiplier *"}
               </label>
-              <p
-                className={`text-xs mt-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                Check if this item requires a driver for delivery/service
-              </p>
-            </div>
-          </div>
-
-          {/* Variants */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">Variants</h3>
-              <button
-                type="button"
-                onClick={onAddVariant}
-                className="px-4 py-3 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
-              >
-                <Plus className="h-4 w-4 inline mr-1" />
-                Add Variant
-              </button>
-            </div>
-
-            {newItem.variants.map((variant, index) => (
-              <div
-                key={index}
-                className={`border rounded p-4 space-y-4 ${
+              <input
+                id="points-input"
+                type="text"
+                value={newItem.pricing_type === "FIXED" ? newItem.points : newItem.points_multiplier}
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    [newItem.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
+                  })
+                }
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
-                    ? "border-gray-700"
-                    : "border-gray-200"
-                }`}
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500 text-base`}
+                placeholder={
+                  newItem.pricing_type === "FIXED"
+                    ? "e.g., 500"
+                    : "e.g., 25 (for 25 points per unit)"
+                }
+                aria-required="true"
+              />
+              {newItem.pricing_type !== "FIXED" && (
+                <p
+                  className={`text-xs mt-1 ${
+                    resolvedTheme === "dark"
+                      ? "text-gray-400"
+                      : "text-gray-500"
+                  }`}
+                >
+                  Points will be calculated: {newItem.pricing_type === "PER_SQFT" ? "sq ft" : newItem.pricing_type === "PER_INVOICE" ? "invoice amount" : newItem.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
+                </p>
+              )}
+            </div>
+
+            {/* Price */}
+            <div>
+              <label
+                htmlFor="price-input"
+                className="block text-sm font-medium mb-2"
               >
-                <div className="flex justify-between items-center">
-                  <h4 className="text-md font-medium">Variant {index + 1}</h4>
-                  {newItem.variants.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => onRemoveVariant(index)}
-                      className="px-2 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
+                {newItem.pricing_type === "FIXED"
+                  ? "Price *"
+                  : "Price Multiplier *"}
+              </label>
+              <input
+                id="price-input"
+                type="text"
+                value={newItem.pricing_type === "FIXED" ? newItem.price : newItem.price_multiplier}
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    [newItem.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
+                  })
+                }
+                className={`w-full px-4 py-3 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500 text-base`}
+                placeholder={
+                  newItem.pricing_type === "FIXED"
+                    ? "e.g., ₱130.00"
+                    : "e.g., 25.00 (for ₱25.00 per unit)"
+                }
+                aria-required="true"
+              />
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Item Code */}
-                  <div>
-                    <label
-                      htmlFor={`item-code-${index}`}
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Item Code *
-                    </label>
-                    <input
-                      id={`item-code-${index}`}
-                      type="text"
-                      value={variant.item_code}
-                      onChange={(e) =>
-                        onUpdateVariant(index, "item_code", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 rounded border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-600 text-white"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:outline-none focus:border-blue-500 text-base`}
-                      placeholder="e.g., MC0001"
-                      aria-required="true"
-                    />
-                  </div>
-
-                  {/* Option Description */}
-                  <div>
-                    <label
-                      htmlFor={`option-desc-${index}`}
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Variant Description (Optional)
-                    </label>
-                    <input
-                      id={`option-desc-${index}`}
-                      type="text"
-                      value={variant.option_description}
-                      onChange={(e) =>
-                        onUpdateVariant(
-                          index,
-                          "option_description",
-                          e.target.value
-                        )
-                      }
-                      className={`w-full px-4 py-3 rounded border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-600 text-white"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:outline-none focus:border-blue-500 text-base`}
-                      placeholder="e.g., Size S, Color Blue"
-                    />
-                  </div>
-
-                  {/* Pricing Type */}
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor={`pricing-type-${index}`}
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Pricing Type *
-                    </label>
-                    <select
-                      id={`pricing-type-${index}`}
-                      value={variant.pricing_type}
-                      onChange={(e) =>
-                        onUpdateVariant(index, "pricing_type", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 rounded border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-600 text-white"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:outline-none focus:border-blue-500 text-base`}
-                      aria-required="true"
-                    >
-                      {PRICING_TYPE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label} - {option.description}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Points - Label changes based on pricing type */}
-                  <div>
-                    <label
-                      htmlFor={`points-${index}`}
-                      className="block text-sm font-medium mb-2"
-                    >
-                      {variant.pricing_type === "FIXED"
-                        ? "Points Required *"
-                        : "Points Multiplier *"}
-                    </label>
-                    <input
-                      id={`points-${index}`}
-                      type="text"
-                      value={variant.pricing_type === "FIXED" ? variant.points : variant.points_multiplier}
-                      onChange={(e) =>
-                        onUpdateVariant(
-                          index,
-                          variant.pricing_type === "FIXED" ? "points" : "points_multiplier",
-                          e.target.value
-                        )
-                      }
-                      className={`w-full px-4 py-3 rounded border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-600 text-white"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:outline-none focus:border-blue-500 text-base`}
-                      placeholder={
-                        variant.pricing_type === "FIXED"
-                          ? "e.g., 500"
-                          : "e.g., 25 (for 25 points per unit)"
-                      }
-                      aria-required="true"
-                    />
-                    {variant.pricing_type !== "FIXED" && (
-                      <p
-                        className={`text-xs mt-1 ${
-                          resolvedTheme === "dark"
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        Points will be calculated: {variant.pricing_type === "PER_SQFT" ? "sq ft" : variant.pricing_type === "PER_INVOICE" ? "invoice amount" : variant.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Price - Label changes based on pricing type */}
-                  <div>
-                    <label
-                      htmlFor={`price-${index}`}
-                      className="block text-sm font-medium mb-2"
-                    >
-                      {variant.pricing_type === "FIXED"
-                        ? "Price *"
-                        : "Price Multiplier *"}
-                    </label>
-                    <input
-                      id={`price-${index}`}
-                      type="text"
-                      value={variant.pricing_type === "FIXED" ? variant.price : variant.price_multiplier}
-                      onChange={(e) =>
-                        onUpdateVariant(
-                          index,
-                          variant.pricing_type === "FIXED" ? "price" : "price_multiplier",
-                          e.target.value
-                        )
-                      }
-                      className={`w-full px-4 py-3 rounded border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-600 text-white"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:outline-none focus:border-blue-500 text-base`}
-                      placeholder={
-                        variant.pricing_type === "FIXED"
-                          ? "e.g., ₱130.00"
-                          : "e.g., 25.00 (for ₱25.00 per unit)"
-                      }
-                      aria-required="true"
-                    />
-                  </div>
-
-                  {/* Image URL */}
-                  <div className="md:col-span-2">
-                    <label
-                      htmlFor={`image-url-${index}`}
-                      className="block text-sm font-medium mb-2"
-                    >
-                      Image URL (Optional)
-                    </label>
-                    <input
-                      id={`image-url-${index}`}
-                      type="url"
-                      value={variant.image_url}
-                      onChange={(e) =>
-                        onUpdateVariant(index, "image_url", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 rounded border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-800 border-gray-600 text-white"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:outline-none focus:border-blue-500 text-base`}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+            {/* Stock */}
+            <div>
+              <label
+                htmlFor="stock-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Initial Stock
+              </label>
+              <input
+                id="stock-input"
+                type="number"
+                min="0"
+                value={newItem.stock}
+                onChange={(e) =>
+                  setNewItem({ ...newItem, stock: e.target.value })
+                }
+                className={`w-full px-4 py-3 rounded border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-800 border-gray-600 text-white"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:outline-none focus:border-blue-500 text-base`}
+                placeholder="e.g., 100"
+              />
+            </div>
           </div>
         </div>
 
@@ -568,7 +431,7 @@ export function CreateItemModal({
             disabled={creating}
             className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50"
           >
-            {creating ? "Creating..." : "Create Item"}
+            {creating ? "Creating..." : "Create Product"}
           </button>
         </div>
       </div>

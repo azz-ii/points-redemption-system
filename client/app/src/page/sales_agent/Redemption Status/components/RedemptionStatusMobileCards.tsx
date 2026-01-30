@@ -65,15 +65,15 @@ export function RedemptionStatusMobileCards({
                   isDark ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                Request #{item.requestId} • {item.variant_code}
+                Request #{item.requestId} • {item.product_code}
               </p>
-              <h3 className="text-base font-semibold mb-0.5">{item.catalogue_item_name}</h3>
+              <h3 className="text-base font-semibold mb-0.5">{item.product_name}</h3>
               <p
                 className={`text-sm mb-3 ${
                   isDark ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                {item.variant_option || "Standard"} • Qty: {item.quantity} • {item.total_points} pts
+                {item.category || "Standard"} • Qty: {item.quantity} • {item.total_points} pts
               </p>
               <div className="flex justify-between items-center mb-3">
                 <StatusChip status={item.status} processingStatus={item.processing_status} isDark={isDark} />
@@ -92,7 +92,7 @@ export function RedemptionStatusMobileCards({
                     ? "bg-white text-gray-900 hover:bg-gray-200"
                     : "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
                 }`}
-                aria-label={`View details for ${item.catalogue_item_name}`}
+                aria-label={`View details for ${item.product_name}`}
               >
                 View Details
               </button>

@@ -27,18 +27,15 @@ import {
 
 interface ApiInventoryItem {
   id: number;
-  catalogue_item_id: number;
   item_name: string;
   item_code: string;
-  option_description: string | null;
+  category: string;
   points: string;
   price: string;
-  image_url: string | null;
   stock: number;
   committed_stock: number;
   available_stock: number;
-  reorder_level: number;
-  legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
+  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
   stock_status: string;
 }
 
@@ -66,7 +63,7 @@ function Inventory() {
   const [viewTarget, setViewTarget] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
-  const [editData, setEditData] = useState({ stock: "", reorder_level: "" });
+  const [editData, setEditData] = useState({ stock: "" });
   const [updating, setUpdating] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -106,17 +103,14 @@ function Inventory() {
       const inventoryItems: InventoryItem[] = (data.results || []).map(
         (item: ApiInventoryItem) => ({
           id: item.id,
-          catalogue_item_id: item.catalogue_item_id,
           item_name: item.item_name,
           item_code: item.item_code,
-          option_description: item.option_description,
+          category: item.category,
           points: item.points,
           price: item.price,
-          image_url: item.image_url,
           stock: item.stock,
           committed_stock: item.committed_stock,
           available_stock: item.available_stock,
-          reorder_level: item.reorder_level,
           legend: item.legend,
           stock_status: item.stock_status as StockStatus,
         })
@@ -159,7 +153,6 @@ function Inventory() {
     setEditTarget(item);
     setEditData({
       stock: item.stock.toString(),
-      reorder_level: item.reorder_level.toString(),
     });
     setEditError(null);
     setShowEditModal(true);
@@ -173,14 +166,9 @@ function Inventory() {
 
     // Validation
     const stock = parseInt(editData.stock);
-    const reorderLevel = parseInt(editData.reorder_level);
 
     if (isNaN(stock) || stock < 0) {
       setEditError("Stock must be a valid non-negative number");
-      return;
-    }
-    if (isNaN(reorderLevel) || reorderLevel < 0) {
-      setEditError("Reorder level must be a valid non-negative number");
       return;
     }
 
@@ -188,7 +176,6 @@ function Inventory() {
       setUpdating(true);
       const payload = {
         stock: stock,
-        reorder_level: reorderLevel,
       };
       console.log(
         "[Inventory] Updating stock (PATCH) id=",
@@ -329,7 +316,7 @@ function Inventory() {
             >
               <Search className="absolute left-3 h-5 w-5 text-gray-500" />
               <Input
-                placeholder="Search by name, code, variant......"
+                placeholder="Search by name, code, category......"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`pl-10 w-80 ${

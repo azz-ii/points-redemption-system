@@ -42,7 +42,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         if not profile:
             # Super admin without profile sees only approved requests
-            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__variant')
+            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__product')
         
         # Sales Agent - team-scoped access
         if profile.position == 'Sales Agent':
@@ -52,9 +52,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 # Show requests that belong to their team
                 return RedemptionRequest.objects.filter(
                     team=membership.team
-                ).distinct().prefetch_related('items', 'items__variant')
+                ).distinct().prefetch_related('items', 'items__product')
             # If not in a team, only see own requests
-            return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__variant')
+            return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__product')
         
         # Approver - team-scoped access
         elif profile.position == 'Approver':
@@ -77,7 +77,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 # Filter by team field OR by requesting user being in managed teams (fallback for NULL team)
                 queryset = RedemptionRequest.objects.filter(
                     Q(team__in=managed_teams) | Q(team__isnull=True, requested_by_id__in=team_member_ids)
-                ).distinct().prefetch_related('items', 'items__variant')
+                ).distinct().prefetch_related('items', 'items__product')
                 
                 logger.info(f"🔍 [APPROVER DEBUG] Total requests found: {queryset.count()}")
                 logger.info(f"🔍 [APPROVER DEBUG] Request details: {list(queryset.values('id', 'team_id', 'requested_by_id', 'status'))}")
@@ -87,24 +87,22 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             logger.warning(f"⚠️ [APPROVER DEBUG] User {user.username} is not managing any teams!")
             return RedemptionRequest.objects.none()
         
-        # Marketing - only see APPROVED requests where they have assigned items
+        # Marketing - see only APPROVED requests with items assigned to them
         elif profile.position == 'Marketing':
-            # Get requests where this user is the mktg_admin for at least one item
             return RedemptionRequest.objects.filter(
                 status='APPROVED',
-                items__variant__catalogue_item__mktg_admin=user
-            ).distinct().prefetch_related('items', 'items__variant', 'items__variant__catalogue_item')
+                items__product__mktg_admin=user
+            ).distinct().prefetch_related('items', 'items__product')
         
-        # Admin - see APPROVED requests where they have assigned items (like Marketing)
+        # Admin - see all APPROVED requests for processing
         elif profile.position == 'Admin':
             return RedemptionRequest.objects.filter(
-                status='APPROVED',
-                items__variant__catalogue_item__mktg_admin=user
-            ).distinct().prefetch_related('items', 'items__variant', 'items__variant__catalogue_item')
+                status='APPROVED'
+            ).distinct().prefetch_related('items', 'items__product')
         
         # Other administrative support positions - global access to approved requests
         elif profile.position in ['Reception', 'Executive Assistant']:
-            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__variant')
+            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__product')
         
         # Unspecified positions - no access
         else:
@@ -709,9 +707,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         Should only be called within a transaction.
         """
         for item in redemption_request.items.all():
-            variant = item.variant
-            variant.uncommit_stock(item.quantity)
-            logger.info(f"Uncommitted {item.quantity} units of {variant.item_code}")
+            product = item.product
+            product.uncommit_stock(item.quantity)
+            logger.info(f"Uncommitted {item.quantity} units of {product.item_code}")
 
     @action(detail=True, methods=['post'])
     def sales_approve(self, request, pk=None):
@@ -878,143 +876,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
-    def marketing_approve(self, request, pk=None):
-        """Approve a redemption request from the marketing track"""
-        redemption_request = self.get_object()
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Permission check: Only Marketing position can use this endpoint
-        if not profile or profile.position != 'Marketing':
-            return Response(
-                {'error': 'Permission denied: Only Marketing users can approve via marketing track'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Check if this request requires marketing approval
-        if not redemption_request.requires_marketing_approval:
-            return Response(
-                {'error': 'This request does not require marketing approval'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check if already actioned
-        if redemption_request.marketing_approval_status != ApprovalStatusChoice.PENDING:
-            return Response(
-                {'error': f'Marketing approval is already {redemption_request.marketing_approval_status}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            with transaction.atomic():
-                # Update marketing approval track
-                redemption_request.marketing_approval_status = ApprovalStatusChoice.APPROVED
-                redemption_request.marketing_approved_by = user
-                redemption_request.marketing_approval_date = timezone.now()
-                
-                if 'remarks' in request.data:
-                    redemption_request.remarks = request.data['remarks']
-                
-                redemption_request.save()
-                
-                # Update overall status
-                redemption_request.update_overall_status()
-                
-                # If fully approved now, deduct points and stock
-                if redemption_request.is_fully_approved():
-                    success, error_response = self._deduct_points_and_stock(redemption_request)
-                    if not success:
-                        raise Exception(error_response.data.get('detail', 'Failed to deduct points/stock'))
-                    
-                    redemption_request.reviewed_by = user
-                    redemption_request.date_reviewed = timezone.now()
-                    redemption_request.save()
-                    
-                    # Send approval emails
-                    logger.info(f"Request #{redemption_request.id} fully approved, sending notifications...")
-                    send_request_approved_email(
-                        request_obj=redemption_request,
-                        distributor=redemption_request.get_requested_for_entity(),
-                        approved_by=user
-                    )
-                    send_approved_request_notification_to_admin(
-                        request_obj=redemption_request,
-                        distributor=redemption_request.get_requested_for_entity(),
-                        approved_by=user
-                    )
-                else:
-                    logger.info(f"Request #{redemption_request.id} marketing approved, awaiting sales approval")
-        
-        except Exception as e:
-            logger.error(f"Failed to process marketing approval for request #{redemption_request.id}: {str(e)}")
-            return Response(
-                {'error': 'Failed to process approval', 'detail': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-        serializer = self.get_serializer(redemption_request)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def marketing_reject(self, request, pk=None):
-        """Reject a redemption request from the marketing track"""
-        redemption_request = self.get_object()
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Permission check
-        if not profile or profile.position != 'Marketing':
-            return Response(
-                {'error': 'Permission denied: Only Marketing users can reject via marketing track'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Check if this request requires marketing approval
-        if not redemption_request.requires_marketing_approval:
-            return Response(
-                {'error': 'This request does not require marketing approval'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check if already actioned
-        if redemption_request.marketing_approval_status != ApprovalStatusChoice.PENDING:
-            return Response(
-                {'error': f'Marketing approval is already {redemption_request.marketing_approval_status}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Rejection reason required
-        rejection_reason = request.data.get('rejection_reason')
-        if not rejection_reason:
-            return Response(
-                {'error': 'Rejection reason is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Update marketing rejection
-        redemption_request.marketing_approval_status = ApprovalStatusChoice.REJECTED
-        redemption_request.marketing_approved_by = user
-        redemption_request.marketing_approval_date = timezone.now()
-        redemption_request.marketing_rejection_reason = rejection_reason
-        
-        if 'remarks' in request.data:
-            redemption_request.remarks = request.data['remarks']
-        
-        redemption_request.save()
-        redemption_request.update_overall_status()
-        
-        # Send rejection email
-        logger.info(f"Request #{redemption_request.id} marketing rejected, sending notification...")
-        send_request_rejected_email(
-            request_obj=redemption_request,
-            distributor=redemption_request.get_requested_for_entity(),
-            rejected_by=user
-        )
-        
-        serializer = self.get_serializer(redemption_request)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
     def mark_items_processed(self, request, pk=None):
         """
         Marketing or Admin user marks their assigned items as processed.
@@ -1070,9 +931,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     item.save()
                     
                     # Deduct actual stock and release committed stock
-                    variant = item.variant
-                    variant.deduct_stock(item.quantity)
-                    logger.info(f"Deducted {item.quantity} units from {variant.item_code} stock (processed by {user.username})")
+                    product = item.product
+                    product.deduct_stock(item.quantity)
+                    logger.info(f"Deducted {item.quantity} units from {product.item_code} stock (processed by {user.username})")
                     
                     processed_count += 1
                 
@@ -1218,7 +1079,7 @@ class DashboardRedemptionRequestsView(APIView):
             # Get all redemption requests with related data
             all_requests = RedemptionRequest.objects.all().prefetch_related(
                 'items',
-                'items__variant',
+                'items__product',
                 'requested_by',
                 'requested_for',
                 'reviewed_by',
@@ -1394,8 +1255,7 @@ class ProcessedRequestHistoryView(APIView):
             processing_status='PROCESSED'
         ).prefetch_related(
             'items',
-            'items__variant',
-            'items__variant__catalogue_item'
+            'items__product'
         ).order_by('-date_requested')
         
         serializer = RedemptionRequestSerializer(processed_requests, many=True)
@@ -1424,8 +1284,7 @@ class MarketingHistoryView(APIView):
             items__item_processed_by=user
         ).distinct().prefetch_related(
             'items',
-            'items__variant',
-            'items__variant__catalogue_item'
+            'items__product'
         ).order_by('-date_requested')
         
         serializer = RedemptionRequestSerializer(processed_requests, many=True)

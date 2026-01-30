@@ -76,15 +76,15 @@ export function DataTable<TData, TValue>({
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = String(filterValue).toLowerCase()
       const requestId = String(row.getValue("requestId") || "").toLowerCase()
-      const variantCode = String(row.getValue("variant_code") || "").toLowerCase()
-      const itemName = String(row.getValue("catalogue_item_name") || "").toLowerCase()
-      const variant = String(row.getValue("variant_option") || "").toLowerCase()
+      const productCode = String(row.getValue("product_code") || "").toLowerCase()
+      const itemName = String(row.getValue("product_name") || "").toLowerCase()
+      const category = String(row.getValue("category") || "").toLowerCase()
       const status = String((row.original as any).status_display || "").toLowerCase()
       
       return requestId.includes(searchValue) || 
-             variantCode.includes(searchValue) || 
+             productCode.includes(searchValue) || 
              itemName.includes(searchValue) ||
-             variant.includes(searchValue) ||
+             category.includes(searchValue) ||
              status.includes(searchValue)
     },
     initialState: {

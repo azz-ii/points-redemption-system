@@ -152,7 +152,7 @@ export function ViewRedemptionStatusModal({
 
   if (!isOpen || !item || !request) return null;
 
-  const imageUrl = item.image_url || "/images/tshirt.png";
+  const imageUrl = "/images/tshirt.png";
   const normalizedStatus = request.status.toUpperCase();
 
   // Check if request can be withdrawn:
@@ -273,7 +273,7 @@ export function ViewRedemptionStatusModal({
                 )}
                 <img
                   src={imageUrl}
-                  alt={`${item.catalogue_item_name}: ${item.variant_option || ""}`}
+                  alt={item.product_name}
                   onLoad={() => setImageLoading(false)}
                   onError={(e) => {
                     e.currentTarget.src = "/images/tshirt.png";
@@ -298,12 +298,12 @@ export function ViewRedemptionStatusModal({
                       isDark ? "text-green-400" : "text-green-600"
                     }`}
                   >
-                    {item.variant_code}
+                    {item.product_code}
                   </p>
-                  <h4 className="text-xl font-bold">{item.catalogue_item_name}</h4>
-                  {item.variant_option && (
+                  <h4 className="text-xl font-bold">{item.product_name}</h4>
+                  {item.category && (
                     <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                      {item.variant_option}
+                      {item.category}
                     </p>
                   )}
                 </div>

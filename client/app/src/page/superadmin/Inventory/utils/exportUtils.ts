@@ -24,10 +24,11 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
   { key: "id", label: "ID", enabled: true },
   { key: "item_name", label: "Item Name", enabled: true },
   { key: "item_code", label: "Item Code", enabled: true },
-  { key: "option_description", label: "Variant", enabled: true },
-  { key: "legend", label: "Category", enabled: true },
+  { key: "category", label: "Category", enabled: true },
+  { key: "legend", label: "Legend", enabled: true },
   { key: "stock", label: "Stock", enabled: true },
-  { key: "reorder_level", label: "Reorder Level", enabled: true },
+  { key: "committed_stock", label: "Committed", enabled: true },
+  { key: "available_stock", label: "Available", enabled: true },
   { key: "stock_status", label: "Status", enabled: true },
   { key: "points", label: "Points", enabled: false },
   { key: "price", label: "Price", enabled: false },
@@ -41,10 +42,12 @@ function getCellValue(item: InventoryItem, key: ExportColumn["key"]): string | n
     case "legend": {
       // Format legend to be more readable
       const legendMap: Record<string, string> = {
-        COLLATERAL: "Collateral",
         GIVEAWAY: "Giveaway",
-        ASSET: "Asset",
-        BENEFIT: "Benefit",
+        MERCH: "Merch",
+        PROMO: "Promo",
+        AD_MATERIALS: "Ad Materials",
+        POINT_OF_SALE: "Point of Sale",
+        OTHERS: "Others",
       };
       return legendMap[item.legend] || item.legend;
     }
@@ -218,14 +221,16 @@ export function generateExcel(items: InventoryItem[], options: ExportOptions): v
         return { wch: 30 };
       case "item_code":
         return { wch: 12 };
-      case "option_description":
+      case "category":
         return { wch: 20 };
       case "legend":
-        return { wch: 12 };
+        return { wch: 14 };
       case "stock":
         return { wch: 8 };
-      case "reorder_level":
-        return { wch: 14 };
+      case "committed_stock":
+        return { wch: 12 };
+      case "available_stock":
+        return { wch: 12 };
       case "stock_status":
         return { wch: 14 };
       case "points":

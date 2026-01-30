@@ -176,10 +176,10 @@ export function ViewRedemptionModal({
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold">{it.catalogue_item_name}</p>
-                      {it.variant_name && (
+                      <p className="font-semibold">{it.product_name}</p>
+                      {it.product_code && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {it.variant_name}
+                          {it.product_code}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

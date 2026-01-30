@@ -1,15 +1,15 @@
-import type { CatalogueVariant } from "../modals";
+import type { Product } from "../modals";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 export interface ExportColumn {
-  key: keyof CatalogueVariant | "formatted_date" | "status";
+  key: keyof Product | "formatted_date" | "status";
   label: string;
   enabled: boolean;
 }
 
-export type SortField = keyof CatalogueVariant | "formatted_date" | "status";
+export type SortField = keyof Product | "formatted_date" | "status";
 export type SortDirection = "asc" | "desc";
 
 export interface ExportOptions {
@@ -24,19 +24,19 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
   { key: "id", label: "ID", enabled: true },
   { key: "item_name", label: "Item Name", enabled: true },
   { key: "item_code", label: "Item Code", enabled: true },
-  { key: "legend", label: "Category", enabled: true },
-  { key: "reward", label: "Reward", enabled: true },
-  { key: "option_description", label: "Variant", enabled: true },
+  { key: "legend", label: "Legend", enabled: true },
+  { key: "category", label: "Category", enabled: true },
   { key: "points", label: "Points", enabled: true },
   { key: "price", label: "Price", enabled: true },
+  { key: "stock", label: "Stock", enabled: true },
+  { key: "available_stock", label: "Available Stock", enabled: true },
+  { key: "committed_stock", label: "Committed Stock", enabled: false },
   { key: "status", label: "Status", enabled: true },
   { key: "formatted_date", label: "Date Added", enabled: true },
   { key: "pricing_type", label: "Pricing Type", enabled: false },
   { key: "description", label: "Description", enabled: false },
   { key: "purpose", label: "Purpose", enabled: false },
   { key: "specifications", label: "Specifications", enabled: false },
-  { key: "needs_driver", label: "Needs Driver", enabled: false },
-  { key: "mktg_admin_name", label: "Marketing Admin", enabled: false },
 ];
 
 /**
@@ -54,21 +54,21 @@ function formatDate(dateString?: string): string {
 /**
  * Get cell value for export
  */
-function getCellValue(item: CatalogueVariant, key: ExportColumn["key"]): string | number {
+function getCellValue(item: Product, key: ExportColumn["key"]): string | number {
   switch (key) {
     case "formatted_date":
       return formatDate(item.date_added);
     case "status":
       return item.is_archived ? "Archived" : "Active";
-    case "needs_driver":
-      return item.needs_driver ? "Yes" : "No";
     case "legend": {
       // Format legend to be more readable
       const legendMap: Record<string, string> = {
-        COLLATERAL: "Collateral",
         GIVEAWAY: "Giveaway",
-        ASSET: "Asset",
-        BENEFIT: "Benefit",
+        MERCH: "Merch",
+        PROMO: "Promo",
+        AD_MATERIALS: "Ad Materials",
+        POINT_OF_SALE: "Point of Sale",
+        OTHERS: "Others",
       };
       return legendMap[item.legend] || item.legend;
     }
@@ -84,7 +84,7 @@ function getCellValue(item: CatalogueVariant, key: ExportColumn["key"]): string 
       return pricingMap[item.pricing_type || "FIXED"] || item.pricing_type || "Fixed";
     }
     default: {
-      const value = item[key as keyof CatalogueVariant];
+      const value = item[key as keyof Product];
       if (typeof value === "boolean") {
         return value ? "Yes" : "No";
       }
@@ -94,13 +94,13 @@ function getCellValue(item: CatalogueVariant, key: ExportColumn["key"]): string 
 }
 
 /**
- * Sort catalogue items by field and direction
+ * Sort products by field and direction
  */
 function sortItems(
-  items: CatalogueVariant[],
+  items: Product[],
   sortField: SortField,
   sortDirection: SortDirection
-): CatalogueVariant[] {
+): Product[] {
   return [...items].sort((a, b) => {
     let aVal: string | number | undefined;
     let bVal: string | number | undefined;
@@ -112,8 +112,8 @@ function sortItems(
       aVal = a.is_archived ? "Archived" : "Active";
       bVal = b.is_archived ? "Archived" : "Active";
     } else {
-      aVal = a[sortField as keyof CatalogueVariant] as string | number | undefined;
-      bVal = b[sortField as keyof CatalogueVariant] as string | number | undefined;
+      aVal = a[sortField as keyof Product] as string | number | undefined;
+      bVal = b[sortField as keyof Product] as string | number | undefined;
     }
 
     // Handle undefined/null values
@@ -139,10 +139,10 @@ function sortItems(
 }
 
 /**
- * Generate PDF export of catalogue items
+ * Generate PDF export of products
  */
-export function generatePDF(items: CatalogueVariant[], options: ExportOptions): void {
-  const { columns, sortField, sortDirection, filename = "catalogue_export" } = options;
+export function generatePDF(items: Product[], options: ExportOptions): void {
+  const { columns, sortField, sortDirection, filename = "products_export" } = options;
   const enabledColumns = columns.filter((col) => col.enabled);
 
   if (enabledColumns.length === 0) {
@@ -166,7 +166,7 @@ export function generatePDF(items: CatalogueVariant[], options: ExportOptions): 
   });
 
   // Add title
-  const title = "Catalogue Export";
+  const title = "Products Export";
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -204,7 +204,7 @@ export function generatePDF(items: CatalogueVariant[], options: ExportOptions): 
     margin: { top: 42, right: 10, bottom: 20, left: 10 },
     columnStyles: enabledColumns.reduce((acc, col, idx) => {
       // Limit description/purpose/specs column widths
-      if (["description", "purpose", "specifications"].includes(col.key)) {
+      if (["description", "purpose", "specifications"].includes(String(col.key))) {
         acc[idx] = { cellWidth: 40 };
       }
       return acc;
@@ -216,10 +216,10 @@ export function generatePDF(items: CatalogueVariant[], options: ExportOptions): 
 }
 
 /**
- * Generate Excel export of catalogue items
+ * Generate Excel export of products
  */
-export function generateExcel(items: CatalogueVariant[], options: ExportOptions): void {
-  const { columns, sortField, sortDirection, filename = "catalogue_export" } = options;
+export function generateExcel(items: Product[], options: ExportOptions): void {
+  const { columns, sortField, sortDirection, filename = "products_export" } = options;
   const enabledColumns = columns.filter((col) => col.enabled);
 
   if (enabledColumns.length === 0) {
@@ -249,14 +249,16 @@ export function generateExcel(items: CatalogueVariant[], options: ExportOptions)
       case "item_code":
         return { wch: 12 };
       case "legend":
-        return { wch: 12 };
-      case "reward":
         return { wch: 15 };
-      case "option_description":
+      case "category":
         return { wch: 20 };
       case "points":
         return { wch: 10 };
       case "price":
+        return { wch: 12 };
+      case "stock":
+      case "available_stock":
+      case "committed_stock":
         return { wch: 12 };
       case "status":
         return { wch: 10 };
@@ -268,8 +270,6 @@ export function generateExcel(items: CatalogueVariant[], options: ExportOptions)
       case "purpose":
       case "specifications":
         return { wch: 40 };
-      case "mktg_admin_name":
-        return { wch: 20 };
       default:
         return { wch: 15 };
     }
@@ -278,11 +278,11 @@ export function generateExcel(items: CatalogueVariant[], options: ExportOptions)
 
   // Create workbook and add worksheet
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Catalogue");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
 
   // Add metadata sheet
   const metaData = [
-    ["Catalogue Export Report"],
+    ["Products Export Report"],
     [],
     ["Generated On", new Date().toLocaleString()],
     ["Total Records", sortedItems.length],
@@ -298,12 +298,15 @@ export function generateExcel(items: CatalogueVariant[], options: ExportOptions)
 }
 
 /**
- * Export catalogue items using specified options
+ * Export products using specified options
  */
-export function exportCatalogueItems(items: CatalogueVariant[], options: ExportOptions): void {
+export function exportProducts(items: Product[], options: ExportOptions): void {
   if (options.format === "pdf") {
     generatePDF(items, options);
   } else {
     generateExcel(items, options);
   }
 }
+
+// Backward compatibility alias
+export const exportCatalogueItems = exportProducts;

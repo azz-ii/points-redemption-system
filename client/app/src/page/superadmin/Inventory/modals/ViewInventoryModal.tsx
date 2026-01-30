@@ -102,31 +102,29 @@ export function ViewInventoryModal({
                 <label className="block text-sm font-medium mb-2">
                   Category
                 </label>
+                <input
+                  type="text"
+                  value={item.category}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Legend
+                </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
                     item.legend
                   )}`}
                 >
-                  {item.legend}
+                  {item.legend.replace("_", " ")}
                 </span>
               </div>
-              {item.option_description && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Variant
-                  </label>
-                  <input
-                    type="text"
-                    value={item.option_description}
-                    disabled
-                    className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-700 border-gray-600 text-gray-300"
-                        : "bg-gray-100 border-gray-300 text-gray-600"
-                    } focus:outline-none`}
-                  />
-                </div>
-              )}
             </div>
           </div>
 
@@ -216,24 +214,7 @@ export function ViewInventoryModal({
                   } ${
                     item.available_stock === 0
                       ? "text-red-500"
-                      : item.available_stock <= item.reorder_level
-                      ? "text-yellow-500"
                       : "text-green-500"
-                  } focus:outline-none`}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Reorder Level
-                </label>
-                <input
-                  type="text"
-                  value={item.reorder_level.toString()}
-                  disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
                   } focus:outline-none`}
                 />
               </div>

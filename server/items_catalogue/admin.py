@@ -1,48 +1,33 @@
 from django.contrib import admin
-from .models import CatalogueItem, Variant
+from .models import Product
 
 
-@admin.register(CatalogueItem)
-class CatalogueItemAdmin(admin.ModelAdmin):
-    list_display = ['item_name', 'legend', 'date_added', 'is_archived']
-    list_filter = ['legend', 'is_archived']
-    search_fields = ['item_name', 'description', 'reward']
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['item_code', 'item_name', 'category', 'legend', 'stock', 'committed_stock', 'points', 'price', 'is_archived']
+    list_filter = ['legend', 'is_archived', 'pricing_type']
+    search_fields = ['item_code', 'item_name', 'description', 'category']
+    list_editable = ['stock']
+    ordering = ['item_name', 'item_code']
     
     fieldsets = (
-        ('Basic Information', {
-            'fields': ('reward', 'item_name')
-        }),
-        ('Details', {
-            'fields': ('description', 'purpose', 'specifications')
+        ('Identification', {
+            'fields': ('item_code', 'item_name', 'category')
         }),
         ('Category', {
             'fields': ('legend',)
         }),
-        ('Archiving', {
-            'fields': ('is_archived', 'date_archived', 'archived_by')
-        }),
-    )
-
-
-@admin.register(Variant)
-class VariantAdmin(admin.ModelAdmin):
-    list_display = ['item_code', 'catalogue_item', 'option_description', 'stock', 'reorder_level', 'points', 'price']
-    list_filter = ['catalogue_item__legend']
-    search_fields = ['item_code', 'option_description', 'catalogue_item__item_name']
-    list_editable = ['stock', 'reorder_level']
-    ordering = ['catalogue_item__item_name', 'item_code']
-    
-    fieldsets = (
-        ('Product Information', {
-            'fields': ('catalogue_item', 'item_code', 'option_description')
+        ('Details', {
+            'fields': ('description', 'purpose', 'specifications')
         }),
         ('Pricing', {
-            'fields': ('points', 'price')
+            'fields': ('points', 'price', 'pricing_type')
         }),
         ('Inventory', {
-            'fields': ('stock', 'reorder_level')
+            'fields': ('stock', 'committed_stock')
         }),
-        ('Media', {
-            'fields': ('image_url',)
+        ('Audit', {
+            'fields': ('date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by')
         }),
     )
+

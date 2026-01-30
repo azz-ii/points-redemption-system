@@ -100,9 +100,9 @@ export function MarkAsProcessedModal({
                       : "bg-gray-50 border-gray-200"
                   }`}
                 >
-                  <p className="font-medium">{it.catalogue_item_name}</p>
+                  <p className="font-medium">{it.product_name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Qty: {it.quantity} • {it.variant_code}
+                    Qty: {it.quantity} • {it.product_code}
                   </p>
                 </div>
               ))}

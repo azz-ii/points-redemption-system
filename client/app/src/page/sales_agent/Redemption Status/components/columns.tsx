@@ -41,10 +41,10 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
     ),
   },
   {
-    accessorKey: "variant_code",
+    accessorKey: "product_code",
     header: "Item Code",
     cell: ({ row }) => {
-      const code = row.getValue("variant_code") as string
+      const code = row.getValue("product_code") as string
       return (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -59,7 +59,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
     },
   },
   {
-    accessorKey: "catalogue_item_name",
+    accessorKey: "product_name",
     header: ({ column }) => {
       return (
         <Button
@@ -73,7 +73,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
       )
     },
     cell: ({ row }) => {
-      const name = row.getValue("catalogue_item_name") as string
+      const name = row.getValue("product_name") as string
       return (
         <div className={context.isDark ? "text-gray-300" : "text-gray-700"}>
           {name}
@@ -82,13 +82,13 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
     },
   },
   {
-    accessorKey: "variant_option",
-    header: "Variant",
+    accessorKey: "category",
+    header: "Category",
     cell: ({ row }) => {
-      const variant = row.getValue("variant_option") as string | null
+      const category = row.getValue("category") as string | null
       return (
         <div className={`text-sm ${context.isDark ? "text-gray-400" : "text-gray-600"}`}>
-          {variant || "-"}
+          {category || "-"}
         </div>
       )
     },

@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
-import type { CatalogueVariant } from "./types";
+import type { Product } from "./types";
 import {
-  exportCatalogueItems,
+  exportProducts,
   DEFAULT_EXPORT_COLUMNS,
   type ExportColumn,
   type SortField,
@@ -13,7 +13,7 @@ import {
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  items: CatalogueVariant[];
+  items: Product[];
 }
 
 export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
@@ -49,7 +49,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
     }
 
     if (items.length === 0) {
-      setError("No catalogue items to export");
+      setError("No products to export");
       return;
     }
 
@@ -58,9 +58,9 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
 
     try {
       const timestamp = new Date().toISOString().split("T")[0];
-      const filename = `catalogue_export_${timestamp}`;
+      const filename = `products_export_${timestamp}`;
       
-      exportCatalogueItems(items, {
+      exportProducts(items, {
         columns,
         sortField,
         sortDirection,
@@ -104,10 +104,10 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         <div className="flex justify-between items-center p-6">
           <div>
             <h2 id="export-modal-title" className="text-xl font-semibold">
-              Export Catalogue
+              Export Products
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {items.length} item{items.length !== 1 ? "s" : ""} will be exported
+              {items.length} product{items.length !== 1 ? "s" : ""} will be exported
             </p>
           </div>
           <button

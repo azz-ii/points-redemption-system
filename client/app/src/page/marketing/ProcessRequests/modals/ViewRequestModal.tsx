@@ -7,13 +7,11 @@ interface ViewRequestModalProps extends ModalBaseProps {
   request: RequestItem | null;
   myItems?: Array<{
     id: number;
-    variant_name: string;
-    variant_code: string;
-    catalogue_item_name: string;
+    product_name: string;
+    product_code: string;
     quantity: number;
     points_per_item: number;
     total_points: number;
-    image_url: string | null;
     item_processed_by?: number | null;
     item_processed_by_name?: string | null;
     item_processed_at?: string | null;
@@ -188,10 +186,10 @@ export function ViewRequestModal({
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold">{item.catalogue_item_name}</p>
-                      {item.variant_name && (
+                      <p className="font-semibold">{item.product_name}</p>
+                      {item.product_code && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {item.variant_name}
+                          {item.product_code}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

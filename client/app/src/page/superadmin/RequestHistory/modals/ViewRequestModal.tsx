@@ -156,10 +156,10 @@ export function ViewRequestModal({
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <p className="font-semibold">{it.catalogue_item_name}</p>
-                      {it.variant_name && (
+                      <p className="font-semibold">{it.product_name}</p>
+                      {it.product_code && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Variant: {it.variant_name}
+                          Code: {it.product_code}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 dark:text-gray-400">

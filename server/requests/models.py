@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.conf import settings
 from distributers.models import Distributor
 from customers.models import Customer
-from items_catalogue.models import Variant
+from items_catalogue.models import Product
 from teams.models import Team
 
 class PointsDeductionChoice(models.TextChoices):
@@ -162,10 +162,6 @@ class RedemptionRequest(models.Model):
         default=True,
         help_text='Whether this request requires sales approver approval'
     )
-    requires_marketing_approval = models.BooleanField(
-        default=False,
-        help_text='Whether this request requires marketing approval'
-    )
     
     # Sales Approval Track
     sales_approval_status = models.CharField(
@@ -191,32 +187,6 @@ class RedemptionRequest(models.Model):
         blank=True,
         null=True,
         help_text='Reason for sales approval rejection'
-    )
-    
-    # Marketing Approval Track
-    marketing_approval_status = models.CharField(
-        max_length=20,
-        choices=ApprovalStatusChoice.choices,
-        default=ApprovalStatusChoice.NOT_REQUIRED,
-        help_text='Marketing approval status'
-    )
-    marketing_approved_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='marketing_approved_requests',
-        help_text='Marketing user who approved/rejected this request'
-    )
-    marketing_approval_date = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text='Date and time of marketing approval/rejection'
-    )
-    marketing_rejection_reason = models.TextField(
-        blank=True,
-        null=True,
-        help_text='Reason for marketing approval rejection'
     )
     
     # Service Vehicle Use fields
@@ -267,58 +237,24 @@ class RedemptionRequest(models.Model):
 
     def compute_approval_requirements(self):
         """
-        Compute what approvals are required based on items in the request.
+        All requests require sales approval. Marketing only processes items.
         Should be called after items are added.
         """
-        from items_catalogue.models import ApprovalType
-        
-        requires_sales = False
-        requires_marketing = False
-        
-        for item in self.items.all():
-            approval_type = item.variant.catalogue_item.approval_type
-            if approval_type == ApprovalType.SALES_ONLY:
-                requires_sales = True
-            elif approval_type == ApprovalType.MARKETING_ONLY:
-                requires_marketing = True
-            elif approval_type == ApprovalType.BOTH:
-                requires_sales = True
-                requires_marketing = True
-        
-        self.requires_sales_approval = requires_sales
-        self.requires_marketing_approval = requires_marketing
-        
-        # Set initial statuses based on requirements
-        if requires_sales:
-            self.sales_approval_status = ApprovalStatusChoice.PENDING
-        else:
-            self.sales_approval_status = ApprovalStatusChoice.NOT_REQUIRED
-            
-        if requires_marketing:
-            self.marketing_approval_status = ApprovalStatusChoice.PENDING
-        else:
-            self.marketing_approval_status = ApprovalStatusChoice.NOT_REQUIRED
-        
+        self.requires_sales_approval = True
+        self.sales_approval_status = ApprovalStatusChoice.PENDING
         self.save()
 
     def update_overall_status(self):
         """
-        Update the overall status based on individual approval tracks.
+        Update the overall status based on sales approval track.
         Call this after any approval action.
         """
-        # If either track is rejected, overall is rejected
-        if (self.sales_approval_status == ApprovalStatusChoice.REJECTED or 
-            self.marketing_approval_status == ApprovalStatusChoice.REJECTED):
+        # If sales rejected, overall is rejected
+        if self.sales_approval_status == ApprovalStatusChoice.REJECTED:
             self.status = RequestStatus.REJECTED
-            # Combine rejection reasons
-            reasons = []
-            if self.sales_rejection_reason:
-                reasons.append(f"Sales: {self.sales_rejection_reason}")
-            if self.marketing_rejection_reason:
-                reasons.append(f"Marketing: {self.marketing_rejection_reason}")
-            self.rejection_reason = " | ".join(reasons) if reasons else None
+            self.rejection_reason = self.sales_rejection_reason
         
-        # If all required tracks are approved, overall is approved
+        # If sales approved, overall is approved
         elif self.is_fully_approved():
             self.status = RequestStatus.APPROVED
         
@@ -329,20 +265,14 @@ class RedemptionRequest(models.Model):
         self.save()
 
     def is_fully_approved(self):
-        """Check if all required approvals have been granted."""
-        sales_ok = (self.sales_approval_status in 
-                   [ApprovalStatusChoice.APPROVED, ApprovalStatusChoice.NOT_REQUIRED])
-        marketing_ok = (self.marketing_approval_status in 
-                       [ApprovalStatusChoice.APPROVED, ApprovalStatusChoice.NOT_REQUIRED])
-        return sales_ok and marketing_ok
+        """Check if sales approval has been granted."""
+        return self.sales_approval_status in [ApprovalStatusChoice.APPROVED, ApprovalStatusChoice.NOT_REQUIRED]
 
     def get_pending_approvals(self):
         """Get list of pending approval types."""
         pending = []
         if self.sales_approval_status == ApprovalStatusChoice.PENDING:
             pending.append('sales')
-        if self.marketing_approval_status == ApprovalStatusChoice.PENDING:
-            pending.append('marketing')
         return pending
 
     def get_required_marketing_users(self):
@@ -351,25 +281,24 @@ class RedemptionRequest(models.Model):
         Returns User objects for all items that have a mktg_admin assigned.
         """
         users = set()
-        for item in self.items.select_related('variant__catalogue_item__mktg_admin').all():
-            mktg_admin = item.variant.catalogue_item.mktg_admin
-            if mktg_admin:
-                users.add(mktg_admin)
+        for item in self.items.select_related('product__mktg_admin').all():
+            if item.product and item.product.mktg_admin:
+                users.add(item.product.mktg_admin)
         return users
 
     def get_items_for_marketing_user(self, user):
         """
         Get items assigned to a specific Marketing user.
-        Returns QuerySet of RedemptionRequestItem where the item's mktg_admin == user.
+        Returns QuerySet of RedemptionRequestItem where the item's product mktg_admin == user.
         """
-        return self.items.filter(variant__catalogue_item__mktg_admin=user)
+        return self.items.filter(product__mktg_admin=user)
 
     def get_items_pending_processing(self, user):
         """
         Get items assigned to this Marketing user that haven't been processed yet.
         """
         return self.items.filter(
-            variant__catalogue_item__mktg_admin=user,
+            product__mktg_admin=user,
             item_processed_by__isnull=True
         )
 
@@ -381,7 +310,7 @@ class RedemptionRequest(models.Model):
         - All items with mktg_admin have been processed
         """
         items_with_mktg = self.items.filter(
-            variant__catalogue_item__mktg_admin__isnull=False
+            product__mktg_admin__isnull=False
         )
         if not items_with_mktg.exists():
             return True
@@ -395,8 +324,8 @@ class RedemptionRequest(models.Model):
         Returns dict with counts and user-specific info.
         """
         items_with_mktg = self.items.filter(
-            variant__catalogue_item__mktg_admin__isnull=False
-        ).select_related('variant__catalogue_item__mktg_admin', 'item_processed_by')
+            product__mktg_admin__isnull=False
+        ).select_related('product__mktg_admin', 'item_processed_by')
         
         total = items_with_mktg.count()
         processed = items_with_mktg.filter(item_processed_by__isnull=False).count()
@@ -404,7 +333,7 @@ class RedemptionRequest(models.Model):
         # Group by marketing user
         user_status = {}
         for item in items_with_mktg:
-            mktg_user = item.variant.catalogue_item.mktg_admin
+            mktg_user = item.product.mktg_admin
             if mktg_user.id not in user_status:
                 user_status[mktg_user.id] = {
                     'user_id': mktg_user.id,
@@ -436,11 +365,11 @@ class RedemptionRequestItem(models.Model):
         related_name='items',
         help_text='The redemption request this item belongs to'
     )
-    variant = models.ForeignKey(
-        Variant,
+    product = models.ForeignKey(
+        Product,
         on_delete=models.CASCADE,
         related_name='redemption_items',
-        help_text='The catalogue item variant being redeemed'
+        help_text='The product being redeemed'
     )
     quantity = models.PositiveIntegerField(
         default=1,
@@ -455,7 +384,7 @@ class RedemptionRequestItem(models.Model):
         help_text='Total points for this line item'
     )
     
-    # Dynamic pricing fields - snapshots from variant at request time
+    # Dynamic pricing fields - snapshots from product at request time
     pricing_type = models.CharField(
         max_length=20,
         null=True,
@@ -505,7 +434,7 @@ class RedemptionRequestItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.quantity}x {self.variant} for Request #{self.request.id}"
+        return f"{self.quantity}x {self.product} for Request #{self.request.id}"
 
     class Meta:
         verbose_name = "Redemption Request Item"

@@ -17,15 +17,12 @@ import {
   RotateCw,
   Download,
 } from "lucide-react";
-import type { CatalogueItem, Variant, CatalogueVariant, User } from "./modals";
+import type { Product, User } from "./modals";
 import {
   CreateItemModal,
   EditItemModal,
   ViewItemModal,
   DeleteItemModal,
-  ViewVariantModal,
-  EditVariantModal,
-  DeleteVariantModal,
   ExportModal,
 } from "./modals";
 import {
@@ -42,11 +39,9 @@ function Catalogue() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [items, setItems] = useState<CatalogueVariant[]>([
+  const [items, setItems] = useState<Product[]>([
     {
-      id: "1",
-      catalogue_item_id: 1,
-      reward: null,
+      id: 1,
       item_name: "Platinum Polo",
       item_code: "MC3001",
       description:
@@ -55,22 +50,24 @@ function Catalogue() {
         "Ideal for casual wear, company events, or as a stylish uniform piece.",
       specifications:
         "Material: 100% Platinum Cotton, Fit: Modern Fit, Color: Ribbed Polo Collar, Sleeves: Short sleeves with ribbed armbands",
-      option_description:
+      category:
         "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
       points: "500",
       price: "1200",
-      legend: "ASSET",
-      needs_driver: false,
-      image_url: null,
+      legend: "MERCH",
+      pricing_type: "FIXED",
+      stock: 100,
+      committed_stock: 10,
+      available_stock: 90,
       is_archived: false,
       date_added: new Date().toISOString().split("T")[0],
-      mktg_admin: null,
-      mktg_admin_name: null,
+      added_by: null,
+      date_archived: null,
+      archived_by: null,
     },
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [users, setUsers] = useState<User[]>([]);
 
   // Pagination state
@@ -118,110 +115,66 @@ function Catalogue() {
       }
 
       const url = `/api/catalogue/?${params.toString()}`;
-      console.log("[Catalogue] Fetching catalogue items (GET) -> url=", url);
+      console.log("[Catalogue] Fetching products (GET) -> url=", url);
       const response = await fetch(url, {
         credentials: "include",
       });
       console.log("[Catalogue] GET response status:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch catalogue items");
+        throw new Error("Failed to fetch products");
       }
 
       const data = await response.json();
       // Handle paginated response format: { count, next, previous, results }
-      const variants = data.results || [];
+      const products = data.results || [];
       setTotalCount(data.count || 0);
 
-      const flattenedItems: CatalogueVariant[] = variants.map(
-        (variant: Variant) => ({
-          id: variant.id.toString(),
-          catalogue_item_id: variant.catalogue_item.id,
-          reward: variant.catalogue_item.reward,
-          item_name: variant.catalogue_item.item_name,
-          item_code: variant.item_code,
-          description: variant.catalogue_item.description,
-          purpose: variant.catalogue_item.purpose,
-          specifications: variant.catalogue_item.specifications,
-          option_description: variant.option_description,
-          points: variant.points,
-          price: variant.price,
-          legend: variant.catalogue_item.legend,
-          needs_driver: variant.catalogue_item.needs_driver,
-          image_url: variant.image_url,
-          is_archived: variant.catalogue_item.is_archived,
-          date_added: variant.catalogue_item.date_added,
-          mktg_admin: variant.catalogue_item.mktg_admin,
-          mktg_admin_name: variant.catalogue_item.mktg_admin_name,
-          pricing_type: variant.pricing_type,
-          points_multiplier: variant.points_multiplier,
-          price_multiplier: variant.price_multiplier,
+      // Map API response to Product model
+      const mappedItems: Product[] = products.map(
+        (product: Product) => ({
+          id: product.id,
+          item_code: product.item_code,
+          item_name: product.item_name,
+          description: product.description,
+          purpose: product.purpose,
+          specifications: product.specifications,
+          legend: product.legend,
+          category: product.category,
+          points: product.points,
+          price: product.price,
+          pricing_type: product.pricing_type || "FIXED",
+          stock: product.stock || 0,
+          committed_stock: product.committed_stock || 0,
+          available_stock: product.available_stock || 0,
+          is_archived: product.is_archived || false,
+          date_added: product.date_added,
+          added_by: product.added_by,
+          date_archived: product.date_archived,
+          archived_by: product.archived_by,
         })
       );
-      setItems(flattenedItems);
+      setItems(mappedItems);
       setError(null);
     } catch (err) {
-      console.error("Error fetching catalogue items:", err);
-      setError("Failed to load catalogue items. Please try again.");
+      console.error("Error fetching products:", err);
+      setError("Failed to load products. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Group variants by catalogue_item_id (items are already filtered server-side)
-  const groupedItems = items.reduce((acc, item) => {
-    const catalogueItemId = item.catalogue_item_id;
-    if (!acc[catalogueItemId]) {
-      acc[catalogueItemId] = {
-        catalogueItem: {
-          id: catalogueItemId,
-          item_name: item.item_name,
-          description: item.description,
-          purpose: item.purpose,
-          specifications: item.specifications,
-          legend: item.legend,
-          needs_driver: item.needs_driver,
-          reward: item.reward,
-          is_archived: item.is_archived,
-          date_added: item.date_added,
-          mktg_admin: item.mktg_admin,
-          mktg_admin_name: item.mktg_admin_name,
-        },
-        variants: [],
-      };
-    }
-    acc[catalogueItemId].variants.push(item);
-    return acc;
-  }, {} as Record<number, { catalogueItem: { id: number; item_name: string; description: string; purpose: string; specifications: string; legend: string; needs_driver: boolean; reward: string | null; is_archived: boolean; date_added: string; mktg_admin: number | null; mktg_admin_name: string | null; approver: number | null; approver_name: string | null }; variants: CatalogueVariant[] }>);
-
-  const groupedItemsArray = Object.values(groupedItems);
-
   // Pagination logic using server-side count
-  // Note: We're paginating at variant level on server, but displaying grouped items
   const totalPages =
     rowsPerPage === "ALL"
       ? 1
       : Math.max(1, Math.ceil(totalCount / (rowsPerPage as number)));
   const safePage = Math.min(page, totalPages);
-  const paginatedGroupedItems = groupedItemsArray;
 
   // Reset to page 1 when search query changes
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
-
-  // Toggle row expansion
-  const toggleRow = (catalogueItemId: number) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(catalogueItemId)) {
-        newSet.delete(catalogueItemId);
-      } else {
-        newSet.add(catalogueItemId);
-      }
-      return newSet;
-    });
-  };
 
   // Modal and form state for creating new item
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -229,27 +182,19 @@ function Catalogue() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({
-    reward: "",
+    item_code: "",
     item_name: "",
+    category: "",
     description: "",
     purpose: "",
     specifications: "",
-    legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
-    needs_driver: false,
-    mktg_admin: null as number | null,
-    approver: null as number | null,
-    variants: [
-      {
-        item_code: "",
-        option_description: "",
-        points: "",
-        price: "",
-        image_url: "",
-        pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
-        points_multiplier: "",
-        price_multiplier: "",
-      },
-    ],
+    legend: "GIVEAWAY" as "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS",
+    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    points: "",
+    price: "",
+    stock: "0",
+    points_multiplier: "",
+    price_multiplier: "",
   });
 
   const [editItem, setEditItem] = useState({
@@ -258,18 +203,14 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "GIVEAWAY" as "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT",
-    needs_driver: false,
-    mktg_admin: null as number | null,
-    approver: null as number | null,
+    legend: "GIVEAWAY" as "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS",
     variants: [
       {
         id: null as number | null,
         item_code: "",
-        option_description: "",
+        category: "",
         points: "",
         price: "",
-        image_url: "",
         pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
         points_multiplier: "",
         price_multiplier: "",
@@ -281,114 +222,74 @@ function Catalogue() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingCatalogueItemId, setEditingCatalogueItemId] = useState<
+  const [editingProductId, setEditingProductId] = useState<
     number | null
   >(null);
-  const [viewTarget, setViewTarget] = useState<CatalogueVariant | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CatalogueVariant | null>(
+  const [viewTarget, setViewTarget] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(
     null
   );
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [loadingVariants, setLoadingVariants] = useState(false);
-  const [loadingViewVariants, setLoadingViewVariants] = useState(false);
-  const [viewVariants, setViewVariants] = useState<Variant[]>([]);
-
-  const [showViewVariantModal, setShowViewVariantModal] = useState(false);
-  const [viewVariantTarget, setViewVariantTarget] =
-    useState<CatalogueVariant | null>(null);
-  const [showEditVariantModal, setShowEditVariantModal] = useState(false);
-  const [editVariantTarget, setEditVariantTarget] =
-    useState<CatalogueVariant | null>(null);
-  const [showDeleteVariantModal, setShowDeleteVariantModal] = useState(false);
-  const [deleteVariantTarget, setDeleteVariantTarget] =
-    useState<CatalogueVariant | null>(null);
-  const [editVariantError, setEditVariantError] = useState<string | null>(null);
-  const [updatingVariant, setUpdatingVariant] = useState(false);
-  const [editVariantData, setEditVariantData] = useState({
-    item_code: "",
-    option_description: "",
-    points: "",
-    price: "",
-    image_url: "",
-    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
-    points_multiplier: "",
-    price_multiplier: "",
-  });
 
   // Handle create item submission
   const handleCreateItem = async () => {
     setCreateError(null);
 
     // Validation
+    if (!newItem.item_code.trim()) {
+      setCreateError("Item code is required");
+      return;
+    }
     if (!newItem.item_name.trim()) {
       setCreateError("Item name is required");
       return;
     }
     if (!newItem.legend) {
-      setCreateError("Category is required");
+      setCreateError("Legend is required");
       return;
     }
-    if (newItem.variants.length === 0) {
-      setCreateError("At least one variant is required");
-      return;
-    }
-    for (let i = 0; i < newItem.variants.length; i++) {
-      const variant = newItem.variants[i];
-      const isFixed = variant.pricing_type === "FIXED";
-      if (!variant.item_code.trim()) {
-        setCreateError(`Variant ${i + 1}: Item code is required`);
+    
+    const isFixed = newItem.pricing_type === "FIXED";
+    if (isFixed) {
+      if (!newItem.points.trim()) {
+        setCreateError("Points is required");
         return;
       }
-      if (isFixed) {
-        if (!variant.points.trim()) {
-          setCreateError(`Variant ${i + 1}: Points is required`);
-          return;
-        }
-        if (!variant.price.trim()) {
-          setCreateError(`Variant ${i + 1}: Price is required`);
-          return;
-        }
-      } else {
-        if (!variant.points_multiplier.trim()) {
-          setCreateError(`Variant ${i + 1}: Points multiplier is required`);
-          return;
-        }
-        if (!variant.price_multiplier.trim()) {
-          setCreateError(`Variant ${i + 1}: Price multiplier is required`);
-          return;
-        }
+      if (!newItem.price.trim()) {
+        setCreateError("Price is required");
+        return;
+      }
+    } else {
+      if (!newItem.points_multiplier.trim()) {
+        setCreateError("Points multiplier is required");
+        return;
+      }
+      if (!newItem.price_multiplier.trim()) {
+        setCreateError("Price multiplier is required");
+        return;
       }
     }
 
     try {
       setCreating(true);
+      
       const payload = {
-        reward: newItem.reward || null,
+        item_code: newItem.item_code,
         item_name: newItem.item_name,
+        category: newItem.category || "",
         description: newItem.description,
         purpose: newItem.purpose,
         specifications: newItem.specifications,
         legend: newItem.legend,
-        needs_driver: newItem.needs_driver,
-        mktg_admin: newItem.mktg_admin,
-        approver: newItem.approver,
-        variants: newItem.variants.map((v) => {
-          const isFixed = v.pricing_type === "FIXED";
-          return {
-            item_code: v.item_code,
-            option_description: v.option_description || null,
-            image_url: v.image_url || null,
-            pricing_type: v.pricing_type || "FIXED",
-            // For FIXED: use points/price. For dynamic: use multiplier values for both fields
-            points: isFixed ? v.points : v.points_multiplier,
-            price: isFixed ? v.price : v.price_multiplier,
-            points_multiplier: isFixed ? null : v.points_multiplier,
-            price_multiplier: isFixed ? null : v.price_multiplier,
-          };
-        }),
+        pricing_type: newItem.pricing_type,
+        points: isFixed ? parseFloat(newItem.points) : parseFloat(newItem.points_multiplier),
+        price: isFixed ? parseFloat(newItem.price) : parseFloat(newItem.price_multiplier),
+        stock: parseInt(newItem.stock) || 0,
       };
-      console.log("[Catalogue] Creating item (POST) payload:", payload);
+      
+      console.log("[Catalogue] Creating product (POST) payload:", payload);
       const response = await fetch("/api/catalogue/", {
         method: "POST",
         credentials: "include",
@@ -405,33 +306,25 @@ function Catalogue() {
           data.details?.item_name?.[0] ||
             data.details?.item_code?.[0] ||
             data.error ||
-            "Failed to create item"
+            "Failed to create product"
         );
       }
 
       // Success: reset form and close modal
       setNewItem({
-        reward: "",
+        item_code: "",
         item_name: "",
+        category: "",
         description: "",
         purpose: "",
         specifications: "",
         legend: "GIVEAWAY",
-        needs_driver: false,
-        mktg_admin: null,
-        approver: null,
-        variants: [
-          {
-            item_code: "",
-            option_description: "",
-            points: "",
-            price: "",
-            image_url: "",
-            pricing_type: "FIXED",
-            points_multiplier: "",
-            price_multiplier: "",
-          },
-        ],
+        pricing_type: "FIXED",
+        points: "",
+        price: "",
+        stock: "0",
+        points_multiplier: "",
+        price_multiplier: "",
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -439,9 +332,9 @@ function Catalogue() {
       // Refresh items list
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error creating item:", err);
+      console.error("Error creating product:", err);
       setCreateError(
-        err instanceof Error ? err.message : "Failed to create item"
+        err instanceof Error ? err.message : "Failed to create product"
       );
     } finally {
       setCreating(false);
@@ -449,55 +342,51 @@ function Catalogue() {
   };
 
   // Handle edit click
-  const handleEditClick = async (item: CatalogueVariant) => {
-    setEditingCatalogueItemId(item.catalogue_item_id);
+  const handleEditClick = async (item: Product) => {
+    setEditingProductId(item.id);
     setLoadingVariants(true);
     setShowEditModal(true);
     setEditError(null);
 
     try {
-      // Fetch all variants for this catalogue item (use large page_size to get all)
+      // Fetch all products for this item (use large page_size to get all)
       const response = await fetch(`/api/catalogue/?page_size=1000`, {
         credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch catalogue items");
+        throw new Error("Failed to fetch products");
       }
 
       const data = await response.json();
-      const allVariants = (data.results || []).filter(
-        (v: Variant) => v.catalogue_item.id === item.catalogue_item_id
+      const allProducts = (data.results || []).filter(
+        (p: Product) => p.item_name === item.item_name
       );
 
-      if (allVariants.length > 0) {
-        const catalogueItem = allVariants[0].catalogue_item;
+      if (allProducts.length > 0) {
+        const product = allProducts[0];
         setEditItem({
-          reward: catalogueItem.reward || "",
-          item_name: catalogueItem.item_name,
-          description: catalogueItem.description,
-          purpose: catalogueItem.purpose,
-          specifications: catalogueItem.specifications,
-          legend: catalogueItem.legend,
-          needs_driver: catalogueItem.needs_driver,
-          mktg_admin: catalogueItem.mktg_admin,
-          approver: catalogueItem.approver,
-          variants: allVariants.map((v: Variant) => ({
-            id: v.id,
-            item_code: v.item_code,
-            option_description: v.option_description || "",
-            points: v.points,
-            price: v.price,
-            image_url: v.image_url || "",
-            pricing_type: v.pricing_type || "FIXED",
-            points_multiplier: v.points_multiplier || "",
-            price_multiplier: v.price_multiplier || "",
+          reward: "",
+          item_name: product.item_name,
+          description: product.description,
+          purpose: product.purpose,
+          specifications: product.specifications,
+          legend: product.legend,
+          variants: allProducts.map((p: Product) => ({
+            id: p.id,
+            item_code: p.item_code,
+            category: p.category || "",
+            points: p.points,
+            price: p.price,
+            pricing_type: p.pricing_type || "FIXED",
+            points_multiplier: "",
+            price_multiplier: "",
           })),
         });
       }
     } catch (err) {
-      console.error("Error fetching variants:", err);
-      setEditError("Failed to load variants. Please try again.");
+      console.error("Error fetching products:", err);
+      setEditError("Failed to load products. Please try again.");
     } finally {
       setLoadingVariants(false);
     }
@@ -505,7 +394,7 @@ function Catalogue() {
 
   // Handle update item
   const handleUpdateItem = async () => {
-    if (!editingCatalogueItemId) return;
+    if (!editingProductId) return;
 
     setEditError(null);
 
@@ -515,36 +404,36 @@ function Catalogue() {
       return;
     }
     if (!editItem.legend) {
-      setEditError("Category is required");
+      setEditError("Legend is required");
       return;
     }
     if (editItem.variants.length === 0) {
-      setEditError("At least one variant is required");
+      setEditError("At least one product is required");
       return;
     }
     for (let i = 0; i < editItem.variants.length; i++) {
       const variant = editItem.variants[i];
       const isFixed = variant.pricing_type === "FIXED";
       if (!variant.item_code.trim()) {
-        setEditError(`Variant ${i + 1}: Item code is required`);
+        setEditError(`Product ${i + 1}: Item code is required`);
         return;
       }
       if (isFixed) {
         if (!variant.points.toString().trim()) {
-          setEditError(`Variant ${i + 1}: Points is required`);
+          setEditError(`Product ${i + 1}: Points is required`);
           return;
         }
         if (!variant.price.toString().trim()) {
-          setEditError(`Variant ${i + 1}: Price is required`);
+          setEditError(`Product ${i + 1}: Price is required`);
           return;
         }
       } else {
         if (!variant.points_multiplier.toString().trim()) {
-          setEditError(`Variant ${i + 1}: Points multiplier is required`);
+          setEditError(`Product ${i + 1}: Points multiplier is required`);
           return;
         }
         if (!variant.price_multiplier.toString().trim()) {
-          setEditError(`Variant ${i + 1}: Price multiplier is required`);
+          setEditError(`Product ${i + 1}: Price multiplier is required`);
           return;
         }
       }
@@ -553,22 +442,18 @@ function Catalogue() {
     try {
       setUpdating(true);
       const updatePayload = {
-        reward: editItem.reward || null,
+        reward: "",
         item_name: editItem.item_name,
         description: editItem.description,
         purpose: editItem.purpose,
         specifications: editItem.specifications,
         legend: editItem.legend,
-        needs_driver: editItem.needs_driver,
-        mktg_admin: editItem.mktg_admin,
-        approver: editItem.approver,
         variants: editItem.variants.map((v) => {
           const isFixed = v.pricing_type === "FIXED";
           return {
             id: v.id,
             item_code: v.item_code,
-            option_description: v.option_description || null,
-            image_url: v.image_url || null,
+            category: v.category || null,
             pricing_type: v.pricing_type || "FIXED",
             // For FIXED: use points/price. For dynamic: use multiplier values for both fields
             points: isFixed ? v.points : v.points_multiplier,
@@ -579,13 +464,13 @@ function Catalogue() {
         }),
       };
       console.log(
-        "[Catalogue] Updating item (PUT) id=",
-        editingCatalogueItemId,
+        "[Catalogue] Updating product (PUT) id=",
+        editingProductId,
         " payload:",
         updatePayload
       );
       const response = await fetch(
-        `/api/catalogue/item/${editingCatalogueItemId}/`,
+        `/api/catalogue/item/${editingProductId}/`,
         {
           method: "PUT",
           credentials: "include",
@@ -603,18 +488,18 @@ function Catalogue() {
           data.details?.item_name?.[0] ||
             data.details?.item_code?.[0] ||
             data.error ||
-            "Failed to update item"
+            "Failed to update product"
         );
       }
 
       setShowEditModal(false);
-      setEditingCatalogueItemId(null);
+      setEditingProductId(null);
       setEditError(null);
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error updating item:", err);
+      console.error("Error updating product:", err);
       setEditError(
-        err instanceof Error ? err.message : "Failed to update item"
+        err instanceof Error ? err.message : "Failed to update product"
       );
     } finally {
       setUpdating(false);
@@ -622,37 +507,13 @@ function Catalogue() {
   };
 
   // Handle view click
-  const handleViewClick = async (item: CatalogueVariant) => {
+  const handleViewClick = async (item: Product) => {
     setViewTarget(item);
-    setViewVariants([]); // Reset variants before loading
-    setLoadingViewVariants(true);
     setShowViewModal(true);
-
-    try {
-      // Fetch all variants for this catalogue item (use large page_size to get all)
-      const response = await fetch(`/api/catalogue/?page_size=1000`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch catalogue items");
-      }
-
-      const data = await response.json();
-      const allVariants = (data.results || []).filter(
-        (v: Variant) => v.catalogue_item.id === item.catalogue_item_id
-      );
-
-      setViewVariants(allVariants);
-    } catch (err) {
-      console.error("Error fetching variants for view:", err);
-    } finally {
-      setLoadingViewVariants(false);
-    }
   };
 
   // Handle delete with modal
-  const handleDeleteClick = (item: CatalogueVariant) => {
+  const handleDeleteClick = (item: Product) => {
     setDeleteTarget(item);
     setShowDeleteModal(true);
   };
@@ -698,7 +559,7 @@ function Catalogue() {
     if (!deleteTarget) return;
 
     try {
-      console.log("[Catalogue] Deleting item (DELETE) id=", deleteTarget.id);
+      console.log("[Catalogue] Deleting product (DELETE) id=", deleteTarget.id);
       const response = await fetch(`/api/catalogue/${deleteTarget.id}/`, {
         method: "DELETE",
         credentials: "include",
@@ -706,42 +567,41 @@ function Catalogue() {
       console.log("[Catalogue] DELETE response status:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to delete item");
+        throw new Error("Failed to delete product");
       }
 
       setShowDeleteModal(false);
       setDeleteTarget(null);
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error deleting item:", err);
-      alert("Failed to delete item. Please try again.");
+      console.error("Error deleting product:", err);
+      alert("Failed to delete product. Please try again.");
     }
   };
 
-  const handleViewVariantClick = (variant: CatalogueVariant) => {
-    setViewVariantTarget(variant);
-    setShowViewVariantModal(true);
+  const handleViewProductClick = (product: Product) => {
+    setViewProductTarget(product);
+    setShowViewProductModal(true);
   };
 
-  const handleEditVariantClick = (variant: CatalogueVariant) => {
-    setEditVariantTarget(variant);
+  const handleEditVariantClick = (product: Product) => {
+    setEditVariantTarget(product);
     setEditVariantData({
-      item_code: variant.item_code,
-      option_description: variant.option_description || "",
-      points: variant.points,
-      price: variant.price,
-      image_url: variant.image_url || "",
-      pricing_type: variant.pricing_type || "FIXED",
-      points_multiplier: variant.points_multiplier || "",
-      price_multiplier: variant.price_multiplier || "",
+      item_code: product.item_code,
+      category: product.category || "",
+      points: product.points,
+      price: product.price,
+      pricing_type: product.pricing_type || "FIXED",
+      points_multiplier: "",
+      price_multiplier: "",
     });
     setShowEditVariantModal(true);
     setEditVariantError(null);
   };
 
-  const handleDeleteVariantClick = (variant: CatalogueVariant) => {
-    setDeleteVariantTarget(variant);
-    setShowDeleteVariantModal(true);
+  const handleDeleteProductClick = (product: Product) => {
+    setDeleteProductTarget(product);
+    setShowDeleteProductModal(true);
   };
 
   const handleUpdateVariant = async () => {
@@ -781,10 +641,9 @@ function Catalogue() {
       setUpdatingVariant(true);
       
       // Build payload based on pricing type
-      const payload: Record<string, any> = {
+      const payload: Record<string, unknown> = {
         item_code: editVariantData.item_code,
-        option_description: editVariantData.option_description || null,
-        image_url: editVariantData.image_url || null,
+        category: editVariantData.category || null,
         pricing_type: editVariantData.pricing_type || "FIXED",
       };
       
@@ -810,77 +669,41 @@ function Catalogue() {
       });
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to update variant");
+        throw new Error(data.error || "Failed to update product");
       }
       setShowEditVariantModal(false);
       setEditVariantTarget(null);
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error updating variant:", err);
+      console.error("Error updating product:", err);
       setEditVariantError(
-        err instanceof Error ? err.message : "Failed to update variant"
+        err instanceof Error ? err.message : "Failed to update product"
       );
     } finally {
       setUpdatingVariant(false);
     }
   };
 
-  const confirmDeleteVariant = async () => {
-    if (!deleteVariantTarget) return;
+  const confirmDeleteProduct = async () => {
+    if (!deleteProductTarget) return;
     try {
       const response = await fetch(
-        `/api/catalogue/${deleteVariantTarget.id}/`,
+        `/api/catalogue/${deleteProductTarget.id}/`,
         {
           method: "DELETE",
           credentials: "include",
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to delete variant");
+        throw new Error("Failed to delete product");
       }
-      setShowDeleteVariantModal(false);
-      setDeleteVariantTarget(null);
+      setShowDeleteProductModal(false);
+      setDeleteProductTarget(null);
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error deleting variant:", err);
-      alert("Failed to delete variant. Please try again.");
+      console.error("Error deleting product:", err);
+      alert("Failed to delete product. Please try again.");
     }
-  };
-
-  // Add variant to new item
-  const addVariant = () => {
-    setNewItem({
-      ...newItem,
-      variants: [
-        ...newItem.variants,
-        {
-          item_code: "",
-          option_description: "",
-          points: "",
-          price: "",
-          image_url: "",
-          pricing_type: "FIXED",
-          points_multiplier: "",
-          price_multiplier: "",
-        },
-      ],
-    });
-  };
-
-  // Remove variant from new item
-  const removeVariant = (index: number) => {
-    setNewItem({
-      ...newItem,
-      variants: newItem.variants.filter((_, i) => i !== index),
-    });
-  };
-
-  // Update variant in new item
-  const updateVariant = (index: number, field: string, value: string) => {
-    const updatedVariants = newItem.variants.map((v, i) =>
-      i === index ? { ...v, [field]: value } : v
-    );
-    setNewItem({ ...newItem, variants: updatedVariants });
   };
 
   return (
@@ -1056,17 +879,12 @@ function Catalogue() {
             } transition-colors`}
           >
             <CatalogueTable
-              groupedItems={paginatedGroupedItems}
+              products={items}
               loading={loading}
               error={error}
-              expandedRows={expandedRows}
-              onToggleRow={toggleRow}
-              onViewItem={handleViewClick}
-              onEditItem={handleEditClick}
-              onDeleteItem={handleDeleteClick}
-              onViewVariant={handleViewVariantClick}
-              onEditVariant={handleEditVariantClick}
-              onDeleteVariant={handleDeleteVariantClick}
+              onView={handleViewClick}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
               onRetry={fetchCatalogueItems}
               searchQuery={searchQuery}
             />
@@ -1131,22 +949,17 @@ function Catalogue() {
 
           {/* Mobile Cards and Pagination */}
           <CatalogueMobileCards
-            groupedItems={paginatedGroupedItems}
+            products={items}
             loading={loading}
             error={error}
-            expandedRows={expandedRows}
-            onToggleRow={toggleRow}
-            onViewItem={handleViewClick}
-            onEditItem={handleEditClick}
-            onDeleteItem={handleDeleteClick}
-            onViewVariant={handleViewVariantClick}
-            onEditVariant={handleEditVariantClick}
-            onDeleteVariant={handleDeleteVariantClick}
+            onView={handleViewClick}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
             onRetry={fetchCatalogueItems}
             searchQuery={searchQuery}
           />
 
-          {paginatedGroupedItems.length > 0 && (
+          {items.length > 0 && (
             <CataloguePagination
               page={safePage}
               totalPages={totalPages}
@@ -1173,14 +986,10 @@ function Catalogue() {
         creating={creating}
         error={createError}
         onConfirm={handleCreateItem}
-        onAddVariant={addVariant}
-        onRemoveVariant={removeVariant}
-        onUpdateVariant={updateVariant}
-        users={users}
       />
 
       <EditItemModal
-        isOpen={showEditModal && !!editingCatalogueItemId}
+        isOpen={showEditModal && !!editingProductId}
         onClose={() => setShowEditModal(false)}
         editItem={editItem}
         setEditItem={setEditItem}
@@ -1200,8 +1009,7 @@ function Catalogue() {
           setShowViewModal(false);
           setViewTarget(null);
         }}
-        viewVariants={viewVariants}
-        loading={loadingViewVariants}
+        product={viewTarget}
       />
 
       <DeleteItemModal
@@ -1209,30 +1017,6 @@ function Catalogue() {
         onClose={() => setShowDeleteModal(false)}
         item={deleteTarget}
         onConfirm={confirmDelete}
-      />
-
-      <ViewVariantModal
-        isOpen={showViewVariantModal && !!viewVariantTarget}
-        onClose={() => setShowViewVariantModal(false)}
-        variant={viewVariantTarget}
-      />
-
-      <EditVariantModal
-        isOpen={showEditVariantModal && !!editVariantTarget}
-        onClose={() => setShowEditVariantModal(false)}
-        variant={editVariantTarget}
-        data={editVariantData}
-        setData={setEditVariantData}
-        updating={updatingVariant}
-        error={editVariantError}
-        onConfirm={handleUpdateVariant}
-      />
-
-      <DeleteVariantModal
-        isOpen={showDeleteVariantModal && !!deleteVariantTarget}
-        onClose={() => setShowDeleteVariantModal(false)}
-        variant={deleteVariantTarget}
-        onConfirm={confirmDeleteVariant}
       />
 
       <ExportModal

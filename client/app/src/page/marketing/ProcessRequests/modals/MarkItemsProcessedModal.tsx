@@ -100,9 +100,9 @@ export function MarkItemsProcessedModal({
                       : "bg-gray-50 border-gray-200"
                   }`}
                 >
-                  <p className="font-medium">{item.catalogue_item_name}</p>
+                  <p className="font-medium">{item.product_name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Qty: {item.quantity} • {item.variant_code}
+                    Qty: {item.quantity} • {item.product_code}
                   </p>
                 </div>
               ))}

@@ -15,15 +15,13 @@ export interface CatalogueItem {
 
 export interface RedemptionRequestItem {
   id: number;
-  variant: number;
-  variant_name: string;
-  variant_code: string;
-  variant_option: string | null;
-  catalogue_item_name: string;
+  product: number;
+  product_name: string;
+  product_code: string;
+  category: string | null;
   quantity: number;
   points_per_item: number;
   total_points: number;
-  image_url: string | null;
 }
 
 export interface RedemptionRequest {

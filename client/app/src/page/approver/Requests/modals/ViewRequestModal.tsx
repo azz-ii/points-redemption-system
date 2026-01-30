@@ -140,10 +140,10 @@ export function ViewRequestModal({
                       : "bg-gray-50 border-gray-200"
                   }`}
                 >
-                  <p className="font-semibold">{item.catalogue_item_name}</p>
-                  {item.variant_name && (
+                  <p className="font-semibold">{item.product_name}</p>
+                  {item.product_code && (
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {item.variant_name}
+                      {item.product_code}
                     </p>
                   )}
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

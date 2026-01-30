@@ -84,9 +84,9 @@ export default function RedemptionStatus() {
     const q = searchQuery.toLowerCase();
     return (
       item.requestId.toString().includes(q) ||
-      item.variant_code.toLowerCase().includes(q) ||
-      item.catalogue_item_name.toLowerCase().includes(q) ||
-      (item.variant_option && item.variant_option.toLowerCase().includes(q)) ||
+      item.product_code.toLowerCase().includes(q) ||
+      item.product_name.toLowerCase().includes(q) ||
+      (item.category && item.category.toLowerCase().includes(q)) ||
       item.status_display.toLowerCase().includes(q)
     );
   });

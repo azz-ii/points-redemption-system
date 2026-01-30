@@ -5,7 +5,7 @@ from .models import RedemptionRequest, RedemptionRequestItem
 class RedemptionRequestItemInline(admin.TabularInline):
     model = RedemptionRequestItem
     extra = 0
-    fields = ('variant', 'quantity', 'points_per_item', 'total_points')
+    fields = ('product', 'quantity', 'points_per_item', 'total_points')
     readonly_fields = ('total_points',)
 
 
@@ -32,7 +32,7 @@ class RedemptionRequestAdmin(admin.ModelAdmin):
 
 @admin.register(RedemptionRequestItem)
 class RedemptionRequestItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'request', 'variant', 'quantity', 'points_per_item', 'total_points')
+    list_display = ('id', 'request', 'product', 'quantity', 'points_per_item', 'total_points')
     list_filter = ('request__status',)
-    search_fields = ('request__id', 'variant__item_code', 'variant__catalogue_item__item_name')
+    search_fields = ('request__id', 'product__item_code', 'product__item_name')
     readonly_fields = ('total_points',)

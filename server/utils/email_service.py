@@ -149,8 +149,8 @@ def send_request_approved_email(request_obj, distributor, approved_by):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points
@@ -209,8 +209,8 @@ def send_request_rejected_email(request_obj, distributor, rejected_by):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points
@@ -277,8 +277,8 @@ def send_request_processed_email(request_obj, distributor, processed_by):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points
@@ -455,8 +455,8 @@ def send_approved_request_notification_to_admin(request_obj, distributor, approv
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points
@@ -522,8 +522,8 @@ def send_request_submitted_email(request_obj, distributor, approvers_emails):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points
@@ -722,8 +722,8 @@ def send_request_withdrawn_email(request_obj, distributor, withdrawn_by):
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points
@@ -791,8 +791,8 @@ def send_request_withdrawn_confirmation_email(request_obj, distributor, withdraw
         
         for item in request_obj.items.all():
             items_list.append({
-                'name': item.variant.catalogue_item.item_name,
-                'sku': item.variant.item_code,
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
                 'quantity': item.quantity,
                 'points_per_unit': item.points_per_item,
                 'total_points': item.total_points

@@ -3,26 +3,34 @@
 const API_BASE_URL = "/api";
 
 // Backend API Response Types
-export interface CatalogueItem {
+export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';
+export type LegendType = 'GIVEAWAY' | 'MERCH' | 'PROMO' | 'AD_MATERIALS' | 'POINT_OF_SALE' | 'OTHERS';
+
+export interface Product {
   id: number;
-  reward: string | null;
+  item_code: string;
   item_name: string;
   description: string;
   purpose: string;
   specifications: string;
-  legend: "COLLATERAL" | "GIVEAWAY" | "ASSET" | "BENEFIT";
-  needs_driver: boolean;
-  added_by: number | null;
-  mktg_admin: number | null;
-  mktg_admin_name: string | null;
-  approver: number | null;
-  approver_name: string | null;
+  legend: LegendType;
+  category: string;
+  points: string;
+  price: string;
+  pricing_type: PricingType;
+  stock: number;
+  committed_stock: number;
+  available_stock: number;
   is_archived: boolean;
+  date_added: string;
+  added_by: number | null;
   date_archived: string | null;
   archived_by: number | null;
 }
 
-export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';
+// Backward compatibility aliases
+export type CatalogueItem = Product;
+export type Variant = Product;
 
 export const PRICING_TYPE_LABELS: Record<PricingType, string> = {
   FIXED: 'Fixed',
@@ -56,41 +64,23 @@ export const PRICING_TYPE_INPUT_HINTS: Record<PricingType, string> = {
   PER_EU_SRP: 'USD',
 };
 
-export interface Variant {
-  id: number;
-  catalogue_item: CatalogueItem;
-  catalogue_item_id: number;
-  item_code: string;
-  option_description: string | null;
-  points: string;
-  price: string;
-  image_url: string | null;
-  stock: number;
-  committed_stock: number;
-  available_stock: number;
-  reorder_level: number;
-  pricing_type: PricingType | null;
-  points_multiplier: string | null;
-  price_multiplier: string | null;
-}
-
-export interface CatalogueItemsResponse {
+export interface ProductsResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: Variant[];
+  results: Product[];
 }
+
+// Backward compatibility alias
+export type CatalogueItemsResponse = ProductsResponse;
 
 // Frontend Display Types
 export interface RedeemItemData {
   id: string;
   name: string;
   points: number; // For FIXED items: per-unit points. For dynamic: the multiplier
-  image: string;
   category: string;
-  needs_driver: boolean;
   pricing_type: PricingType;
-  points_multiplier: number | null; // For dynamic items: points per unit (sq ft, invoice, etc.)
   available_stock: number; // Available stock (stock - committed)
 }
 
@@ -112,25 +102,27 @@ export interface UserProfile {
 
 // Map backend legend to frontend category
 const legendToCategoryMap: Record<string, string> = {
-  COLLATERAL: "Collateral",
   GIVEAWAY: "Giveaway",
-  ASSET: "Asset",
-  BENEFIT: "Benefit",
+  MERCH: "Merch",
+  PROMO: "Promo",
+  AD_MATERIALS: "Ad Materials",
+  POINT_OF_SALE: "Point of Sale",
+  OTHERS: "Others",
 };
 
-// Transform backend variant data to frontend format
-export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
-  console.log("[API] Transforming variant:", variant);
+// Transform backend product data to frontend format
+export function transformProductToRedeemItem(product: Product): RedeemItemData {
+  console.log("[API] Transforming product:", product);
   
   // Parse points - handle both numeric and formula strings
   let pointsValue = 0;
   try {
     // Try to parse as number first
-    const parsed = parseFloat(variant.points);
+    const parsed = parseFloat(product.points);
     if (!isNaN(parsed)) {
       pointsValue = parsed;
     } else {
-      console.warn(`[API] Could not parse points value: ${variant.points}`);
+      console.warn(`[API] Could not parse points value: ${product.points}`);
       pointsValue = 0;
     }
   } catch (error) {
@@ -138,45 +130,31 @@ export function transformVariantToRedeemItem(variant: Variant): RedeemItemData {
     pointsValue = 0;
   }
 
-  // Use placeholder image if no image_url provided
-  const imageUrl = variant.image_url && variant.image_url.trim() !== "" 
-    ? variant.image_url 
-    : "/images/tshirt.png";
-
-  console.log(`[API] Image URL for ${variant.catalogue_item.item_name}: ${imageUrl}`);
-
   // Get category from legend
-  const category = legendToCategoryMap[variant.catalogue_item.legend] || variant.catalogue_item.legend;
+  const category = legendToCategoryMap[product.legend] || product.legend;
 
-  // Parse pricing type and multiplier
-  const pricingType: PricingType = (variant.pricing_type as PricingType) || 'FIXED';
-  let pointsMultiplier: number | null = null;
-  if (variant.points_multiplier) {
-    const parsed = parseFloat(variant.points_multiplier);
-    if (!isNaN(parsed)) {
-      pointsMultiplier = parsed;
-    }
-  }
+  // Parse pricing type
+  const pricingType: PricingType = (product.pricing_type as PricingType) || 'FIXED';
 
   const transformed: RedeemItemData = {
-    id: variant.id.toString(),
-    name: variant.catalogue_item.item_name,
+    id: product.id.toString(),
+    name: product.item_name,
     points: pointsValue,
-    image: imageUrl,
     category: category,
-    needs_driver: variant.catalogue_item.needs_driver,
     pricing_type: pricingType,
-    points_multiplier: pointsMultiplier,
-    available_stock: variant.available_stock || 0,
+    available_stock: product.available_stock || 0,
   };
 
   console.log("[API] Transformed item:", transformed);
   return transformed;
 }
 
-// Fetch catalogue items from backend
+// Backward compatibility alias
+export const transformVariantToRedeemItem = transformProductToRedeemItem;
+
+// Fetch catalogue items (products) from backend
 export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
-  console.log("[API] Fetching catalogue items from:", `${API_BASE_URL}/catalogue/`);
+  console.log("[API] Fetching products from:", `${API_BASE_URL}/catalogue/`);
   
   try {
     // Fetch all items with a large page_size to get everything at once
@@ -194,10 +172,10 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[API] Error response:", errorText);
-      throw new Error(`Failed to fetch catalogue items: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
     }
 
-    const data: CatalogueItemsResponse = await response.json();
+    const data: ProductsResponse = await response.json();
     console.log("[API] Received data:", data);
     console.log("[API] Number of items:", data.results?.length || 0);
 
@@ -207,16 +185,16 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     }
 
     // Filter out archived items
-    const activeItems = data.results.filter(variant => !variant.catalogue_item.is_archived);
+    const activeItems = data.results.filter(product => !product.is_archived);
     console.log("[API] Active (non-archived) items:", activeItems.length);
 
     // Transform to frontend format
-    const transformedItems = activeItems.map(transformVariantToRedeemItem);
+    const transformedItems = activeItems.map(transformProductToRedeemItem);
     console.log("[API] Transformed items:", transformedItems);
 
     return transformedItems;
   } catch (error) {
-    console.error("[API] Error fetching catalogue items:", error);
+    console.error("[API] Error fetching products:", error);
     if (error instanceof Error) {
       console.error("[API] Error message:", error.message);
       console.error("[API] Error stack:", error.stack);
@@ -289,9 +267,16 @@ function getHeaders(): HeadersInit {
 }
 
 export interface RedemptionRequestItem {
-  variant_id: string;
+  product_id: string;
   quantity?: number; // For FIXED pricing items
   dynamic_quantity?: number; // For dynamic pricing items (PER_SQFT, etc.)
+}
+
+// Backward compatibility - some older code may still use variant_id
+export interface LegacyRedemptionRequestItem {
+  product_id: string; // Now uses product_id
+  quantity?: number;
+  dynamic_quantity?: number;
 }
 
 export type RequestedForType = 'DISTRIBUTOR' | 'CUSTOMER';
@@ -342,15 +327,12 @@ export interface RedemptionRequestResponse {
   svc_driver: string | null;
   items: Array<{
     id: number;
-    variant: number;
-    variant_name: string;
-    variant_code: string;
-    variant_option: string | null;
-    catalogue_item_name: string;
+    product: number;
+    product_name: string;
+    product_code: string;
     quantity: number;
     points_per_item: number;
     total_points: number;
-    image_url: string | null;
   }>;
 }
 
@@ -475,16 +457,13 @@ export const redemptionRequestsApi = {
 
 export interface MarketingProcessingStatusItem {
   id: number;
-  variant: number;
-  variant_name: string;
-  variant_code: string;
-  variant_option: string | null;
-  catalogue_item_name: string;
-  catalogue_item_legend?: string;
+  product: number;
+  product_name: string;
+  product_code: string;
+  product_legend?: string;
   quantity: number;
   points_per_item: number;
   total_points: number;
-  image_url: string | null;
   item_processed_by?: number | null;
   item_processed_by_name?: string | null;
   item_processed_at?: string | null;
