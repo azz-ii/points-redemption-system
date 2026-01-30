@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import { Trash2, X, Search, Info } from "lucide-react";
-import { distributorsApi, type Distributor } from "@/lib/distributors-api";
-import { customersApi, type Customer } from "@/lib/customers-api";
+import { Trash2, X, ChevronDown, Info, Search } from "lucide-react";
+import { distributorsApi } from "@/lib/distributors-api";
+import { customersApi } from "@/lib/customers-api";
 import { redemptionRequestsApi, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -17,6 +17,8 @@ export interface CartItem {
   points_multiplier: number | null; // For dynamic items
   dynamic_quantity?: number; // For dynamic items (sqft, invoice amount, etc.)
   available_stock: number; // Available stock for validation
+  min_order_qty: number; // Minimum quantity per order
+  max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
 }
 
 interface CartModalProps {
@@ -51,22 +53,24 @@ export default function CartModal({
   // Entity type selection (Distributor or Customer)
   const [entityType, setEntityType] = useState<RequestedForType>('DISTRIBUTOR');
   
-  // Distributor search state
+  // All entities for dropdown (preloaded)
+  const [allDistributors, setAllDistributors] = useState<{id: number; name: string; location: string}[]>([]);
+  const [allCustomers, setAllCustomers] = useState<{id: number; name: string; location: string}[]>([]);
+  const [loadingEntities, setLoadingEntities] = useState(false);
+  
+  // Selected entity
+  const [selectedDistributorId, setSelectedDistributorId] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  
+  // Search/filter state for comboboxes
   const [distributorSearch, setDistributorSearch] = useState("");
-  const [distributors, setDistributors] = useState<Distributor[]>([]);
-  const [showDistributorDropdown, setShowDistributorDropdown] = useState(false);
-  const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
-  const [loadingDistributors, setLoadingDistributors] = useState(false);
-  
-  // Customer search state
   const [customerSearch, setCustomerSearch] = useState("");
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [showDistributorDropdown, setShowDistributorDropdown] = useState(false);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [loadingCustomers, setLoadingCustomers] = useState(false);
   
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Refs for click-outside handling
+  const distributorDropdownRef = useRef<HTMLDivElement>(null);
+  const customerDropdownRef = useRef<HTMLDivElement>(null);
   
   // Points deduction and submission state
   const [pointsDeductedFrom, setPointsDeductedFrom] = useState<'SELF' | 'DISTRIBUTOR' | 'CUSTOMER'>('SELF');
@@ -75,80 +79,60 @@ export default function CartModal({
   const [inputErrors, setInputErrors] = useState<Record<string, string>>({});
   const [showTooltips, setShowTooltips] = useState<Record<string, boolean>>({});
 
-  // Search distributors with debounce
+  // Load all distributors and customers when modal opens or step changes to details
   useEffect(() => {
-    if (entityType !== 'DISTRIBUTOR' || distributorSearch.length < 2) {
-      setDistributors([]);
-      return;
-    }
-
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    searchTimeoutRef.current = setTimeout(async () => {
+    if (!isOpen) return;
+    
+    const loadEntities = async () => {
+      setLoadingEntities(true);
       try {
-        setLoadingDistributors(true);
-        const results = await distributorsApi.getDistributors(distributorSearch);
-        // Ensure results is always an array
-        setDistributors(Array.isArray(results) ? results : []);
+        const [distributorsList, customersList] = await Promise.all([
+          distributorsApi.getListAll(),
+          customersApi.getListAll()
+        ]);
+        setAllDistributors(distributorsList);
+        setAllCustomers(customersList);
       } catch (error) {
-        console.error("Error searching distributors:", error);
-        setDistributors([]);
+        console.error("Error loading entities:", error);
+        toast.error("Failed to load recipients list");
       } finally {
-        setLoadingDistributors(false);
-      }
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+        setLoadingEntities(false);
       }
     };
-  }, [distributorSearch, entityType]);
-
-  // Search customers with debounce
-  useEffect(() => {
-    if (entityType !== 'CUSTOMER' || customerSearch.length < 2) {
-      setCustomers([]);
-      return;
+    
+    // Only load if we don't have data yet
+    if (allDistributors.length === 0 || allCustomers.length === 0) {
+      loadEntities();
     }
+  }, [isOpen]);
 
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    searchTimeoutRef.current = setTimeout(async () => {
-      try {
-        setLoadingCustomers(true);
-        const results = await customersApi.getCustomers(customerSearch);
-        // Ensure results is always an array
-        setCustomers(Array.isArray(results) ? results : []);
-      } catch (error) {
-        console.error("Error searching customers:", error);
-        setCustomers([]);
-      } finally {
-        setLoadingCustomers(false);
-      }
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [customerSearch, entityType]);
-
-  // Close dropdown when clicking outside
+  // Get selected entity objects
+  const selectedDistributor = allDistributors.find(d => d.id === selectedDistributorId) || null;
+  const selectedCustomer = allCustomers.find(c => c.id === selectedCustomerId) || null;
+  
+  // Filtered lists for combobox search
+  const filteredDistributors = allDistributors.filter(d => 
+    d.name.toLowerCase().includes(distributorSearch.toLowerCase()) ||
+    d.location.toLowerCase().includes(distributorSearch.toLowerCase())
+  );
+  const filteredCustomers = allCustomers.filter(c => 
+    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    c.location.toLowerCase().includes(customerSearch.toLowerCase())
+  );
+  
+  // Click-outside handler for dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (distributorDropdownRef.current && !distributorDropdownRef.current.contains(event.target as Node)) {
         setShowDistributorDropdown(false);
       }
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target as Node)) {
+        setShowCustomerDropdown(false);
+      }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   if (!isOpen) return null;
@@ -192,37 +176,16 @@ export default function CartModal({
   const remainingPoints = availablePoints - totalPoints;
   const hasItemsNeedingDriver = items.some(item => item.needs_driver);
 
-  const handleSelectDistributor = (distributor: Distributor) => {
-    setSelectedDistributor(distributor);
-    setDistributorSearch(distributor.name);
-    setShowDistributorDropdown(false);
-  };
-
-  const handleDistributorSearchChange = (value: string) => {
-    setDistributorSearch(value);
-    setSelectedDistributor(null);
-    setShowDistributorDropdown(true);
-  };
-
-  const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setCustomerSearch(customer.name);
-    setShowCustomerDropdown(false);
-  };
-
-  const handleCustomerSearchChange = (value: string) => {
-    setCustomerSearch(value);
-    setSelectedCustomer(null);
-    setShowCustomerDropdown(true);
-  };
-
   const handleEntityTypeChange = (type: RequestedForType) => {
     setEntityType(type);
     // Reset selections when switching type
-    setSelectedDistributor(null);
-    setSelectedCustomer(null);
+    setSelectedDistributorId(null);
+    setSelectedCustomerId(null);
+    // Reset search states
     setDistributorSearch("");
     setCustomerSearch("");
+    setShowDistributorDropdown(false);
+    setShowCustomerDropdown(false);
     // Reset points deduction to SELF when switching entity type
     setPointsDeductedFrom('SELF');
   };
@@ -286,10 +249,8 @@ export default function CartModal({
     items.forEach(item => onRemoveItem(item.id));
     setStep("cart");
     setRemarks("");
-    setDistributorSearch("");
-    setSelectedDistributor(null);
-    setCustomerSearch("");
-    setSelectedCustomer(null);
+    setSelectedDistributorId(null);
+    setSelectedCustomerId(null);
     setSvcDate("");
     setSvcTime("");
     setSvcDriver("without");
@@ -429,13 +390,16 @@ export default function CartModal({
                                   onClick={() =>
                                     onUpdateQuantity(
                                       item.id,
-                                      Math.max(1, item.quantity - 1)
+                                      Math.max(item.min_order_qty, item.quantity - 1)
                                     )
                                   }
+                                  disabled={item.quantity <= item.min_order_qty}
                                   className={`px-2 py-1 rounded ${
-                                    isDark
-                                      ? "bg-gray-800 hover:bg-gray-700"
-                                      : "bg-gray-200 hover:bg-gray-300"
+                                    item.quantity <= item.min_order_qty
+                                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                      : isDark
+                                        ? "bg-gray-800 hover:bg-gray-700"
+                                        : "bg-gray-200 hover:bg-gray-300"
                                   }`}
                                 >
                                   −
@@ -444,12 +408,19 @@ export default function CartModal({
                                   {item.quantity}
                                 </span>
                                 <button
-                                  onClick={() =>
-                                    onUpdateQuantity(item.id, Math.min(item.quantity + 1, item.available_stock))
+                                  onClick={() => {
+                                    const maxQty = item.max_order_qty !== null 
+                                      ? Math.min(item.max_order_qty, item.available_stock)
+                                      : item.available_stock;
+                                    onUpdateQuantity(item.id, Math.min(item.quantity + 1, maxQty));
+                                  }}
+                                  disabled={
+                                    item.quantity >= item.available_stock || 
+                                    (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
                                   }
-                                  disabled={item.quantity >= item.available_stock}
                                   className={`px-2 py-1 rounded ${
-                                    item.quantity >= item.available_stock
+                                    item.quantity >= item.available_stock || 
+                                    (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
                                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                                       : isDark
                                         ? "bg-gray-800 hover:bg-gray-700"
@@ -459,8 +430,14 @@ export default function CartModal({
                                   +
                                 </button>
                               </div>
-                              <span className={`text-xs ${item.quantity >= item.available_stock ? 'text-amber-500' : isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                              <span className={`text-xs ${
+                                item.quantity >= item.available_stock || 
+                                (item.max_order_qty !== null && item.quantity >= item.max_order_qty) 
+                                  ? 'text-amber-500' 
+                                  : isDark ? 'text-gray-500' : 'text-gray-400'
+                              }`}>
                                 {item.quantity}/{item.available_stock} available
+                                {item.max_order_qty !== null && ` (max ${item.max_order_qty})`}
                               </span>
                             </div>
                           ) : (
@@ -698,8 +675,8 @@ export default function CartModal({
                   
                   <div className="mt-4 space-y-4">
                     {entityType === 'DISTRIBUTOR' ? (
-                      /* Distributor Search */
-                      <div className="space-y-1 relative" ref={dropdownRef}>
+                      /* Distributor Searchable Combobox */
+                      <div className="space-y-1">
                         <label
                           className={`text-sm ${
                             isDark ? "text-gray-300" : "text-gray-700"
@@ -707,79 +684,80 @@ export default function CartModal({
                         >
                           Distributor Name
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={distributorSearch}
-                            onChange={(e) => handleDistributorSearchChange(e.target.value)}
-                            onFocus={() => setShowDistributorDropdown(true)}
-                            placeholder="Search for a distributor..."
-                            className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
+                        <div className="relative" ref={distributorDropdownRef}>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={selectedDistributor ? `${selectedDistributor.name} - ${selectedDistributor.location}` : distributorSearch}
+                              onChange={(e) => {
+                                setDistributorSearch(e.target.value);
+                                setSelectedDistributorId(null);
+                                setShowDistributorDropdown(true);
+                              }}
+                              onFocus={() => setShowDistributorDropdown(true)}
+                              placeholder={loadingEntities ? "Loading..." : "Search or select a distributor..."}
+                              disabled={loadingEntities}
+                              className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
+                                isDark
+                                  ? "bg-gray-800 border border-gray-700"
+                                  : "bg-gray-100 border border-gray-200"
+                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                            />
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none ${
+                              isDark ? "text-gray-500" : "text-gray-400"
+                            }`}>
+                              <Search className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4" />
+                            </div>
+                          </div>
+                          
+                          {/* Dropdown List */}
+                          {showDistributorDropdown && !loadingEntities && (
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
                               isDark
-                                ? "bg-gray-800 border border-gray-700"
-                                : "bg-gray-100 border border-gray-200"
-                            }`}
-                          />
-                          <Search className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                            isDark ? "text-gray-500" : "text-gray-400"
-                          }`} />
+                                ? "bg-gray-800 border-gray-700"
+                                : "bg-white border-gray-200"
+                            }`}>
+                              {filteredDistributors.length === 0 ? (
+                                <div className="px-3 py-2 text-sm text-center">
+                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                    No distributors found
+                                  </span>
+                                </div>
+                              ) : (
+                                filteredDistributors.map((distributor) => (
+                                  <button
+                                    key={distributor.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setSelectedDistributorId(distributor.id);
+                                      setDistributorSearch("");
+                                      setShowDistributorDropdown(false);
+                                    }}
+                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
+                                      isDark
+                                        ? "hover:bg-white"
+                                        : "hover:bg-gray-900"
+                                    } ${selectedDistributorId === distributor.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
+                                      isDark ? "border-gray-700" : "border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="font-medium">{distributor.name}</div>
+                                    <div className={`text-xs mt-0.5 ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}>
+                                      {distributor.location}
+                                    </div>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* Distributor Dropdown */}
-                        {showDistributorDropdown && distributorSearch.length >= 2 && (
-                          <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-60 overflow-y-auto ${
-                            isDark
-                              ? "bg-gray-800 border-gray-700"
-                              : "bg-white border-gray-200"
-                          }`}>
-                            {loadingDistributors ? (
-                              <div className="px-3 py-2 text-sm text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  Searching...
-                                </span>
-                              </div>
-                            ) : distributors.length === 0 ? (
-                              <div className="px-3 py-2 text-sm text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  No distributors found
-                                </span>
-                              </div>
-                            ) : (
-                              distributors.map((distributor) => (
-                                <button
-                                  key={distributor.id}
-                                  onClick={() => handleSelectDistributor(distributor)}
-                                  className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
-                                    isDark
-                                      ? "hover:bg-white"
-                                      : "hover:bg-gray-900"
-                                  } border-b last:border-b-0 ${
-                                    isDark ? "border-gray-700" : "border-gray-200"
-                                  }`}
-                                >
-                                  <div className="font-medium">{distributor.name}</div>
-                                  <div className={`text-xs ${
-                                    isDark ? "text-gray-400" : "text-gray-600"
-                                  }`}>
-                                    {distributor.location} • {distributor.region}
-                                  </div>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        )}
-                        
-                        {selectedDistributor && (
-                          <div className={`text-xs mt-1 ${
-                            isDark ? "text-green-400" : "text-green-600"
-                          }`}>
-                            ✓ Selected: {selectedDistributor.name} ({selectedDistributor.location})
-                          </div>
-                        )}
                       </div>
                     ) : (
-                      /* Customer Search */
-                      <div className="space-y-1 relative" ref={dropdownRef}>
+                      /* Customer Searchable Combobox */
+                      <div className="space-y-1">
                         <label
                           className={`text-sm ${
                             isDark ? "text-gray-300" : "text-gray-700"
@@ -787,75 +765,76 @@ export default function CartModal({
                         >
                           Customer Name
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={customerSearch}
-                            onChange={(e) => handleCustomerSearchChange(e.target.value)}
-                            onFocus={() => setShowCustomerDropdown(true)}
-                            placeholder="Search for a customer..."
-                            className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
+                        <div className="relative" ref={customerDropdownRef}>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.location}` : customerSearch}
+                              onChange={(e) => {
+                                setCustomerSearch(e.target.value);
+                                setSelectedCustomerId(null);
+                                setShowCustomerDropdown(true);
+                              }}
+                              onFocus={() => setShowCustomerDropdown(true)}
+                              placeholder={loadingEntities ? "Loading..." : "Search or select a customer..."}
+                              disabled={loadingEntities}
+                              className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
+                                isDark
+                                  ? "bg-gray-800 border border-gray-700"
+                                  : "bg-gray-100 border border-gray-200"
+                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                            />
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none ${
+                              isDark ? "text-gray-500" : "text-gray-400"
+                            }`}>
+                              <Search className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4" />
+                            </div>
+                          </div>
+                          
+                          {/* Dropdown List */}
+                          {showCustomerDropdown && !loadingEntities && (
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
                               isDark
-                                ? "bg-gray-800 border border-gray-700"
-                                : "bg-gray-100 border border-gray-200"
-                            }`}
-                          />
-                          <Search className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                            isDark ? "text-gray-500" : "text-gray-400"
-                          }`} />
+                                ? "bg-gray-800 border-gray-700"
+                                : "bg-white border-gray-200"
+                            }`}>
+                              {filteredCustomers.length === 0 ? (
+                                <div className="px-3 py-2 text-sm text-center">
+                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                    No customers found
+                                  </span>
+                                </div>
+                              ) : (
+                                filteredCustomers.map((customer) => (
+                                  <button
+                                    key={customer.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setSelectedCustomerId(customer.id);
+                                      setCustomerSearch("");
+                                      setShowCustomerDropdown(false);
+                                    }}
+                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
+                                      isDark
+                                        ? "hover:bg-white"
+                                        : "hover:bg-gray-900"
+                                    } ${selectedCustomerId === customer.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
+                                      isDark ? "border-gray-700" : "border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="font-medium">{customer.name}</div>
+                                    <div className={`text-xs mt-0.5 ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}>
+                                      {customer.location}
+                                    </div>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* Customer Dropdown */}
-                        {showCustomerDropdown && customerSearch.length >= 2 && (
-                          <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-60 overflow-y-auto ${
-                            isDark
-                              ? "bg-gray-800 border-gray-700"
-                              : "bg-white border-gray-200"
-                          }`}>
-                            {loadingCustomers ? (
-                              <div className="px-3 py-2 text-sm text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  Searching...
-                                </span>
-                              </div>
-                            ) : customers.length === 0 ? (
-                              <div className="px-3 py-2 text-sm text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  No customers found
-                                </span>
-                              </div>
-                            ) : (
-                              customers.map((customer) => (
-                                <button
-                                  key={customer.id}
-                                  onClick={() => handleSelectCustomer(customer)}
-                                  className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
-                                    isDark
-                                      ? "hover:bg-white"
-                                      : "hover:bg-gray-900"
-                                  } border-b last:border-b-0 ${
-                                    isDark ? "border-gray-700" : "border-gray-200"
-                                  }`}
-                                >
-                                  <div className="font-medium">{customer.name}</div>
-                                  <div className={`text-xs ${
-                                    isDark ? "text-gray-400" : "text-gray-600"
-                                  }`}>
-                                    {customer.location}
-                                  </div>
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        )}
-                        
-                        {selectedCustomer && (
-                          <div className={`text-xs mt-1 ${
-                            isDark ? "text-green-400" : "text-green-600"
-                          }`}>
-                            ✓ Selected: {selectedCustomer.name} ({selectedCustomer.location})
-                          </div>
-                        )}
                       </div>
                     )}
                     <div className="space-y-1">
@@ -1325,8 +1304,8 @@ export default function CartModal({
                   
                   <div className="mt-3 space-y-3">
                     {entityType === 'DISTRIBUTOR' ? (
-                      /* Distributor Search */
-                      <div className="space-y-1 relative">
+                      /* Distributor Searchable Combobox */
+                      <div className="space-y-1">
                         <label
                           className={`text-xs ${
                             isDark ? "text-gray-300" : "text-gray-700"
@@ -1334,67 +1313,76 @@ export default function CartModal({
                         >
                           Distributor Name
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={distributorSearch}
-                            onChange={(e) => handleDistributorSearchChange(e.target.value)}
-                            onFocus={() => setShowDistributorDropdown(true)}
-                            placeholder="Search for a distributor..."
-                            className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
-                              isDark
-                                ? "bg-gray-800 border border-gray-700"
-                                : "bg-gray-100 border border-gray-200"
-                            }`}
-                          />
-                          <Search className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                            isDark ? "text-gray-500" : "text-gray-400"
-                          }`} />
-                        </div>
-                        
-                        {/* Distributor Dropdown */}
-                        {showDistributorDropdown && distributorSearch.length >= 2 && (
-                          <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
-                            isDark
-                              ? "bg-gray-800 border-gray-700"
-                              : "bg-white border-gray-200"
-                          }`}>
-                            {loadingDistributors ? (
-                              <div className="px-3 py-2 text-xs text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  Searching...
-                                </span>
-                              </div>
-                            ) : distributors.length === 0 ? (
-                              <div className="px-3 py-2 text-xs text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  No distributors found
-                                </span>
-                              </div>
-                            ) : (
-                              distributors.map((distributor) => (
-                                <button
-                                  key={distributor.id}
-                                  onClick={() => handleSelectDistributor(distributor)}
-                                  className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
-                                    isDark
-                                      ? "hover:bg-white"
-                                      : "hover:bg-gray-900"
-                                  } border-b last:border-b-0 ${
-                                    isDark ? "border-gray-700" : "border-gray-200"
-                                  }`}
-                                >
-                                  <div className="font-medium">{distributor.name}</div>
-                                  <div className={`text-xs mt-0.5 ${
-                                    isDark ? "text-gray-400" : "text-gray-600"
-                                  }`}>
-                                    {distributor.location} • {distributor.region}
-                                  </div>
-                                </button>
-                              ))
-                            )}
+                        <div className="relative" ref={distributorDropdownRef}>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={selectedDistributor ? `${selectedDistributor.name} - ${selectedDistributor.location}` : distributorSearch}
+                              onChange={(e) => {
+                                setDistributorSearch(e.target.value);
+                                setSelectedDistributorId(null);
+                                setShowDistributorDropdown(true);
+                              }}
+                              onFocus={() => setShowDistributorDropdown(true)}
+                              placeholder={loadingEntities ? "Loading..." : "Search or select..."}
+                              disabled={loadingEntities}
+                              className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
+                                isDark
+                                  ? "bg-gray-800 border border-gray-700"
+                                  : "bg-gray-100 border border-gray-200"
+                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                            />
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none ${
+                              isDark ? "text-gray-500" : "text-gray-400"
+                            }`}>
+                              <Search className="h-3 w-3" />
+                              <ChevronDown className="h-3 w-3" />
+                            </div>
                           </div>
-                        )}
+                          
+                          {/* Dropdown List */}
+                          {showDistributorDropdown && !loadingEntities && (
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto ${
+                              isDark
+                                ? "bg-gray-800 border-gray-700"
+                                : "bg-white border-gray-200"
+                            }`}>
+                              {filteredDistributors.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-center">
+                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                    No distributors found
+                                  </span>
+                                </div>
+                              ) : (
+                                filteredDistributors.map((distributor) => (
+                                  <button
+                                    key={distributor.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setSelectedDistributorId(distributor.id);
+                                      setDistributorSearch("");
+                                      setShowDistributorDropdown(false);
+                                    }}
+                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
+                                      isDark
+                                        ? "hover:bg-white"
+                                        : "hover:bg-gray-900"
+                                    } ${selectedDistributorId === distributor.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
+                                      isDark ? "border-gray-700" : "border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="font-medium">{distributor.name}</div>
+                                    <div className={`text-xs mt-0.5 ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}>
+                                      {distributor.location}
+                                    </div>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
                         
                         {selectedDistributor && (
                           <div className={`text-xs mt-1 ${
@@ -1405,8 +1393,8 @@ export default function CartModal({
                         )}
                       </div>
                     ) : (
-                      /* Customer Search */
-                      <div className="space-y-1 relative">
+                      /* Customer Searchable Combobox */
+                      <div className="space-y-1">
                         <label
                           className={`text-xs ${
                             isDark ? "text-gray-300" : "text-gray-700"
@@ -1414,67 +1402,76 @@ export default function CartModal({
                         >
                           Customer Name
                         </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={customerSearch}
-                            onChange={(e) => handleCustomerSearchChange(e.target.value)}
-                            onFocus={() => setShowCustomerDropdown(true)}
-                            placeholder="Search for a customer..."
-                            className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
-                              isDark
-                                ? "bg-gray-800 border border-gray-700"
-                                : "bg-gray-100 border border-gray-200"
-                            }`}
-                          />
-                          <Search className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                            isDark ? "text-gray-500" : "text-gray-400"
-                          }`} />
-                        </div>
-                        
-                        {/* Customer Dropdown */}
-                        {showCustomerDropdown && customerSearch.length >= 2 && (
-                          <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
-                            isDark
-                              ? "bg-gray-800 border-gray-700"
-                              : "bg-white border-gray-200"
-                          }`}>
-                            {loadingCustomers ? (
-                              <div className="px-3 py-2 text-xs text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  Searching...
-                                </span>
-                              </div>
-                            ) : customers.length === 0 ? (
-                              <div className="px-3 py-2 text-xs text-center">
-                                <span className={isDark ? "text-gray-400" : "text-gray-600"}>
-                                  No customers found
-                                </span>
-                              </div>
-                            ) : (
-                              customers.map((customer) => (
-                                <button
-                                  key={customer.id}
-                                  onClick={() => handleSelectCustomer(customer)}
-                                  className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
-                                    isDark
-                                      ? "hover:bg-white"
-                                      : "hover:bg-gray-900"
-                                  } border-b last:border-b-0 ${
-                                    isDark ? "border-gray-700" : "border-gray-200"
-                                  }`}
-                                >
-                                  <div className="font-medium">{customer.name}</div>
-                                  <div className={`text-xs mt-0.5 ${
-                                    isDark ? "text-gray-400" : "text-gray-600"
-                                  }`}>
-                                    {customer.location}
-                                  </div>
-                                </button>
-                              ))
-                            )}
+                        <div className="relative" ref={customerDropdownRef}>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.location}` : customerSearch}
+                              onChange={(e) => {
+                                setCustomerSearch(e.target.value);
+                                setSelectedCustomerId(null);
+                                setShowCustomerDropdown(true);
+                              }}
+                              onFocus={() => setShowCustomerDropdown(true)}
+                              placeholder={loadingEntities ? "Loading..." : "Search or select..."}
+                              disabled={loadingEntities}
+                              className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
+                                isDark
+                                  ? "bg-gray-800 border border-gray-700"
+                                  : "bg-gray-100 border border-gray-200"
+                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                            />
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none ${
+                              isDark ? "text-gray-500" : "text-gray-400"
+                            }`}>
+                              <Search className="h-3 w-3" />
+                              <ChevronDown className="h-3 w-3" />
+                            </div>
                           </div>
-                        )}
+                          
+                          {/* Dropdown List */}
+                          {showCustomerDropdown && !loadingEntities && (
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto ${
+                              isDark
+                                ? "bg-gray-800 border-gray-700"
+                                : "bg-white border-gray-200"
+                            }`}>
+                              {filteredCustomers.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-center">
+                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                    No customers found
+                                  </span>
+                                </div>
+                              ) : (
+                                filteredCustomers.map((customer) => (
+                                  <button
+                                    key={customer.id}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setSelectedCustomerId(customer.id);
+                                      setCustomerSearch("");
+                                      setShowCustomerDropdown(false);
+                                    }}
+                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
+                                      isDark
+                                        ? "hover:bg-white"
+                                        : "hover:bg-gray-900"
+                                    } ${selectedCustomerId === customer.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
+                                      isDark ? "border-gray-700" : "border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="font-medium">{customer.name}</div>
+                                    <div className={`text-xs mt-0.5 ${
+                                      isDark ? "text-gray-400" : "text-gray-600"
+                                    }`}>
+                                      {customer.location}
+                                    </div>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
                         
                         {selectedCustomer && (
                           <div className={`text-xs mt-1 ${

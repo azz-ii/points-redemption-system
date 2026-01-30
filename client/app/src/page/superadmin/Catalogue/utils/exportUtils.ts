@@ -28,12 +28,13 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
   { key: "category", label: "Category", enabled: true },
   { key: "points", label: "Points", enabled: true },
   { key: "price", label: "Price", enabled: true },
+  { key: "pricing_type", label: "Pricing Type", enabled: false },
+  { key: "has_stock", label: "Tracks Inventory", enabled: true },
   { key: "stock", label: "Stock", enabled: true },
   { key: "available_stock", label: "Available Stock", enabled: true },
   { key: "committed_stock", label: "Committed Stock", enabled: false },
   { key: "status", label: "Status", enabled: true },
   { key: "formatted_date", label: "Date Added", enabled: true },
-  { key: "pricing_type", label: "Pricing Type", enabled: false },
   { key: "description", label: "Description", enabled: false },
   { key: "purpose", label: "Purpose", enabled: false },
   { key: "specifications", label: "Specifications", enabled: false },
@@ -83,6 +84,8 @@ function getCellValue(item: Product, key: ExportColumn["key"]): string | number 
       };
       return pricingMap[item.pricing_type || "FIXED"] || item.pricing_type || "Fixed";
     }
+    case "has_stock":
+      return item.has_stock ? "Yes" : "No";
     default: {
       const value = item[key as keyof Product];
       if (typeof value === "boolean") {
@@ -265,6 +268,8 @@ export function generateExcel(items: Product[], options: ExportOptions): void {
       case "formatted_date":
         return { wch: 12 };
       case "pricing_type":
+        return { wch: 15 };
+      case "has_stock":
         return { wch: 15 };
       case "description":
       case "purpose":

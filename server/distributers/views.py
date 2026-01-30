@@ -77,6 +77,15 @@ class DistributorViewSet(viewsets.ModelViewSet):
         """
         return self.list(request)
 
+    @action(detail=False, methods=['get'])
+    def list_all(self, request):
+        """
+        Lightweight endpoint for dropdown use - returns id, name, and location only.
+        No pagination for efficient single-request loading.
+        """
+        queryset = Distributor.objects.filter(is_archived=False).values('id', 'name', 'location').order_by('name')
+        return Response(list(queryset))
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DistributorExportView(APIView):

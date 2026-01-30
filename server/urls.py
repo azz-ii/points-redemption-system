@@ -23,7 +23,7 @@ urlpatterns = [
     path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     # Catalogue Management API
     path('api/catalogue/', CatalogueItemListCreateView.as_view(), name='catalogue_list_create'),
-    path('api/catalogue/<int:item_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
+    path('api/catalogue/<int:product_id>/', CatalogueItemDetailView.as_view(), name='catalogue_detail'),
     # Test session
     path('api/test-session/', TestSessionView.as_view(), name='test_session'),
 ]

@@ -35,6 +35,7 @@ interface ApiInventoryItem {
   stock: number;
   committed_stock: number;
   available_stock: number;
+  has_stock: boolean;
   legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
   stock_status: string;
 }
@@ -111,6 +112,7 @@ function Inventory() {
           stock: item.stock,
           committed_stock: item.committed_stock,
           available_stock: item.available_stock,
+          has_stock: item.has_stock,
           legend: item.legend,
           stock_status: item.stock_status as StockStatus,
         })

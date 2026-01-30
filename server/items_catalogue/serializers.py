@@ -25,7 +25,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'item_code', 'item_name', 'legend', 'category',
             'description', 'purpose', 'specifications',
             'points', 'price', 'pricing_type',
-            'stock', 'committed_stock', 'available_stock',
+            'min_order_qty', 'max_order_qty',
+            'has_stock', 'stock', 'committed_stock', 'available_stock',
             'date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by'
         ]
         extra_kwargs = {
@@ -46,12 +47,13 @@ class ProductInventorySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'item_code', 'item_name', 'legend', 'category',
             'points', 'price', 'pricing_type',
-            'stock', 'committed_stock', 'available_stock',
+            'min_order_qty', 'max_order_qty',
+            'has_stock', 'stock', 'committed_stock', 'available_stock',
             'stock_status'
         ]
     
     def get_stock_status(self, obj):
-        """Calculate stock status based on available_stock (stock - committed)"""
+        """Calculate stock status for inventory-tracked items only."""
         available = obj.available_stock
         if available == 0:
             return 'Out of Stock'

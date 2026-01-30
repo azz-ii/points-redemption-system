@@ -14,7 +14,10 @@ interface NewItem {
   pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
   points: string;
   price: string;
+  min_order_qty: string;
+  max_order_qty: string;
   stock: string;
+  has_stock: boolean;
   points_multiplier: string;
   price_multiplier: string;
 }
@@ -386,6 +389,64 @@ export function CreateItemModal({
               />
             </div>
 
+            {/* Order Quantity Limits */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="min-order-qty-input"
+                  className="block text-sm font-medium mb-2"
+                >
+                  Min Order Qty *
+                </label>
+                <input
+                  id="min-order-qty-input"
+                  type="number"
+                  min="1"
+                  value={newItem.min_order_qty}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, min_order_qty: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500 text-base`}
+                  placeholder="1"
+                  aria-required="true"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="max-order-qty-input"
+                  className="block text-sm font-medium mb-2"
+                >
+                  Max Order Qty
+                </label>
+                <input
+                  id="max-order-qty-input"
+                  type="number"
+                  min="1"
+                  value={newItem.max_order_qty}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, max_order_qty: e.target.value })
+                  }
+                  className={`w-full px-4 py-3 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:outline-none focus:border-blue-500 text-base`}
+                  placeholder="Leave empty for unlimited"
+                />
+                <p
+                  className={`text-xs mt-1 ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Leave empty for unlimited
+                </p>
+              </div>
+            </div>
+
             {/* Stock */}
             <div>
               <label
@@ -402,13 +463,40 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, stock: e.target.value })
                 }
+                disabled={!newItem.has_stock}
                 className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500 text-base disabled:opacity-50 disabled:cursor-not-allowed`}
                 placeholder="e.g., 100"
               />
+            </div>
+
+            {/* Has Stock Toggle */}
+            <div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newItem.has_stock}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, has_stock: e.target.checked })
+                  }
+                  className={`w-5 h-5 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600"
+                      : "bg-white border-gray-300"
+                  } focus:ring-blue-500 accent-blue-600`}
+                />
+                <span className="text-sm font-medium">Track Inventory</span>
+              </label>
+              <p
+                className={`text-xs mt-1 ml-8 ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                Uncheck for made-to-order items that don't require stock tracking
+              </p>
             </div>
           </div>
         </div>

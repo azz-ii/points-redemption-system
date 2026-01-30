@@ -127,6 +127,11 @@ export const distributorsApi = {
     if (!response.ok) throw new Error('Failed to fetch distributors');
     return response.json();
   },
+  getListAll: async (): Promise<{id: number; name: string; location: string}[]> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/list_all/`);
+    if (!response.ok) throw new Error('Failed to fetch distributors list');
+    return response.json();
+  },
   create: async (data: Omit<Distributor, 'id' | 'date_added'>): Promise<Distributor> => {
     const response = await fetch(`${API_BASE_URL}/distributors/`, {
       method: 'POST',

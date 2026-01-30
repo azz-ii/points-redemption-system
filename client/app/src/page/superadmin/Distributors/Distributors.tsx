@@ -289,12 +289,6 @@ function Distributors() {
     try {
       setSettingPoints(true);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.log("[DEBUG] Request timed out after 30 seconds");
-        controller.abort();
-      }, 30000);
-      
       console.log("[DEBUG] Sending POST to /api/distributors/bulk_update_points/");
       const response = await fetch("/api/distributors/bulk_update_points/", {
         method: "POST",
@@ -302,13 +296,11 @@ function Distributors() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        signal: controller.signal,
         body: JSON.stringify({
           points_delta: pointsDelta,
           password: password,
         }),
       });
-      clearTimeout(timeoutId);
       
       console.log("[DEBUG] Response received:", response.status);
       const data = await response.json();
@@ -324,11 +316,7 @@ function Distributors() {
       fetchDistributors();
     } catch (err) {
       console.error("[DEBUG] Error bulk updating points:", err);
-      if (err instanceof Error && err.name === "AbortError") {
-        alert("Request timed out. Please check if the server is running.");
-      } else {
-        alert("Error updating points");
-      }
+      alert("Error updating points. Please try again.");
     } finally {
       setSettingPoints(false);
     }
@@ -340,12 +328,6 @@ function Distributors() {
     try {
       setSettingPoints(true);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.log("[DEBUG] Reset request timed out after 30 seconds");
-        controller.abort();
-      }, 30000);
-      
       console.log("[DEBUG] Sending POST for reset to /api/distributors/bulk_update_points/");
       const response = await fetch("/api/distributors/bulk_update_points/", {
         method: "POST",
@@ -353,13 +335,11 @@ function Distributors() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        signal: controller.signal,
         body: JSON.stringify({
           reset_to_zero: true,
           password: password,
         }),
       });
-      clearTimeout(timeoutId);
       
       console.log("[DEBUG] Reset response received:", response.status);
       const data = await response.json();
@@ -375,11 +355,7 @@ function Distributors() {
       fetchDistributors();
     } catch (err) {
       console.error("[DEBUG] Error resetting points:", err);
-      if (err instanceof Error && err.name === "AbortError") {
-        alert("Request timed out. Please check if the server is running.");
-      } else {
-        alert("Error resetting points");
-      }
+      alert("Error resetting points. Please try again.");
     } finally {
       setSettingPoints(false);
     }

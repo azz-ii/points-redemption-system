@@ -62,7 +62,22 @@ class Product(models.Model):
         default=PricingType.FIXED
     )
     
+    # Order quantity limits
+    min_order_qty = models.PositiveIntegerField(
+        default=1,
+        help_text='Minimum quantity per order. Default is 1.'
+    )
+    max_order_qty = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Maximum quantity per order. Null means unlimited.'
+    )
+    
     # Stock management
+    has_stock = models.BooleanField(
+        default=True,
+        help_text='Whether this item tracks inventory. False for made-to-order items.'
+    )
     stock = models.PositiveIntegerField(default=0)
     committed_stock = models.PositiveIntegerField(default=0)
     
@@ -87,21 +102,31 @@ class Product(models.Model):
     
     @property
     def available_stock(self):
-        """Returns stock available for new requests (stock minus committed)"""
+        """Returns stock available for new requests (stock minus committed).
+        For items without stock tracking (has_stock=False), returns unlimited (999999).
+        """
+        if not self.has_stock:
+            return 999999  # Unlimited for made-to-order items
         return max(0, self.stock - self.committed_stock)
     
     def commit_stock(self, quantity):
-        """Reserve stock for a pending request"""
+        """Reserve stock for a pending request. No-op for items without stock tracking."""
+        if not self.has_stock:
+            return  # No stock tracking for made-to-order items
         self.committed_stock += quantity
         self.save(update_fields=['committed_stock'])
     
     def uncommit_stock(self, quantity):
-        """Release reserved stock (on rejection/cancellation)"""
+        """Release reserved stock (on rejection/cancellation). No-op for items without stock tracking."""
+        if not self.has_stock:
+            return  # No stock tracking for made-to-order items
         self.committed_stock = max(0, self.committed_stock - quantity)
         self.save(update_fields=['committed_stock'])
     
     def deduct_stock(self, quantity):
-        """Deduct actual stock and release committed (on processing)"""
+        """Deduct actual stock and release committed (on processing). No-op for items without stock tracking."""
+        if not self.has_stock:
+            return  # No stock tracking for made-to-order items
         self.stock -= quantity
         self.committed_stock = max(0, self.committed_stock - quantity)
         self.save(update_fields=['stock', 'committed_stock'])

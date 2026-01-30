@@ -78,6 +78,11 @@ export const customersApi = {
     if (!response.ok) throw new Error('Failed to fetch customers');
     return response.json();
   },
+  getListAll: async (): Promise<{id: number; name: string; location: string}[]> => {
+    const response = await fetch(`${API_BASE_URL}/customers/list_all/`);
+    if (!response.ok) throw new Error('Failed to fetch customers list');
+    return response.json();
+  },
   create: async (data: Omit<Customer, 'id' | 'date_added'>): Promise<Customer> => {
     const response = await fetch(`${API_BASE_URL}/customers/`, {
       method: 'POST',

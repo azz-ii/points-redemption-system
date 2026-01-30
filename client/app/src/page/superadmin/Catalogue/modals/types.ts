@@ -20,6 +20,9 @@ export interface Product {
   points: string;
   price: string;
   pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  min_order_qty: number;
+  max_order_qty: number | null;
+  has_stock: boolean;
   stock: number;
   committed_stock: number;
   available_stock: number;

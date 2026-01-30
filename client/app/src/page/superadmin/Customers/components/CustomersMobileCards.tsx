@@ -62,13 +62,7 @@ export function CustomersMobileCards({
                   <h3 className="font-semibold text-sm">{customer.name}</h3>
                   <p className="text-xs text-gray-500">ID: {customer.id}</p>
                 </div>
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    resolvedTheme === "dark"
-                      ? "bg-blue-900 text-blue-300"
-                      : "bg-blue-100 text-blue-800"
-                  }`}
-                >
+                <span className="text-sm font-medium">
                   {customer.points} pts
                 </span>
               </div>

@@ -92,14 +92,24 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
             )}
             <p
               className={`text-xs mt-1 ${
-                item.available_stock === 0 
-                  ? 'text-red-500 font-medium'
-                  : item.available_stock < 10
-                    ? 'text-amber-500'
-                    : isDark ? "text-gray-500" : "text-gray-500"
+                !item.has_stock
+                  ? isDark ? 'text-blue-400' : 'text-blue-500'
+                  : item.available_stock === 0 
+                    ? 'text-red-500 font-medium'
+                    : item.available_stock < 10
+                      ? 'text-amber-500'
+                      : isDark ? "text-gray-500" : "text-gray-500"
               }`}
             >
-              {item.available_stock === 0 ? 'Out of stock' : `${item.available_stock} available`} • {item.category}
+              {!item.has_stock 
+                ? 'Made to Order' 
+                : item.available_stock === 0 
+                  ? 'Out of stock' 
+                  : `${item.available_stock} available`} • {item.category}
+            </p>
+            {/* Order quantity limits hint */}
+            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              Qty: {item.min_order_qty ?? 1}{item.max_order_qty ? ` - ${item.max_order_qty}` : '+'}
             </p>
           </div>
           {/* Add button */}

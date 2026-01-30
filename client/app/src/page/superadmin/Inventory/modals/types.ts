@@ -12,6 +12,7 @@ export interface InventoryItem {
   stock: number;
   committed_stock: number;
   available_stock: number;
+  has_stock: boolean;
   legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
   stock_status: StockStatus;
 }

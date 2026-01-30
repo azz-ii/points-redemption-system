@@ -192,30 +192,31 @@ function Catalogue() {
     pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
     points: "",
     price: "",
+    min_order_qty: "1",
+    max_order_qty: "",
     stock: "0",
+    has_stock: true,
     points_multiplier: "",
     price_multiplier: "",
   });
 
   const [editItem, setEditItem] = useState({
-    reward: "",
+    item_code: "",
     item_name: "",
+    category: "",
     description: "",
     purpose: "",
     specifications: "",
     legend: "GIVEAWAY" as "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS",
-    variants: [
-      {
-        id: null as number | null,
-        item_code: "",
-        category: "",
-        points: "",
-        price: "",
-        pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
-        points_multiplier: "",
-        price_multiplier: "",
-      },
-    ],
+    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    points: "",
+    price: "",
+    min_order_qty: "1",
+    max_order_qty: "",
+    stock: "",
+    has_stock: true,
+    points_multiplier: "",
+    price_multiplier: "",
   });
 
   // Modal state for edit/view/delete
@@ -231,7 +232,6 @@ function Catalogue() {
   );
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
 
   // Handle create item submission
   const handleCreateItem = async () => {
@@ -286,7 +286,10 @@ function Catalogue() {
         pricing_type: newItem.pricing_type,
         points: isFixed ? parseFloat(newItem.points) : parseFloat(newItem.points_multiplier),
         price: isFixed ? parseFloat(newItem.price) : parseFloat(newItem.price_multiplier),
+        min_order_qty: parseInt(newItem.min_order_qty) || 1,
+        max_order_qty: newItem.max_order_qty ? parseInt(newItem.max_order_qty) : null,
         stock: parseInt(newItem.stock) || 0,
+        has_stock: newItem.has_stock,
       };
       
       console.log("[Catalogue] Creating product (POST) payload:", payload);
@@ -322,7 +325,10 @@ function Catalogue() {
         pricing_type: "FIXED",
         points: "",
         price: "",
+        min_order_qty: "1",
+        max_order_qty: "",
         stock: "0",
+        has_stock: true,
         points_multiplier: "",
         price_multiplier: "",
       });
@@ -344,52 +350,29 @@ function Catalogue() {
   // Handle edit click
   const handleEditClick = async (item: Product) => {
     setEditingProductId(item.id);
-    setLoadingVariants(true);
     setShowEditModal(true);
     setEditError(null);
 
-    try {
-      // Fetch all products for this item (use large page_size to get all)
-      const response = await fetch(`/api/catalogue/?page_size=1000`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-
-      const data = await response.json();
-      const allProducts = (data.results || []).filter(
-        (p: Product) => p.item_name === item.item_name
-      );
-
-      if (allProducts.length > 0) {
-        const product = allProducts[0];
-        setEditItem({
-          reward: "",
-          item_name: product.item_name,
-          description: product.description,
-          purpose: product.purpose,
-          specifications: product.specifications,
-          legend: product.legend,
-          variants: allProducts.map((p: Product) => ({
-            id: p.id,
-            item_code: p.item_code,
-            category: p.category || "",
-            points: p.points,
-            price: p.price,
-            pricing_type: p.pricing_type || "FIXED",
-            points_multiplier: "",
-            price_multiplier: "",
-          })),
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setEditError("Failed to load products. Please try again.");
-    } finally {
-      setLoadingVariants(false);
-    }
+    // Populate edit form with selected product's data
+    const isFixed = item.pricing_type === "FIXED";
+    setEditItem({
+      item_code: item.item_code,
+      item_name: item.item_name,
+      category: item.category || "",
+      description: item.description,
+      purpose: item.purpose,
+      specifications: item.specifications,
+      legend: item.legend,
+      pricing_type: item.pricing_type || "FIXED",
+      points: isFixed ? item.points.toString() : "",
+      price: isFixed ? item.price.toString() : "",
+      min_order_qty: (item.min_order_qty ?? 1).toString(),
+      max_order_qty: item.max_order_qty?.toString() ?? "",
+      stock: item.stock?.toString() || "0",
+      has_stock: item.has_stock ?? true,
+      points_multiplier: !isFixed ? item.points.toString() : "",
+      price_multiplier: !isFixed ? item.price.toString() : "",
+    });
   };
 
   // Handle update item
@@ -399,6 +382,10 @@ function Catalogue() {
     setEditError(null);
 
     // Validation
+    if (!editItem.item_code.trim()) {
+      setEditError("Item code is required");
+      return;
+    }
     if (!editItem.item_name.trim()) {
       setEditError("Item name is required");
       return;
@@ -407,86 +394,71 @@ function Catalogue() {
       setEditError("Legend is required");
       return;
     }
-    if (editItem.variants.length === 0) {
-      setEditError("At least one product is required");
-      return;
-    }
-    for (let i = 0; i < editItem.variants.length; i++) {
-      const variant = editItem.variants[i];
-      const isFixed = variant.pricing_type === "FIXED";
-      if (!variant.item_code.trim()) {
-        setEditError(`Product ${i + 1}: Item code is required`);
+
+    const isFixed = editItem.pricing_type === "FIXED";
+    if (isFixed) {
+      if (!editItem.points.trim()) {
+        setEditError("Points is required");
         return;
       }
-      if (isFixed) {
-        if (!variant.points.toString().trim()) {
-          setEditError(`Product ${i + 1}: Points is required`);
-          return;
-        }
-        if (!variant.price.toString().trim()) {
-          setEditError(`Product ${i + 1}: Price is required`);
-          return;
-        }
-      } else {
-        if (!variant.points_multiplier.toString().trim()) {
-          setEditError(`Product ${i + 1}: Points multiplier is required`);
-          return;
-        }
-        if (!variant.price_multiplier.toString().trim()) {
-          setEditError(`Product ${i + 1}: Price multiplier is required`);
-          return;
-        }
+      if (!editItem.price.trim()) {
+        setEditError("Price is required");
+        return;
+      }
+    } else {
+      if (!editItem.points_multiplier.trim()) {
+        setEditError("Points multiplier is required");
+        return;
+      }
+      if (!editItem.price_multiplier.trim()) {
+        setEditError("Price multiplier is required");
+        return;
       }
     }
 
     try {
       setUpdating(true);
-      const updatePayload = {
-        reward: "",
+
+      const payload = {
+        item_code: editItem.item_code,
         item_name: editItem.item_name,
+        category: editItem.category || "",
         description: editItem.description,
         purpose: editItem.purpose,
         specifications: editItem.specifications,
         legend: editItem.legend,
-        variants: editItem.variants.map((v) => {
-          const isFixed = v.pricing_type === "FIXED";
-          return {
-            id: v.id,
-            item_code: v.item_code,
-            category: v.category || null,
-            pricing_type: v.pricing_type || "FIXED",
-            // For FIXED: use points/price. For dynamic: use multiplier values for both fields
-            points: isFixed ? v.points : v.points_multiplier,
-            price: isFixed ? v.price : v.price_multiplier,
-            points_multiplier: isFixed ? null : v.points_multiplier,
-            price_multiplier: isFixed ? null : v.price_multiplier,
-          };
-        }),
+        pricing_type: editItem.pricing_type,
+        points: isFixed ? parseFloat(editItem.points) : parseFloat(editItem.points_multiplier),
+        price: isFixed ? parseFloat(editItem.price) : parseFloat(editItem.price_multiplier),
+        min_order_qty: parseInt(editItem.min_order_qty) || 1,
+        max_order_qty: editItem.max_order_qty ? parseInt(editItem.max_order_qty) : null,
+        stock: parseInt(editItem.stock) || 0,
+        has_stock: editItem.has_stock,
       };
+
       console.log(
-        "[Catalogue] Updating product (PUT) id=",
+        "[Catalogue] Updating product (PATCH) id=",
         editingProductId,
         " payload:",
-        updatePayload
+        payload
       );
-      const response = await fetch(
-        `/api/catalogue/item/${editingProductId}/`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatePayload),
-        }
-      );
-      console.log("[Catalogue] PUT response status:", response.status);
+
+      const response = await fetch(`/api/catalogue/${editingProductId}/`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("[Catalogue] PATCH response status:", response.status);
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(
-          data.details?.item_name?.[0] ||
-            data.details?.item_code?.[0] ||
+          data.item_code?.[0] ||
+            data.item_name?.[0] ||
             data.error ||
             "Failed to update product"
         );
@@ -516,43 +488,6 @@ function Catalogue() {
   const handleDeleteClick = (item: Product) => {
     setDeleteTarget(item);
     setShowDeleteModal(true);
-  };
-
-  // Add variant to edit item
-  const addEditVariant = () => {
-    setEditItem({
-      ...editItem,
-      variants: [
-        ...editItem.variants,
-        {
-          id: null,
-          item_code: "",
-          option_description: "",
-          points: "",
-          price: "",
-          image_url: "",
-          pricing_type: "FIXED",
-          points_multiplier: "",
-          price_multiplier: "",
-        },
-      ],
-    });
-  };
-
-  // Remove variant from edit item
-  const removeEditVariant = (index: number) => {
-    setEditItem({
-      ...editItem,
-      variants: editItem.variants.filter((_, i) => i !== index),
-    });
-  };
-
-  // Update variant in edit item
-  const updateEditVariant = (index: number, field: string, value: string) => {
-    const updatedVariants = editItem.variants.map((v, i) =>
-      i === index ? { ...v, [field]: value } : v
-    );
-    setEditItem({ ...editItem, variants: updatedVariants });
   };
 
   const confirmDelete = async () => {
@@ -993,14 +928,9 @@ function Catalogue() {
         onClose={() => setShowEditModal(false)}
         editItem={editItem}
         setEditItem={setEditItem}
-        loading={loadingVariants}
         updating={updating}
         error={editError}
         onConfirm={handleUpdateItem}
-        onAddVariant={addEditVariant}
-        onRemoveVariant={removeEditVariant}
-        onUpdateVariant={updateEditVariant}
-        users={users}
       />
 
       <ViewItemModal

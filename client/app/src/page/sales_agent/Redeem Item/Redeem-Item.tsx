@@ -112,27 +112,37 @@ export default function RedeemItem() {
   );
 
   const handleAddToCart = (item: RedeemItemData) => {
-    // Check if item has available stock
-    if (item.available_stock <= 0) {
+    // Check if item has available stock (skip check for made-to-order items)
+    if (item.has_stock && item.available_stock <= 0) {
       toast.error("Out of stock", {
         description: `${item.name} is currently unavailable`,
       });
       return;
     }
 
+    const minQty = item.min_order_qty ?? 1;
+    const maxQty = item.max_order_qty;
+
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id);
       if (existingItem) {
-        // For FIXED items, increment quantity up to available stock
+        // For FIXED items, increment quantity up to available stock and max order qty
         if (item.pricing_type === 'FIXED') {
-          if (existingItem.quantity >= item.available_stock) {
+          const effectiveMax = maxQty !== null 
+            ? Math.min(maxQty, item.available_stock) 
+            : item.available_stock;
+          
+          if (existingItem.quantity >= effectiveMax) {
+            const limitReason = maxQty !== null && existingItem.quantity >= maxQty
+              ? `Maximum order quantity is ${maxQty}`
+              : `Only ${item.available_stock} available`;
             toast.error("Maximum quantity reached", {
-              description: `Only ${item.available_stock} available for ${item.name}`,
+              description: limitReason,
             });
             return prevItems;
           }
           return prevItems.map((i) =>
-            i.id === item.id ? { ...i, quantity: Math.min(i.quantity + 1, item.available_stock) } : i
+            i.id === item.id ? { ...i, quantity: Math.min(i.quantity + 1, effectiveMax) } : i
           );
         }
         // Dynamic item already in cart - just return existing
@@ -145,12 +155,14 @@ export default function RedeemItem() {
           name: item.name,
           points: item.points,
           image: item.image,
-          quantity: 1,
+          quantity: minQty,
           needs_driver: item.needs_driver,
           pricing_type: item.pricing_type,
           points_multiplier: item.points_multiplier,
           dynamic_quantity: item.pricing_type === 'FIXED' ? undefined : 0,
           available_stock: item.available_stock,
+          min_order_qty: minQty,
+          max_order_qty: maxQty,
         },
       ];
     });

@@ -18,6 +18,9 @@ export interface Product {
   points: string;
   price: string;
   pricing_type: PricingType;
+  min_order_qty: number;
+  max_order_qty: number | null;
+  has_stock: boolean;
   stock: number;
   committed_stock: number;
   available_stock: number;
@@ -81,7 +84,10 @@ export interface RedeemItemData {
   points: number; // For FIXED items: per-unit points. For dynamic: the multiplier
   category: string;
   pricing_type: PricingType;
+  has_stock: boolean; // Whether item tracks inventory or is made-to-order
   available_stock: number; // Available stock (stock - committed)
+  min_order_qty: number; // Minimum quantity per order
+  max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
 }
 
 export interface UserProfile {
@@ -142,7 +148,10 @@ export function transformProductToRedeemItem(product: Product): RedeemItemData {
     points: pointsValue,
     category: category,
     pricing_type: pricingType,
+    has_stock: product.has_stock ?? true,
     available_stock: product.available_stock || 0,
+    min_order_qty: product.min_order_qty ?? 1,
+    max_order_qty: product.max_order_qty ?? null,
   };
 
   console.log("[API] Transformed item:", transformed);

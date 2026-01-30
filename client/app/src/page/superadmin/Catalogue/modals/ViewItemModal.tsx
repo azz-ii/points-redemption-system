@@ -116,12 +116,44 @@ export function ViewItemModal({
                 <p className="font-semibold">₱{product.price}</p>
               </div>
 
-              {/* Stock Information */}
+              {/* Tracks Inventory */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Stock / Available / Committed</p>
-                <p className="font-semibold">
-                  {product.stock} / {product.available_stock} / {product.committed_stock}
-                </p>
+                <p className="text-xs text-gray-500 mb-1">Inventory Tracking</p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    product.has_stock
+                      ? "bg-green-500 text-white"
+                      : "bg-blue-500 text-white"
+                  }`}
+                >
+                  {product.has_stock ? "Tracks Stock" : "Made to Order"}
+                </span>
+              </div>
+
+              {/* Stock Information */}
+              {product.has_stock ? (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Stock / Available / Committed</p>
+                  <p className="font-semibold">
+                    {product.stock} / {product.available_stock} / {product.committed_stock}
+                  </p>
+                </div>
+              ) : (
+                <div className="md:col-span-2">
+                  <p className="text-xs text-gray-500 mb-1">Stock Status</p>
+                  <p className="font-semibold text-blue-600">Made to order - No stock tracking</p>
+                </div>
+              )}
+
+              {/* Order Quantity Limits */}
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Min Order Qty</p>
+                <p className="font-semibold">{product.min_order_qty ?? 1}</p>
+              </div>
+
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Max Order Qty</p>
+                <p className="font-semibold">{product.max_order_qty ?? "Unlimited"}</p>
               </div>
             </div>
 

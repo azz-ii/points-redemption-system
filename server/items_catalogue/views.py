@@ -108,6 +108,26 @@ class ProductDetailView(APIView):
                 "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
     
+    def patch(self, request, product_id):
+        """Partially update a product's details"""
+        try:
+            product = Product.objects.get(id=product_id)
+            serializer = ProductSerializer(product, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "message": "Product updated successfully",
+                    "product": serializer.data
+                }, status=status.HTTP_200_OK)
+            return Response({
+                "error": "Failed to update product",
+                "details": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Product.DoesNotExist:
+            return Response({
+                "error": "Product not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+    
     def delete(self, request, product_id):
         """Delete a product"""
         try:
@@ -135,11 +155,12 @@ class InventoryListView(APIView):
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def get(self, request):
-        """Get paginated list of inventory items with stock status"""
+        """Get paginated list of inventory items with stock status (only items that track stock)"""
         search = request.query_params.get('search', '').strip()
         status_filter = request.query_params.get('status', '').strip()
         
-        products = Product.objects.all()
+        # Only show items that track inventory (has_stock=True)
+        products = Product.objects.filter(has_stock=True)
         
         if search:
             products = products.filter(

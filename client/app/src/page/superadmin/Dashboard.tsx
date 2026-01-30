@@ -296,17 +296,6 @@ function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsResetModalOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Reset Points"
-            >
-              <RotateCcw className="h-5 w-5" />
-            </button>
-            <button
               onClick={() => setIsNotificationOpen(true)}
               className={`p-2 rounded-lg ${
                 resolvedTheme === "dark"
@@ -355,18 +344,6 @@ function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsResetModalOpen(true)}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
-                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
-                }`}
-                title="Reset Points"
-              >
-                <RotateCcw className="h-5 w-5" />
-                Reset Points
-              </button>
               <button
                 onClick={() => setIsNotificationOpen(true)}
                 className={`p-2 rounded-lg ${

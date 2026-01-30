@@ -294,11 +294,16 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                     'quantity': qty
                 }
         
-        # Validate available stock for all products
+        # Validate available stock for all products (skip items with has_stock=False)
         insufficient_stock_items = []
         for product_id, data in product_quantities.items():
             product = data['product']
             requested_qty = data['quantity']
+            
+            # Skip stock validation for made-to-order items
+            if not product.has_stock:
+                continue
+            
             available = product.available_stock  # stock - committed_stock
             
             if available < requested_qty:
