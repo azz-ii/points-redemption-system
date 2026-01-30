@@ -28,7 +28,7 @@ from views import (
     ChangePasswordView,
     ActivateAccountView,
 )
-from users.views import UserListCreateView, UserDetailView, CurrentUserView, UserExportView
+from users.views import UserListCreateView, UserDetailView, CurrentUserView, UserExportView, BulkUpdatePointsView
 from items_catalogue.views import CatalogueItemListCreateView, CatalogueItemDetailView, CatalogueItemUpdateView, InventoryListView, InventoryDetailView, BulkApprovalTypeUpdateView, BulkAssignMarketingView
 
 urlpatterns = [
@@ -44,6 +44,7 @@ urlpatterns = [
     # User Management API
     path('api/users/', UserListCreateView.as_view(), name='user_list_create'),
     path('api/users/export/', UserExportView.as_view(), name='user_export'),
+    path('api/users/bulk_update_points/', BulkUpdatePointsView.as_view(), name='bulk_update_points'),
     path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     path('api/users/me/', CurrentUserView.as_view(), name='current_user'),
     # Catalogue Management API

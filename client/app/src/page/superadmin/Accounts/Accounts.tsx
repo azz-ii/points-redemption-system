@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useLogout, useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { usersApi } from "@/lib/users-api";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
@@ -1176,7 +1177,7 @@ function Accounts() {
       <SetPointsModal
         isOpen={showSetPointsModal}
         onClose={() => setShowSetPointsModal(false)}
-        accounts={accounts}
+        onFetchPage={usersApi.getAccountsPage}
         loading={loading}
         onSubmit={handleSetPoints}
         onBulkSubmit={handleBulkSetPoints}

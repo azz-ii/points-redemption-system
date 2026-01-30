@@ -12,7 +12,11 @@ from rest_framework.views import APIView
 from .models import Distributor
 from .serializers import DistributorSerializer
 import io
+import logging
 from datetime import datetime
+
+# Configure logger for distributor operations
+logger = logging.getLogger('distributors')
 
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     """Session authentication without CSRF checks for API endpoints"""
@@ -311,4 +315,119 @@ class DistributorExportView(APIView):
         except ImportError:
             return Response({
                 "error": "PDF export not available. Please install reportlab."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DistributorBulkUpdatePointsView(APIView):
+    """Bulk update points for all distributors with password verification"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def post(self, request):
+        """Apply points delta to all distributors"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if user is superadmin or admin
+        if not request.user.is_superuser:
+            profile = getattr(request.user, 'profile', None)
+            is_admin = profile and profile.position == 'Admin'
+            if not is_admin:
+                return Response({
+                    "error": "Only superadmins can perform bulk points update"
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get password from request
+        password = request.data.get('password', '')
+        if not password:
+            return Response({
+                "error": "Password is required for verification"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify password
+        if not request.user.check_password(password):
+            return Response({
+                "error": "Invalid password"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if this is a reset operation
+        reset_to_zero = request.data.get('reset_to_zero', False)
+        
+        if reset_to_zero:
+            points_delta = None
+            operation = "reset"
+        else:
+            # Get points delta
+            points_delta = request.data.get('points_delta')
+            if points_delta is None:
+                return Response({
+                    "error": "Points delta is required when not resetting"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                points_delta = int(points_delta)
+            except (ValueError, TypeError):
+                return Response({
+                    "error": "Points delta must be a valid integer"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            operation = "update"
+        
+        try:
+            # Get all distributors
+            distributors = Distributor.objects.all()
+            
+            updated_count = 0
+            failed_count = 0
+            failed_distributors = []
+            
+            # Update each distributor's points
+            for distributor in distributors:
+                try:
+                    if reset_to_zero:
+                        distributor.points = 0
+                    else:
+                        # Allow negative values
+                        distributor.points = (distributor.points or 0) + points_delta
+                    distributor.save()
+                    updated_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to update points for distributor {distributor.name}: {str(e)}")
+                    failed_count += 1
+                    failed_distributors.append(distributor.name)
+            
+            if reset_to_zero:
+                message = f"Successfully reset points to 0 for {updated_count} distributor(s)"
+                log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} distributors to 0"
+            else:
+                message = f"Successfully updated points for {updated_count} distributor(s)"
+                log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} distributors"
+            
+            response_data = {
+                "message": message,
+                "updated_count": updated_count,
+                "failed_count": failed_count,
+                "total_affected": len(distributors),
+                "operation": operation
+            }
+            
+            if not reset_to_zero:
+                response_data["points_delta"] = points_delta
+            
+            if failed_count > 0:
+                response_data["failed_distributors"] = failed_distributors
+                response_data["message"] = f"Updated {updated_count} of {len(distributors)} distributors. {failed_count} failed."
+            
+            logger.info(log_message)
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error in bulk points update: {str(e)}")
+            return Response({
+                "error": "Failed to update points",
+                "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

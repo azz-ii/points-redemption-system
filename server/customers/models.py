@@ -9,7 +9,7 @@ class Customer(models.Model):
     contact_email = models.EmailField(max_length=254, help_text="Contact email address")
     phone = models.CharField(max_length=20, help_text="Contact phone number")
     location = models.CharField(max_length=255, help_text="Location of the customer")
-    points = models.PositiveIntegerField(default=0, help_text='Current points balance for the customer')
+    points = models.IntegerField(default=0, help_text='Current points balance for the customer (can be negative)')
     date_added = models.DateField(auto_now_add=True, help_text="Date the customer was added")
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

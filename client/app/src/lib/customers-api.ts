@@ -12,7 +12,30 @@ export interface Customer {
   added_by_name?: string;
 }
 
+export interface PaginatedCustomersResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Customer[];
+}
+
 export const customersApi = {
+  getCustomersPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedCustomersResponse> => {
+    const url = new URL(`${API_BASE_URL}/customers/`, window.location.origin);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('page_size', pageSize.toString());
+    if (searchQuery) {
+      url.searchParams.append('search', searchQuery);
+    }
+    const response = await fetch(url.toString());
+    if (!response.ok) throw new Error('Failed to fetch customers');
+    const data = await response.json();
+    // Ensure we return paginated format
+    if (Array.isArray(data)) {
+      return { count: data.length, next: null, previous: null, results: data };
+    }
+    return data;
+  },
   getCustomers: async (searchQuery: string = ''): Promise<Customer[]> => {
     const url = new URL(`${API_BASE_URL}/customers/`, window.location.origin);
     if (searchQuery) {
@@ -23,6 +46,32 @@ export const customersApi = {
     const data = await response.json();
     // Handle both array and paginated response formats
     return Array.isArray(data) ? data : (data.results || []);
+  },
+  getAllCustomers: async (): Promise<Customer[]> => {
+    // Fetch all customers by requesting maximum page size and iterating through pages
+    let allCustomers: Customer[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const url = new URL(`${API_BASE_URL}/customers/`, window.location.origin);
+      url.searchParams.append('page', page.toString());
+      url.searchParams.append('page_size', '100'); // Max allowed by backend
+      
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error('Failed to fetch customers');
+      
+      const data = await response.json();
+      const results = Array.isArray(data) ? data : (data.results || []);
+      
+      allCustomers = [...allCustomers, ...results];
+      
+      // Check if there are more pages (pagination response has 'next' field)
+      hasMore = !Array.isArray(data) && data.next !== null;
+      page++;
+    }
+    
+    return allCustomers;
   },
   getAll: async (): Promise<Customer[]> => {
     const response = await fetch(`${API_BASE_URL}/customers/`);

@@ -1,13 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
-import { X, Save, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { Customer } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
+
+interface PaginatedCustomersResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Customer[];
+}
 
 interface SetPointsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customers: Customer[];
+  onFetchPage: (page: number, pageSize: number, searchQuery: string) => Promise<PaginatedCustomersResponse>;
   loading: boolean;
   onSubmit: (updates: { id: number; points: number }[]) => void;
   onBulkSubmit?: (pointsDelta: number, password: string) => void;
@@ -17,7 +24,7 @@ interface SetPointsModalProps {
 export function SetPointsModal({
   isOpen,
   onClose,
-  customers,
+  onFetchPage,
   loading,
   onSubmit,
   onBulkSubmit,
@@ -25,6 +32,19 @@ export function SetPointsModal({
 }: SetPointsModalProps) {
   const { resolvedTheme } = useTheme();
   const [pointsToAdd, setPointsToAdd] = useState<Record<number, number>>({});
+
+  // Data state
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoadingPage, setIsLoadingPage] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
   // Advanced section state
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -36,14 +56,44 @@ export function SetPointsModal({
   const [confirmationType, setConfirmationType] = useState<"bulk" | "reset">("bulk");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Initialize points to add (delta) when modal opens
+  // Calculate pagination
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Fetch page data when page or search changes
+  const fetchPageData = useCallback(async () => {
+    if (!isOpen) return;
+    
+    try {
+      setIsLoadingPage(true);
+      const data = await onFetchPage(currentPage, itemsPerPage, debouncedSearchQuery);
+      setCustomers(data.results);
+      setTotalCount(data.count);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      setCustomers([]);
+      setTotalCount(0);
+    } finally {
+      setIsLoadingPage(false);
+    }
+  }, [isOpen, currentPage, itemsPerPage, debouncedSearchQuery, onFetchPage]);
+
+  useEffect(() => {
+    fetchPageData();
+  }, [fetchPageData]);
+
+  // Initialize when modal opens
   useEffect(() => {
     if (isOpen) {
-      const initialDelta: Record<number, number> = {};
-      customers.forEach((customer) => {
-        initialDelta[customer.id] = 0; // Start with 0 (no change)
-      });
-      setPointsToAdd(initialDelta);
       // Reset confirmation modal
       setShowConfirmModal(false);
       setConfirmPassword("");
@@ -51,9 +101,17 @@ export function SetPointsModal({
       setShowAdvanced(false);
       setBulkPointsDelta(0);
       setConfirmBulkUpdate(false);
+      // Reset pagination and search
+      setCurrentPage(1);
+      setSearchQuery("");
+      setDebouncedSearchQuery("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]); // Only reset when modal opens
+  }, [isOpen]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery]);
 
   const handlePointsChange = (customerId: number, value: string) => {
     // Allow empty string, minus sign, or valid numbers
@@ -68,14 +126,27 @@ export function SetPointsModal({
   };
 
   const handleSubmit = () => {
-    const updates = customers.map((customer) => {
-      const delta = pointsToAdd[customer.id] || 0;
-      const newPoints = (customer.points || 0) + delta; // Allow negative values
-      return {
-        id: customer.id,
-        points: newPoints,
-      };
+    // Only submit updates for items with non-zero deltas
+    const updates: { id: number; points: number }[] = [];
+    
+    // Get all customer IDs that have point changes
+    Object.entries(pointsToAdd).forEach(([idStr, delta]) => {
+      if (delta !== 0) {
+        const id = parseInt(idStr, 10);
+        // Find the customer to get current points
+        const customer = customers.find(c => c.id === id);
+        if (customer) {
+          const newPoints = (customer.points || 0) + delta;
+          updates.push({ id, points: newPoints });
+        }
+      }
     });
+    
+    if (updates.length === 0) {
+      alert("No changes to save. Please add or subtract points for at least one customer.");
+      return;
+    }
+    
     onSubmit(updates);
   };
 
@@ -140,7 +211,7 @@ export function SetPointsModal({
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                {customers.length} customer{customers.length !== 1 ? "s" : ""}
+                {totalCount} customer{totalCount !== 1 ? "s" : ""}
               </p>
             </div>
             <button
@@ -166,6 +237,38 @@ export function SetPointsModal({
               Add or subtract points for customers. Enter positive numbers to add points, negative numbers to deduct. Changes will be applied when you click Save.
             </p>
 
+            {/* Search Bar */}
+            <div className="mb-4">
+              <div className="relative">
+                <Search
+                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                />
+                <input
+                  type="text"
+                  placeholder="Search by name, location, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                  }`}
+                  disabled={loading || isLoadingPage}
+                />
+              </div>
+            </div>
+
+            {/* Loading Indicator */}
+            {isLoadingPage && (
+              <div className="text-center py-8">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                  <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               {/* Header Row */}
               <div
@@ -183,7 +286,7 @@ export function SetPointsModal({
               </div>
 
               {/* Customer Rows */}
-              {customers.map((customer) => {
+              {!isLoadingPage && customers.map((customer) => {
                 const delta = pointsToAdd[customer.id] || 0;
                 const currentPoints = customer.points || 0;
                 const newTotal = currentPoints + delta; // Allow negative values
@@ -256,16 +359,65 @@ export function SetPointsModal({
               })}
             </div>
 
-            {customers.length === 0 && (
+            {!isLoadingPage && customers.length === 0 && (
               <div
                 className={`text-center py-8 ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                No customers found
+                {searchQuery ? "No customers match your search" : "No customers found"}
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalCount > itemsPerPage && (
+            <div
+              className={`flex items-center justify-between px-6 py-4 border-t ${
+                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
+              }`}
+            >
+              <div
+                className={`text-sm ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, totalCount)} of {totalCount} customers
+                {searchQuery && ` (search: "${searchQuery}")`}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1 || loading || isLoadingPage}
+                  className={`p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "hover:bg-gray-700 text-gray-300"
+                      : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <span
+                  className={`text-sm px-3 ${
+                    resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || loading || isLoadingPage}
+                  className={`p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "hover:bg-gray-700 text-gray-300"
+                      : "hover:bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Advanced Section */}
           {onBulkSubmit && (
@@ -341,7 +493,7 @@ export function SetPointsModal({
                       }`}
                     >
                       This will apply the same points adjustment to all{" "}
-                      {customers.length} customer(s). This action cannot
+                    {totalCount} customer(s). This action cannot
                       be undone.
                     </p>
                   </div>
@@ -407,7 +559,7 @@ export function SetPointsModal({
                             : "text-gray-700"
                         }`}
                       >
-                        I understand this will affect all {customers.length}{" "}
+                      I understand this will affect all {totalCount}{" "}
                         customer(s) and cannot be undone
                       </span>
                     </label>
@@ -459,7 +611,7 @@ export function SetPointsModal({
                         }`}
                       >
                         <AlertTriangle className="h-4 w-4" />
-                        {loading ? "Resetting..." : `Reset All ${customers.length} Customers to 0 Points`}
+                        {loading ? "Resetting..." : `Reset All ${totalCount} Customers to 0 Points`}
                       </button>
                     </>
                   )}
@@ -511,7 +663,7 @@ export function SetPointsModal({
         onConfirm={handleConfirmAction}
         confirmationType={confirmationType}
         bulkPointsDelta={bulkPointsDelta}
-        customersCount={customers.length}
+        customersCount={totalCount}
         loading={loading}
         password={confirmPassword}
         onPasswordChange={setConfirmPassword}

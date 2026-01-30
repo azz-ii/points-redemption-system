@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views
+from .views import DistributorViewSet, DistributorExportView, DistributorBulkUpdatePointsView
 
 router = DefaultRouter()
-router.register(r'distributors', views.DistributorViewSet)
+router.register(r'distributors', DistributorViewSet, basename='distributor')
 
 urlpatterns = [
+    path('api/distributors/export/', DistributorExportView.as_view(), name='distributor-export'),
+    path('api/distributors/bulk_update_points/', DistributorBulkUpdatePointsView.as_view(), name='distributor-bulk-update-points'),
     path('api/', include(router.urls)),
-    path('api/distributors/export/', views.DistributorExportView.as_view(), name='distributor-export'),
 ]

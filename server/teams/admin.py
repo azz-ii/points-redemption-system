@@ -15,16 +15,16 @@ class TeamMembershipInline(admin.TabularInline):
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     """Admin interface for Team model"""
-    list_display = ['name', 'approver_name', 'marketing_admin_name', 'member_count', 'created_at']
+    list_display = ['name', 'approver_name', 'member_count', 'created_at']
     list_filter = ['created_at']
-    search_fields = ['name', 'approver__profile__full_name', 'approver__username', 'marketing_admin__profile__full_name', 'marketing_admin__username']
-    autocomplete_fields = ['approver', 'marketing_admin']
+    search_fields = ['name', 'approver__profile__full_name', 'approver__username']
+    autocomplete_fields = ['approver']
     inlines = [TeamMembershipInline]
     readonly_fields = ['created_at', 'updated_at', 'member_count']
     
     fieldsets = (
         ('Team Information', {
-            'fields': ('name', 'approver', 'marketing_admin')
+            'fields': ('name', 'approver')
         }),
         ('Statistics', {
             'fields': ('member_count',),
@@ -43,14 +43,6 @@ class TeamAdmin(admin.ModelAdmin):
         return 'No Approver'
     approver_name.short_description = 'Approver'
     approver_name.admin_order_field = 'approver__profile__full_name'
-
-    def marketing_admin_name(self, obj):
-        """Display marketing admin's full name"""
-        if obj.marketing_admin and hasattr(obj.marketing_admin, 'profile'):
-            return obj.marketing_admin.profile.full_name
-        return 'No Marketing Admin'
-    marketing_admin_name.short_description = 'Marketing Admin'
-    marketing_admin_name.admin_order_field = 'marketing_admin__profile__full_name'
 
     def member_count(self, obj):
         """Display number of team members"""

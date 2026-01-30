@@ -654,7 +654,7 @@ function Distributors() {
       <SetPointsModal
         isOpen={showSetPointsModal}
         onClose={() => setShowSetPointsModal(false)}
-        distributors={distributors}
+        onFetchPage={distributorsApi.getDistributorsPage}
         loading={settingPoints}
         onSubmit={handleSetPoints}
         onBulkSubmit={handleBulkSetPoints}

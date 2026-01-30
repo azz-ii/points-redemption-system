@@ -12,6 +12,13 @@ export interface Distributor {
   date_added?: string;
 }
 
+export interface PaginatedDistributorsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Distributor[];
+}
+
 export interface DashboardStats {
   total_requests: number;
   pending_count: number;
@@ -62,6 +69,22 @@ export interface PaginatedResponse<T> {
 }
 
 export const distributorsApi = {
+  getDistributorsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedDistributorsResponse> => {
+    const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('page_size', pageSize.toString());
+    if (searchQuery) {
+      url.searchParams.append('search', searchQuery);
+    }
+    const response = await fetch(url.toString());
+    if (!response.ok) throw new Error('Failed to fetch distributors');
+    const data = await response.json();
+    // Ensure we return paginated format
+    if (Array.isArray(data)) {
+      return { count: data.length, next: null, previous: null, results: data };
+    }
+    return data;
+  },
   getDistributors: async (searchQuery: string = ''): Promise<Distributor[]> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
     if (searchQuery) {
@@ -72,6 +95,32 @@ export const distributorsApi = {
     const data = await response.json();
     // Handle both array and paginated response formats
     return Array.isArray(data) ? data : (data.results || []);
+  },
+  getAllDistributors: async (): Promise<Distributor[]> => {
+    // Fetch all distributors by requesting maximum page size and iterating through pages
+    let allDistributors: Distributor[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
+      url.searchParams.append('page', page.toString());
+      url.searchParams.append('page_size', '100'); // Max allowed by backend
+      
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error('Failed to fetch distributors');
+      
+      const data = await response.json();
+      const results = Array.isArray(data) ? data : (data.results || []);
+      
+      allDistributors = [...allDistributors, ...results];
+      
+      // Check if there are more pages (pagination response has 'next' field)
+      hasMore = !Array.isArray(data) && data.next !== null;
+      page++;
+    }
+    
+    return allDistributors;
   },
   getAll: async (): Promise<Distributor[]> => {
     const response = await fetch(`${API_BASE_URL}/distributors/`);

@@ -641,7 +641,7 @@ function Customers() {
       <SetPointsModal
         isOpen={showSetPointsModal}
         onClose={() => setShowSetPointsModal(false)}
-        customers={customers}
+        onFetchPage={customersApi.getCustomersPage}
         loading={settingPoints}
         onSubmit={handleSetPoints}
         onBulkSubmit={handleBulkSetPoints}

@@ -416,3 +416,125 @@ class UserExportView(APIView):
             return Response({
                 "error": "PDF export not available. Please install reportlab."
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BulkUpdatePointsView(APIView):
+    """Bulk update points for all active accounts with password verification"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def post(self, request):
+        """Apply points delta to all active accounts"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if user is superadmin
+        if not request.user.is_superuser:
+            profile = getattr(request.user, 'profile', None)
+            is_admin = profile and profile.position == 'Admin'
+            if not is_admin:
+                return Response({
+                    "error": "Only superadmins can perform bulk points update"
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get password from request
+        password = request.data.get('password', '')
+        if not password:
+            return Response({
+                "error": "Password is required for verification"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify password
+        if not request.user.check_password(password):
+            return Response({
+                "error": "Invalid password"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if this is a reset operation
+        reset_to_zero = request.data.get('reset_to_zero', False)
+        
+        if reset_to_zero:
+            points_delta = None
+            operation = "reset"
+        else:
+            # Get points delta
+            points_delta = request.data.get('points_delta')
+            if points_delta is None:
+                return Response({
+                    "error": "Points delta is required when not resetting"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                points_delta = int(points_delta)
+            except (ValueError, TypeError):
+                return Response({
+                    "error": "Points delta must be a valid integer"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            operation = "update"
+        
+        try:
+            # Get all active, non-banned users (excluding superusers)
+            active_users = User.objects.filter(
+                is_superuser=False,
+                profile__is_activated=True,
+                profile__is_banned=False
+            ).select_related('profile')
+            
+            updated_count = 0
+            failed_count = 0
+            failed_users = []
+            
+            # Update each user's points
+            for user in active_users:
+                try:
+                    if hasattr(user, 'profile'):
+                        if reset_to_zero:
+                            user.profile.points = 0
+                        else:
+                            user.profile.points = (user.profile.points or 0) + points_delta
+                        user.profile.save()
+                        updated_count += 1
+                    else:
+                        failed_count += 1
+                        failed_users.append(user.username)
+                except Exception as e:
+                    logger.error(f"Failed to update points for user {user.username}: {str(e)}")
+                    failed_count += 1
+                    failed_users.append(user.username)
+            
+            if reset_to_zero:
+                message = f"Successfully reset points to 0 for {updated_count} account(s)"
+                log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} accounts to 0"
+            else:
+                message = f"Successfully updated points for {updated_count} account(s)"
+                log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} accounts"
+            
+            response_data = {
+                "message": message,
+                "updated_count": updated_count,
+                "failed_count": failed_count,
+                "total_affected": len(active_users),
+                "operation": operation
+            }
+            
+            if not reset_to_zero:
+                response_data["points_delta"] = points_delta
+            
+            if failed_count > 0:
+                response_data["failed_users"] = failed_users
+                response_data["message"] = f"Updated {updated_count} of {len(active_users)} accounts. {failed_count} failed."
+            
+            logger.info(log_message)
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error in bulk points update: {str(e)}")
+            return Response({
+                "error": "Failed to update points",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
