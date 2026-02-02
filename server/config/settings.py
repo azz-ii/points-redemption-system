@@ -148,8 +148,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173",  # Vite dev server
     "http://127.0.0.1:5173",
+    "http://localhost:3000",  # IIS frontend
+    "http://127.0.0.1:3000",
     "https://points-redemption-system.onrender.com",
 ]
 
@@ -157,6 +159,8 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",  # IIS frontend
+    "http://127.0.0.1:3000",
     "https://points-redemption-system.onrender.com",
 ]
 
