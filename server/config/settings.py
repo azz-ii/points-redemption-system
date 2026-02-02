@@ -32,11 +32,13 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-u1@$9tf^z&d_ri^+!ws$o
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,points-redemption-system.onrender.com,.onrender.com',
-    cast=Csv()
-)
+# Hardcoded for Render deployment - remove env var complexity
+ALLOWED_HOSTS = [
+    'points-redemption-system.onrender.com',
+    '.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
 
 
 # Application definition
