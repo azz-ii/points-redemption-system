@@ -87,7 +87,7 @@ function HistoryRouter() {
 }
 
 export function AppRoutes() {
-  const { userPosition, isLoggedIn } = useAuth();
+  const { userPosition: _userPosition, isLoggedIn: _isLoggedIn } = useAuth();
 
   return (
     <Routes>

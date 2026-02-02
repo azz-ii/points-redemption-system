@@ -5,7 +5,7 @@ export interface RequestItemVariant {
   product: number;
   product_name: string;
   product_code: string;
-  category: string | null;
+  category?: string | null;
   quantity: number;
   points_per_item: number;
   total_points: number;

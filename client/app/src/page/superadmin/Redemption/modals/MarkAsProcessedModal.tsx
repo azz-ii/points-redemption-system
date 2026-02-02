@@ -5,17 +5,17 @@ import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types
 
 interface MarkAsProcessedModalProps extends ModalBaseProps {
   item: RedemptionItem | null;
-  myItems: RequestItemVariant[];
-  pendingCount: number;
-  onConfirm: () => Promise<void>;
+  myItems?: RequestItemVariant[];
+  pendingCount?: number;
+  onConfirm: ((remarks?: string) => Promise<void>) | (() => Promise<void>);
 }
 
 export function MarkAsProcessedModal({
   isOpen,
   onClose,
   item,
-  myItems,
-  pendingCount,
+  myItems = [],
+  pendingCount = 0,
   onConfirm,
 }: MarkAsProcessedModalProps) {
   const { resolvedTheme } = useTheme();

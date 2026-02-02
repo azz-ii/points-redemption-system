@@ -56,6 +56,9 @@ function Catalogue() {
       price: "1200",
       legend: "MERCH",
       pricing_type: "FIXED",
+      min_order_qty: 1,
+      max_order_qty: null,
+      has_stock: true,
       stock: 100,
       committed_stock: 10,
       available_stock: 90,
@@ -68,7 +71,7 @@ function Catalogue() {
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
+  const [_users, setUsers] = useState<User[]>([]);
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -232,6 +235,25 @@ function Catalogue() {
   );
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+
+  // Additional modal state for product/variant operations
+  const [viewProductTarget, setViewProductTarget] = useState<Product | null>(null);
+  const [showViewProductModal, setShowViewProductModal] = useState(false);
+  const [editVariantTarget, setEditVariantTarget] = useState<Product | null>(null);
+  const [editVariantData, setEditVariantData] = useState({
+    item_code: "",
+    category: "",
+    points: "",
+    price: "",
+    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    points_multiplier: "",
+    price_multiplier: "",
+  });
+  const [showEditVariantModal, setShowEditVariantModal] = useState(false);
+  const [editVariantError, setEditVariantError] = useState<string | null>(null);
+  const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
+  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [updatingVariant, setUpdatingVariant] = useState(false);
 
   // Handle create item submission
   const handleCreateItem = async () => {

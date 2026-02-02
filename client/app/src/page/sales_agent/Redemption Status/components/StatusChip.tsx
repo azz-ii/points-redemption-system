@@ -1,8 +1,8 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StatusChipProps {
-  status: "PENDING" | "APPROVED" | "REJECTED" | "Pending" | "Approved" | "Rejected";
-  processingStatus?: "NOT_PROCESSED" | "PROCESSED" | "CANCELLED";
+  status: string;
+  processingStatus?: string;
   isDark: boolean;
 }
 

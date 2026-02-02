@@ -8,6 +8,8 @@ export interface Customer {
   location?: string;
   points?: number;
   date_added?: string;
+  created_at?: string;
+  updated_at?: string;
   added_by?: number;
   added_by_name?: string;
 }

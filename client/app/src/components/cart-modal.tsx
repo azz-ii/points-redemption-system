@@ -10,11 +10,11 @@ export interface CartItem {
   id: string;
   name: string;
   points: number; // For FIXED: per-unit points. For dynamic: points_multiplier
-  image: string;
+  image?: string;
   quantity: number; // For FIXED pricing items
-  needs_driver: boolean;
+  needs_driver?: boolean;
   pricing_type: PricingType;
-  points_multiplier: number | null; // For dynamic items
+  points_multiplier?: number | null; // For dynamic items
   dynamic_quantity?: number; // For dynamic items (sqft, invoice amount, etc.)
   available_stock: number; // Available stock for validation
   min_order_qty: number; // Minimum quantity per order

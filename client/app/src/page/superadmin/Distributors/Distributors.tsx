@@ -67,9 +67,9 @@ function Distributors() {
     const query = searchQuery.toLowerCase();
     return (
       distributor.name.toLowerCase().includes(query) ||
-      distributor.contact_email.toLowerCase().includes(query) ||
-      distributor.location.toLowerCase().includes(query) ||
-      distributor.region.toLowerCase().includes(query)
+      (distributor.contact_email?.toLowerCase().includes(query) ?? false) ||
+      (distributor.location?.toLowerCase().includes(query) ?? false) ||
+      (distributor.region?.toLowerCase().includes(query) ?? false)
     );
   });
 
@@ -170,10 +170,10 @@ function Distributors() {
     setEditingDistributorId(distributor.id);
     setEditDistributor({
       name: distributor.name,
-      contact_email: distributor.contact_email,
-      phone: distributor.phone,
-      location: distributor.location,
-      region: distributor.region,
+      contact_email: distributor.contact_email ?? "",
+      phone: distributor.phone ?? "",
+      location: distributor.location ?? "",
+      region: distributor.region ?? "",
     });
     setShowEditModal(true);
     setEditError(null);

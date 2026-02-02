@@ -2,7 +2,7 @@ export interface HistoryItem {
   id: number;
   requested_by: number;
   requested_by_name: string;
-  requested_for: number;
+  requested_for: number | null;
   requested_for_name: string;
   team: number | null;
   team_name: string | null;
@@ -47,7 +47,7 @@ export interface HistoryItem {
     product: number;
     product_name: string;
     product_code: string;
-    category: string | null;
+    category?: string | null;
     quantity: number;
     points_per_item: number;
     total_points: number;

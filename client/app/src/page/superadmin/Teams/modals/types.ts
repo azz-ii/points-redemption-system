@@ -58,6 +58,13 @@ export interface ApproverOption {
   email: string;
 }
 
+// Marketing admin option for team assignment
+export interface MarketingAdminOption {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
 export interface SalesAgentOption {
   id: number;
   username: string;

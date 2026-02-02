@@ -128,7 +128,7 @@ function Dashboard() {
     setCancelRequest(item);
   };
 
-  const confirmMarkAsProcessed = async (remarks: string) => {
+  const confirmMarkAsProcessed = async (remarks?: string) => {
     if (!processRequest) return;
 
     try {

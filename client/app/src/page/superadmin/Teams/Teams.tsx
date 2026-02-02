@@ -30,6 +30,7 @@ import {
   type NewTeamData,
   type EditTeamData,
   type ApproverOption,
+  type MarketingAdminOption,
 } from "./modals";
 import { TeamsTable } from "./components";
 import type { Team } from "./components/columns";
@@ -60,6 +61,7 @@ function Teams() {
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
   const [approvers, setApprovers] = useState<ApproverOption[]>([]);
+  const [marketingAdmins, setMarketingAdmins] = useState<MarketingAdminOption[]>([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
     approver: null,

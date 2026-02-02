@@ -68,3 +68,8 @@ export const getLegendColor = (legend: string): string => {
       return "bg-gray-500 text-white";
   }
 };
+
+// Backward compatibility aliases
+export type CatalogueItem = Product;
+export type Variant = Product;
+export type CatalogueVariant = Product;

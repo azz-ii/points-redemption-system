@@ -88,6 +88,10 @@ export interface RedeemItemData {
   available_stock: number; // Available stock (stock - committed)
   min_order_qty: number; // Minimum quantity per order
   max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
+  // Additional fields for cart functionality
+  image?: string;
+  needs_driver?: boolean;
+  points_multiplier?: number | null;
 }
 
 export interface UserProfile {
@@ -339,6 +343,7 @@ export interface RedemptionRequestResponse {
     product: number;
     product_name: string;
     product_code: string;
+    category?: string | null;
     quantity: number;
     points_per_item: number;
     total_points: number;

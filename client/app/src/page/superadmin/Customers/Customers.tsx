@@ -67,8 +67,8 @@ function Customers() {
     const query = searchQuery.toLowerCase();
     return (
       customer.name.toLowerCase().includes(query) ||
-      customer.contact_email.toLowerCase().includes(query) ||
-      customer.location.toLowerCase().includes(query)
+      (customer.contact_email?.toLowerCase().includes(query) ?? false) ||
+      (customer.location?.toLowerCase().includes(query) ?? false)
     );
   });
 
@@ -162,9 +162,9 @@ function Customers() {
     setEditingCustomerId(customer.id);
     setEditCustomer({
       name: customer.name,
-      contact_email: customer.contact_email,
-      phone: customer.phone,
-      location: customer.location,
+      contact_email: customer.contact_email ?? "",
+      phone: customer.phone ?? "",
+      location: customer.location ?? "",
     });
     setShowEditModal(true);
     setEditError(null);

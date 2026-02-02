@@ -1,5 +1,6 @@
 // Backend API response types (mirroring Django serializers)
-export type { ModalBaseProps } from "@/components/modals";
+import type { ModalBaseProps } from "@/components/modals";
+export type { ModalBaseProps };
 
 export interface CatalogueItem {
   id: number;

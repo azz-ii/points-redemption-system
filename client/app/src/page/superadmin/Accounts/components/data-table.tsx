@@ -72,9 +72,9 @@ export function DataTable<TData, TValue>({
   onExport,
   editingRowId = null,
   editedData = {},
-  onEditRow,
-  onSaveRow,
-  onCancelEdit,
+  onEditRow: _onEditRow,
+  onSaveRow: _onSaveRow,
+  onCancelEdit: _onCancelEdit,
   onFieldChange,
   fieldErrors = {},
 }: DataTableProps<TData, TValue>) {

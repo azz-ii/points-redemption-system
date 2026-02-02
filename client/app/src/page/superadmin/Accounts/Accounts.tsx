@@ -4,7 +4,6 @@ import { useTheme } from "next-themes";
 import { useLogout, useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
-import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -51,6 +50,7 @@ function Accounts() {
     full_name: "",
     email: "",
     position: "",
+    points: 0,
     is_activated: false,
     is_banned: false,
   });
@@ -185,6 +185,7 @@ function Accounts() {
       full_name: "",
       email: "",
       position: "",
+      points: 0,
       is_activated: false,
       is_banned: false,
     });
@@ -583,7 +584,7 @@ function Accounts() {
   };
 
   // Mobile pagination
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, _setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
@@ -603,7 +604,7 @@ function Accounts() {
   const handleFieldChange = useCallback((field: string, value: any) => {
     setEditedData((prev) => {
       // Only update if value actually changed
-      if (prev[field] === value) {
+      if ((prev as Record<string, any>)[field] === value) {
         return prev;
       }
       return { ...prev, [field]: value };
