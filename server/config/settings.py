@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
-from decouple import Config, RepositoryEnv
+from decouple import Config, RepositoryEnv, Csv
 import dj_database_url
 import os
 
@@ -32,7 +32,11 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-u1@$9tf^z&d_ri^+!ws$o
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,points-redemption-system.onrender.com,.onrender.com',
+    cast=Csv()
+)
 
 
 # Application definition
@@ -143,12 +147,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://points-redemption-system.onrender.com",
 ]
 
 # CSRF trusted origins for cross-origin requests
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://points-redemption-system.onrender.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
