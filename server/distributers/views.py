@@ -440,3 +440,57 @@ class DistributorBulkUpdatePointsView(APIView):
                 "error": "Failed to update points",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DistributorBatchUpdatePointsView(APIView):
+    """Batch update points for specific distributors (optimized single request)"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def post(self, request):
+        """Update points for multiple specific distributors in a single request"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        updates = request.data.get('updates', [])
+        
+        if not updates:
+            return Response({
+                "error": "No updates provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated_ids = []
+        failed = []
+        
+        for update in updates:
+            try:
+                distributor_id = update.get('id')
+                new_points = update.get('points')
+                
+                if distributor_id is None or new_points is None:
+                    failed.append({'id': distributor_id, 'error': 'Missing id or points'})
+                    continue
+                
+                distributor = Distributor.objects.get(id=distributor_id)
+                distributor.points = int(new_points)  # Allow negative points
+                distributor.save(update_fields=['points'])
+                updated_ids.append(distributor_id)
+            except Distributor.DoesNotExist:
+                failed.append({'id': distributor_id, 'error': 'Distributor not found'})
+            except (ValueError, TypeError) as e:
+                failed.append({'id': distributor_id, 'error': f'Invalid points value: {str(e)}'})
+            except Exception as e:
+                logger.error(f"Failed to update points for distributor {distributor_id}: {str(e)}")
+                failed.append({'id': distributor_id, 'error': str(e)})
+        
+        return Response({
+            "message": f"Updated {len(updated_ids)} distributor(s)",
+            "updated_count": len(updated_ids),
+            "failed_count": len(failed),
+            "updated_ids": updated_ids,
+            "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)

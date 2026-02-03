@@ -237,27 +237,20 @@ function Customers() {
     }
   };
 
-  // Handle set points submission
+  // Handle set points submission - batch updates (only changed customers)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
       
-      // Update points for all customers
-      const updateResults = await Promise.allSettled(
-        updates.map(update =>
-          customersApi.update(update.id, { points: update.points })
-        )
-      );
-
-      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
-      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      // Use batch API for efficiency
+      const result = await customersApi.batchUpdatePoints(updates);
       
       setShowSetPointsModal(false);
       
-      if (failCount === 0) {
-        alert(`Successfully updated points for ${successCount} customer(s)`);
+      if (result.failed_count === 0) {
+        alert(`Successfully updated points for ${result.updated_count} customer(s)`);
       } else {
-        alert(`Updated ${successCount} of ${updates.length} customer(s). ${failCount} failed.`);
+        alert(`Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`);
       }
       
       // Refresh customers list

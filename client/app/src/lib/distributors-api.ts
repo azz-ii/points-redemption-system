@@ -70,6 +70,14 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export interface BatchUpdateResponse {
+  message: string;
+  updated_count: number;
+  failed_count: number;
+  updated_ids: number[];
+  failed?: { id: number; error: string }[] | null;
+}
+
 export const distributorsApi = {
   getDistributorsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedDistributorsResponse> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
@@ -87,6 +95,26 @@ export const distributorsApi = {
     }
     return data;
   },
+
+  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/batch_update_points/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ updates }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to batch update points');
+    }
+    
+    return data;
+  },
+
   getDistributors: async (searchQuery: string = ''): Promise<Distributor[]> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
     if (searchQuery) {

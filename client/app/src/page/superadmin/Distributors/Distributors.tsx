@@ -250,27 +250,20 @@ function Distributors() {
     }
   };
 
-  // Handle set points submission
+  // Handle set points submission - batch updates (only changed distributors)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
       
-      // Update points for all distributors
-      const updateResults = await Promise.allSettled(
-        updates.map(update =>
-          distributorsApi.update(update.id, { points: update.points })
-        )
-      );
-
-      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
-      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      // Use batch API for efficiency
+      const result = await distributorsApi.batchUpdatePoints(updates);
       
       setShowSetPointsModal(false);
       
-      if (failCount === 0) {
-        alert(`Successfully updated points for ${successCount} distributor(s)`);
+      if (result.failed_count === 0) {
+        alert(`Successfully updated points for ${result.updated_count} distributor(s)`);
       } else {
-        alert(`Updated ${successCount} of ${updates.length} distributor(s). ${failCount} failed.`);
+        alert(`Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`);
       }
       
       // Refresh distributors list

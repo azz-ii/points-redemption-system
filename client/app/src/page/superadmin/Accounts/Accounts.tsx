@@ -699,37 +699,24 @@ function Accounts() {
     }
   }, [editingRowId, editedData, fetchAccounts]);
 
-  // Handle set points submission
+  // Handle set points submission - batch updates (only changed accounts)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setLoading(true);
       
-      // Update points for all users
-      const updateResults = await Promise.allSettled(
-        updates.map(update =>
-          fetchWithCsrf(`/api/users/${update.id}/`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ points: update.points }),
-          })
-        )
-      );
-
-      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
-      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      // Use batch API for efficiency
+      const result = await usersApi.batchUpdatePoints(updates);
       
       setShowSetPointsModal(false);
       
-      if (failCount === 0) {
+      if (result.failed_count === 0) {
         setToast({
-          message: `Successfully updated points for ${successCount} account(s)`,
+          message: `Successfully updated points for ${result.updated_count} account(s)`,
           type: "success",
         });
       } else {
         setToast({
-          message: `Updated ${successCount} of ${updates.length} account(s). ${failCount} failed.`,
+          message: `Updated ${result.updated_count} of ${updates.length} account(s). ${result.failed_count} failed.`,
           type: "error",
         });
       }
