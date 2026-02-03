@@ -34,10 +34,15 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # Hardcoded for Render deployment - remove env var complexity
 ALLOWED_HOSTS = [
-    'points-redemption-system.onrender.com',
-    '.onrender.com',
-    'localhost',
-    '127.0.0.1',
+    "localhost",
+    "127.0.0.1",
+    "52.163.243.237",  # Server IP
+    "points.n01tb.com",  # Production subdomain
+    "points-redemption.n01tb.com",  # Correct subdomain with hyphen
+    "n01tb.com",  # Main domain
+    "www.n01tb.com",  # www subdomain
+    "points-redemption-system.onrender.com",  # Existing Render deployment
+    ".onrender.com",
 ]
 
 
@@ -139,16 +144,23 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files (User uploads)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173",  # Vite dev server
     "http://127.0.0.1:5173",
+    "http://localhost:3000",  # IIS frontend (localhost)
+    "http://127.0.0.1:3000",
+    "http://points.n01tb.com",  # Production subdomain (HTTP)
+    "https://points.n01tb.com",  # Production subdomain (HTTPS)
+    "http://points-redemption.n01tb.com",  # Production subdomain HTTP
+    "https://points-redemption.n01tb.com",  # Production subdomain HTTPS
     "https://points-redemption-system.onrender.com",
 ]
 
@@ -156,6 +168,12 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",  # IIS frontend (localhost)
+    "http://127.0.0.1:3000",
+    "http://points.n01tb.com",  # Production subdomain (HTTP)
+    "https://points.n01tb.com",  # Production subdomain (HTTPS)
+    "http://points-redemption.n01tb.com",  # Production subdomain HTTP
+    "https://points-redemption.n01tb.com",  # Production subdomain HTTPS
     "https://points-redemption-system.onrender.com",
 ]
 

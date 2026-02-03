@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   UserPlus,
@@ -133,7 +134,7 @@ function Accounts() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users/");
+      const response = await fetch(`${API_URL}/users/`);
       const data = await response.json();
 
       if (response.ok) {
@@ -209,7 +210,7 @@ function Accounts() {
     }
 
     // Execute API call in background without blocking
-    fetchWithCsrf("/api/users/", {
+    fetchWithCsrf(`${API_URL}/users/`, {
       method: "POST",
       body: formData,
     })
@@ -738,7 +739,7 @@ function Accounts() {
     try {
       setLoading(true);
       
-      const response = await fetchWithCsrf("/api/users/bulk_update_points/", {
+      const response = await fetchWithCsrf(`${API_URL}/users/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -782,7 +783,7 @@ function Accounts() {
     try {
       setLoading(true);
       
-      const response = await fetchWithCsrf("/api/users/bulk_update_points/", {
+      const response = await fetchWithCsrf(`${API_URL}/users/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

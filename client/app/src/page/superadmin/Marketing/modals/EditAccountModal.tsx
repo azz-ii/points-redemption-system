@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { X, Package, Loader2, Check, AlertCircle } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import type { Account, ModalBaseProps, LegendAssignment } from "./types";
 import { LEGEND_OPTIONS } from "./types";
 
@@ -42,7 +43,7 @@ export function EditAccountModal({
   const fetchAssignments = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/catalogue/bulk-assign-marketing/");
+      const response = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`);
       const data = await response.json();
 
       if (response.ok) {
@@ -77,7 +78,7 @@ export function EditAccountModal({
       setError("");
       setSuccessMessage("");
 
-      const response = await fetchWithCsrf("/api/catalogue/bulk-assign-marketing/", {
+      const response = await fetchWithCsrf(`${API_URL}/catalogue/bulk-assign-marketing/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

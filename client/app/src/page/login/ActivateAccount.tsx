@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTheme } from "next-themes";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +58,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
     // Call API to activate account
     setIsLoading(true);
     try {
-      const response = await fetchWithCsrf("/api/activate-account/", {
+      const response = await fetchWithCsrf(`${API_URL}/activate-account/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, new_password: newPassword }),
