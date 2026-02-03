@@ -25,8 +25,8 @@ interface CampaignItem {
 }
 
 function MarketingDashboard() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
+  const _navigate = useNavigate();
+  const _handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

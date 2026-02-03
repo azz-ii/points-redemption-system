@@ -15,8 +15,8 @@ import { HistoryTable, HistoryMobileCards } from "./components";
 import { ViewHistoryModal } from "./modals";
 
 function ApproverHistory() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
+  const _navigate = useNavigate();
+  const _handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +24,7 @@ function ApproverHistory() {
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   // Fetch processed requests on mount
   useEffect(() => {
@@ -69,15 +69,15 @@ function ApproverHistory() {
   const endIndex = startIndex + pageSize;
   const paginatedItems = filteredItems.slice(startIndex, endIndex);
 
-  const handleNavigate = (
+  const _handleNavigate = (
     page: "dashboard" | "approver-requests" | "history" | "requests"
   ) => {
     if (page === "approver-requests" || page === "requests") {
-      navigate("/approver/requests");
+      _navigate("/approver/requests");
     } else if (page === "history") {
-      navigate("/approver/history");
+      _navigate("/approver/history");
     } else {
-      navigate("/approver/dashboard");
+      _navigate("/approver/dashboard");
     }
   };
 

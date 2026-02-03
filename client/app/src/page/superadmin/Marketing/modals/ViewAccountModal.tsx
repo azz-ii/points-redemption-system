@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { X, Package, Loader2 } from "lucide-react";
+import { API_URL } from "@/lib/config";
 import type { Account, ModalBaseProps, LegendAssignment } from "./types";
 import { LEGEND_OPTIONS } from "./types";
 
@@ -21,7 +22,7 @@ export function ViewAccountModal({
     if (!account) return;
     try {
       setLoading(true);
-      const response = await fetch("/api/catalogue/bulk-assign-marketing/");
+      const response = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`);
       const data = await response.json();
 
       if (response.ok) {

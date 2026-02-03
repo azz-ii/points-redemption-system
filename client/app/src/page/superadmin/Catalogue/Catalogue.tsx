@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   Search,
@@ -56,6 +57,9 @@ function Catalogue() {
       price: "1200",
       legend: "MERCH",
       pricing_type: "FIXED",
+      min_order_qty: 1,
+      max_order_qty: null,
+      has_stock: true,
       stock: 100,
       committed_stock: 10,
       available_stock: 90,
@@ -68,7 +72,7 @@ function Catalogue() {
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
+  const [_users, setUsers] = useState<User[]>([]);
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -84,7 +88,7 @@ function Catalogue() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("/api/users/", {
+        const response = await fetch(`${API_URL}/users/`, {
           credentials: "include",
         });
         if (response.ok) {
@@ -233,6 +237,25 @@ function Catalogue() {
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
 
+  // Additional modal state for product/variant operations
+  const [viewProductTarget, setViewProductTarget] = useState<Product | null>(null);
+  const [showViewProductModal, setShowViewProductModal] = useState(false);
+  const [editVariantTarget, setEditVariantTarget] = useState<Product | null>(null);
+  const [editVariantData, setEditVariantData] = useState({
+    item_code: "",
+    category: "",
+    points: "",
+    price: "",
+    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    points_multiplier: "",
+    price_multiplier: "",
+  });
+  const [showEditVariantModal, setShowEditVariantModal] = useState(false);
+  const [editVariantError, setEditVariantError] = useState<string | null>(null);
+  const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
+  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [updatingVariant, setUpdatingVariant] = useState(false);
+
   // Handle create item submission
   const handleCreateItem = async () => {
     setCreateError(null);
@@ -293,7 +316,7 @@ function Catalogue() {
       };
       
       console.log("[Catalogue] Creating product (POST) payload:", payload);
-      const response = await fetch("/api/catalogue/", {
+      const response = await fetch(`${API_URL}/catalogue/`, {
         method: "POST",
         credentials: "include",
         headers: {

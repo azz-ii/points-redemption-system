@@ -16,8 +16,8 @@ import { HistoryMobileCards } from "./components/HistoryMobileCards";
 import { ViewRequestModal } from "@/page/marketing/ProcessRequests/modals/ViewRequestModal";
 
 export default function MarketingHistory() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
+  const _navigate = useNavigate();
+  const _handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

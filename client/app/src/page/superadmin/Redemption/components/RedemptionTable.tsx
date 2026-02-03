@@ -8,7 +8,9 @@ interface RedemptionTableProps {
   loading: boolean;
   onView: (item: RedemptionItem) => void;
   onMarkAsProcessed: (item: RedemptionItem) => void;
-  canMarkProcessed: (item: RedemptionItem) => boolean;
+  canMarkProcessed?: (item: RedemptionItem) => boolean;
+  onEdit?: (item: RedemptionItem) => void;
+  onCancelRequest?: (item: RedemptionItem) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
@@ -19,7 +21,9 @@ export function RedemptionTable({
   loading,
   onView,
   onMarkAsProcessed,
-  canMarkProcessed,
+  canMarkProcessed = () => true,
+  onEdit: _onEdit,
+  onCancelRequest: _onCancelRequest,
   onRefresh,
   refreshing,
   onExport,

@@ -18,7 +18,8 @@ import {
   Download,
 } from "lucide-react";
 import type { InventoryItem, StockStatus } from "./modals";
-import { ViewInventoryModal, EditStockModal, ExportModal, STATUS_OPTIONS } from "./modals";
+import { ViewInventoryModal, EditStockModal, ExportModal, SetInventoryModal, STATUS_OPTIONS } from "./modals";
+import { inventoryApi } from "@/lib/inventory-api";
 import {
   InventoryTable,
   InventoryMobileCards,
@@ -61,6 +62,7 @@ function Inventory() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSetInventoryModal, setShowSetInventoryModal] = useState(false);
   const [viewTarget, setViewTarget] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
@@ -158,6 +160,68 @@ function Inventory() {
     });
     setEditError(null);
     setShowEditModal(true);
+  };
+
+  // Handle set inventory - batch updates (only changed items)
+  const handleSetStock = async (updates: { id: number; stock: number }[]) => {
+    try {
+      setLoading(true);
+      
+      // Use batch API for efficiency
+      const result = await inventoryApi.batchUpdateStock(updates);
+      
+      // Success
+      setShowSetInventoryModal(false);
+      
+      if (result.failed_count === 0) {
+        alert(`Successfully updated stock for ${result.updated_count} item(s)`);
+      } else {
+        alert(`Updated ${result.updated_count} of ${updates.length} item(s). ${result.failed_count} failed.`);
+      }
+      
+      fetchInventoryItems();
+    } catch (err) {
+      console.error("Error updating stock:", err);
+      alert(err instanceof Error ? err.message : "Failed to update stock");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bulk set stock
+  const handleBulkSetStock = async (stockDelta: number, password: string) => {
+    try {
+      setLoading(true);
+      const result = await inventoryApi.bulkUpdateStock(stockDelta, password);
+      
+      // Success
+      setShowSetInventoryModal(false);
+      alert(result.message || `Successfully updated ${result.updated_count} item(s)`);
+      fetchInventoryItems();
+    } catch (err) {
+      console.error("Error bulk updating stock:", err);
+      alert(err instanceof Error ? err.message : "Failed to bulk update stock");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle reset all stock
+  const handleResetAllStock = async (password: string) => {
+    try {
+      setLoading(true);
+      const result = await inventoryApi.resetAllStock(password);
+      
+      // Success
+      setShowSetInventoryModal(false);
+      alert(result.message || `Successfully reset ${result.updated_count} item(s)`);
+      fetchInventoryItems();
+    } catch (err) {
+      console.error("Error resetting stock:", err);
+      alert(err instanceof Error ? err.message : "Failed to reset stock");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle update stock
@@ -401,6 +465,17 @@ function Inventory() {
                 )}
               </div>
               <button
+                onClick={() => setShowSetInventoryModal(true)}
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
+                  resolvedTheme === "dark"
+                    ? "border-blue-700 hover:bg-blue-900 text-blue-400"
+                    : "border-blue-300 hover:bg-blue-50 text-blue-600"
+                } transition-colors`}
+              >
+                <BookOpen className="h-5 w-5" />
+                <span>Set Inventory</span>
+              </button>
+              <button
                 onClick={() => setShowExportModal(true)}
                 className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
                   resolvedTheme === "dark"
@@ -561,6 +636,16 @@ function Inventory() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         items={items}
+      />
+
+      <SetInventoryModal
+        isOpen={showSetInventoryModal}
+        onClose={() => setShowSetInventoryModal(false)}
+        onFetchPage={inventoryApi.getInventoryPage}
+        loading={loading}
+        onSubmit={handleSetStock}
+        onBulkSubmit={handleBulkSetStock}
+        onResetAll={handleResetAllStock}
       />
     </div>
   );

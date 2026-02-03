@@ -4,12 +4,14 @@ import type { ModalBaseProps, RedemptionItem } from "./types";
 
 interface EditRedemptionModalProps extends ModalBaseProps {
   item: RedemptionItem | null;
+  onSave?: () => void;
 }
 
 export function EditRedemptionModal({
   isOpen,
   onClose,
   item,
+  onSave: _onSave,
 }: EditRedemptionModalProps) {
   const { resolvedTheme } = useTheme();
 

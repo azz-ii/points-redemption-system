@@ -23,7 +23,12 @@ export function ViewAccountModal({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const handleImageSelect = (file: File) => {
+  const handleImageSelect = (file: File | null) => {
+    if (!file) {
+      setNewImage(null);
+      setImagePreview(null);
+      return;
+    }
     setNewImage(file);
     const reader = new FileReader();
     reader.onloadend = () => {

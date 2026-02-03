@@ -538,3 +538,60 @@ class BulkUpdatePointsView(APIView):
                 "error": "Failed to update points",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BatchUpdatePointsView(APIView):
+    """Batch update points for specific accounts (optimized single request)"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def post(self, request):
+        """Update points for multiple specific accounts in a single request"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        updates = request.data.get('updates', [])
+        
+        if not updates:
+            return Response({
+                "error": "No updates provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated_ids = []
+        failed = []
+        
+        for update in updates:
+            try:
+                user_id = update.get('id')
+                new_points = update.get('points')
+                
+                if user_id is None or new_points is None:
+                    failed.append({'id': user_id, 'error': 'Missing id or points'})
+                    continue
+                
+                user = User.objects.select_related('profile').get(id=user_id, is_superuser=False)
+                if hasattr(user, 'profile'):
+                    user.profile.points = int(new_points)  # Allow negative points
+                    user.profile.save(update_fields=['points'])
+                    updated_ids.append(user_id)
+                else:
+                    failed.append({'id': user_id, 'error': 'User has no profile'})
+            except User.DoesNotExist:
+                failed.append({'id': user_id, 'error': 'User not found'})
+            except (ValueError, TypeError) as e:
+                failed.append({'id': user_id, 'error': f'Invalid points value: {str(e)}'})
+            except Exception as e:
+                logger.error(f"Failed to update points for user {user_id}: {str(e)}")
+                failed.append({'id': user_id, 'error': str(e)})
+        
+        return Response({
+            "message": f"Updated {len(updated_ids)} account(s)",
+            "updated_count": len(updated_ids),
+            "failed_count": len(failed),
+            "updated_ids": updated_ids,
+            "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)

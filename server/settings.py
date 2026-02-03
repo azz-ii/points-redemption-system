@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-rmh29ql)yltr+vie1cd-(*@@ya^kjcondq)wu#+24c=8_hirr(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'points-redemption-system.onrender.com',
+    'localhost',
+    '127.0.0.1'
+]
 
 
 # Application definition
@@ -45,10 +49,16 @@ INSTALLED_APPS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://points-redemption-system.onrender.com"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF trusted origins for cross-origin requests
+CSRF_TRUSTED_ORIGINS = [
+    "https://points-redemption-system.onrender.com"
+]
 
 # Session cookie settings for cross-origin requests
 SESSION_COOKIE_SAMESITE = 'Lax'

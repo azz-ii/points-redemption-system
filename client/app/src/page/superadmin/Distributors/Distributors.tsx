@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   Search,
@@ -67,9 +68,9 @@ function Distributors() {
     const query = searchQuery.toLowerCase();
     return (
       distributor.name.toLowerCase().includes(query) ||
-      distributor.contact_email.toLowerCase().includes(query) ||
-      distributor.location.toLowerCase().includes(query) ||
-      distributor.region.toLowerCase().includes(query)
+      (distributor.contact_email?.toLowerCase().includes(query) ?? false) ||
+      (distributor.location?.toLowerCase().includes(query) ?? false) ||
+      (distributor.region?.toLowerCase().includes(query) ?? false)
     );
   });
 
@@ -170,10 +171,10 @@ function Distributors() {
     setEditingDistributorId(distributor.id);
     setEditDistributor({
       name: distributor.name,
-      contact_email: distributor.contact_email,
-      phone: distributor.phone,
-      location: distributor.location,
-      region: distributor.region,
+      contact_email: distributor.contact_email ?? "",
+      phone: distributor.phone ?? "",
+      location: distributor.location ?? "",
+      region: distributor.region ?? "",
     });
     setShowEditModal(true);
     setEditError(null);
@@ -250,27 +251,20 @@ function Distributors() {
     }
   };
 
-  // Handle set points submission
+  // Handle set points submission - batch updates (only changed distributors)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
       
-      // Update points for all distributors
-      const updateResults = await Promise.allSettled(
-        updates.map(update =>
-          distributorsApi.update(update.id, { points: update.points })
-        )
-      );
-
-      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
-      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      // Use batch API for efficiency
+      const result = await distributorsApi.batchUpdatePoints(updates);
       
       setShowSetPointsModal(false);
       
-      if (failCount === 0) {
-        alert(`Successfully updated points for ${successCount} distributor(s)`);
+      if (result.failed_count === 0) {
+        alert(`Successfully updated points for ${result.updated_count} distributor(s)`);
       } else {
-        alert(`Updated ${successCount} of ${updates.length} distributor(s). ${failCount} failed.`);
+        alert(`Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`);
       }
       
       // Refresh distributors list
@@ -290,7 +284,7 @@ function Distributors() {
       setSettingPoints(true);
       
       console.log("[DEBUG] Sending POST to /api/distributors/bulk_update_points/");
-      const response = await fetch("/api/distributors/bulk_update_points/", {
+      const response = await fetch(`${API_URL}/distributors/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -329,7 +323,7 @@ function Distributors() {
       setSettingPoints(true);
       
       console.log("[DEBUG] Sending POST for reset to /api/distributors/bulk_update_points/");
-      const response = await fetch("/api/distributors/bulk_update_points/", {
+      const response = await fetch(`${API_URL}/distributors/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

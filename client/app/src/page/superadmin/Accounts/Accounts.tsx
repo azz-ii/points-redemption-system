@@ -4,11 +4,11 @@ import { useTheme } from "next-themes";
 import { useLogout, useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
-import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   UserPlus,
@@ -51,6 +51,7 @@ function Accounts() {
     full_name: "",
     email: "",
     position: "",
+    points: 0,
     is_activated: false,
     is_banned: false,
   });
@@ -133,7 +134,7 @@ function Accounts() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users/");
+      const response = await fetch(`${API_URL}/users/`);
       const data = await response.json();
 
       if (response.ok) {
@@ -185,6 +186,7 @@ function Accounts() {
       full_name: "",
       email: "",
       position: "",
+      points: 0,
       is_activated: false,
       is_banned: false,
     });
@@ -208,7 +210,7 @@ function Accounts() {
     }
 
     // Execute API call in background without blocking
-    fetchWithCsrf("/api/users/", {
+    fetchWithCsrf(`${API_URL}/users/`, {
       method: "POST",
       body: formData,
     })
@@ -583,7 +585,7 @@ function Accounts() {
   };
 
   // Mobile pagination
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, _setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
 
@@ -603,7 +605,7 @@ function Accounts() {
   const handleFieldChange = useCallback((field: string, value: any) => {
     setEditedData((prev) => {
       // Only update if value actually changed
-      if (prev[field] === value) {
+      if ((prev as Record<string, any>)[field] === value) {
         return prev;
       }
       return { ...prev, [field]: value };
@@ -698,37 +700,24 @@ function Accounts() {
     }
   }, [editingRowId, editedData, fetchAccounts]);
 
-  // Handle set points submission
+  // Handle set points submission - batch updates (only changed accounts)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setLoading(true);
       
-      // Update points for all users
-      const updateResults = await Promise.allSettled(
-        updates.map(update =>
-          fetchWithCsrf(`/api/users/${update.id}/`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ points: update.points }),
-          })
-        )
-      );
-
-      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
-      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      // Use batch API for efficiency
+      const result = await usersApi.batchUpdatePoints(updates);
       
       setShowSetPointsModal(false);
       
-      if (failCount === 0) {
+      if (result.failed_count === 0) {
         setToast({
-          message: `Successfully updated points for ${successCount} account(s)`,
+          message: `Successfully updated points for ${result.updated_count} account(s)`,
           type: "success",
         });
       } else {
         setToast({
-          message: `Updated ${successCount} of ${updates.length} account(s). ${failCount} failed.`,
+          message: `Updated ${result.updated_count} of ${updates.length} account(s). ${result.failed_count} failed.`,
           type: "error",
         });
       }
@@ -750,7 +739,7 @@ function Accounts() {
     try {
       setLoading(true);
       
-      const response = await fetchWithCsrf("/api/users/bulk_update_points/", {
+      const response = await fetchWithCsrf(`${API_URL}/users/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -794,7 +783,7 @@ function Accounts() {
     try {
       setLoading(true);
       
-      const response = await fetchWithCsrf("/api/users/bulk_update_points/", {
+      const response = await fetchWithCsrf(`${API_URL}/users/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

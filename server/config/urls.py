@@ -28,8 +28,8 @@ from views import (
     ChangePasswordView,
     ActivateAccountView,
 )
-from users.views import UserListCreateView, UserDetailView, CurrentUserView, UserExportView, BulkUpdatePointsView
-from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView
+from users.views import UserListCreateView, UserDetailView, CurrentUserView, UserExportView, BulkUpdatePointsView, BatchUpdatePointsView
+from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -45,6 +45,7 @@ urlpatterns = [
     path('api/users/', UserListCreateView.as_view(), name='user_list_create'),
     path('api/users/export/', UserExportView.as_view(), name='user_export'),
     path('api/users/bulk_update_points/', BulkUpdatePointsView.as_view(), name='bulk_update_points'),
+    path('api/users/batch_update_points/', BatchUpdatePointsView.as_view(), name='batch_update_points'),
     path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     path('api/users/me/', CurrentUserView.as_view(), name='current_user'),
     # Catalogue/Product Management API
@@ -53,6 +54,8 @@ urlpatterns = [
     path('api/catalogue/bulk-assign-marketing/', BulkAssignMarketingView.as_view(), name='bulk_assign_marketing'),
     # Inventory Management API
     path('api/inventory/', InventoryListView.as_view(), name='inventory_list'),
+    path('api/inventory/bulk_update_stock/', BulkUpdateStockView.as_view(), name='bulk_update_stock'),
+    path('api/inventory/batch_update_stock/', BatchUpdateStockView.as_view(), name='batch_update_stock'),
     path('api/inventory/<int:product_id>/', InventoryDetailView.as_view(), name='inventory_detail'),
     # Distributor Management API
     path('', include('distributers.urls')),

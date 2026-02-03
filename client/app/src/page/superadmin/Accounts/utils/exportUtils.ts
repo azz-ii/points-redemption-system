@@ -68,8 +68,8 @@ function sortAccounts(
       aVal = getAccountStatus(a);
       bVal = getAccountStatus(b);
     } else {
-      aVal = a[sortField];
-      bVal = b[sortField];
+      aVal = a[sortField as keyof Account] as string | number | boolean;
+      bVal = b[sortField as keyof Account] as string | number | boolean;
     }
 
     // Handle different types

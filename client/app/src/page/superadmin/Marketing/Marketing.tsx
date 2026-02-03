@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   LogOut,
@@ -46,8 +47,8 @@ function Marketing() {
       
       // Fetch users and assignments in parallel
       const [usersResponse, assignmentsResponse] = await Promise.all([
-        fetch("/api/users/"),
-        fetch("/api/catalogue/bulk-assign-marketing/")
+        fetch(`${API_URL}/users/`),
+        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`)
       ]);
       
       const usersData = await usersResponse.json();

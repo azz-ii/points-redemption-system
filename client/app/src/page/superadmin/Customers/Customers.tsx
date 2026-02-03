@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   Search,
@@ -67,8 +68,8 @@ function Customers() {
     const query = searchQuery.toLowerCase();
     return (
       customer.name.toLowerCase().includes(query) ||
-      customer.contact_email.toLowerCase().includes(query) ||
-      customer.location.toLowerCase().includes(query)
+      (customer.contact_email?.toLowerCase().includes(query) ?? false) ||
+      (customer.location?.toLowerCase().includes(query) ?? false)
     );
   });
 
@@ -162,9 +163,9 @@ function Customers() {
     setEditingCustomerId(customer.id);
     setEditCustomer({
       name: customer.name,
-      contact_email: customer.contact_email,
-      phone: customer.phone,
-      location: customer.location,
+      contact_email: customer.contact_email ?? "",
+      phone: customer.phone ?? "",
+      location: customer.location ?? "",
     });
     setShowEditModal(true);
     setEditError(null);
@@ -237,27 +238,20 @@ function Customers() {
     }
   };
 
-  // Handle set points submission
+  // Handle set points submission - batch updates (only changed customers)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
       
-      // Update points for all customers
-      const updateResults = await Promise.allSettled(
-        updates.map(update =>
-          customersApi.update(update.id, { points: update.points })
-        )
-      );
-
-      const successCount = updateResults.filter(r => r.status === "fulfilled").length;
-      const failCount = updateResults.filter(r => r.status === "rejected").length;
+      // Use batch API for efficiency
+      const result = await customersApi.batchUpdatePoints(updates);
       
       setShowSetPointsModal(false);
       
-      if (failCount === 0) {
-        alert(`Successfully updated points for ${successCount} customer(s)`);
+      if (result.failed_count === 0) {
+        alert(`Successfully updated points for ${result.updated_count} customer(s)`);
       } else {
-        alert(`Updated ${successCount} of ${updates.length} customer(s). ${failCount} failed.`);
+        alert(`Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`);
       }
       
       // Refresh customers list
@@ -277,7 +271,7 @@ function Customers() {
       setSettingPoints(true);
       
       console.log("[DEBUG] Sending POST to /api/customers/bulk_update_points/");
-      const response = await fetch("/api/customers/bulk_update_points/", {
+      const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -316,7 +310,7 @@ function Customers() {
       setSettingPoints(true);
       
       console.log("[DEBUG] Sending POST for reset to /api/customers/bulk_update_points/");
-      const response = await fetch("/api/customers/bulk_update_points/", {
+      const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

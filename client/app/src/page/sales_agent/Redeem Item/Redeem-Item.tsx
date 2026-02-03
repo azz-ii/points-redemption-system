@@ -18,11 +18,11 @@ import {
 import type { SalesPages } from "./types";
 
 export default function RedeemItem() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
+  const _navigate = useNavigate();
+  const _handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const currentPage = "redeem-items" as SalesPages;
+  const _currentPage = "redeem-items" as SalesPages;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [notificationOpen, setNotificationOpen] = useState(false);

@@ -448,3 +448,57 @@ class CustomerBulkUpdatePointsView(APIView):
                 "error": "Failed to update points",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CustomerBatchUpdatePointsView(APIView):
+    """Batch update points for specific customers (optimized single request)"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def post(self, request):
+        """Update points for multiple specific customers in a single request"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        updates = request.data.get('updates', [])
+        
+        if not updates:
+            return Response({
+                "error": "No updates provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated_ids = []
+        failed = []
+        
+        for update in updates:
+            try:
+                customer_id = update.get('id')
+                new_points = update.get('points')
+                
+                if customer_id is None or new_points is None:
+                    failed.append({'id': customer_id, 'error': 'Missing id or points'})
+                    continue
+                
+                customer = Customer.objects.get(id=customer_id)
+                customer.points = int(new_points)  # Allow negative points
+                customer.save(update_fields=['points'])
+                updated_ids.append(customer_id)
+            except Customer.DoesNotExist:
+                failed.append({'id': customer_id, 'error': 'Customer not found'})
+            except (ValueError, TypeError) as e:
+                failed.append({'id': customer_id, 'error': f'Invalid points value: {str(e)}'})
+            except Exception as e:
+                logger.error(f"Failed to update points for customer {customer_id}: {str(e)}")
+                failed.append({'id': customer_id, 'error': str(e)})
+        
+        return Response({
+            "message": f"Updated {len(updated_ids)} customer(s)",
+            "updated_count": len(updated_ids),
+            "failed_count": len(failed),
+            "updated_ids": updated_ids,
+            "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)

@@ -39,7 +39,7 @@ export function EditAccountModal({
   error,
   setError,
   onSubmit,
-  profileImage,
+  profileImage: _profileImage,
   profileImagePreview,
   onImageSelect,
   onImageRemove,

@@ -38,7 +38,7 @@ export function CreateAccountModal({
   error,
   setError,
   onSubmit,
-  profileImage,
+  profileImage: _profileImage,
   profileImagePreview,
   onImageSelect,
   onImageRemove,

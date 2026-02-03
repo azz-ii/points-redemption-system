@@ -1,4 +1,6 @@
-const API_BASE_URL = '/api'; // Proxied to Django backend
+import { API_URL } from './config';
+
+const API_BASE_URL = API_URL;
 
 export interface Distributor {
   id: number;
@@ -10,6 +12,8 @@ export interface Distributor {
   points?: number;
   team?: string;
   date_added?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface PaginatedDistributorsResponse {
@@ -68,6 +72,14 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export interface BatchUpdateResponse {
+  message: string;
+  updated_count: number;
+  failed_count: number;
+  updated_ids: number[];
+  failed?: { id: number; error: string }[] | null;
+}
+
 export const distributorsApi = {
   getDistributorsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedDistributorsResponse> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
@@ -85,6 +97,26 @@ export const distributorsApi = {
     }
     return data;
   },
+
+  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/batch_update_points/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ updates }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to batch update points');
+    }
+    
+    return data;
+  },
+
   getDistributors: async (searchQuery: string = ''): Promise<Distributor[]> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
     if (searchQuery) {
@@ -141,6 +173,16 @@ export const distributorsApi = {
     if (!response.ok) throw new Error('Failed to create distributor');
     return response.json();
   },
+  // Alias for backwards compatibility
+  createDistributor: async (data: Omit<Distributor, 'id' | 'date_added'>): Promise<Distributor> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create distributor');
+    return response.json();
+  },
   update: async (id: number, data: Partial<Distributor>): Promise<Distributor> => {
     const response = await fetch(`${API_BASE_URL}/distributors/${id}/`, {
       method: 'PUT',
@@ -150,7 +192,24 @@ export const distributorsApi = {
     if (!response.ok) throw new Error('Failed to update distributor');
     return response.json();
   },
+  // Alias for backwards compatibility
+  updateDistributor: async (id: number, data: Partial<Distributor>): Promise<Distributor> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/${id}/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update distributor');
+    return response.json();
+  },
   delete: async (id: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/${id}/`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete distributor');
+  },
+  // Alias for backwards compatibility
+  deleteDistributor: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/distributors/${id}/`, {
       method: 'DELETE',
     });

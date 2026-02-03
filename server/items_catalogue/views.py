@@ -322,6 +322,173 @@ class BulkAssignMarketingView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class BulkUpdateStockView(APIView):
+    """Bulk update stock for all inventory-tracked items with password verification"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]  # TEMP: Will add proper auth
+    
+    def post(self, request):
+        """Apply stock delta to all items with inventory tracking"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if user is superadmin
+        if not request.user.is_superuser:
+            profile = getattr(request.user, 'profile', None)
+            is_admin = profile and profile.position == 'Admin'
+            if not is_admin:
+                return Response({
+                    "error": "Only superadmins can perform bulk stock update"
+                }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get password from request
+        password = request.data.get('password', '')
+        if not password:
+            return Response({
+                "error": "Password is required for verification"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify password
+        if not request.user.check_password(password):
+            return Response({
+                "error": "Invalid password"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Check if this is a reset operation
+        reset_to_zero = request.data.get('reset_to_zero', False)
+        
+        if reset_to_zero:
+            stock_delta = None
+            operation = "reset"
+        else:
+            # Get stock delta
+            stock_delta = request.data.get('stock_delta')
+            if stock_delta is None:
+                return Response({
+                    "error": "Stock delta is required when not resetting"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                stock_delta = int(stock_delta)
+            except (ValueError, TypeError):
+                return Response({
+                    "error": "Stock delta must be a valid integer"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            operation = "update"
+        
+        try:
+            # Get all products with inventory tracking enabled
+            tracked_items = Product.objects.filter(has_stock=True)
+            
+            updated_count = 0
+            failed_count = 0
+            failed_items = []
+            
+            # Update each item's stock
+            for item in tracked_items:
+                try:
+                    if reset_to_zero:
+                        item.stock = 0
+                    else:
+                        # Calculate new stock, ensure it doesn't go negative
+                        new_stock = max(0, item.stock + stock_delta)
+                        item.stock = new_stock
+                    item.save(update_fields=['stock'])
+                    updated_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to update stock for item {item.item_code}: {str(e)}")
+                    failed_count += 1
+                    failed_items.append(item.item_code)
+            
+            if reset_to_zero:
+                message = f"Successfully reset stock to 0 for {updated_count} item(s)"
+                log_message = f"Bulk stock reset by {request.user.username}: Reset {updated_count} items to 0"
+            else:
+                message = f"Successfully updated stock for {updated_count} item(s)"
+                log_message = f"Bulk stock update by {request.user.username}: {stock_delta:+d} stock to {updated_count} items"
+            
+            response_data = {
+                "message": message,
+                "updated_count": updated_count,
+                "failed_count": failed_count,
+                "total_affected": len(tracked_items),
+                "operation": operation
+            }
+            
+            if not reset_to_zero:
+                response_data["stock_delta"] = stock_delta
+            
+            if failed_count > 0:
+                response_data["failed_items"] = failed_items
+                response_data["message"] = f"Updated {updated_count} of {len(tracked_items)} items. {failed_count} failed."
+            
+            logger.info(log_message)
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Bulk stock update failed: {str(e)}")
+            return Response({
+                "error": f"Failed to update stock: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class BatchUpdateStockView(APIView):
+    """Batch update stock for specific inventory items (optimized single request)"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]  # TEMP: Will add proper auth
+    
+    def post(self, request):
+        """Update stock for multiple specific items in a single request"""
+        # Check authentication
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        updates = request.data.get('updates', [])
+        
+        if not updates:
+            return Response({
+                "error": "No updates provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated_ids = []
+        failed = []
+        
+        for update in updates:
+            try:
+                item_id = update.get('id')
+                new_stock = update.get('stock')
+                
+                if item_id is None or new_stock is None:
+                    failed.append({'id': item_id, 'error': 'Missing id or stock'})
+                    continue
+                
+                product = Product.objects.get(id=item_id, has_stock=True)
+                product.stock = max(0, int(new_stock))
+                product.save(update_fields=['stock'])
+                updated_ids.append(item_id)
+            except Product.DoesNotExist:
+                failed.append({'id': item_id, 'error': 'Product not found or not inventory-tracked'})
+            except (ValueError, TypeError) as e:
+                failed.append({'id': item_id, 'error': f'Invalid stock value: {str(e)}'})
+            except Exception as e:
+                logger.error(f"Failed to update stock for item {item_id}: {str(e)}")
+                failed.append({'id': item_id, 'error': str(e)})
+        
+        return Response({
+            "message": f"Updated {len(updated_ids)} item(s)",
+            "updated_count": len(updated_ids),
+            "failed_count": len(failed),
+            "updated_ids": updated_ids,
+            "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)
+
+
 # Backward-compatible aliases for URL routing
 CatalogueItemListCreateView = ProductListCreateView
 CatalogueItemDetailView = ProductDetailView

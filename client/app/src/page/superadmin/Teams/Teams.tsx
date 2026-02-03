@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   Search,
@@ -30,6 +31,7 @@ import {
   type NewTeamData,
   type EditTeamData,
   type ApproverOption,
+  type MarketingAdminOption,
 } from "./modals";
 import { TeamsTable } from "./components";
 import type { Team } from "./components/columns";
@@ -60,6 +62,7 @@ function Teams() {
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
   const [approvers, setApprovers] = useState<ApproverOption[]>([]);
+  const [marketingAdmins, setMarketingAdmins] = useState<MarketingAdminOption[]>([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
     approver: null,
@@ -76,7 +79,7 @@ function Teams() {
     try {
       setLoading(true);
       console.log("Fetching teams from API...");
-      const response = await fetch("/api/teams/", {
+      const response = await fetch(`${API_URL}/teams/`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -106,7 +109,7 @@ function Teams() {
   const fetchApprovers = async () => {
     try {
       console.log("DEBUG Teams: Fetching approvers...");
-      const response = await fetch("/api/users/", {
+      const response = await fetch(`${API_URL}/users/`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -144,7 +147,7 @@ function Teams() {
   const fetchMarketingAdmins = async () => {
     try {
       console.log("DEBUG Teams: Fetching marketing admins...");
-      const response = await fetch("/api/users/", {
+      const response = await fetch(`${API_URL}/users/`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -224,7 +227,7 @@ function Teams() {
       setCreateError("");
       console.log("DEBUG Teams: Creating team", { newTeam, memberIds });
 
-      const response = await fetchWithCsrf("/api/teams/", {
+      const response = await fetchWithCsrf(`${API_URL}/teams/`, {
         method: "POST",
         credentials: "include",
         headers: {

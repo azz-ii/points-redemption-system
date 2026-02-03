@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "next-themes";
 import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
+import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
 
@@ -97,7 +98,7 @@ export function ViewTeamModal({
     try {
       console.log("DEBUG ViewTeamModal: Fetching available sales agents");
 
-      const response = await fetch("/api/users/", {
+      const response = await fetch(`${API_URL}/users/`, {
         method: "GET",
         credentials: "include",
         headers: {

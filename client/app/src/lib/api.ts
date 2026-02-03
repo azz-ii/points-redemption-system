@@ -1,6 +1,8 @@
 // API Configuration and Service Layer
-// Use relative URLs to match the login flow (cookies are set for the same origin)
-const API_BASE_URL = "/api";
+// Import API URL from central configuration
+import { API_URL } from './config';
+
+const API_BASE_URL = API_URL;
 
 // Backend API Response Types
 export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';
@@ -88,6 +90,10 @@ export interface RedeemItemData {
   available_stock: number; // Available stock (stock - committed)
   min_order_qty: number; // Minimum quantity per order
   max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
+  // Additional fields for cart functionality
+  image?: string;
+  needs_driver?: boolean;
+  points_multiplier?: number | null;
 }
 
 export interface UserProfile {
@@ -339,6 +345,7 @@ export interface RedemptionRequestResponse {
     product: number;
     product_name: string;
     product_code: string;
+    category?: string | null;
     quantity: number;
     points_per_item: number;
     total_points: number;

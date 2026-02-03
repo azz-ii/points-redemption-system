@@ -26,8 +26,8 @@ interface RequestItem {
 }
 
 function ApproverDashboard() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
+  const _navigate = useNavigate();
+  const _handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,13 +95,13 @@ function ApproverDashboard() {
   const endIndex = startIndex + pageSize;
   const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
-  const handleNavigate = (page: "dashboard" | "requests" | "history") => {
+  const _handleNavigate = (page: "dashboard" | "requests" | "history") => {
     if (page === "history") {
-      navigate("/approver/history");
+      _navigate("/approver/history");
     } else if (page === "requests") {
-      navigate("/approver/requests");
+      _navigate("/approver/requests");
     } else {
-      navigate("/approver/dashboard");
+      _navigate("/approver/dashboard");
     }
   };
 

@@ -42,7 +42,7 @@ export function Sidebar() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
+  const [profilePicture, _setProfilePicture] = useState<string | null>(() => {
     try {
       return localStorage.getItem("profilePicture");
     } catch {

@@ -1,4 +1,6 @@
-const API_BASE_URL = '/api'; // Proxied to Django backend
+import { API_URL } from './config';
+
+const API_BASE_URL = API_URL;
 
 export interface Account {
   id: number;
@@ -19,6 +21,14 @@ export interface PaginatedAccountsResponse {
   results: Account[];
 }
 
+export interface BatchUpdateResponse {
+  message: string;
+  updated_count: number;
+  failed_count: number;
+  updated_ids: number[];
+  failed?: { id: number; error: string }[] | null;
+}
+
 export const usersApi = {
   getAccountsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedAccountsResponse> => {
     const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
@@ -36,6 +46,26 @@ export const usersApi = {
     }
     return data;
   },
+
+  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+    const response = await fetch(`${API_BASE_URL}/users/batch_update_points/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ updates }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to batch update points');
+    }
+    
+    return data;
+  },
+
   getAccounts: async (searchQuery: string = ''): Promise<Account[]> => {
     const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
     if (searchQuery) {

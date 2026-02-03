@@ -5,7 +5,23 @@ export interface RequestItemVariant {
   product: number;
   product_name: string;
   product_code: string;
-  category: string | null;
+  category?: string | null;
+  quantity: number;
+  points_per_item: number;
+  total_points: number;
+  item_processed_by?: number | null;
+  item_processed_by_name?: string | null;
+  item_processed_at?: string | null;
+}
+
+// Export for marketing history page
+export interface MarketingProcessingStatusItem {
+  id: number;
+  product: number;
+  product_name: string;
+  product_code: string;
+  product_legend?: string;
+  category?: string | null;
   quantity: number;
   points_per_item: number;
   total_points: number;

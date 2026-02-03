@@ -6,11 +6,12 @@ import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Bell, Search, ShoppingCart } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./modals/ViewRedemptionStatusModal";
 import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import {
   RedemptionStatusTable,
   RedemptionStatusMobileCards,
@@ -20,11 +21,11 @@ import {
 type SalesPages = "dashboard" | "redemption-status" | "redeem-items";
 
 export default function RedemptionStatus() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
+  const _navigate = useNavigate();
+  const _handleLogout = useLogout();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const currentPage = "redemption-status" as SalesPages;
+  const _currentPage = "redemption-status" as SalesPages;
 
   // Use currentPage from props to reflect parent routing state
   const [searchQuery, setSearchQuery] = useState(""); // Only for mobile view
@@ -44,7 +45,7 @@ export default function RedemptionStatus() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("/api/redemption-requests/", {
+      const response = await fetch(`${API_URL}/redemption-requests/`, {
         credentials: "include",
       });
 
@@ -120,7 +121,7 @@ export default function RedemptionStatus() {
     
     setIsSubmitting(true);
     try {
-      const response = await fetchWithCsrf(`/api/redemption-requests/${selectedRequest.id}/withdraw_request/`, {
+      const response = await fetchWithCsrf(`${API_URL}/redemption-requests/${selectedRequest.id}/withdraw_request/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ withdrawal_reason: reason }),
