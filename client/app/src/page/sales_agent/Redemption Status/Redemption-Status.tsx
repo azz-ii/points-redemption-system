@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./modals/ViewRedemptionStatusModal";
 import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import {
   RedemptionStatusTable,
   RedemptionStatusMobileCards,
@@ -44,7 +45,7 @@ export default function RedemptionStatus() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("/api/redemption-requests/", {
+      const response = await fetch(`${API_URL}/redemption-requests/`, {
         credentials: "include",
       });
 
@@ -120,7 +121,7 @@ export default function RedemptionStatus() {
     
     setIsSubmitting(true);
     try {
-      const response = await fetchWithCsrf(`/api/redemption-requests/${selectedRequest.id}/withdraw_request/`, {
+      const response = await fetchWithCsrf(`${API_URL}/redemption-requests/${selectedRequest.id}/withdraw_request/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ withdrawal_reason: reason }),

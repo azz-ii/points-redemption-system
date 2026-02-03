@@ -1,6 +1,8 @@
 // API Configuration and Service Layer
-// Use relative URLs to match the login flow (cookies are set for the same origin)
-const API_BASE_URL = "/api";
+// Import API URL from central configuration
+import { API_URL } from './config';
+
+const API_BASE_URL = API_URL;
 
 // Backend API Response Types
 export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';

@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   Search,
@@ -87,7 +88,7 @@ function Catalogue() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("/api/users/", {
+        const response = await fetch(`${API_URL}/users/`, {
           credentials: "include",
         });
         if (response.ok) {
@@ -315,7 +316,7 @@ function Catalogue() {
       };
       
       console.log("[Catalogue] Creating product (POST) payload:", payload);
-      const response = await fetch("/api/catalogue/", {
+      const response = await fetch(`${API_URL}/catalogue/`, {
         method: "POST",
         credentials: "include",
         headers: {

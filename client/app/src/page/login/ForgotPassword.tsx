@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,7 +86,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetchWithCsrf("/api/otp/request-otp/", {
+      const response = await fetchWithCsrf(`${API_URL}/otp/request-otp/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -125,7 +126,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetchWithCsrf("/api/otp/verify-otp/", {
+      const response = await fetchWithCsrf(`${API_URL}/otp/verify-otp/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp_code: otpCode }),
@@ -169,7 +170,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetchWithCsrf("/api/otp/reset-password/", {
+      const response = await fetchWithCsrf(`${API_URL}/otp/reset-password/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp_code: otpCode, new_password: newPassword }),

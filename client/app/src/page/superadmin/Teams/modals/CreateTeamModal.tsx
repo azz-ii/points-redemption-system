@@ -1,6 +1,7 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { useTheme } from "next-themes";
 import { X, AlertTriangle, UserPlus, Trash2, AlertCircle } from "lucide-react";
+import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, NewTeamData, ApproverOption, Team, SalesAgentOption } from "./types";
 
 interface CreateTeamModalProps extends ModalBaseProps {
@@ -48,7 +49,7 @@ export function CreateTeamModal({
     try {
       console.log("DEBUG CreateTeamModal: Fetching available sales agents");
       
-      const response = await fetch("/api/users/", {
+      const response = await fetch(`${API_URL}/users/`, {
         method: "GET",
         credentials: "include",
         headers: {

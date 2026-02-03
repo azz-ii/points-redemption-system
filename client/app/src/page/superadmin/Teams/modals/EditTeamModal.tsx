@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useTheme } from "next-themes";
 import { X, AlertTriangle, UserPlus, Trash2, AlertCircle } from "lucide-react";
+import { API_URL } from "@/lib/config";
 import type {
   Team,
   ModalBaseProps,
@@ -113,7 +114,7 @@ export function EditTeamModal({
     try {
       console.log("DEBUG EditTeamModal: Fetching available sales agents");
 
-      const response = await fetch("/api/users/", {
+      const response = await fetch(`${API_URL}/users/`, {
         method: "GET",
         credentials: "include",
         headers: {
