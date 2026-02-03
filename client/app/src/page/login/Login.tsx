@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +33,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetchWithCsrf("/api/login/", {
+      const response = await fetchWithCsrf(`${API_URL}/login/`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },

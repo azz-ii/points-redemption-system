@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
+import { API_URL } from "@/lib/config";
 import {
   Bell,
   Search,
@@ -277,7 +278,7 @@ function Customers() {
       setSettingPoints(true);
       
       console.log("[DEBUG] Sending POST to /api/customers/bulk_update_points/");
-      const response = await fetch("/api/customers/bulk_update_points/", {
+      const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -316,7 +317,7 @@ function Customers() {
       setSettingPoints(true);
       
       console.log("[DEBUG] Sending POST for reset to /api/customers/bulk_update_points/");
-      const response = await fetch("/api/customers/bulk_update_points/", {
+      const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
