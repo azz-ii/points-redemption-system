@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "52.163.243.237",  # Server IP
     "points.n01tb.com",  # Production subdomain
+    "points-redemption.n01tb.com",  # Correct subdomain with hyphen
     "n01tb.com",  # Main domain
     "www.n01tb.com",  # www subdomain
     "points-redemption-system.onrender.com",  # Existing Render deployment
@@ -158,6 +159,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://points.n01tb.com",  # Production subdomain (HTTP)
     "https://points.n01tb.com",  # Production subdomain (HTTPS)
+    "http://points-redemption.n01tb.com",  # Production subdomain HTTP
+    "https://points-redemption.n01tb.com",  # Production subdomain HTTPS
     "https://points-redemption-system.onrender.com",
 ]
 
@@ -169,6 +172,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://points.n01tb.com",  # Production subdomain (HTTP)
     "https://points.n01tb.com",  # Production subdomain (HTTPS)
+    "http://points-redemption.n01tb.com",  # Production subdomain HTTP
+    "https://points-redemption.n01tb.com",  # Production subdomain HTTPS
     "https://points-redemption-system.onrender.com",
 ]
 
