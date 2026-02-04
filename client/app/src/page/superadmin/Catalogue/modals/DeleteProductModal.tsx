@@ -37,11 +37,7 @@ export function DeleteProductModal({
             <h2 id="delete-product-title" className="text-xl font-semibold">
               Delete Product
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-gray-500 mt-1">
               Confirm deletion
             </p>
           </div>
@@ -65,7 +61,7 @@ export function DeleteProductModal({
         <div className="p-8 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold border font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

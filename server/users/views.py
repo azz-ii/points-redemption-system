@@ -86,7 +86,7 @@ class UserDetailView(APIView):
         """Get a specific user's details"""
         try:
             user = User.objects.select_related('profile').get(id=user_id)
-            serializer = UserSerializer(user)
+            serializer = UserListSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({
@@ -106,9 +106,12 @@ class UserDetailView(APIView):
             serializer = UserSerializer(user, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
+                # Return updated user data with flattened format
+                updated_user = User.objects.select_related('profile').get(id=user_id)
+                response_serializer = UserListSerializer(updated_user)
                 return Response({
                     "message": "User updated successfully",
-                    "user": serializer.data
+                    "user": response_serializer.data
                 }, status=status.HTTP_200_OK)
             return Response({
                 "error": "Failed to update user",
@@ -154,7 +157,7 @@ class CurrentUserView(APIView):
         
         try:
             user = request.user
-            serializer = UserSerializer(user)
+            serializer = UserListSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({

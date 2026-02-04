@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/context/AuthContext";
+import { ViewAccountModal } from "@/components/modals";
 
 export function Sidebar() {
   const { resolvedTheme } = useTheme();
@@ -49,6 +50,7 @@ export function Sidebar() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
@@ -153,10 +155,13 @@ export function Sidebar() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -180,7 +185,7 @@ export function Sidebar() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -191,7 +196,7 @@ export function Sidebar() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -211,6 +216,11 @@ export function Sidebar() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }
@@ -242,6 +252,7 @@ export function SidebarSuperAdmin() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
@@ -347,10 +358,13 @@ export function SidebarSuperAdmin() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -374,7 +388,7 @@ export function SidebarSuperAdmin() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -385,7 +399,7 @@ export function SidebarSuperAdmin() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -405,6 +419,11 @@ export function SidebarSuperAdmin() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }
@@ -436,6 +455,7 @@ export function SidebarSales() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/sales/dashboard" },
@@ -534,10 +554,13 @@ export function SidebarSales() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -561,7 +584,7 @@ export function SidebarSales() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -572,7 +595,7 @@ export function SidebarSales() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -592,6 +615,11 @@ export function SidebarSales() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }
@@ -623,6 +651,7 @@ export function SidebarApprover() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/approver/dashboard" },
@@ -721,10 +750,13 @@ export function SidebarApprover() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -748,7 +780,7 @@ export function SidebarApprover() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -759,7 +791,7 @@ export function SidebarApprover() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -779,6 +811,11 @@ export function SidebarApprover() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }
@@ -810,6 +847,7 @@ export function SidebarMarketing() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
@@ -908,10 +946,13 @@ export function SidebarMarketing() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -935,7 +976,7 @@ export function SidebarMarketing() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -946,7 +987,7 @@ export function SidebarMarketing() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -966,6 +1007,11 @@ export function SidebarMarketing() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }
@@ -997,6 +1043,7 @@ export function SidebarReception() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/reception/dashboard" },
@@ -1094,10 +1141,13 @@ export function SidebarReception() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -1121,7 +1171,7 @@ export function SidebarReception() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -1132,7 +1182,7 @@ export function SidebarReception() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -1152,6 +1202,11 @@ export function SidebarReception() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }
@@ -1183,6 +1238,7 @@ export function SidebarExecutiveAssistant() {
       return null;
     }
   });
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/executive-assistant/dashboard" },
@@ -1280,10 +1336,13 @@ export function SidebarExecutiveAssistant() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-4">
-        <div
-          className={`flex items-center ${
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAccountModal(true)}
+          className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3" : "justify-center"
+          } rounded-lg p-2 -m-2 transition-colors ${
+            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
@@ -1307,7 +1366,7 @@ export function SidebarExecutiveAssistant() {
             </span>
           </div>
           {sidebarExpanded && (
-            <div className="transition-all duration-300">
+            <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
                 className={`text-xs ${
@@ -1318,7 +1377,7 @@ export function SidebarExecutiveAssistant() {
               </p>
             </div>
           )}
-        </div>
+        </button>
         <Button
           onClick={handleLogout}
           className={`w-full flex items-center ${
@@ -1338,6 +1397,11 @@ export function SidebarExecutiveAssistant() {
           )}
         </Button>
       </div>
+
+      <ViewAccountModal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+      />
     </div>
   );
 }

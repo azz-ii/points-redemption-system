@@ -35,11 +35,7 @@ export function ViewItemModal({
             <h2 id="view-item-title" className="text-xl font-semibold">
               View Product
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-gray-500 mt-1">
               Product details
             </p>
           </div>
@@ -55,46 +51,72 @@ export function ViewItemModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Product Details */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Product Details</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT DETAILS</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* ID */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">
-                  Product ID
-                </p>
-                <p className="font-semibold">
-                  {product.id}
-                </p>
+                <label className="block text-sm font-medium mb-2">Product ID</label>
+                <input
+                  type="text"
+                  value={product.id}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               {/* Item Code */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Item Code</p>
-                <p className="font-mono font-semibold">
-                  {product.item_code}
-                </p>
+                <label className="block text-sm font-medium mb-2">Item Code</label>
+                <input
+                  type="text"
+                  value={product.item_code}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-mono ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               {/* Item Name */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Item Name</p>
-                <p className="font-semibold">
-                  {product.item_name}
-                </p>
+                <label className="block text-sm font-medium mb-2">Item Name</label>
+                <input
+                  type="text"
+                  value={product.item_name}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               {/* Category */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Category</p>
-                <p className="font-semibold">
-                  {product.category || "-"}
-                </p>
+                <label className="block text-sm font-medium mb-2">Category</label>
+                <input
+                  type="text"
+                  value={product.category || "-"}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               {/* Legend */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Legend</p>
+                <p className="text-xs text-gray-500 mb-2">Legend</p>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
                     product.legend
@@ -106,19 +128,37 @@ export function ViewItemModal({
 
               {/* Points */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Points</p>
-                <p className="font-semibold">{product.points}</p>
+                <label className="block text-sm font-medium mb-2">Points</label>
+                <input
+                  type="text"
+                  value={product.points}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               {/* Price */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Price</p>
-                <p className="font-semibold">₱{product.price}</p>
+                <label className="block text-sm font-medium mb-2">Price</label>
+                <input
+                  type="text"
+                  value={`₱${product.price}`}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               {/* Tracks Inventory */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Inventory Tracking</p>
+                <p className="text-xs text-gray-500 mb-2">Inventory Tracking</p>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                     product.has_stock
@@ -133,84 +173,121 @@ export function ViewItemModal({
               {/* Stock Information */}
               {product.has_stock ? (
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Stock / Available / Committed</p>
-                  <p className="font-semibold">
-                    {product.stock} / {product.available_stock} / {product.committed_stock}
-                  </p>
+                  <label className="block text-sm font-medium mb-2">Stock / Available / Committed</label>
+                  <input
+                    type="text"
+                    value={`${product.stock} / ${product.available_stock} / ${product.committed_stock}`}
+                    disabled
+                    className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-gray-300"
+                        : "bg-gray-100 border-gray-300 text-gray-600"
+                    } focus:outline-none`}
+                  />
                 </div>
               ) : (
                 <div className="md:col-span-2">
-                  <p className="text-xs text-gray-500 mb-1">Stock Status</p>
-                  <p className="font-semibold text-blue-600">Made to order - No stock tracking</p>
+                  <label className="block text-sm font-medium mb-2">Stock Status</label>
+                  <input
+                    type="text"
+                    value="Made to order - No stock tracking"
+                    disabled
+                    className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                      resolvedTheme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-blue-400"
+                        : "bg-gray-100 border-gray-300 text-blue-600"
+                    } focus:outline-none`}
+                  />
                 </div>
               )}
 
               {/* Order Quantity Limits */}
               <div>
-                <p className="text-xs text-gray-500 mb-1">Min Order Qty</p>
-                <p className="font-semibold">{product.min_order_qty ?? 1}</p>
+                <label className="block text-sm font-medium mb-2">Min Order Qty</label>
+                <input
+                  type="text"
+                  value={product.min_order_qty ?? 1}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
 
               <div>
-                <p className="text-xs text-gray-500 mb-1">Max Order Qty</p>
-                <p className="font-semibold">{product.max_order_qty ?? "Unlimited"}</p>
+                <label className="block text-sm font-medium mb-2">Max Order Qty</label>
+                <input
+                  type="text"
+                  value={product.max_order_qty ?? "Unlimited"}
+                  disabled
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
             </div>
 
             {/* Description */}
             {product.description && (
               <div>
-                <p className="text-xs text-gray-500 mb-1">Description</p>
-                <p
-                  className={`leading-relaxed ${
+                <label className="block text-sm font-medium mb-2">Description</label>
+                <textarea
+                  value={product.description}
+                  disabled
+                  rows={3}
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed resize-none ${
                     resolvedTheme === "dark"
-                      ? "text-gray-300"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {product.description}
-                </p>
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
             )}
 
             {/* Purpose */}
             {product.purpose && (
               <div>
-                <p className="text-xs text-gray-500 mb-1">Purpose</p>
-                <p
-                  className={`leading-relaxed ${
+                <label className="block text-sm font-medium mb-2">Purpose</label>
+                <textarea
+                  value={product.purpose}
+                  disabled
+                  rows={2}
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed resize-none ${
                     resolvedTheme === "dark"
-                      ? "text-gray-300"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {product.purpose}
-                </p>
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
             )}
 
             {/* Specifications */}
             {product.specifications && (
               <div>
-                <p className="text-xs text-gray-500 mb-1">Specifications</p>
-                <p
-                  className={`leading-relaxed ${
+                <label className="block text-sm font-medium mb-2">Specifications</label>
+                <textarea
+                  value={product.specifications}
+                  disabled
+                  rows={2}
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed resize-none ${
                     resolvedTheme === "dark"
-                      ? "text-gray-300"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {product.specifications}
-                </p>
+                      ? "bg-gray-700 border-gray-600 text-gray-300"
+                      : "bg-gray-100 border-gray-300 text-gray-600"
+                  } focus:outline-none`}
+                />
               </div>
             )}
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-700 flex gap-2 justify-end">
+        <div className="p-8 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-2 rounded-lg border transition-colors ${
+            className={`px-6 py-3 rounded-lg border transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

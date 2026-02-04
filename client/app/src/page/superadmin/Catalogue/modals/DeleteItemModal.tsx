@@ -36,11 +36,7 @@ export function DeleteItemModal({
             <h2 id="delete-item-title" className="text-xl font-semibold">
               Delete Item
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-gray-500 mt-1">
               Confirm deletion
             </p>
           </div>
@@ -60,10 +56,10 @@ export function DeleteItemModal({
           </p>
         </div>
 
-        <div className="p-8 border-t flex gap-3">
+        <div className="p-8 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className={`flex-1 px-6 py-3 rounded-lg border transition-colors ${
+            className={`flex-1 px-6 py-3 rounded-lg font-semibold border transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

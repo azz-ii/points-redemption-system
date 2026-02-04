@@ -56,11 +56,7 @@ export function EditVariantModal({
             <h2 id="edit-variant-title" className="text-xl font-semibold">
               Edit Variant
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-gray-500 mt-1">
               Update variant details
             </p>
           </div>
@@ -76,7 +72,7 @@ export function EditVariantModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
+            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
@@ -86,7 +82,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-item-code"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Item Code *
               </label>
@@ -100,7 +96,7 @@ export function EditVariantModal({
                     item_code: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -113,7 +109,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-variant-desc"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Variant Description (Optional)
               </label>
@@ -127,7 +123,7 @@ export function EditVariantModal({
                     option_description: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -140,7 +136,7 @@ export function EditVariantModal({
             <div className="md:col-span-2">
               <label
                 htmlFor="edit-variant-pricing-type"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Pricing Type *
               </label>
@@ -153,7 +149,7 @@ export function EditVariantModal({
                     pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -171,7 +167,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-variant-points"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 {data.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -187,7 +183,7 @@ export function EditVariantModal({
                     [data.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -215,7 +211,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-variant-price"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 {data.pricing_type === "FIXED"
                   ? "Price *"
@@ -231,7 +227,7 @@ export function EditVariantModal({
                     [data.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -248,7 +244,7 @@ export function EditVariantModal({
             <div className="md:col-span-2">
               <label
                 htmlFor="edit-variant-image"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Image URL (Optional)
               </label>
@@ -262,7 +258,7 @@ export function EditVariantModal({
                     image_url: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
+                className={`w-full px-4 py-3 rounded border ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -290,7 +286,7 @@ export function EditVariantModal({
           <button
             onClick={onClose}
             disabled={updating}
-            className={`px-6 py-3 rounded-lg border transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold border transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"

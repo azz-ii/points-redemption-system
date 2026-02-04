@@ -63,11 +63,7 @@ export function EditItemModal({
             <h2 id="edit-item-title" className="text-xl font-semibold">
               Edit Product
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-gray-500 mt-1">
               Update product details
             </p>
           </div>
@@ -84,20 +80,20 @@ export function EditItemModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
+            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
 
           {/* Product Fields */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Product Information</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
 
             {/* Item Code */}
             <div>
               <label
                 htmlFor="edit-item-code"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Item Code *
               </label>
@@ -122,7 +118,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-item-name"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Item Name *
               </label>
@@ -147,7 +143,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-category"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Category
               </label>
@@ -171,7 +167,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-description"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Description
               </label>
@@ -195,7 +191,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-purpose"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Purpose
               </label>
@@ -219,7 +215,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-specs"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Specifications
               </label>
@@ -243,7 +239,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-legend"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Legend *
               </label>
@@ -282,7 +278,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-pricing-type"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Pricing Type *
               </label>
@@ -314,7 +310,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-points"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 {editItem.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -359,7 +355,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-price"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 {editItem.pricing_type === "FIXED"
                   ? "Price *"
@@ -394,7 +390,7 @@ export function EditItemModal({
               <div>
                 <label
                   htmlFor="edit-min-order-qty"
-                  className="block text-sm font-medium mb-2"
+                  className="text-xs text-gray-500 mb-2 block"
                 >
                   Min Order Qty *
                 </label>
@@ -418,7 +414,7 @@ export function EditItemModal({
               <div>
                 <label
                   htmlFor="edit-max-order-qty"
-                  className="block text-sm font-medium mb-2"
+                  className="text-xs text-gray-500 mb-2 block"
                 >
                   Max Order Qty
                 </label>
@@ -451,7 +447,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-stock"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Stock
               </label>
@@ -506,7 +502,7 @@ export function EditItemModal({
           <button
             onClick={onClose}
             disabled={updating}
-            className={`px-6 py-3 rounded-lg border transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold border transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"

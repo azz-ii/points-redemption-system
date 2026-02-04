@@ -16,7 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, Trash2, Settings2, UserPlus, RotateCw, Download, Coins } from "lucide-react"
+import { ChevronLeft, ChevronRight, Trash2, Settings2, Plus, RotateCw, Download } from "lucide-react"
 
 import {
   Table,
@@ -47,7 +47,6 @@ interface DataTableProps<TData, TValue> {
   onRefresh?: () => void
   refreshing?: boolean
   onExport?: () => void
-  onSetPoints?: () => void
 }
 
 export function DataTable<TData, TValue>({
@@ -60,7 +59,6 @@ export function DataTable<TData, TValue>({
   onRefresh,
   refreshing = false,
   onExport,
-  onSetPoints,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -91,13 +89,13 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const searchValue = String(filterValue).toLowerCase()
-      const name = String(row.getValue("name") || "").toLowerCase()
-      const email = String(row.getValue("contact_email") || "").toLowerCase()
-      const location = String(row.getValue("location") || "").toLowerCase()
+      const itemCode = String(row.getValue("item_code") || "").toLowerCase()
+      const itemName = String(row.getValue("item_name") || "").toLowerCase()
+      const category = String(row.getValue("category") || "").toLowerCase()
       
-      return name.includes(searchValue) || 
-             email.includes(searchValue) || 
-             location.includes(searchValue)
+      return itemCode.includes(searchValue) || 
+             itemName.includes(searchValue) || 
+             category.includes(searchValue)
     },
     initialState: {
       pagination: {
@@ -114,7 +112,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Filter by name, email, or location..."
+            placeholder="Filter by item code, name, or category..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
@@ -188,32 +186,17 @@ export function DataTable<TData, TValue>({
           )}
         </div>
         {onCreateNew && (
-          <div className="flex gap-2">
-            {onSetPoints && (
-              <button
-                onClick={onSetPoints}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                  resolvedTheme === "dark"
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-green-600 text-white hover:bg-green-700"
-                } transition-colors font-semibold`}
-              >
-                <Coins className="h-5 w-5" />
-                <span>Set Points</span>
-              </button>
-            )}
-            <button
-              onClick={onCreateNew}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              } transition-colors font-semibold`}
-            >
-              <UserPlus className="h-5 w-5" />
+          <button
+            onClick={onCreateNew}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+              resolvedTheme === "dark"
+                ? "bg-white text-black hover:bg-gray-200"
+                : "bg-gray-900 text-white hover:bg-gray-700"
+            } transition-colors font-semibold`}
+          >
+            <Plus className="h-5 w-5" />
             <span>{createButtonLabel}</span>
           </button>
-          </div>
         )}
       </div>
 
@@ -247,7 +230,7 @@ export function DataTable<TData, TValue>({
                   >
                     <div className="flex flex-col items-center justify-center gap-4">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                      <p className="text-muted-foreground">Loading distributors...</p>
+                      <p className="text-muted-foreground">Loading catalogue items...</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -273,7 +256,7 @@ export function DataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center text-muted-foreground"
                   >
-                    No distributors found
+                    No catalogue items found
                   </TableCell>
                 </TableRow>
               )}

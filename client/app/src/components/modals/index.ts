@@ -3,6 +3,7 @@ export { ModalHeader } from "./ModalHeader";
 export { ModalContent } from "./ModalContent";
 export { ModalFooter } from "./ModalFooter";
 export { RequestTimeline } from "./RequestTimeline";
+export { ViewAccountModal } from "./ViewAccountModal";
 export type { RequestTimelineData } from "./RequestTimeline";
 export type {
   ModalBaseProps,

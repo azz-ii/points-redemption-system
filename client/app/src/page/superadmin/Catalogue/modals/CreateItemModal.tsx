@@ -63,11 +63,7 @@ export function CreateItemModal({
             <h2 id="create-item-title" className="text-xl font-semibold">
               Add Catalogue Product
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-gray-500 mt-1">
               Create a new product in the catalogue
             </p>
           </div>
@@ -84,20 +80,20 @@ export function CreateItemModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
+            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
 
           {/* Shared Fields */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Product Information</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
 
             {/* Item Code */}
             <div>
               <label
                 htmlFor="item-code-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Item Code *
               </label>
@@ -122,7 +118,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="item-name-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Item Name *
               </label>
@@ -147,7 +143,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="category-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Category
               </label>
@@ -171,7 +167,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="description-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Description
               </label>
@@ -195,7 +191,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="purpose-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Purpose
               </label>
@@ -219,7 +215,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="specs-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Specifications
               </label>
@@ -243,7 +239,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="legend-select"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Legend *
               </label>
@@ -282,7 +278,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="pricing-type-select"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Pricing Type *
               </label>
@@ -314,7 +310,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="points-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 {newItem.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -359,7 +355,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="price-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 {newItem.pricing_type === "FIXED"
                   ? "Price *"
@@ -394,7 +390,7 @@ export function CreateItemModal({
               <div>
                 <label
                   htmlFor="min-order-qty-input"
-                  className="block text-sm font-medium mb-2"
+                  className="text-xs text-gray-500 mb-2 block"
                 >
                   Min Order Qty *
                 </label>
@@ -418,7 +414,7 @@ export function CreateItemModal({
               <div>
                 <label
                   htmlFor="max-order-qty-input"
-                  className="block text-sm font-medium mb-2"
+                  className="text-xs text-gray-500 mb-2 block"
                 >
                   Max Order Qty
                 </label>
@@ -451,7 +447,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="stock-input"
-                className="block text-sm font-medium mb-2"
+                className="text-xs text-gray-500 mb-2 block"
               >
                 Initial Stock
               </label>
@@ -506,7 +502,7 @@ export function CreateItemModal({
           <button
             onClick={onClose}
             disabled={creating}
-            className={`px-6 py-3 rounded-lg border transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold border transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
