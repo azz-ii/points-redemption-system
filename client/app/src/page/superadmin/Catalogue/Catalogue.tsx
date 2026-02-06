@@ -196,6 +196,7 @@ function Catalogue() {
       | "PROMO"
       | "AD_MATERIALS"
       | "POINT_OF_SALE"
+      | "ASSET"
       | "OTHERS",
     pricing_type: "FIXED" as
       | "FIXED"
@@ -209,6 +210,7 @@ function Catalogue() {
     max_order_qty: "",
     stock: "0",
     has_stock: true,
+    requires_sales_approval: true,
     points_multiplier: "",
     price_multiplier: "",
   });
@@ -226,6 +228,7 @@ function Catalogue() {
       | "PROMO"
       | "AD_MATERIALS"
       | "POINT_OF_SALE"
+      | "ASSET"
       | "OTHERS",
     pricing_type: "FIXED" as
       | "FIXED"
@@ -239,6 +242,7 @@ function Catalogue() {
     max_order_qty: "",
     stock: "",
     has_stock: true,
+    requires_sales_approval: true,
     points_multiplier: "",
     price_multiplier: "",
   });
@@ -345,6 +349,7 @@ function Catalogue() {
           : null,
         stock: parseInt(newItem.stock) || 0,
         has_stock: newItem.has_stock,
+        requires_sales_approval: newItem.requires_sales_approval,
       };
 
       console.log("[Catalogue] Creating product (POST) payload:", payload);
@@ -384,6 +389,7 @@ function Catalogue() {
         max_order_qty: "",
         stock: "0",
         has_stock: true,
+        requires_sales_approval: true,
         points_multiplier: "",
         price_multiplier: "",
       });
@@ -425,6 +431,7 @@ function Catalogue() {
       max_order_qty: item.max_order_qty?.toString() ?? "",
       stock: item.stock?.toString() || "0",
       has_stock: item.has_stock ?? true,
+      requires_sales_approval: item.requires_sales_approval ?? true,
       points_multiplier: !isFixed ? item.points.toString() : "",
       price_multiplier: !isFixed ? item.price.toString() : "",
     });
@@ -495,6 +502,7 @@ function Catalogue() {
           : null,
         stock: parseInt(editItem.stock) || 0,
         has_stock: editItem.has_stock,
+        requires_sales_approval: editItem.requires_sales_approval ?? true,
       };
 
       console.log(

@@ -26,6 +26,8 @@ export interface Product {
   stock: number;
   committed_stock: number;
   available_stock: number;
+  mktg_admin?: number | null;
+  requires_sales_approval?: boolean;
   is_archived: boolean;
   date_added: string;
   added_by: number | null;

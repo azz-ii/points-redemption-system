@@ -335,12 +335,11 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         
         # Use transaction to ensure atomicity for stock commitment
         with transaction.atomic():
-            # Create the main request with team assignment - all requests require sales approval
+            # Create the main request with team assignment
+            # Note: requires_sales_approval will be computed after items are added
             redemption_request = RedemptionRequest.objects.create(
                 requested_by=requested_by,
                 team=membership.team if membership else None,
-                requires_sales_approval=True,
-                sales_approval_status=ApprovalStatusChoice.PENDING,
                 requested_for=validated_data.get('requested_for'),
                 requested_for_customer=validated_data.get('requested_for_customer'),
                 requested_for_type=validated_data.get('requested_for_type', 'DISTRIBUTOR'),
@@ -409,5 +408,17 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             # Update total points on the request
             redemption_request.total_points = total_points
             redemption_request.save()
+            
+            # Compute approval requirements based on products
+            # This will auto-approve if no items require sales approval
+            # and deduct points accordingly
+            try:
+                redemption_request.compute_approval_requirements()
+            except ValueError as e:
+                # If points deduction fails (insufficient points), rollback transaction
+                raise serializers.ValidationError({
+                    'error': 'Insufficient points',
+                    'detail': str(e)
+                })
         
         return redemption_request

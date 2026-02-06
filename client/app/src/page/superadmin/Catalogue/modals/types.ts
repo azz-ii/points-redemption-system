@@ -15,7 +15,7 @@ export interface Product {
   description: string;
   purpose: string;
   specifications: string;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
+  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "ASSET" | "OTHERS";
   category: string;
   points: string;
   price: string;
@@ -39,6 +39,7 @@ export const LEGEND_OPTIONS = [
   { value: "PROMO", label: "Promo" },
   { value: "AD_MATERIALS", label: "Ad Materials" },
   { value: "POINT_OF_SALE", label: "Point of Sale" },
+  { value: "ASSET", label: "Asset" },
   { value: "OTHERS", label: "Others" },
 ] as const;
 
@@ -62,6 +63,8 @@ export const getLegendColor = (legend: string): string => {
       return "bg-red-500 text-white";
     case "POINT_OF_SALE":
       return "bg-yellow-500 text-black";
+    case "ASSET":
+      return "bg-green-500 text-white";
     case "OTHERS":
       return "bg-gray-500 text-white";
     default:

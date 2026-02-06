@@ -9,6 +9,7 @@ class ItemLegend(models.TextChoices):
     PROMO = 'PROMO', 'Promo'
     AD_MATERIALS = 'AD_MATERIALS', 'Ad Materials'
     POINT_OF_SALE = 'POINT_OF_SALE', 'Point of Sale'
+    ASSET = 'ASSET', 'Asset'
     OTHERS = 'OTHERS', 'Others'
 
 
@@ -51,6 +52,12 @@ class Product(models.Model):
         blank=True,
         related_name='mktg_admin_products',
         help_text='Marketing admin assigned to process this product'
+    )
+    
+    # Approval requirements
+    requires_sales_approval = models.BooleanField(
+        default=True,
+        help_text='Whether requests containing this product require sales approver approval. If False, skips directly to marketing processing.'
     )
     
     # Pricing

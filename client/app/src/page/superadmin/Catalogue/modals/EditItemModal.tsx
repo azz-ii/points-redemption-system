@@ -10,7 +10,7 @@ interface EditItem {
   description: string;
   purpose: string;
   specifications: string;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
+  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "ASSET" | "OTHERS";
   pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
   points: string;
   price: string;
@@ -18,6 +18,7 @@ interface EditItem {
   max_order_qty: string;
   stock: string;
   has_stock: boolean;
+  requires_sales_approval?: boolean;
   points_multiplier: string;
   price_multiplier: string;
 }
@@ -255,6 +256,7 @@ export function EditItemModal({
                       | "PROMO"
                       | "AD_MATERIALS"
                       | "POINT_OF_SALE"
+                      | "ASSET"
                       | "OTHERS",
                   })
                 }
@@ -270,6 +272,7 @@ export function EditItemModal({
                 <option value="PROMO">Promo</option>
                 <option value="AD_MATERIALS">Ad Materials</option>
                 <option value="POINT_OF_SALE">Point of Sale</option>
+                <option value="ASSET">Asset</option>
                 <option value="OTHERS">Others</option>
               </select>
             </div>
@@ -492,6 +495,32 @@ export function EditItemModal({
                 }`}
               >
                 Uncheck for made-to-order items that don't require stock tracking
+              </p>
+            </div>
+
+            {/* Requires Sales Approval Toggle */}
+            <div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editItem.requires_sales_approval ?? true}
+                  onChange={(e) =>
+                    setEditItem({ ...editItem, requires_sales_approval: e.target.checked })
+                  }
+                  className={`w-5 h-5 rounded border ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-600"
+                      : "bg-white border-gray-300"
+                  } focus:ring-blue-500 accent-blue-600`}
+                />
+                <span className="text-sm font-medium">Requires Sales Approval</span>
+              </label>
+              <p
+                className={`text-xs mt-1 ml-8 ${
+                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                If unchecked, requests with this product will skip sales approval and go directly to marketing
               </p>
             </div>
           </div>

@@ -237,12 +237,75 @@ class RedemptionRequest(models.Model):
 
     def compute_approval_requirements(self):
         """
-        All requests require sales approval. Marketing only processes items.
+        Compute whether sales approval is required based on items.
+        If ANY item's product requires sales approval, the whole request requires it.
+        If no items require sales approval, auto-approve and deduct points.
         Should be called after items are added.
         """
-        self.requires_sales_approval = True
-        self.sales_approval_status = ApprovalStatusChoice.PENDING
+        # Check if any item requires sales approval
+        requires_sales = any(
+            item.product and item.product.requires_sales_approval
+            for item in self.items.select_related('product').all()
+        )
+        
+        self.requires_sales_approval = requires_sales
+        
+        if requires_sales:
+            # Requires approval - set to PENDING
+            self.sales_approval_status = ApprovalStatusChoice.PENDING
+            self.status = RequestStatus.PENDING
+        else:
+            # Does not require approval - auto-approve
+            self.sales_approval_status = ApprovalStatusChoice.NOT_REQUIRED
+            self.status = RequestStatus.APPROVED
+            
+            # Deduct points immediately since we're bypassing approval
+            try:
+                self.deduct_points()
+            except ValueError as e:
+                # If points deduction fails, raise exception
+                # The serializer should handle this in a transaction
+                raise
+        
         self.save()
+    
+    def deduct_points(self):
+        """
+        Deduct points from the appropriate account (agent, distributor, or customer).
+        Raises ValueError if insufficient points.
+        Should be called within a transaction.
+        """
+        # Check if sufficient points are available
+        if self.points_deducted_from == 'SELF':
+            user_profile = self.requested_by.profile
+            if user_profile.points < self.total_points:
+                raise ValueError(
+                    f'Insufficient points: Sales agent has {user_profile.points} points but needs {self.total_points} points'
+                )
+            user_profile.points -= self.total_points
+            user_profile.save()
+            
+        elif self.points_deducted_from == 'DISTRIBUTOR':
+            distributor = self.requested_for
+            if not distributor:
+                raise ValueError('No distributor assigned to this request')
+            if distributor.points < self.total_points:
+                raise ValueError(
+                    f'Insufficient points: Distributor has {distributor.points} points but needs {self.total_points} points'
+                )
+            distributor.points -= self.total_points
+            distributor.save()
+            
+        elif self.points_deducted_from == 'CUSTOMER':
+            customer = self.requested_for_customer
+            if not customer:
+                raise ValueError('No customer assigned to this request')
+            if customer.points < self.total_points:
+                raise ValueError(
+                    f'Insufficient points: Customer has {customer.points} points but needs {self.total_points} points'
+                )
+            customer.points -= self.total_points
+            customer.save()
 
     def update_overall_status(self):
         """

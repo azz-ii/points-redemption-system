@@ -75,8 +75,10 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 logger.info(f"🔍 [APPROVER DEBUG] Team member IDs: {list(team_member_ids)}")
                 
                 # Filter by team field OR by requesting user being in managed teams (fallback for NULL team)
+                # Only show requests that require sales approval
                 queryset = RedemptionRequest.objects.filter(
-                    Q(team__in=managed_teams) | Q(team__isnull=True, requested_by_id__in=team_member_ids)
+                    Q(team__in=managed_teams) | Q(team__isnull=True, requested_by_id__in=team_member_ids),
+                    requires_sales_approval=True
                 ).distinct().prefetch_related('items', 'items__product')
                 
                 logger.info(f"🔍 [APPROVER DEBUG] Total requests found: {queryset.count()}")
@@ -190,6 +192,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         redemption_request = self.get_object()
         
+        # Check if this request requires sales approval
+        if not redemption_request.requires_sales_approval:
+            return Response(
+                {'error': 'This request does not require sales approval and has been auto-approved'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         # Check if approver has permission for this request's team
         user = request.user
         profile = getattr(user, 'profile', None)
@@ -298,6 +307,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         from teams.models import Team
         
         redemption_request = self.get_object()
+        
+        # Check if this request requires sales approval
+        if not redemption_request.requires_sales_approval:
+            return Response(
+                {'error': 'This request does not require sales approval and has been auto-approved'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Check if approver has permission for this request's team
         user = request.user
