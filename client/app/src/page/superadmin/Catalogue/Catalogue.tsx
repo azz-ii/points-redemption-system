@@ -135,29 +135,27 @@ function Catalogue() {
       setTotalCount(data.count || 0);
 
       // Map API response to Product model
-      const mappedItems: Product[] = products.map(
-        (product: Product) => ({
-          id: product.id,
-          item_code: product.item_code,
-          item_name: product.item_name,
-          description: product.description,
-          purpose: product.purpose,
-          specifications: product.specifications,
-          legend: product.legend,
-          category: product.category,
-          points: product.points,
-          price: product.price,
-          pricing_type: product.pricing_type || "FIXED",
-          stock: product.stock || 0,
-          committed_stock: product.committed_stock || 0,
-          available_stock: product.available_stock || 0,
-          is_archived: product.is_archived || false,
-          date_added: product.date_added,
-          added_by: product.added_by,
-          date_archived: product.date_archived,
-          archived_by: product.archived_by,
-        })
-      );
+      const mappedItems: Product[] = products.map((product: Product) => ({
+        id: product.id,
+        item_code: product.item_code,
+        item_name: product.item_name,
+        description: product.description,
+        purpose: product.purpose,
+        specifications: product.specifications,
+        legend: product.legend,
+        category: product.category,
+        points: product.points,
+        price: product.price,
+        pricing_type: product.pricing_type || "FIXED",
+        stock: product.stock || 0,
+        committed_stock: product.committed_stock || 0,
+        available_stock: product.available_stock || 0,
+        is_archived: product.is_archived || false,
+        date_added: product.date_added,
+        added_by: product.added_by,
+        date_archived: product.date_archived,
+        archived_by: product.archived_by,
+      }));
       setItems(mappedItems);
       setError(null);
     } catch (err) {
@@ -192,8 +190,19 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "GIVEAWAY" as "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS",
-    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    legend: "GIVEAWAY" as
+      | "GIVEAWAY"
+      | "MERCH"
+      | "PROMO"
+      | "AD_MATERIALS"
+      | "POINT_OF_SALE"
+      | "OTHERS",
+    pricing_type: "FIXED" as
+      | "FIXED"
+      | "PER_SQFT"
+      | "PER_INVOICE"
+      | "PER_DAY"
+      | "PER_EU_SRP",
     points: "",
     price: "",
     min_order_qty: "1",
@@ -211,8 +220,19 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "GIVEAWAY" as "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS",
-    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    legend: "GIVEAWAY" as
+      | "GIVEAWAY"
+      | "MERCH"
+      | "PROMO"
+      | "AD_MATERIALS"
+      | "POINT_OF_SALE"
+      | "OTHERS",
+    pricing_type: "FIXED" as
+      | "FIXED"
+      | "PER_SQFT"
+      | "PER_INVOICE"
+      | "PER_DAY"
+      | "PER_EU_SRP",
     points: "",
     price: "",
     min_order_qty: "1",
@@ -227,32 +247,38 @@ function Catalogue() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingProductId, setEditingProductId] = useState<
-    number | null
-  >(null);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [viewTarget, setViewTarget] = useState<Product | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(
-    null
-  );
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
 
   // Additional modal state for product/variant operations
-  const [viewProductTarget, setViewProductTarget] = useState<Product | null>(null);
+  const [viewProductTarget, setViewProductTarget] = useState<Product | null>(
+    null,
+  );
   const [showViewProductModal, setShowViewProductModal] = useState(false);
-  const [editVariantTarget, setEditVariantTarget] = useState<Product | null>(null);
+  const [editVariantTarget, setEditVariantTarget] = useState<Product | null>(
+    null,
+  );
   const [editVariantData, setEditVariantData] = useState({
     item_code: "",
     category: "",
     points: "",
     price: "",
-    pricing_type: "FIXED" as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+    pricing_type: "FIXED" as
+      | "FIXED"
+      | "PER_SQFT"
+      | "PER_INVOICE"
+      | "PER_DAY"
+      | "PER_EU_SRP",
     points_multiplier: "",
     price_multiplier: "",
   });
   const [showEditVariantModal, setShowEditVariantModal] = useState(false);
   const [editVariantError, setEditVariantError] = useState<string | null>(null);
-  const [deleteProductTarget, setDeleteProductTarget] = useState<Product | null>(null);
+  const [deleteProductTarget, setDeleteProductTarget] =
+    useState<Product | null>(null);
   const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
   const [updatingVariant, setUpdatingVariant] = useState(false);
 
@@ -273,7 +299,7 @@ function Catalogue() {
       setCreateError("Legend is required");
       return;
     }
-    
+
     const isFixed = newItem.pricing_type === "FIXED";
     if (isFixed) {
       if (!newItem.points.trim()) {
@@ -297,7 +323,7 @@ function Catalogue() {
 
     try {
       setCreating(true);
-      
+
       const payload = {
         item_code: newItem.item_code,
         item_name: newItem.item_name,
@@ -307,14 +333,20 @@ function Catalogue() {
         specifications: newItem.specifications,
         legend: newItem.legend,
         pricing_type: newItem.pricing_type,
-        points: isFixed ? parseFloat(newItem.points) : parseFloat(newItem.points_multiplier),
-        price: isFixed ? parseFloat(newItem.price) : parseFloat(newItem.price_multiplier),
+        points: isFixed
+          ? parseFloat(newItem.points)
+          : parseFloat(newItem.points_multiplier),
+        price: isFixed
+          ? parseFloat(newItem.price)
+          : parseFloat(newItem.price_multiplier),
         min_order_qty: parseInt(newItem.min_order_qty) || 1,
-        max_order_qty: newItem.max_order_qty ? parseInt(newItem.max_order_qty) : null,
+        max_order_qty: newItem.max_order_qty
+          ? parseInt(newItem.max_order_qty)
+          : null,
         stock: parseInt(newItem.stock) || 0,
         has_stock: newItem.has_stock,
       };
-      
+
       console.log("[Catalogue] Creating product (POST) payload:", payload);
       const response = await fetch(`${API_URL}/catalogue/`, {
         method: "POST",
@@ -332,7 +364,7 @@ function Catalogue() {
           data.details?.item_name?.[0] ||
             data.details?.item_code?.[0] ||
             data.error ||
-            "Failed to create product"
+            "Failed to create product",
         );
       }
 
@@ -363,7 +395,7 @@ function Catalogue() {
     } catch (err) {
       console.error("Error creating product:", err);
       setCreateError(
-        err instanceof Error ? err.message : "Failed to create product"
+        err instanceof Error ? err.message : "Failed to create product",
       );
     } finally {
       setCreating(false);
@@ -451,10 +483,16 @@ function Catalogue() {
         specifications: editItem.specifications,
         legend: editItem.legend,
         pricing_type: editItem.pricing_type,
-        points: isFixed ? parseFloat(editItem.points) : parseFloat(editItem.points_multiplier),
-        price: isFixed ? parseFloat(editItem.price) : parseFloat(editItem.price_multiplier),
+        points: isFixed
+          ? parseFloat(editItem.points)
+          : parseFloat(editItem.points_multiplier),
+        price: isFixed
+          ? parseFloat(editItem.price)
+          : parseFloat(editItem.price_multiplier),
         min_order_qty: parseInt(editItem.min_order_qty) || 1,
-        max_order_qty: editItem.max_order_qty ? parseInt(editItem.max_order_qty) : null,
+        max_order_qty: editItem.max_order_qty
+          ? parseInt(editItem.max_order_qty)
+          : null,
         stock: parseInt(editItem.stock) || 0,
         has_stock: editItem.has_stock,
       };
@@ -463,7 +501,7 @@ function Catalogue() {
         "[Catalogue] Updating product (PATCH) id=",
         editingProductId,
         " payload:",
-        payload
+        payload,
       );
 
       const response = await fetch(`/api/catalogue/${editingProductId}/`, {
@@ -483,7 +521,7 @@ function Catalogue() {
           data.item_code?.[0] ||
             data.item_name?.[0] ||
             data.error ||
-            "Failed to update product"
+            "Failed to update product",
         );
       }
 
@@ -494,7 +532,7 @@ function Catalogue() {
     } catch (err) {
       console.error("Error updating product:", err);
       setEditError(
-        err instanceof Error ? err.message : "Failed to update product"
+        err instanceof Error ? err.message : "Failed to update product",
       );
     } finally {
       setUpdating(false);
@@ -565,15 +603,15 @@ function Catalogue() {
   const handleUpdateVariant = async () => {
     if (!editVariantTarget) return;
     setEditVariantError(null);
-    
+
     const isFixed = editVariantData.pricing_type === "FIXED";
-    
+
     // Validation
     if (!editVariantData.item_code.trim()) {
       setEditVariantError("Item code is required");
       return;
     }
-    
+
     // Validate based on pricing type
     if (isFixed) {
       if (!editVariantData.points.toString().trim()) {
@@ -594,17 +632,17 @@ function Catalogue() {
         return;
       }
     }
-    
+
     try {
       setUpdatingVariant(true);
-      
+
       // Build payload based on pricing type
       const payload: Record<string, unknown> = {
         item_code: editVariantData.item_code,
         category: editVariantData.category || null,
         pricing_type: editVariantData.pricing_type || "FIXED",
       };
-      
+
       if (isFixed) {
         payload.points = editVariantData.points;
         payload.price = editVariantData.price;
@@ -612,11 +650,11 @@ function Catalogue() {
         payload.price_multiplier = null;
       } else {
         payload.points = editVariantData.points_multiplier; // Backend may use points field
-        payload.price = editVariantData.price_multiplier;   // Backend may use price field
+        payload.price = editVariantData.price_multiplier; // Backend may use price field
         payload.points_multiplier = editVariantData.points_multiplier;
         payload.price_multiplier = editVariantData.price_multiplier;
       }
-      
+
       const response = await fetch(`/api/catalogue/${editVariantTarget.id}/`, {
         method: "PUT",
         credentials: "include",
@@ -635,7 +673,7 @@ function Catalogue() {
     } catch (err) {
       console.error("Error updating product:", err);
       setEditVariantError(
-        err instanceof Error ? err.message : "Failed to update product"
+        err instanceof Error ? err.message : "Failed to update product",
       );
     } finally {
       setUpdatingVariant(false);
@@ -650,7 +688,7 @@ function Catalogue() {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
       if (!response.ok) {
         throw new Error("Failed to delete product");

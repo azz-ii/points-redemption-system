@@ -8,13 +8,7 @@ import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import {
-  Bell,
-  Search,
-  Plus,
-  Store,
-  LogOut,
-} from "lucide-react";
+import { Bell, Search, Plus, Store, LogOut } from "lucide-react";
 
 import { distributorsApi, type Distributor } from "@/lib/distributors-api";
 import {
@@ -78,7 +72,10 @@ function Distributors() {
   const safePage = Math.min(page, totalPages);
   const startIndex = (safePage - 1) * 15;
   const endIndex = startIndex + 15;
-  const paginatedDistributors = filteredDistributors.slice(startIndex, endIndex);
+  const paginatedDistributors = filteredDistributors.slice(
+    startIndex,
+    endIndex,
+  );
 
   // Reset to page 1 when search query changes
   useEffect(() => {
@@ -110,7 +107,9 @@ function Distributors() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingDistributorId, setEditingDistributorId] = useState<number | null>(null);
+  const [editingDistributorId, setEditingDistributorId] = useState<
+    number | null
+  >(null);
   const [viewTarget, setViewTarget] = useState<Distributor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Distributor | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -147,8 +146,9 @@ function Distributors() {
 
     try {
       setCreating(true);
-      const createdDistributor = await distributorsApi.createDistributor(newDistributor);
-      setDistributors(prev => [...prev, createdDistributor]);
+      const createdDistributor =
+        await distributorsApi.createDistributor(newDistributor);
+      setDistributors((prev) => [...prev, createdDistributor]);
       setNewDistributor({
         name: "",
         contact_email: "",
@@ -210,10 +210,15 @@ function Distributors() {
 
     try {
       setUpdating(true);
-      const updatedDistributor = await distributorsApi.updateDistributor(editingDistributorId, editDistributor);
-      setDistributors(prev => prev.map(d => 
-        d.id === editingDistributorId ? updatedDistributor : d
-      ));
+      const updatedDistributor = await distributorsApi.updateDistributor(
+        editingDistributorId,
+        editDistributor,
+      );
+      setDistributors((prev) =>
+        prev.map((d) =>
+          d.id === editingDistributorId ? updatedDistributor : d,
+        ),
+      );
       setShowEditModal(false);
       setEditingDistributorId(null);
       setEditError(null);
@@ -242,7 +247,7 @@ function Distributors() {
 
     try {
       await distributorsApi.deleteDistributor(deleteTarget.id);
-      setDistributors(prev => prev.filter(d => d.id !== deleteTarget.id));
+      setDistributors((prev) => prev.filter((d) => d.id !== deleteTarget.id));
       setShowDeleteModal(false);
       setDeleteTarget(null);
     } catch (err) {
@@ -255,18 +260,22 @@ function Distributors() {
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
-      
+
       // Use batch API for efficiency
       const result = await distributorsApi.batchUpdatePoints(updates);
-      
+
       setShowSetPointsModal(false);
-      
+
       if (result.failed_count === 0) {
-        alert(`Successfully updated points for ${result.updated_count} distributor(s)`);
+        alert(
+          `Successfully updated points for ${result.updated_count} distributor(s)`,
+        );
       } else {
-        alert(`Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`);
+        alert(
+          `Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`,
+        );
       }
-      
+
       // Refresh distributors list
       fetchDistributors();
     } catch (err) {
@@ -282,20 +291,25 @@ function Distributors() {
     console.log("[DEBUG] handleBulkSetPoints called with delta:", pointsDelta);
     try {
       setSettingPoints(true);
-      
-      console.log("[DEBUG] Sending POST to /api/distributors/bulk_update_points/");
-      const response = await fetch(`${API_URL}/distributors/bulk_update_points/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+
+      console.log(
+        "[DEBUG] Sending POST to /api/distributors/bulk_update_points/",
+      );
+      const response = await fetch(
+        `${API_URL}/distributors/bulk_update_points/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            points_delta: pointsDelta,
+            password: password,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          points_delta: pointsDelta,
-          password: password,
-        }),
-      });
-      
+      );
+
       console.log("[DEBUG] Response received:", response.status);
       const data = await response.json();
       console.log("[DEBUG] Response data:", data);
@@ -306,7 +320,9 @@ function Distributors() {
       }
 
       setShowSetPointsModal(false);
-      alert(`Successfully updated points for ${data.updated_count} distributor(s)`);
+      alert(
+        `Successfully updated points for ${data.updated_count} distributor(s)`,
+      );
       fetchDistributors();
     } catch (err) {
       console.error("[DEBUG] Error bulk updating points:", err);
@@ -321,20 +337,25 @@ function Distributors() {
     console.log("[DEBUG] handleResetAllPoints called");
     try {
       setSettingPoints(true);
-      
-      console.log("[DEBUG] Sending POST for reset to /api/distributors/bulk_update_points/");
-      const response = await fetch(`${API_URL}/distributors/bulk_update_points/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+
+      console.log(
+        "[DEBUG] Sending POST for reset to /api/distributors/bulk_update_points/",
+      );
+      const response = await fetch(
+        `${API_URL}/distributors/bulk_update_points/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            reset_to_zero: true,
+            password: password,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          reset_to_zero: true,
-          password: password,
-        }),
-      });
-      
+      );
+
       console.log("[DEBUG] Reset response received:", response.status);
       const data = await response.json();
       console.log("[DEBUG] Reset response data:", data);
@@ -345,7 +366,9 @@ function Distributors() {
       }
 
       setShowSetPointsModal(false);
-      alert(`Successfully reset points for ${data.updated_count} distributor(s)`);
+      alert(
+        `Successfully reset points for ${data.updated_count} distributor(s)`,
+      );
       fetchDistributors();
     } catch (err) {
       console.error("[DEBUG] Error resetting points:", err);
@@ -447,8 +470,6 @@ function Distributors() {
               <ThemeToggle />
             </div>
           </div>
-
-
 
           {/* Loading/Error States */}
           {loading && (

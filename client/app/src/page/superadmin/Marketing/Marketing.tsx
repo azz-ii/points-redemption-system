@@ -7,20 +7,19 @@ import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import {
-  Bell,
-  LogOut,
-  X,
-  RotateCw,
-  Download,
-} from "lucide-react";
+import { Bell, LogOut, X, RotateCw, Download } from "lucide-react";
 import {
   ViewAccountModal,
   EditAccountModal,
   ExportModal,
   type Account,
 } from "./modals";
-import { MarketingUsersTable, MarketingUsersMobileCards, type MarketingUser, type LegendAssignment } from "./components";
+import {
+  MarketingUsersTable,
+  MarketingUsersMobileCards,
+  type MarketingUser,
+  type LegendAssignment,
+} from "./components";
 
 function Marketing() {
   const handleLogout = useLogout();
@@ -38,27 +37,31 @@ function Marketing() {
 
   const [showExportModal, setShowExportModal] = useState(false);
 
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Fetch accounts and assignments
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Fetch users and assignments in parallel
       const [usersResponse, assignmentsResponse] = await Promise.all([
         fetch(`${API_URL}/users/`),
-        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`)
+        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`),
       ]);
-      
+
       const usersData = await usersResponse.json();
       const assignmentsData = await assignmentsResponse.json();
 
       if (usersResponse.ok) {
         const accounts = (usersData.accounts || []).filter(
-          (account: Account) => account.position === "Marketing" || account.position === "Admin"
+          (account: Account) =>
+            account.position === "Marketing" || account.position === "Admin",
         );
-        
+
         // Build assignments map by user ID
         const assignmentsByUser: Record<number, LegendAssignment[]> = {};
         if (assignmentsResponse.ok && assignmentsData.assignments) {
@@ -74,13 +77,15 @@ function Marketing() {
             }
           }
         }
-        
+
         // Merge users with their assignments
-        const usersWithAssignments: MarketingUser[] = accounts.map((account: Account) => ({
-          ...account,
-          assigned_legends: assignmentsByUser[account.id] || [],
-        }));
-        
+        const usersWithAssignments: MarketingUser[] = accounts.map(
+          (account: Account) => ({
+            ...account,
+            assigned_legends: assignmentsByUser[account.id] || [],
+          }),
+        );
+
         setMarketingUsers(usersWithAssignments);
       } else {
         setError("Failed to load marketing users");
@@ -144,18 +149,18 @@ function Marketing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  
+
   const filteredUsers = marketingUsers.filter(
     (user) =>
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.id.toString().includes(searchQuery)
+      user.id.toString().includes(searchQuery),
   );
-  
+
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredUsers.length / itemsPerPage)
+    Math.ceil(filteredUsers.length / itemsPerPage),
   );
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
@@ -267,7 +272,9 @@ function Marketing() {
                   : "bg-gray-100 text-gray-900 hover:bg-gray-200"
               } disabled:opacity-50`}
             >
-              <RotateCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+              <RotateCw
+                className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
+              />
             </button>
           </div>
 
@@ -336,7 +343,8 @@ function Marketing() {
         onClose={() => {
           setShowEditModal(false);
           setEditingAccount(null);
-        }}        account={editingAccount}
+        }}
+        account={editingAccount}
         onSuccess={handleEditSuccess}
       />
 

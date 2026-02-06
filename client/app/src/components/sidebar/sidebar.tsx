@@ -653,13 +653,13 @@ export function SidebarSales() {
               }`}
               title={label}
             >
-              <Icon className={`h-5 w-5 shrink-0 ${
-                sidebarExpanded ? "" : "mx-auto"
-              }`} />
+              <Icon
+                className={`h-5 w-5 shrink-0 ${
+                  sidebarExpanded ? "" : "mx-auto"
+                }`}
+              />
               {sidebarExpanded && (
-                <span className="text-sm truncate">
-                  {label}
-                </span>
+                <span className="text-sm truncate">{label}</span>
               )}
             </button>
           ))}
@@ -667,9 +667,11 @@ export function SidebarSales() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className={`space-y-3 border-t pt-3 ${
-        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-      }`}>
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
@@ -680,7 +682,9 @@ export function SidebarSales() {
         >
           <div
             className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -726,9 +730,7 @@ export function SidebarSales() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="text-sm font-semibold">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -864,13 +866,13 @@ export function SidebarApprover() {
               }`}
               title={label}
             >
-              <Icon className={`h-5 w-5 shrink-0 ${
-                sidebarExpanded ? "" : "mx-auto"
-              }`} />
+              <Icon
+                className={`h-5 w-5 shrink-0 ${
+                  sidebarExpanded ? "" : "mx-auto"
+                }`}
+              />
               {sidebarExpanded && (
-                <span className="text-sm truncate">
-                  {label}
-                </span>
+                <span className="text-sm truncate">{label}</span>
               )}
             </button>
           ))}
@@ -878,9 +880,11 @@ export function SidebarApprover() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className={`space-y-3 border-t pt-3 ${
-        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-      }`}>
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
@@ -891,7 +895,9 @@ export function SidebarApprover() {
         >
           <div
             className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -937,9 +943,7 @@ export function SidebarApprover() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="text-sm font-semibold">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -1081,13 +1085,13 @@ export function SidebarMarketing() {
               }`}
               title={label}
             >
-              <Icon className={`h-5 w-5 shrink-0 ${
-                sidebarExpanded ? "" : "mx-auto"
-              }`} />
+              <Icon
+                className={`h-5 w-5 shrink-0 ${
+                  sidebarExpanded ? "" : "mx-auto"
+                }`}
+              />
               {sidebarExpanded && (
-                <span className="text-sm truncate">
-                  {label}
-                </span>
+                <span className="text-sm truncate">{label}</span>
               )}
             </button>
           ))}
@@ -1095,9 +1099,11 @@ export function SidebarMarketing() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className={`space-y-3 border-t pt-3 ${
-        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-      }`}>
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
@@ -1108,7 +1114,9 @@ export function SidebarMarketing() {
         >
           <div
             className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -1154,9 +1162,7 @@ export function SidebarMarketing() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="text-sm font-semibold">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -1294,9 +1300,7 @@ export function SidebarReception() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="text-sm font-semibold">
-                  {label}
-                </span>
+                <span className="text-sm font-semibold">{label}</span>
               )}
             </button>
           ))}
@@ -1304,9 +1308,11 @@ export function SidebarReception() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className={`space-y-3 border-t pt-3 ${
-        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-      }`}>
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
@@ -1317,7 +1323,9 @@ export function SidebarReception() {
         >
           <div
             className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -1363,9 +1371,7 @@ export function SidebarReception() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="text-sm font-semibold">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -1503,9 +1509,7 @@ export function SidebarExecutiveAssistant() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="text-sm font-semibold">
-                  {label}
-                </span>
+                <span className="text-sm font-semibold">{label}</span>
               )}
             </button>
           ))}
@@ -1513,9 +1517,11 @@ export function SidebarExecutiveAssistant() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className={`space-y-3 border-t pt-3 ${
-        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-      }`}>
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
@@ -1526,7 +1532,9 @@ export function SidebarExecutiveAssistant() {
         >
           <div
             className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -1572,9 +1580,7 @@ export function SidebarExecutiveAssistant() {
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="text-sm font-semibold">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -1586,8 +1592,3 @@ export function SidebarExecutiveAssistant() {
     </div>
   );
 }
-
-
-
-
-

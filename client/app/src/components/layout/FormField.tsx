@@ -67,8 +67,7 @@ export function FormField({
   );
 }
 
-interface TextAreaFieldProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
   error?: string;
   helperText?: string;

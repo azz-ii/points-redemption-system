@@ -27,10 +27,25 @@ export function MobileBottomNavSuperAdmin({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard", path: "/admin/dashboard" },
+    {
+      id: "dashboard",
+      icon: Home,
+      label: "Dashboard",
+      path: "/admin/dashboard",
+    },
     { id: "accounts", icon: User, label: "Accounts", path: "/admin/accounts" },
-    { id: "catalogue", icon: Package, label: "Catalogue", path: "/admin/catalogue" },
-    { id: "inventory", icon: Warehouse, label: "Inventory", path: "/admin/inventory" },
+    {
+      id: "catalogue",
+      icon: Package,
+      label: "Catalogue",
+      path: "/admin/catalogue",
+    },
+    {
+      id: "inventory",
+      icon: Warehouse,
+      label: "Inventory",
+      path: "/admin/inventory",
+    },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
@@ -71,12 +86,12 @@ export function MobileBottomNavSuperAdmin({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 
@@ -123,7 +138,6 @@ export function MobileBottomNavSuperAdmin({
   );
 }
 
-
 export function MobileBottomNavMarketing({
   isModalOpen = false,
 }: {
@@ -136,9 +150,24 @@ export function MobileBottomNavMarketing({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard", path: "/marketing/dashboard" },
-    { id: "process-requests", icon: ClipboardCheck, label: "Requests", path: "/marketing/process-requests" },
-    { id: "history", icon: HistoryIcon, label: "History", path: "/marketing/history" },
+    {
+      id: "dashboard",
+      icon: Home,
+      label: "Dashboard",
+      path: "/marketing/dashboard",
+    },
+    {
+      id: "process-requests",
+      icon: ClipboardCheck,
+      label: "Requests",
+      path: "/marketing/process-requests",
+    },
+    {
+      id: "history",
+      icon: HistoryIcon,
+      label: "History",
+      path: "/marketing/history",
+    },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
@@ -172,12 +201,12 @@ export function MobileBottomNavMarketing({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 
@@ -236,8 +265,18 @@ export function MobileBottomNavReception({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard", path: "/reception/dashboard" },
-    { id: "history", icon: HistoryIcon, label: "History", path: "/reception/history" },
+    {
+      id: "dashboard",
+      icon: Home,
+      label: "Dashboard",
+      path: "/reception/dashboard",
+    },
+    {
+      id: "history",
+      icon: HistoryIcon,
+      label: "History",
+      path: "/reception/history",
+    },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
@@ -270,12 +309,12 @@ export function MobileBottomNavReception({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 
@@ -334,8 +373,18 @@ export function MobileBottomNavExecutiveAssistant({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard", path: "/executive-assistant/dashboard" },
-    { id: "history", icon: HistoryIcon, label: "History", path: "/executive-assistant/history" },
+    {
+      id: "dashboard",
+      icon: Home,
+      label: "Dashboard",
+      path: "/executive-assistant/dashboard",
+    },
+    {
+      id: "history",
+      icon: HistoryIcon,
+      label: "History",
+      path: "/executive-assistant/history",
+    },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
@@ -368,12 +417,12 @@ export function MobileBottomNavExecutiveAssistant({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 
@@ -432,9 +481,24 @@ export function MobileBottomNavSales({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "dashboard", icon: Home, label: "Distributors", path: "/sales/dashboard" },
-    { id: "redemption-status", icon: ClipboardCheck, label: "Status", path: "/sales/redemption-status" },
-    { id: "redeem-items", icon: Gift, label: "Redeem", path: "/sales/redeem-items" },
+    {
+      id: "dashboard",
+      icon: Home,
+      label: "Distributors",
+      path: "/sales/dashboard",
+    },
+    {
+      id: "redemption-status",
+      icon: ClipboardCheck,
+      label: "Status",
+      path: "/sales/redemption-status",
+    },
+    {
+      id: "redeem-items",
+      icon: Gift,
+      label: "Redeem",
+      path: "/sales/redeem-items",
+    },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
@@ -468,12 +532,12 @@ export function MobileBottomNavSales({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 
@@ -532,8 +596,18 @@ export function MobileBottomNavApprover({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "requests", icon: FileBox, label: "Requests", path: "/approver/requests" },
-    { id: "history", icon: HistoryIcon, label: "History", path: "/approver/history" },
+    {
+      id: "requests",
+      icon: FileBox,
+      label: "Requests",
+      path: "/approver/requests",
+    },
+    {
+      id: "history",
+      icon: HistoryIcon,
+      label: "History",
+      path: "/approver/history",
+    },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;
 
@@ -566,12 +640,12 @@ export function MobileBottomNavApprover({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 
@@ -629,10 +703,25 @@ export function MobileBottomNav({
   const [isVisible, setIsVisible] = useState(true);
 
   const navItems = [
-    { id: "dashboard", icon: Home, label: "Dashboard", path: "/admin/dashboard" },
-    { id: "history", icon: HistoryIcon, label: "History", path: "/admin/history" },
+    {
+      id: "dashboard",
+      icon: Home,
+      label: "Dashboard",
+      path: "/admin/dashboard",
+    },
+    {
+      id: "history",
+      icon: HistoryIcon,
+      label: "History",
+      path: "/admin/history",
+    },
     { id: "accounts", icon: User, label: "Accounts", path: "/admin/accounts" },
-    { id: "catalogue", icon: Package, label: "Catalogue", path: "/admin/catalogue" },
+    {
+      id: "catalogue",
+      icon: Package,
+      label: "Catalogue",
+      path: "/admin/catalogue",
+    },
     { id: "teams", icon: Users, label: "Teams", path: "/admin/teams" },
   ] as const;
 
@@ -665,12 +754,12 @@ export function MobileBottomNav({
     (scrollContainer as HTMLElement | Window).addEventListener(
       "scroll",
       handleScroll,
-      { passive: true }
+      { passive: true },
     );
     return () =>
       (scrollContainer as HTMLElement | Window).removeEventListener(
         "scroll",
-        handleScroll
+        handleScroll,
       );
   }, []);
 

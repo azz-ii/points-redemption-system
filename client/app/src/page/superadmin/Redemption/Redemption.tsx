@@ -16,7 +16,13 @@ import {
   LogOut,
   Download,
 } from "lucide-react";
-import { ViewRedemptionModal, MarkAsProcessedModal, ExportModal, type RedemptionItem, type MyProcessingStatus } from "./modals";
+import {
+  ViewRedemptionModal,
+  MarkAsProcessedModal,
+  ExportModal,
+  type RedemptionItem,
+  type MyProcessingStatus,
+} from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
 import { toast } from "sonner";
 
@@ -34,8 +40,11 @@ function Redemption() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showProcessModal, setShowProcessModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
-  const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(
+    null,
+  );
+  const [myProcessingStatus, setMyProcessingStatus] =
+    useState<MyProcessingStatus | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchRequests = useCallback(async (isRefresh = false) => {
@@ -65,7 +74,8 @@ function Redemption() {
 
   const fetchMyProcessingStatus = useCallback(async (requestId: number) => {
     try {
-      const status = await marketingRequestsApi.getMyProcessingStatus(requestId);
+      const status =
+        await marketingRequestsApi.getMyProcessingStatus(requestId);
       setMyProcessingStatus(status);
       return status;
     } catch (err) {
@@ -93,21 +103,27 @@ function Redemption() {
   const endIndex = startIndex + pageSize;
   const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
-  const handleViewClick = useCallback(async (request: RedemptionItem) => {
-    setSelectedRequest(request);
-    await fetchMyProcessingStatus(request.id);
-    setShowViewModal(true);
-  }, [fetchMyProcessingStatus]);
+  const handleViewClick = useCallback(
+    async (request: RedemptionItem) => {
+      setSelectedRequest(request);
+      await fetchMyProcessingStatus(request.id);
+      setShowViewModal(true);
+    },
+    [fetchMyProcessingStatus],
+  );
 
-  const handleMarkProcessedClick = useCallback(async (request: RedemptionItem) => {
-    setSelectedRequest(request);
-    const status = await fetchMyProcessingStatus(request.id);
-    if (status && status.pending_items > 0) {
-      setShowProcessModal(true);
-    } else {
-      toast.info("All your items have already been processed");
-    }
-  }, [fetchMyProcessingStatus]);
+  const handleMarkProcessedClick = useCallback(
+    async (request: RedemptionItem) => {
+      setSelectedRequest(request);
+      const status = await fetchMyProcessingStatus(request.id);
+      if (status && status.pending_items > 0) {
+        setShowProcessModal(true);
+      } else {
+        toast.info("All your items have already been processed");
+      }
+    },
+    [fetchMyProcessingStatus],
+  );
 
   const handleMarkProcessedConfirm = async () => {
     if (!selectedRequest) return;
@@ -121,7 +137,11 @@ function Redemption() {
       fetchRequests(true);
     } catch (err) {
       console.error("Error marking items as processed:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark items as processed",
+      );
     }
   };
 
@@ -176,7 +196,9 @@ function Redemption() {
               } transition-colors ${refreshing ? "opacity-50" : ""}`}
               title="Refresh"
             >
-              <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
+              />
             </button>
             <button
               onClick={() => setIsNotificationOpen(true)}
@@ -212,7 +234,8 @@ function Redemption() {
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                View and process approved redemption requests for your assigned items
+                View and process approved redemption requests for your assigned
+                items
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -226,7 +249,9 @@ function Redemption() {
                 } transition-colors ${refreshing ? "opacity-50" : ""}`}
                 title="Refresh"
               >
-                <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
+                />
               </button>
               <button
                 onClick={() => setIsNotificationOpen(true)}
@@ -241,8 +266,6 @@ function Redemption() {
               <ThemeToggle />
             </div>
           </div>
-
-          
 
           {error ? (
             <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">

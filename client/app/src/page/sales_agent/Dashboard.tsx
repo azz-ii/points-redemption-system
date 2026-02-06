@@ -7,7 +7,10 @@ import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Bell, Warehouse, LogOut, RefreshCw } from "lucide-react";
-import { agentDashboardApi, type AgentDashboardStats } from "@/lib/distributors-api";
+import {
+  agentDashboardApi,
+  type AgentDashboardStats,
+} from "@/lib/distributors-api";
 import { redemptionRequestsApi } from "@/lib/api";
 import { toast } from "react-hot-toast";
 import {
@@ -75,7 +78,7 @@ function SalesAgentDashboard() {
         setRequestsLoading(true);
         const response = await redemptionRequestsApi.getRequests();
         const allRequests = response || [];
-        
+
         // Map to RedemptionItem format and filter for PENDING status only
         const mappedRequests = (allRequests as any[])
           .filter((req) => req.status === "PENDING")
@@ -92,9 +95,9 @@ function SalesAgentDashboard() {
                 total_points: req.total_points,
                 date_requested: req.date_requested,
                 items: req.items,
-              } as RedemptionItem)
+              }) as RedemptionItem,
           );
-        
+
         setRequests(mappedRequests);
       } catch (error) {
         console.error("Error fetching requests:", error);
@@ -112,7 +115,7 @@ function SalesAgentDashboard() {
       setIsRefreshing(true);
       const response = await redemptionRequestsApi.getRequests();
       const allRequests = response || [];
-      
+
       const mappedRequests = (allRequests as any[])
         .filter((req) => req.status === "PENDING")
         .map(
@@ -128,9 +131,9 @@ function SalesAgentDashboard() {
               total_points: req.total_points,
               date_requested: req.date_requested,
               items: req.items,
-            } as RedemptionItem)
+            }) as RedemptionItem,
         );
-      
+
       setRequests(mappedRequests);
       toast.success("Requests refreshed successfully");
     } catch (error) {
@@ -154,9 +157,7 @@ function SalesAgentDashboard() {
         {/* Mobile Header */}
         <div
           className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            isDark
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
+            isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
           }`}
         >
           <div className="flex items-center gap-2">
@@ -220,9 +221,11 @@ function SalesAgentDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isDark ? "bg-yellow-400" : "bg-yellow-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      isDark ? "bg-yellow-400" : "bg-yellow-500"
+                    }`}
+                  />
                   <p className="text-xs font-semibold">Pending</p>
                 </div>
                 <p className="text-2xl font-bold">
@@ -238,9 +241,11 @@ function SalesAgentDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isDark ? "bg-blue-400" : "bg-blue-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      isDark ? "bg-blue-400" : "bg-blue-500"
+                    }`}
+                  />
                   <p className="text-xs font-semibold">Processed</p>
                 </div>
                 <p className="text-2xl font-bold">
@@ -256,9 +261,11 @@ function SalesAgentDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isDark ? "bg-green-400" : "bg-green-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      isDark ? "bg-green-400" : "bg-green-500"
+                    }`}
+                  />
                   <p className="text-xs font-semibold">Approved</p>
                 </div>
                 <p className="text-2xl font-bold">
@@ -274,9 +281,11 @@ function SalesAgentDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    isDark ? "bg-red-400" : "bg-red-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      isDark ? "bg-red-400" : "bg-red-500"
+                    }`}
+                  />
                   <p className="text-xs font-semibold">Rejected</p>
                 </div>
                 <p className="text-2xl font-bold">
@@ -298,7 +307,9 @@ function SalesAgentDashboard() {
                       : "bg-gray-100 hover:bg-gray-200"
                   } transition-colors disabled:opacity-50`}
                 >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
                 </button>
               </div>
 
@@ -324,21 +335,28 @@ function SalesAgentDashboard() {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-semibold text-sm">#{request.id}</p>
-                          <p className="text-xs text-gray-500">{request.requested_by_name}</p>
+                          <p className="text-xs text-gray-500">
+                            {request.requested_by_name}
+                          </p>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          request.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : request.status === "APPROVED"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            request.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : request.status === "APPROVED"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
+                        >
                           {request.status}
                         </span>
                       </div>
-                      <p className="text-sm mb-1">For: {request.requested_for_name}</p>
+                      <p className="text-sm mb-1">
+                        For: {request.requested_for_name}
+                      </p>
                       <p className="text-xs text-gray-500 mb-3">
-                        {request.total_points} points · {new Date(request.date_requested).toLocaleDateString()}
+                        {request.total_points} points ·{" "}
+                        {new Date(request.date_requested).toLocaleDateString()}
                       </p>
                       <button
                         onClick={() => navigate("/sales/redemption-status")}
@@ -477,7 +495,9 @@ function SalesAgentDashboard() {
                 <p className="font-semibold text-sm">Points Balance</p>
               </div>
               <p className="text-4xl font-bold">
-                {statsLoading ? "-" : (stats?.agent_points || 0).toLocaleString()}
+                {statsLoading
+                  ? "-"
+                  : (stats?.agent_points || 0).toLocaleString()}
               </p>
             </div>
           </div>
@@ -485,7 +505,9 @@ function SalesAgentDashboard() {
           {/* Pending Requests Table Section */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Pending Redemption Requests</h3>
+              <h3 className="text-lg font-semibold">
+                Pending Redemption Requests
+              </h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate("/sales/redeem-items")}
@@ -505,8 +527,8 @@ function SalesAgentDashboard() {
                     isRefreshing
                       ? "opacity-50 cursor-not-allowed"
                       : isDark
-                      ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
-                      : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                        ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                        : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
                   }`}
                   title="Refresh requests"
                 >
@@ -593,9 +615,7 @@ function SalesAgentDashboard() {
                         <TableCell className="font-medium">
                           {request.requested_by_name}
                         </TableCell>
-                        <TableCell>
-                          {request.requested_for_name}
-                        </TableCell>
+                        <TableCell>{request.requested_for_name}</TableCell>
                         <TableCell className="font-semibold">
                           {request.total_points.toLocaleString()}
                         </TableCell>
@@ -604,12 +624,16 @@ function SalesAgentDashboard() {
                             isDark ? "text-gray-400" : "text-gray-600"
                           }`}
                         >
-                          {new Date(request.date_requested).toLocaleDateString()}
-                        </TableCell>                        <TableCell>
+                          {new Date(
+                            request.date_requested,
+                          ).toLocaleDateString()}
+                        </TableCell>{" "}
+                        <TableCell>
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                             {request.status}
                           </span>
-                        </TableCell>                      </TableRow>
+                        </TableCell>{" "}
+                      </TableRow>
                     ))
                   ) : !requestsLoading ? (
                     <TableRow>

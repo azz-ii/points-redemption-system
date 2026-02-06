@@ -8,13 +8,7 @@ import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import {
-  Bell,
-  Search,
-  Plus,
-  Users,
-  LogOut,
-} from "lucide-react";
+import { Bell, Search, Plus, Users, LogOut } from "lucide-react";
 
 import { customersApi, type Customer } from "@/lib/customers-api";
 import {
@@ -107,7 +101,9 @@ function Customers() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingCustomerId, setEditingCustomerId] = useState<number | null>(null);
+  const [editingCustomerId, setEditingCustomerId] = useState<number | null>(
+    null,
+  );
   const [viewTarget, setViewTarget] = useState<Customer | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -141,7 +137,7 @@ function Customers() {
     try {
       setCreating(true);
       const createdCustomer = await customersApi.createCustomer(newCustomer);
-      setCustomers(prev => [...prev, createdCustomer]);
+      setCustomers((prev) => [...prev, createdCustomer]);
       setNewCustomer({
         name: "",
         contact_email: "",
@@ -197,10 +193,13 @@ function Customers() {
 
     try {
       setUpdating(true);
-      const updatedCustomer = await customersApi.updateCustomer(editingCustomerId, editCustomer);
-      setCustomers(prev => prev.map(c => 
-        c.id === editingCustomerId ? updatedCustomer : c
-      ));
+      const updatedCustomer = await customersApi.updateCustomer(
+        editingCustomerId,
+        editCustomer,
+      );
+      setCustomers((prev) =>
+        prev.map((c) => (c.id === editingCustomerId ? updatedCustomer : c)),
+      );
       setShowEditModal(false);
       setEditingCustomerId(null);
       setEditError(null);
@@ -229,7 +228,7 @@ function Customers() {
 
     try {
       await customersApi.deleteCustomer(deleteTarget.id);
-      setCustomers(prev => prev.filter(c => c.id !== deleteTarget.id));
+      setCustomers((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       setShowDeleteModal(false);
       setDeleteTarget(null);
     } catch (err) {
@@ -242,18 +241,22 @@ function Customers() {
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
-      
+
       // Use batch API for efficiency
       const result = await customersApi.batchUpdatePoints(updates);
-      
+
       setShowSetPointsModal(false);
-      
+
       if (result.failed_count === 0) {
-        alert(`Successfully updated points for ${result.updated_count} customer(s)`);
+        alert(
+          `Successfully updated points for ${result.updated_count} customer(s)`,
+        );
       } else {
-        alert(`Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`);
+        alert(
+          `Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`,
+        );
       }
-      
+
       // Refresh customers list
       fetchCustomers();
     } catch (err) {
@@ -269,7 +272,7 @@ function Customers() {
     console.log("[DEBUG] handleBulkSetPoints called with delta:", pointsDelta);
     try {
       setSettingPoints(true);
-      
+
       console.log("[DEBUG] Sending POST to /api/customers/bulk_update_points/");
       const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
         method: "POST",
@@ -282,7 +285,7 @@ function Customers() {
           password: password,
         }),
       });
-      
+
       console.log("[DEBUG] Response received:", response.status);
       const data = await response.json();
       console.log("[DEBUG] Response data:", data);
@@ -293,7 +296,9 @@ function Customers() {
       }
 
       setShowSetPointsModal(false);
-      alert(`Successfully updated points for ${data.updated_count} customer(s)`);
+      alert(
+        `Successfully updated points for ${data.updated_count} customer(s)`,
+      );
       fetchCustomers();
     } catch (err) {
       console.error("[DEBUG] Error bulk updating points:", err);
@@ -308,8 +313,10 @@ function Customers() {
     console.log("[DEBUG] handleResetAllPoints called");
     try {
       setSettingPoints(true);
-      
-      console.log("[DEBUG] Sending POST for reset to /api/customers/bulk_update_points/");
+
+      console.log(
+        "[DEBUG] Sending POST for reset to /api/customers/bulk_update_points/",
+      );
       const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
         method: "POST",
         headers: {
@@ -321,7 +328,7 @@ function Customers() {
           password: password,
         }),
       });
-      
+
       console.log("[DEBUG] Reset response received:", response.status);
       const data = await response.json();
       console.log("[DEBUG] Reset response data:", data);
@@ -434,8 +441,6 @@ function Customers() {
               <ThemeToggle />
             </div>
           </div>
-
-
 
           {/* Loading/Error States */}
           {loading && (

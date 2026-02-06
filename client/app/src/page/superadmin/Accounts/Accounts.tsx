@@ -9,14 +9,7 @@ import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import {
-  Bell,
-  UserPlus,
-  LogOut,
-  Warehouse,
-  X,
-  RotateCw,
-} from "lucide-react";
+import { Bell, UserPlus, LogOut, Warehouse, X, RotateCw } from "lucide-react";
 import {
   ViewAccountModal,
   CreateAccountModal,
@@ -56,7 +49,9 @@ function Accounts() {
     is_banned: false,
   });
   const [newAccountImage, setNewAccountImage] = useState<File | null>(null);
-  const [newAccountImagePreview, setNewAccountImagePreview] = useState<string | null>(null);
+  const [newAccountImagePreview, setNewAccountImagePreview] = useState<
+    string | null
+  >(null);
 
   const [editAccount, setEditAccount] = useState({
     username: "",
@@ -68,7 +63,9 @@ function Accounts() {
     is_banned: false,
   });
   const [editAccountImage, setEditAccountImage] = useState<File | null>(null);
-  const [editAccountImagePreview, setEditAccountImagePreview] = useState<string | null>(null);
+  const [editAccountImagePreview, setEditAccountImagePreview] = useState<
+    string | null
+  >(null);
 
   const [showBanModal, setShowBanModal] = useState(false);
   const [banTarget, setBanTarget] = useState<Account | null>(null);
@@ -85,12 +82,17 @@ function Accounts() {
   const [bulkBanTargets, setBulkBanTargets] = useState<Account[]>([]);
   const [bulkBanReason, setBulkBanReason] = useState("");
   const [bulkBanMessage, setBulkBanMessage] = useState("");
-  const [bulkBanDuration, setBulkBanDuration] = useState<"1" | "7" | "30" | "permanent">("1");
+  const [bulkBanDuration, setBulkBanDuration] = useState<
+    "1" | "7" | "30" | "permanent"
+  >("1");
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Inline edit state
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
@@ -206,7 +208,7 @@ function Accounts() {
       formData.append(key, String(value));
     });
     if (imageFile) {
-      formData.append('profile_picture', imageFile);
+      formData.append("profile_picture", imageFile);
     }
 
     // Execute API call in background without blocking
@@ -244,7 +246,7 @@ function Accounts() {
   const handleViewAccountUpdate = (updatedAccount: Account) => {
     // Update the account in the accounts list
     setAccounts((prev) =>
-      prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc))
+      prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
     );
 
     // If the updated account is the logged-in user, update sidebar profile picture
@@ -298,23 +300,20 @@ function Accounts() {
 
     try {
       setLoading(true);
-      
+
       // Prepare form data for file upload
       const formData = new FormData();
       Object.entries(editAccount).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
       if (editAccountImage) {
-        formData.append('profile_picture', editAccountImage);
+        formData.append("profile_picture", editAccountImage);
       }
-      
-      const response = await fetchWithCsrf(
-        `/api/users/${editingAccount.id}/`,
-        {
-          method: "PUT",
-          body: formData,
-        }
-      );
+
+      const response = await fetchWithCsrf(`/api/users/${editingAccount.id}/`, {
+        method: "PUT",
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -324,7 +323,7 @@ function Accounts() {
           const updatedProfilePicture = data.user.profile_picture || null;
           updateProfilePicture(updatedProfilePicture);
         }
-        
+
         setShowEditModal(false);
         setEditingAccount(null);
         setError("");
@@ -335,7 +334,7 @@ function Accounts() {
           data.details?.username?.[0] ||
             data.details?.email?.[0] ||
             data.error ||
-            "Failed to update account"
+            "Failed to update account",
         );
       }
     } catch (err) {
@@ -384,22 +383,26 @@ function Accounts() {
   const handleBulkDeleteConfirm = async () => {
     try {
       setLoading(true);
-      
+
       // Delete all selected accounts
       const deleteResults = await Promise.allSettled(
-        bulkDeleteTargets.map(account =>
+        bulkDeleteTargets.map((account) =>
           fetchWithCsrf(`/api/users/${account.id}/`, {
             method: "DELETE",
-          })
-        )
+          }),
+        ),
       );
 
-      const successCount = deleteResults.filter(r => r.status === "fulfilled").length;
-      const failCount = deleteResults.filter(r => r.status === "rejected").length;
-      
+      const successCount = deleteResults.filter(
+        (r) => r.status === "fulfilled",
+      ).length;
+      const failCount = deleteResults.filter(
+        (r) => r.status === "rejected",
+      ).length;
+
       setShowBulkDeleteModal(false);
       setBulkDeleteTargets([]);
-      
+
       if (failCount === 0) {
         setToast({
           message: `Successfully deleted ${successCount} account(s)`,
@@ -411,7 +414,7 @@ function Accounts() {
           type: "error",
         });
       }
-      
+
       // Refresh accounts list
       fetchAccounts();
     } catch (err) {
@@ -459,7 +462,7 @@ function Accounts() {
 
       // Ban all selected accounts
       const banResults = await Promise.allSettled(
-        bulkBanTargets.map(account => {
+        bulkBanTargets.map((account) => {
           const payload = {
             username: account.username,
             full_name: account.full_name,
@@ -479,11 +482,15 @@ function Accounts() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-        })
+        }),
       );
 
-      const successCount = banResults.filter(r => r.status === "fulfilled").length;
-      const failCount = banResults.filter(r => r.status === "rejected").length;
+      const successCount = banResults.filter(
+        (r) => r.status === "fulfilled",
+      ).length;
+      const failCount = banResults.filter(
+        (r) => r.status === "rejected",
+      ).length;
 
       setShowBulkBanModal(false);
       setBulkBanTargets([]);
@@ -552,14 +559,11 @@ function Accounts() {
         unban_date,
       };
 
-      const response = await fetchWithCsrf(
-        `/api/users/${banTarget.id}/`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetchWithCsrf(`/api/users/${banTarget.id}/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
@@ -573,7 +577,7 @@ function Accounts() {
           data.details?.username?.[0] ||
             data.error ||
             data.detail ||
-            "Failed to ban user"
+            "Failed to ban user",
         );
       }
     } catch (err) {
@@ -627,89 +631,92 @@ function Accounts() {
     setFieldErrors({});
   }, []);
 
-  const handleSaveInlineEdit = useCallback(async (accountId: number) => {
-    if (!editingRowId) return;
+  const handleSaveInlineEdit = useCallback(
+    async (accountId: number) => {
+      if (!editingRowId) return;
 
-    // Validate fields
-    const errors: Record<string, string> = {};
-    
-    if (!editedData.username?.trim()) {
-      errors.username = "Username is required";
-    }
-    if (!editedData.full_name?.trim()) {
-      errors.full_name = "Full name is required";
-    }
-    if (!editedData.email?.trim()) {
-      errors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.email)) {
-      errors.email = "Invalid email format";
-    }
-    if (!editedData.position?.trim()) {
-      errors.position = "Position is required";
-    }
+      // Validate fields
+      const errors: Record<string, string> = {};
 
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
-      return;
-    }
+      if (!editedData.username?.trim()) {
+        errors.username = "Username is required";
+      }
+      if (!editedData.full_name?.trim()) {
+        errors.full_name = "Full name is required";
+      }
+      if (!editedData.email?.trim()) {
+        errors.email = "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.email)) {
+        errors.email = "Invalid email format";
+      }
+      if (!editedData.position?.trim()) {
+        errors.position = "Position is required";
+      }
 
-    try {
-      setLoading(true);
-      const response = await fetchWithCsrf(`/api/users/${accountId}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editedData),
-      });
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        return;
+      }
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setToast({
-          message: "Account updated successfully",
-          type: "success",
+      try {
+        setLoading(true);
+        const response = await fetchWithCsrf(`/api/users/${accountId}/`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editedData),
         });
-        setEditingRowId(null);
-        setEditedData({});
-        setFieldErrors({});
-        // Refresh accounts list
-        fetchAccounts();
-      } else {
-        // Handle server-side validation errors
-        const serverErrors: Record<string, string> = {};
-        if (data.details) {
-          Object.keys(data.details).forEach((key) => {
-            serverErrors[key] = data.details[key][0];
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setToast({
+            message: "Account updated successfully",
+            type: "success",
+          });
+          setEditingRowId(null);
+          setEditedData({});
+          setFieldErrors({});
+          // Refresh accounts list
+          fetchAccounts();
+        } else {
+          // Handle server-side validation errors
+          const serverErrors: Record<string, string> = {};
+          if (data.details) {
+            Object.keys(data.details).forEach((key) => {
+              serverErrors[key] = data.details[key][0];
+            });
+          }
+          setFieldErrors(serverErrors);
+          setToast({
+            message: data.error || "Failed to update account",
+            type: "error",
           });
         }
-        setFieldErrors(serverErrors);
+      } catch (err) {
+        console.error("Error updating account:", err);
         setToast({
-          message: data.error || "Failed to update account",
+          message: "Error connecting to server",
           type: "error",
         });
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Error updating account:", err);
-      setToast({
-        message: "Error connecting to server",
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [editingRowId, editedData, fetchAccounts]);
+    },
+    [editingRowId, editedData, fetchAccounts],
+  );
 
   // Handle set points submission - batch updates (only changed accounts)
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setLoading(true);
-      
+
       // Use batch API for efficiency
       const result = await usersApi.batchUpdatePoints(updates);
-      
+
       setShowSetPointsModal(false);
-      
+
       if (result.failed_count === 0) {
         setToast({
           message: `Successfully updated points for ${result.updated_count} account(s)`,
@@ -721,7 +728,7 @@ function Accounts() {
           type: "error",
         });
       }
-      
+
       // Refresh accounts list
       fetchAccounts();
     } catch (err) {
@@ -738,17 +745,20 @@ function Accounts() {
   const handleBulkSetPoints = async (pointsDelta: number, password: string) => {
     try {
       setLoading(true);
-      
-      const response = await fetchWithCsrf(`${API_URL}/users/bulk_update_points/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+
+      const response = await fetchWithCsrf(
+        `${API_URL}/users/bulk_update_points/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            points_delta: pointsDelta,
+            password: password,
+          }),
         },
-        body: JSON.stringify({
-          points_delta: pointsDelta,
-          password: password,
-        }),
-      });
+      );
 
       const data = await response.json();
 
@@ -756,7 +766,9 @@ function Accounts() {
 
       if (response.ok) {
         setToast({
-          message: data.message || `Successfully updated points for ${data.updated_count} account(s)`,
+          message:
+            data.message ||
+            `Successfully updated points for ${data.updated_count} account(s)`,
           type: "success",
         });
         // Refresh accounts list
@@ -782,17 +794,20 @@ function Accounts() {
   const handleResetAllPoints = async (password: string) => {
     try {
       setLoading(true);
-      
-      const response = await fetchWithCsrf(`${API_URL}/users/bulk_update_points/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+
+      const response = await fetchWithCsrf(
+        `${API_URL}/users/bulk_update_points/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reset_to_zero: true,
+            password: password,
+          }),
         },
-        body: JSON.stringify({
-          reset_to_zero: true,
-          password: password,
-        }),
-      });
+      );
 
       const data = await response.json();
 
@@ -800,7 +815,9 @@ function Accounts() {
 
       if (response.ok) {
         setToast({
-          message: data.message || `Successfully reset points for ${data.updated_count} account(s)`,
+          message:
+            data.message ||
+            `Successfully reset points for ${data.updated_count} account(s)`,
           type: "success",
         });
         // Refresh accounts list
@@ -829,12 +846,12 @@ function Accounts() {
       account.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       account.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       account.id.toString().includes(searchQuery) ||
-      account.position.toLowerCase().includes(searchQuery.toLowerCase())
+      account.position.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-  
+
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredAccounts.length / itemsPerPage)
+    Math.ceil(filteredAccounts.length / itemsPerPage),
   );
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
@@ -945,8 +962,6 @@ function Accounts() {
               <ThemeToggle />
             </div>
           </div>
-
-
 
           {/* Table */}
           <AccountsTable

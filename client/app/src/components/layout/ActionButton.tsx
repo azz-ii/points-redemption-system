@@ -58,9 +58,13 @@ export function ActionButton({
       disabled={disabled}
       {...props}
     >
-      {icon && iconPosition === "left" && <span className="shrink-0">{icon}</span>}
+      {icon && iconPosition === "left" && (
+        <span className="shrink-0">{icon}</span>
+      )}
       <span className="truncate">{children}</span>
-      {icon && iconPosition === "right" && <span className="shrink-0">{icon}</span>}
+      {icon && iconPosition === "right" && (
+        <span className="shrink-0">{icon}</span>
+      )}
     </button>
   );
 }

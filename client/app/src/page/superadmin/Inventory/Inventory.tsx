@@ -18,7 +18,13 @@ import {
   Download,
 } from "lucide-react";
 import type { InventoryItem, StockStatus } from "./modals";
-import { ViewInventoryModal, EditStockModal, ExportModal, SetInventoryModal, STATUS_OPTIONS } from "./modals";
+import {
+  ViewInventoryModal,
+  EditStockModal,
+  ExportModal,
+  SetInventoryModal,
+  STATUS_OPTIONS,
+} from "./modals";
 import { inventoryApi } from "@/lib/inventory-api";
 import {
   InventoryTable,
@@ -37,7 +43,13 @@ interface ApiInventoryItem {
   committed_stock: number;
   available_stock: number;
   has_stock: boolean;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
+  legend:
+    | "GIVEAWAY"
+    | "MERCH"
+    | "PROMO"
+    | "AD_MATERIALS"
+    | "POINT_OF_SALE"
+    | "OTHERS";
   stock_status: string;
 }
 
@@ -117,7 +129,7 @@ function Inventory() {
           has_stock: item.has_stock,
           legend: item.legend,
           stock_status: item.stock_status as StockStatus,
-        })
+        }),
       );
       setItems(inventoryItems);
       setTotalCount(data.count || 0);
@@ -166,19 +178,21 @@ function Inventory() {
   const handleSetStock = async (updates: { id: number; stock: number }[]) => {
     try {
       setLoading(true);
-      
+
       // Use batch API for efficiency
       const result = await inventoryApi.batchUpdateStock(updates);
-      
+
       // Success
       setShowSetInventoryModal(false);
-      
+
       if (result.failed_count === 0) {
         alert(`Successfully updated stock for ${result.updated_count} item(s)`);
       } else {
-        alert(`Updated ${result.updated_count} of ${updates.length} item(s). ${result.failed_count} failed.`);
+        alert(
+          `Updated ${result.updated_count} of ${updates.length} item(s). ${result.failed_count} failed.`,
+        );
       }
-      
+
       fetchInventoryItems();
     } catch (err) {
       console.error("Error updating stock:", err);
@@ -193,10 +207,13 @@ function Inventory() {
     try {
       setLoading(true);
       const result = await inventoryApi.bulkUpdateStock(stockDelta, password);
-      
+
       // Success
       setShowSetInventoryModal(false);
-      alert(result.message || `Successfully updated ${result.updated_count} item(s)`);
+      alert(
+        result.message ||
+          `Successfully updated ${result.updated_count} item(s)`,
+      );
       fetchInventoryItems();
     } catch (err) {
       console.error("Error bulk updating stock:", err);
@@ -211,10 +228,12 @@ function Inventory() {
     try {
       setLoading(true);
       const result = await inventoryApi.resetAllStock(password);
-      
+
       // Success
       setShowSetInventoryModal(false);
-      alert(result.message || `Successfully reset ${result.updated_count} item(s)`);
+      alert(
+        result.message || `Successfully reset ${result.updated_count} item(s)`,
+      );
       fetchInventoryItems();
     } catch (err) {
       console.error("Error resetting stock:", err);
@@ -247,7 +266,7 @@ function Inventory() {
         "[Inventory] Updating stock (PATCH) id=",
         editTarget.id,
         " payload:",
-        payload
+        payload,
       );
       const response = await fetchWithCsrf(`/api/inventory/${editTarget.id}/`, {
         method: "PATCH",
@@ -271,7 +290,7 @@ function Inventory() {
     } catch (err) {
       console.error("Error updating stock:", err);
       setEditError(
-        err instanceof Error ? err.message : "Failed to update stock"
+        err instanceof Error ? err.message : "Failed to update stock",
       );
     } finally {
       setUpdating(false);
@@ -453,8 +472,8 @@ function Inventory() {
                             statusFilter === option.value
                               ? "bg-blue-500 text-white"
                               : resolvedTheme === "dark"
-                              ? "hover:bg-gray-700"
-                              : "hover:bg-gray-100"
+                                ? "hover:bg-gray-700"
+                                : "hover:bg-gray-100"
                           }`}
                         >
                           {option.label}

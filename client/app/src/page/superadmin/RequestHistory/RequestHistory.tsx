@@ -16,7 +16,11 @@ import {
   LogOut,
   Download,
 } from "lucide-react";
-import { ViewRequestModal, ExportModal, type RequestHistoryItem } from "./modals";
+import {
+  ViewRequestModal,
+  ExportModal,
+  type RequestHistoryItem,
+} from "./modals";
 import { RequestHistoryTable, RequestHistoryMobileCards } from "./components";
 import { toast } from "sonner";
 
@@ -33,7 +37,8 @@ function RequestHistory() {
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<RequestHistoryItem | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<RequestHistoryItem | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchRequests = useCallback(async (isRefresh = false) => {
@@ -48,7 +53,11 @@ function RequestHistory() {
       setRequests(data as unknown as RequestHistoryItem[]);
     } catch (err) {
       console.error("Error fetching processed requests:", err);
-      setError(err instanceof Error ? err.message : "Failed to load processed requests");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load processed requests",
+      );
       toast.error("Failed to load processed requests");
     } finally {
       setLoading(false);
@@ -124,7 +133,9 @@ function RequestHistory() {
               } transition-colors ${refreshing ? "opacity-50" : ""}`}
               title="Refresh"
             >
-              <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
+              />
             </button>
             <button
               onClick={() => setIsNotificationOpen(true)}
@@ -174,7 +185,9 @@ function RequestHistory() {
                 } transition-colors ${refreshing ? "opacity-50" : ""}`}
                 title="Refresh"
               >
-                <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
+                />
               </button>
               <button
                 onClick={() => setIsNotificationOpen(true)}

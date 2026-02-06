@@ -56,14 +56,14 @@ function Dashboard() {
 
   // Modals
   const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(
-    null
+    null,
   );
   const [editRequest, setEditRequest] = useState<RedemptionItem | null>(null);
   const [processRequest, setProcessRequest] = useState<RedemptionItem | null>(
-    null
+    null,
   );
   const [cancelRequest, setCancelRequest] = useState<RedemptionItem | null>(
-    null
+    null,
   );
 
   // Fetch dashboard statistics
@@ -96,7 +96,7 @@ function Dashboard() {
         ).filter(
           (req) =>
             req.status === "APPROVED" &&
-            req.processing_status === "NOT_PROCESSED"
+            req.processing_status === "NOT_PROCESSED",
         );
         setRequests(filteredRequests);
         setTotalCount(filteredRequests.length);
@@ -141,7 +141,8 @@ function Dashboard() {
         response.results as APIRedemptionRequest[]
       ).filter(
         (req) =>
-          req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+          req.status === "APPROVED" &&
+          req.processing_status === "NOT_PROCESSED",
       );
       setRequests(filteredRequests);
       setTotalCount(filteredRequests.length);
@@ -149,7 +150,7 @@ function Dashboard() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to mark request as processed"
+          : "Failed to mark request as processed",
       );
     }
   };
@@ -162,7 +163,7 @@ function Dashboard() {
       await redemptionRequestsApi.cancelRequest(
         cancelRequest.id,
         reason,
-        remarks
+        remarks,
       );
       toast.success("Request cancelled successfully");
       // Refetch requests
@@ -171,13 +172,14 @@ function Dashboard() {
         response.results as APIRedemptionRequest[]
       ).filter(
         (req) =>
-          req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+          req.status === "APPROVED" &&
+          req.processing_status === "NOT_PROCESSED",
       );
       setRequests(filteredRequests);
       setTotalCount(filteredRequests.length);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to cancel request"
+        error instanceof Error ? error.message : "Failed to cancel request",
       );
     }
   };
@@ -190,7 +192,8 @@ function Dashboard() {
         response.results as APIRedemptionRequest[]
       ).filter(
         (req) =>
-          req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED"
+          req.status === "APPROVED" &&
+          req.processing_status === "NOT_PROCESSED",
       );
       setRequests(filteredRequests);
       setTotalCount(filteredRequests.length);
@@ -229,7 +232,7 @@ function Dashboard() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to reset points. Please check your password."
+          : "Failed to reset points. Please check your password.",
       );
     } finally {
       setIsResettingPoints(false);
@@ -261,7 +264,7 @@ function Dashboard() {
         remarks: req.remarks,
         rejection_reason: req.rejection_reason,
         items: req.items,
-      } as RedemptionItem)
+      }) as RedemptionItem,
   );
 
   return (
@@ -343,9 +346,13 @@ function Dashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-yellow-400" : "bg-yellow-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      resolvedTheme === "dark"
+                        ? "bg-yellow-400"
+                        : "bg-yellow-500"
+                    }`}
+                  />
                   <p className="text-sm font-semibold">Pending Requests</p>
                 </div>
                 <p className="text-3xl font-bold">
@@ -361,9 +368,11 @@ function Dashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
+                    }`}
+                  />
                   <p className="text-sm font-semibold">Approved Requests</p>
                 </div>
                 <p className="text-3xl font-bold">
@@ -379,9 +388,11 @@ function Dashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
+                    }`}
+                  />
                   <p className="text-sm font-semibold">On-board</p>
                 </div>
                 <p className="text-3xl font-bold">
@@ -403,7 +414,9 @@ function Dashboard() {
                       : "bg-gray-100 hover:bg-gray-200"
                   } transition-colors disabled:opacity-50`}
                 >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
                 </button>
               </div>
 
@@ -429,21 +442,28 @@ function Dashboard() {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-semibold text-sm">#{request.id}</p>
-                          <p className="text-xs text-gray-500">{request.requested_by_name}</p>
+                          <p className="text-xs text-gray-500">
+                            {request.requested_by_name}
+                          </p>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          request.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : request.status === "APPROVED"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            request.status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : request.status === "APPROVED"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }`}
+                        >
                           {request.status}
                         </span>
                       </div>
-                      <p className="text-sm mb-1">For: {request.requested_for_name}</p>
+                      <p className="text-sm mb-1">
+                        For: {request.requested_for_name}
+                      </p>
                       <p className="text-xs text-gray-500 mb-3">
-                        {request.total_points} points · {new Date(request.date_requested).toLocaleDateString()}
+                        {request.total_points} points ·{" "}
+                        {new Date(request.date_requested).toLocaleDateString()}
                       </p>
                       <button
                         onClick={() => {
@@ -574,8 +594,8 @@ function Dashboard() {
                   isRefreshing
                     ? "opacity-50 cursor-not-allowed"
                     : resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
-                    : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                      ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
+                      : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
                 }`}
                 title="Refresh requests"
               >
@@ -792,7 +812,7 @@ function Dashboard() {
               ).filter(
                 (req) =>
                   req.status === "APPROVED" &&
-                  req.processing_status === "NOT_PROCESSED"
+                  req.processing_status === "NOT_PROCESSED",
               );
               setRequests(filteredRequests);
               setTotalCount(filteredRequests.length);

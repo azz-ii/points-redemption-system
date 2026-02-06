@@ -24,9 +24,7 @@ export function PageHeader({
 
   return (
     <div className={`mb-6 sm:mb-8 ${className}`}>
-      {breadcrumbs && (
-        <div className="mb-3 sm:mb-4 text-sm">{breadcrumbs}</div>
-      )}
+      {breadcrumbs && <div className="mb-3 sm:mb-4 text-sm">{breadcrumbs}</div>}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <h1

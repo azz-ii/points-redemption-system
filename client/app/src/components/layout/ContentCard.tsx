@@ -61,9 +61,7 @@ export function ContentCard({
               {subtitle && (
                 <p
                   className={`mt-1 text-sm ${
-                    resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-600"
+                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
                   {subtitle}

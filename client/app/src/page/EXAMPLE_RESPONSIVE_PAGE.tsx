@@ -1,24 +1,24 @@
 /**
  * Example: Responsive Page Implementation
- * 
+ *
  * This demonstrates how to integrate the responsive UI components
  * into an existing page with minimal changes.
- * 
+ *
  * This is a reference implementation - adapt the pattern to your pages.
  */
 
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { 
-  PageLayout, 
-  PageHeader, 
-  ContentCard, 
+import {
+  PageLayout,
+  PageHeader,
+  ContentCard,
   ResponsiveTable,
   ActionButton,
   FormField,
   LoadingState,
   EmptyState,
-  ErrorState
+  ErrorState,
 } from "@/components/layout";
 import { SidebarSales } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
@@ -49,7 +49,7 @@ function ResponsivePageExample() {
       // Your API call here
       // const result = await api.getData();
       // setData(result);
-      
+
       // Mock data for example
       setTimeout(() => {
         setData([
@@ -81,7 +81,6 @@ function ResponsivePageExample() {
 
       {/* Main Content - Wrap with PageLayout */}
       <PageLayout maxWidth="2xl" className="flex-1">
-        
         {/* Page Header - Replaces manual header divs */}
         <PageHeader
           title="Dashboard"
@@ -110,34 +109,40 @@ function ResponsivePageExample() {
         />
 
         {/* Stats Section - Wrap in ContentCard */}
-        <ContentCard 
-          title="Statistics" 
+        <ContentCard
+          title="Statistics"
           subtitle="Overview of your account"
           padding="lg"
           className="mb-6"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className={`p-4 rounded-lg border ${
-              resolvedTheme === "dark" 
-                ? "bg-gray-800 border-gray-700" 
-                : "bg-white border-gray-200"
-            }`}>
+            <div
+              className={`p-4 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
+            >
               <p className="text-sm text-gray-500 mb-1">Total Points</p>
               <p className="text-2xl font-bold">1,234</p>
             </div>
-            <div className={`p-4 rounded-lg border ${
-              resolvedTheme === "dark" 
-                ? "bg-gray-800 border-gray-700" 
-                : "bg-white border-gray-200"
-            }`}>
+            <div
+              className={`p-4 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
+            >
               <p className="text-sm text-gray-500 mb-1">Active Items</p>
               <p className="text-2xl font-bold">42</p>
             </div>
-            <div className={`p-4 rounded-lg border ${
-              resolvedTheme === "dark" 
-                ? "bg-gray-800 border-gray-700" 
-                : "bg-white border-gray-200"
-            }`}>
+            <div
+              className={`p-4 rounded-lg border ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-white border-gray-200"
+              }`}
+            >
               <p className="text-sm text-gray-500 mb-1">Pending</p>
               <p className="text-2xl font-bold">8</p>
             </div>
@@ -145,8 +150,8 @@ function ResponsivePageExample() {
         </ContentCard>
 
         {/* Data Table Section */}
-        <ContentCard 
-          title="Recent Activity" 
+        <ContentCard
+          title="Recent Activity"
           padding="none"
           headerActions={
             <ActionButton variant="ghost" size="sm" icon={<RefreshCw />}>
@@ -195,11 +200,13 @@ function ResponsivePageExample() {
           {!loading && !error && data.length > 0 && (
             <ResponsiveTable maxHeight="500px">
               <table className="min-w-full">
-                <thead className={`sticky top-0 ${
-                  resolvedTheme === "dark" 
-                    ? "bg-gray-800 border-gray-700" 
-                    : "bg-gray-50 border-gray-200"
-                } border-b`}>
+                <thead
+                  className={`sticky top-0 ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-gray-50 border-gray-200"
+                  } border-b`}
+                >
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
                       ID
@@ -218,9 +225,11 @@ function ResponsivePageExample() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className={`${
-                  resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-                }`}>
+                <tbody
+                  className={`${
+                    resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
+                  }`}
+                >
                   {data.map((item) => (
                     <tr
                       key={item.id}
@@ -233,11 +242,13 @@ function ResponsivePageExample() {
                       <td className="px-4 py-3 text-sm">{item.id}</td>
                       <td className="px-4 py-3 text-sm">{item.name}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
-                          item.status === "active"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        }`}>
+                        <span
+                          className={`inline-block px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
+                            item.status === "active"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          }`}
+                        >
                           {item.status}
                         </span>
                       </td>
@@ -258,11 +269,7 @@ function ResponsivePageExample() {
         </ContentCard>
 
         {/* Form Section Example */}
-        <ContentCard 
-          title="Quick Actions" 
-          padding="lg"
-          className="mt-6"
-        >
+        <ContentCard title="Quick Actions" padding="lg" className="mt-6">
           <form className="space-y-4 max-w-md">
             <FormField
               label="Item Name"
@@ -286,7 +293,6 @@ function ResponsivePageExample() {
             </ActionButton>
           </form>
         </ContentCard>
-
       </PageLayout>
 
       {/* Mobile Bottom Nav - Keep as is */}
