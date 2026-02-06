@@ -143,31 +143,7 @@ export default function MarketingHistory() {
           onClose={() => setIsNotificationOpen(false)}
         />
 
-        {/* Search */}
-        <div className="p-4 md:p-8">
-          <div
-            className={`relative flex items-center ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border border-gray-700"
-                : "bg-white border border-gray-300"
-            }`}
-          >
-            <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-            <Input
-              placeholder="Search by ID, Requested By, Requested For, or Status..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className={`pl-10 w-full h-12 ${
-                resolvedTheme === "dark"
-                  ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              }`}
-            />
-          </div>
-        </div>
+        
 
         {/* Mobile Cards */}
         <div className="md:hidden px-4">
