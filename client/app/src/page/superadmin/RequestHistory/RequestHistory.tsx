@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/sidebar";
 import { requestHistoryApi } from "@/lib/api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
@@ -306,7 +306,7 @@ function RequestHistory() {
         </div>
       </div>
 
-      <MobileBottomNav />
+      <MobileBottomNavSuperAdmin />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

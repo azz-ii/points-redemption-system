@@ -6,7 +6,7 @@ import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import {
   Bell,
@@ -594,7 +594,7 @@ function Inventory() {
         </div>
       </div>
 
-      <MobileBottomNav />
+      <MobileBottomNavSuperAdmin />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

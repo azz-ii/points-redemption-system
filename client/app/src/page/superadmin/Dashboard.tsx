@@ -4,7 +4,7 @@ import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { useLogout } from "@/context/AuthContext";
 import {
@@ -327,6 +327,146 @@ function Dashboard() {
             >
               <LogOut className="h-5 w-5" />
             </button>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className="md:hidden flex-1 overflow-y-auto pb-20">
+          <div className="p-4">
+            {/* Stats Cards */}
+            <div className="space-y-3 mb-6">
+              <div
+                className={`p-4 rounded-lg border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border-gray-700"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    resolvedTheme === "dark" ? "bg-yellow-400" : "bg-yellow-500"
+                  }`} />
+                  <p className="text-sm font-semibold">Pending Requests</p>
+                </div>
+                <p className="text-3xl font-bold">
+                  {requestsLoading ? "-" : totalCount}
+                </p>
+              </div>
+
+              <div
+                className={`p-4 rounded-lg border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border-gray-700"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
+                  }`} />
+                  <p className="text-sm font-semibold">Approved Requests</p>
+                </div>
+                <p className="text-3xl font-bold">
+                  {statsLoading ? "-" : stats?.approved_count || 0}
+                </p>
+              </div>
+
+              <div
+                className={`p-4 rounded-lg border ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-900 border-gray-700"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
+                  }`} />
+                  <p className="text-sm font-semibold">On-board</p>
+                </div>
+                <p className="text-3xl font-bold">
+                  {statsLoading ? "-" : stats?.on_board_count || 0}
+                </p>
+              </div>
+            </div>
+
+            {/* Pending Requests Section */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Pending Requests</h3>
+                <button
+                  onClick={handleRefreshRequests}
+                  disabled={isRefreshing}
+                  className={`p-2 rounded-lg ${
+                    resolvedTheme === "dark"
+                      ? "bg-gray-900 hover:bg-gray-800"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  } transition-colors disabled:opacity-50`}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+
+              {requestsLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Loading requests...</p>
+                </div>
+              ) : tableRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No pending requests</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tableRequests.slice(0, 5).map((request) => (
+                    <div
+                      key={request.id}
+                      className={`p-4 rounded-lg border ${
+                        resolvedTheme === "dark"
+                          ? "bg-gray-900 border-gray-700"
+                          : "bg-white border-gray-200"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-semibold text-sm">#{request.id}</p>
+                          <p className="text-xs text-gray-500">{request.requested_by_name}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          request.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            : request.status === "APPROVED"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="text-sm mb-1">For: {request.requested_for_name}</p>
+                      <p className="text-xs text-gray-500 mb-3">
+                        {request.total_points} points · {new Date(request.date_requested).toLocaleDateString()}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setSelectedRedemption(request);
+                          setShowViewModal(true);
+                        }}
+                        className="w-full py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  ))}
+                  {tableRequests.length > 5 && (
+                    <button
+                      onClick={() => navigate("/admin/redemption")}
+                      className="w-full py-2.5 rounded border text-sm font-semibold transition-colors"
+                    >
+                      View All ({tableRequests.length})
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -679,7 +819,7 @@ function Dashboard() {
         />
       )}
 
-      <MobileBottomNav />
+      <MobileBottomNavSuperAdmin />
       <NotificationPanel
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}

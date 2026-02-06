@@ -6,7 +6,7 @@ import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
 import {
@@ -1046,7 +1046,7 @@ function Accounts() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      <MobileBottomNavSuperAdmin />
 
       <NotificationPanel
         isOpen={isNotificationOpen}

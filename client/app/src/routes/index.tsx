@@ -5,7 +5,6 @@ import { ProtectedRoute, PublicRoute } from "./ProtectedRoute";
 import Login from "../page/login/Login";
 
 // Dashboard pages
-import ApproverDashboard from "../page/approver/Dashboard";
 import SalesDashboard from "../page/sales_agent/Dashboard";
 import MarketingDashboard from "../page/marketing/Dashboard/Dashboard";
 import ReceptionDashboard from "../page/reception/Dashboard";
@@ -50,7 +49,7 @@ function DashboardRouter() {
     case "Sales Agent":
       return <Navigate to="/sales/dashboard" replace />;
     case "Approver":
-      return <Navigate to="/approver/dashboard" replace />;
+      return <Navigate to="/approver/requests" replace />;
     case "Marketing":
       return <Navigate to="/marketing/dashboard" replace />;
     case "Reception":
@@ -122,7 +121,6 @@ export function AppRoutes() {
 
         {/* Approver routes */}
         <Route element={<ProtectedRoute allowedRoles={["Approver"]} />}>
-          <Route path="/approver/dashboard" element={<ApproverDashboard />} />
           <Route path="/approver/requests" element={<ApproverRequests />} />
           <Route path="/approver/history" element={<ApproverHistory />} />
         </Route>
@@ -131,13 +129,19 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={["Sales Agent"]} />}>
           <Route path="/sales/dashboard" element={<SalesDashboard />} />
           <Route path="/sales/redeem-items" element={<RedeemItem />} />
-          <Route path="/sales/redemption-status" element={<RedemptionStatus />} />
+          <Route
+            path="/sales/redemption-status"
+            element={<RedemptionStatus />}
+          />
         </Route>
 
         {/* Marketing routes */}
         <Route element={<ProtectedRoute allowedRoles={["Marketing"]} />}>
           <Route path="/marketing/dashboard" element={<MarketingDashboard />} />
-          <Route path="/marketing/process-requests" element={<MarketingProcessRequests />} />
+          <Route
+            path="/marketing/process-requests"
+            element={<MarketingProcessRequests />}
+          />
           <Route path="/marketing/history" element={<MarketingHistory />} />
         </Route>
 

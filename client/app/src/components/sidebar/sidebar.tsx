@@ -53,16 +53,56 @@ export function Sidebar() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/admin/dashboard",
+    },
     { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
-    { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
-    { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
-    { id: "customers", label: "Customers", icon: UserCircle, path: "/admin/customers" },
+    {
+      id: "catalogue",
+      label: "Catalogue",
+      icon: Package,
+      path: "/admin/catalogue",
+    },
+    {
+      id: "distributors",
+      label: "Distributors",
+      icon: Store,
+      path: "/admin/distributors",
+    },
+    {
+      id: "customers",
+      label: "Customers",
+      icon: UserCircle,
+      path: "/admin/customers",
+    },
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
-    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/admin/redemption" },
-    { id: "request-history", label: "Request History", icon: History, path: "/admin/request-history" },
-    { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
-    { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
+    {
+      id: "process-requests",
+      label: "Process Requests",
+      icon: ClipboardList,
+      path: "/admin/redemption",
+    },
+    {
+      id: "request-history",
+      label: "Request History",
+      icon: History,
+      path: "/admin/request-history",
+    },
+    {
+      id: "inventory",
+      label: "Inventory",
+      icon: Warehouse,
+      path: "/admin/inventory",
+    },
+    {
+      id: "marketing",
+      label: "Marketing",
+      icon: Megaphone,
+      path: "/admin/marketing",
+    },
   ] as const;
 
   const getCurrentPage = () => {
@@ -85,22 +125,22 @@ export function Sidebar() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -111,9 +151,9 @@ export function Sidebar() {
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
             className={`p-2 rounded-lg shrink-0 ${
               resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+                ? "hover:bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-800"
+                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            } transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -125,29 +165,31 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-3">
+        <nav className="space-y-1">
           {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
-              } px-4 py-2 rounded-lg font-medium ${
+                sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
+              } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              } transition-colors`}
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title={label}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon
+                className={`h-5 w-5 shrink-0 ${
+                  sidebarExpanded ? "" : "mx-auto"
+                }`}
+              />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
-                  {label}
-                </span>
+                <span className="text-sm truncate">{label}</span>
               )}
             </button>
           ))}
@@ -155,18 +197,24 @@ export function Sidebar() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -175,12 +223,16 @@ export function Sidebar() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -199,20 +251,16 @@ export function Sidebar() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -255,16 +303,56 @@ export function SidebarSuperAdmin() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin/dashboard" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/admin/dashboard",
+    },
     { id: "accounts", label: "Accounts", icon: User, path: "/admin/accounts" },
-    { id: "catalogue", label: "Catalogue", icon: Package, path: "/admin/catalogue" },
-    { id: "distributors", label: "Distributors", icon: Store, path: "/admin/distributors" },
-    { id: "customers", label: "Customers", icon: UserCircle, path: "/admin/customers" },
+    {
+      id: "catalogue",
+      label: "Catalogue",
+      icon: Package,
+      path: "/admin/catalogue",
+    },
+    {
+      id: "distributors",
+      label: "Distributors",
+      icon: Store,
+      path: "/admin/distributors",
+    },
+    {
+      id: "customers",
+      label: "Customers",
+      icon: UserCircle,
+      path: "/admin/customers",
+    },
     { id: "teams", label: "Teams", icon: Users, path: "/admin/teams" },
-    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/admin/redemption" },
-    { id: "request-history", label: "Request History", icon: History, path: "/admin/request-history" },
-    { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
-    { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
+    {
+      id: "process-requests",
+      label: "Process Requests",
+      icon: ClipboardList,
+      path: "/admin/redemption",
+    },
+    {
+      id: "request-history",
+      label: "Request History",
+      icon: History,
+      path: "/admin/request-history",
+    },
+    {
+      id: "inventory",
+      label: "Inventory",
+      icon: Warehouse,
+      path: "/admin/inventory",
+    },
+    {
+      id: "marketing",
+      label: "Marketing",
+      icon: Megaphone,
+      path: "/admin/marketing",
+    },
   ] as const;
 
   const getCurrentPage = () => {
@@ -288,22 +376,22 @@ export function SidebarSuperAdmin() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -314,9 +402,9 @@ export function SidebarSuperAdmin() {
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
             className={`p-2 rounded-lg shrink-0 ${
               resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+                ? "hover:bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-800"
+                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            } transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -328,29 +416,31 @@ export function SidebarSuperAdmin() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-3">
+        <nav className="space-y-1">
           {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
-              } px-4 py-2 rounded-lg font-medium ${
+                sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
+              } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              } transition-colors`}
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title={label}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon
+                className={`h-5 w-5 shrink-0 ${
+                  sidebarExpanded ? "" : "mx-auto"
+                }`}
+              />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
-                  {label}
-                </span>
+                <span className="text-sm truncate">{label}</span>
               )}
             </button>
           ))}
@@ -358,18 +448,24 @@ export function SidebarSuperAdmin() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div
+        className={`space-y-3 border-t pt-3 ${
+          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark"
+                ? "bg-blue-600 ring-blue-500/30"
+                : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -378,12 +474,16 @@ export function SidebarSuperAdmin() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -402,20 +502,16 @@ export function SidebarSuperAdmin() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
-              Log Out
-            </span>
+            <span className="text-sm font-semibold">Log Out</span>
           )}
         </Button>
       </div>
@@ -458,9 +554,24 @@ export function SidebarSales() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/sales/dashboard" },
-    { id: "redemption-status", label: "Redemption Status", icon: CheckCircle, path: "/sales/redemption-status" },
-    { id: "redeem-items", label: "Redeem Items", icon: Gift, path: "/sales/redeem-items" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/sales/dashboard",
+    },
+    {
+      id: "redemption-status",
+      label: "Redemption Status",
+      icon: CheckCircle,
+      path: "/sales/redemption-status",
+    },
+    {
+      id: "redeem-items",
+      label: "Redeem Items",
+      icon: Gift,
+      path: "/sales/redeem-items",
+    },
   ] as const;
 
   const getCurrentPage = () => {
@@ -484,22 +595,22 @@ export function SidebarSales() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -510,9 +621,9 @@ export function SidebarSales() {
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
             className={`p-2 rounded-lg shrink-0 ${
               resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
+                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+            } transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -524,27 +635,29 @@ export function SidebarSales() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-3">
+        <nav className="space-y-1">
           {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
-              } px-4 py-2 rounded-lg font-medium ${
+                sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
+              } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              } transition-colors`}
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title={label}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className={`h-5 w-5 shrink-0 ${
+                sidebarExpanded ? "" : "mx-auto"
+              }`} />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
+                <span className="text-sm truncate">
                   {label}
                 </span>
               )}
@@ -554,18 +667,20 @@ export function SidebarSales() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div className={`space-y-3 border-t pt-3 ${
+        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+      }`}>
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -574,12 +689,16 @@ export function SidebarSales() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -598,18 +717,16 @@ export function SidebarSales() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
+            <span className="text-sm font-semibold">
               Log Out
             </span>
           )}
@@ -654,15 +771,24 @@ export function SidebarApprover() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/approver/dashboard" },
-    { id: "requests", label: "Requests", icon: FileBox, path: "/approver/requests" },
-    { id: "history", label: "History", icon: History, path: "/approver/history" },
+    {
+      id: "requests",
+      label: "Requests",
+      icon: FileBox,
+      path: "/approver/requests",
+    },
+    {
+      id: "history",
+      label: "History",
+      icon: History,
+      path: "/approver/history",
+    },
   ] as const;
 
   const getCurrentPage = () => {
     const path = location.pathname;
     const item = navItems.find((item) => path === item.path);
-    return item?.id || "dashboard";
+    return item?.id || "requests";
   };
 
   useEffect(() => {
@@ -680,22 +806,22 @@ export function SidebarApprover() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -706,9 +832,9 @@ export function SidebarApprover() {
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
             className={`p-2 rounded-lg shrink-0 ${
               resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
+                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+            } transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -720,27 +846,29 @@ export function SidebarApprover() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-3">
+        <nav className="space-y-1">
           {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
-              } px-4 py-2 rounded-lg font-medium ${
+                sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
+              } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              } transition-colors`}
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title={label}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className={`h-5 w-5 shrink-0 ${
+                sidebarExpanded ? "" : "mx-auto"
+              }`} />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
+                <span className="text-sm truncate">
                   {label}
                 </span>
               )}
@@ -750,18 +878,20 @@ export function SidebarApprover() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div className={`space-y-3 border-t pt-3 ${
+        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+      }`}>
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -770,12 +900,16 @@ export function SidebarApprover() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -794,18 +928,16 @@ export function SidebarApprover() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
+            <span className="text-sm font-semibold">
               Log Out
             </span>
           )}
@@ -850,9 +982,24 @@ export function SidebarMarketing() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
-    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/marketing/process-requests" },
-    { id: "history", label: "History", icon: History, path: "/marketing/history" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/marketing/dashboard",
+    },
+    {
+      id: "process-requests",
+      label: "Process Requests",
+      icon: ClipboardList,
+      path: "/marketing/process-requests",
+    },
+    {
+      id: "history",
+      label: "History",
+      icon: History,
+      path: "/marketing/history",
+    },
   ] as const;
 
   const getCurrentPage = () => {
@@ -876,22 +1023,22 @@ export function SidebarMarketing() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -902,9 +1049,9 @@ export function SidebarMarketing() {
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
             className={`p-2 rounded-lg shrink-0 ${
               resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
+                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+            } transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -916,27 +1063,29 @@ export function SidebarMarketing() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-3">
+        <nav className="space-y-1">
           {navItems.map(({ id, label, icon: Icon, path }) => (
             <button
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
-              } px-4 py-2 rounded-lg font-medium ${
+                sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
+              } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              } transition-colors`}
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
               title={label}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className={`h-5 w-5 shrink-0 ${
+                sidebarExpanded ? "" : "mx-auto"
+              }`} />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
+                <span className="text-sm truncate">
                   {label}
                 </span>
               )}
@@ -946,18 +1095,20 @@ export function SidebarMarketing() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div className={`space-y-3 border-t pt-3 ${
+        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+      }`}>
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-purple-600" : "bg-purple-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -966,12 +1117,16 @@ export function SidebarMarketing() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -990,18 +1145,16 @@ export function SidebarMarketing() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
+            <span className="text-sm font-semibold">
               Log Out
             </span>
           )}
@@ -1046,8 +1199,18 @@ export function SidebarReception() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/reception/dashboard" },
-    { id: "history", label: "History", icon: History, path: "/reception/history" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/reception/dashboard",
+    },
+    {
+      id: "history",
+      label: "History",
+      icon: History,
+      path: "/reception/history",
+    },
   ] as const;
 
   const getCurrentPage = () => {
@@ -1071,22 +1234,22 @@ export function SidebarReception() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -1117,21 +1280,21 @@ export function SidebarReception() {
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
+                sidebarExpanded ? "gap-3 px-2" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               } transition-colors`}
               title={label}
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
+                <span className="text-sm font-semibold">
                   {label}
                 </span>
               )}
@@ -1141,18 +1304,20 @@ export function SidebarReception() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div className={`space-y-3 border-t pt-3 ${
+        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+      }`}>
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -1161,12 +1326,16 @@ export function SidebarReception() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1185,18 +1354,16 @@ export function SidebarReception() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
+            <span className="text-sm font-semibold">
               Log Out
             </span>
           )}
@@ -1241,8 +1408,18 @@ export function SidebarExecutiveAssistant() {
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/executive-assistant/dashboard" },
-    { id: "history", label: "History", icon: History, path: "/executive-assistant/history" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/executive-assistant/dashboard",
+    },
+    {
+      id: "history",
+      label: "History",
+      icon: History,
+      path: "/executive-assistant/history",
+    },
   ] as const;
 
   const getCurrentPage = () => {
@@ -1266,22 +1443,22 @@ export function SidebarExecutiveAssistant() {
   return (
     <div
       className={`hidden md:flex md:flex-col md:${
-        sidebarExpanded ? "w-52" : "w-20"
+        sidebarExpanded ? "w-60" : "w-20"
       } ${
         resolvedTheme === "dark"
-          ? "bg-gray-900 border-r border-gray-700"
-          : "bg-white border-r border-gray-100"
-      } md:p-4 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+          ? "bg-gray-900 border-r-2 border-gray-800"
+          : "bg-white border-r-2 border-gray-200 shadow-sm"
+      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Logo and Toggle */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
               src="/src/assets/oracle-logo-mb.png"
               alt="Oracle Petroleum"
-              className="w-12 h-auto object-contain shrink-0"
+              className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
@@ -1312,21 +1489,21 @@ export function SidebarExecutiveAssistant() {
               key={id}
               onClick={() => navigate(path)}
               className={`w-full flex items-center ${
-                sidebarExpanded ? "gap-3" : "justify-center"
+                sidebarExpanded ? "gap-3 px-2" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
                 currentPage === id
                   ? resolvedTheme === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                   : resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-white"
-                  : "text-gray-600 hover:text-gray-900"
+                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               } transition-colors`}
               title={label}
             >
               <Icon className="h-5 w-5 shrink-0" />
               {sidebarExpanded && (
-                <span className="transition-all duration-300 inline-block">
+                <span className="text-sm font-semibold">
                   {label}
                 </span>
               )}
@@ -1336,18 +1513,20 @@ export function SidebarExecutiveAssistant() {
       </div>
 
       {/* Bottom - User Profile */}
-      <div className="space-y-6">
+      <div className={`space-y-3 border-t pt-3 ${
+        resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
+      }`}>
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
-            sidebarExpanded ? "gap-3" : "justify-center"
-          } rounded-lg p-2 -m-2 transition-colors ${
+            sidebarExpanded ? "gap-3 px-2" : "justify-center"
+          } rounded-lg py-2 transition-all ${
             resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
           }`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ${
-              resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
+              resolvedTheme === "dark" ? "bg-blue-600 ring-blue-500/30" : "bg-blue-500 ring-blue-400/30"
             }`}
           >
             {profilePicture ? (
@@ -1356,12 +1535,16 @@ export function SidebarExecutiveAssistant() {
                 alt={`${username}'s profile`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden",
+                  );
                 }}
               />
             ) : null}
-            <span className={`text-white font-semibold text-sm ${profilePicture ? 'hidden' : ''}`}>
+            <span
+              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
+            >
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1380,18 +1563,16 @@ export function SidebarExecutiveAssistant() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center ${
-            sidebarExpanded ? "justify-center" : "justify-center"
-          } gap-2 ${
+          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
             resolvedTheme === "dark"
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-gray-900 text-white hover:bg-gray-700"
-          } transition-colors cursor-pointer`}
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-500 text-white hover:bg-red-600"
+          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {sidebarExpanded && (
-            <span className="transition-all duration-300 inline-block">
+            <span className="text-sm font-semibold">
               Log Out
             </span>
           )}
@@ -1405,3 +1586,8 @@ export function SidebarExecutiveAssistant() {
     </div>
   );
 }
+
+
+
+
+
