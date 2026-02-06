@@ -10,7 +10,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
 import { Bell, Search, Plus, Store, LogOut } from "lucide-react";
 
-import { distributorsApi, type Distributor } from "@/lib/distributors-api";
+import { distributorsApi, type Distributor, type ChunkedUpdateProgress } from "@/lib/distributors-api";
 import {
   CreateDistributorModal,
   EditDistributorModal,
@@ -117,6 +117,7 @@ function Distributors() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [settingPoints, setSettingPoints] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
 
   // Handle create distributor submission
   const handleCreateDistributor = async () => {
@@ -256,24 +257,53 @@ function Distributors() {
     }
   };
 
-  // Handle set points submission - batch updates (only changed distributors)
+  // Handle set points submission - batch updates with chunking for large datasets
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
+      setUpdateProgress(null);
 
-      // Use batch API for efficiency
-      const result = await distributorsApi.batchUpdatePoints(updates);
-
-      setShowSetPointsModal(false);
-
-      if (result.failed_count === 0) {
-        alert(
-          `Successfully updated points for ${result.updated_count} distributor(s)`,
+      // Use chunked API for large batches (>100 records), regular API for small batches
+      if (updates.length > 100) {
+        const result = await distributorsApi.batchUpdatePointsChunked(
+          updates,
+          (progress) => {
+            setUpdateProgress(progress);
+          },
+          150 // Chunk size
         );
+
+        setShowSetPointsModal(false);
+        setUpdateProgress(null);
+
+        if (result.success) {
+          alert(
+            `Successfully updated points for ${result.totalUpdated} distributor(s)`,
+          );
+        } else if (result.partialSuccess) {
+          alert(
+            `Updated ${result.totalUpdated} of ${updates.length} distributor(s). ${result.totalFailed} failed.`,
+          );
+        } else {
+          alert(
+            `Failed to update points. ${result.totalFailed} distributor(s) failed.`,
+          );
+        }
       } else {
-        alert(
-          `Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`,
-        );
+        // Use regular batch API for smaller updates
+        const result = await distributorsApi.batchUpdatePoints(updates);
+
+        setShowSetPointsModal(false);
+
+        if (result.failed_count === 0) {
+          alert(
+            `Successfully updated points for ${result.updated_count} distributor(s)`,
+          );
+        } else {
+          alert(
+            `Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`,
+          );
+        }
       }
 
       // Refresh distributors list
@@ -283,6 +313,7 @@ function Distributors() {
       alert("Error updating points");
     } finally {
       setSettingPoints(false);
+      setUpdateProgress(null);
     }
   };
 
@@ -650,6 +681,7 @@ function Distributors() {
         onSubmit={handleSetPoints}
         onBulkSubmit={handleBulkSetPoints}
         onResetAll={handleResetAllPoints}
+        progress={updateProgress}
       />
     </div>
   );

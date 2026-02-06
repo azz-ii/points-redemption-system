@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { Customer } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
+import type { ChunkedUpdateProgress } from "@/lib/customers-api";
 
 interface PaginatedCustomersResponse {
   count: number;
@@ -19,6 +20,7 @@ interface SetPointsModalProps {
   onSubmit: (updates: { id: number; points: number }[]) => void;
   onBulkSubmit?: (pointsDelta: number, password: string) => void;
   onResetAll?: (password: string) => void;
+  progress?: ChunkedUpdateProgress | null;
 }
 
 export function SetPointsModal({
@@ -29,6 +31,7 @@ export function SetPointsModal({
   onSubmit,
   onBulkSubmit,
   onResetAll,
+  progress,
 }: SetPointsModalProps) {
   const { resolvedTheme } = useTheme();
   const [pointsToAdd, setPointsToAdd] = useState<Record<number, number>>({});
@@ -220,8 +223,8 @@ export function SetPointsModal({
                 resolvedTheme === "dark"
                   ? "text-gray-400 hover:text-gray-300"
                   : "text-gray-400 hover:text-gray-600"
-              }`}
-              disabled={loading}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              disabled={loading || !!progress}
             >
               <X className="h-6 w-6" />
             </button>
@@ -236,6 +239,55 @@ export function SetPointsModal({
             >
               Add or subtract points for customers. Enter positive numbers to add points, negative numbers to deduct. Changes will be applied when you click Save.
             </p>
+
+            {/* Progress Indicator */}
+            {progress && (
+              <div
+                className={`mb-4 p-4 rounded-lg border ${
+                  resolvedTheme === "dark"
+                    ? "bg-blue-900/20 border-blue-700"
+                    : "bg-blue-50 border-blue-200"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className={`text-sm font-medium ${
+                      resolvedTheme === "dark" ? "text-blue-300" : "text-blue-700"
+                    }`}
+                  >
+                    Processing chunk {progress.currentChunk} of {progress.totalChunks}
+                  </span>
+                  <span
+                    className={`text-sm ${
+                      resolvedTheme === "dark" ? "text-blue-400" : "text-blue-600"
+                    }`}
+                  >
+                    {progress.successCount} / {progress.totalRecords} processed
+                  </span>
+                </div>
+                <div
+                  className={`w-full rounded-full h-2 ${
+                    resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"
+                  }`}
+                >
+                  <div
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(progress.currentChunk / progress.totalChunks) * 100}%`,
+                    }}
+                  />
+                </div>
+                {progress.failedCount > 0 && (
+                  <p
+                    className={`text-xs mt-2 ${
+                      resolvedTheme === "dark" ? "text-orange-400" : "text-orange-600"
+                    }`}
+                  >
+                    {progress.failedCount} failed so far
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Search Bar */}
             <div className="mb-4">
@@ -632,14 +684,14 @@ export function SetPointsModal({
                 resolvedTheme === "dark"
                   ? "text-gray-300 hover:bg-gray-700"
                   : "text-gray-700 hover:bg-gray-100"
-              }`}
-              disabled={loading}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              disabled={loading || !!progress}
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || !!progress}
               className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 resolvedTheme === "dark"
                   ? "bg-white text-gray-900 hover:bg-gray-200"
@@ -647,7 +699,7 @@ export function SetPointsModal({
               }`}
             >
               <Save className="h-4 w-4" />
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? (progress ? "Processing..." : "Saving...") : "Save Changes"}
             </button>
           </div>
         </div>

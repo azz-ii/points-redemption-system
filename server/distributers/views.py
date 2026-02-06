@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.db import transaction
+from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, status
@@ -329,12 +331,12 @@ class DistributorExportView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DistributorBulkUpdatePointsView(APIView):
-    """Bulk update points for all distributors with password verification"""
+    """Bulk update points for all distributors with password verification (optimized with single query)"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = []
     
     def post(self, request):
-        """Apply points delta to all distributors"""
+        """Apply points delta to all distributors using optimized bulk operations"""
         # Check authentication
         if not request.user.is_authenticated:
             return Response({
@@ -386,49 +388,29 @@ class DistributorBulkUpdatePointsView(APIView):
             operation = "update"
         
         try:
-            # Get all distributors
-            distributors = Distributor.objects.all()
-            
-            updated_count = 0
-            failed_count = 0
-            failed_distributors = []
-            
-            # Update each distributor's points
-            for distributor in distributors:
-                try:
-                    if reset_to_zero:
-                        distributor.points = 0
-                    else:
-                        # Allow negative values
-                        distributor.points = (distributor.points or 0) + points_delta
-                    distributor.save()
-                    updated_count += 1
-                except Exception as e:
-                    logger.error(f"Failed to update points for distributor {distributor.name}: {str(e)}")
-                    failed_count += 1
-                    failed_distributors.append(distributor.name)
-            
-            if reset_to_zero:
-                message = f"Successfully reset points to 0 for {updated_count} distributor(s)"
-                log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} distributors to 0"
-            else:
-                message = f"Successfully updated points for {updated_count} distributor(s)"
-                log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} distributors"
+            # Use atomic transaction for data consistency
+            with transaction.atomic():
+                if reset_to_zero:
+                    # Single SQL UPDATE query to reset all distributors to 0
+                    updated_count = Distributor.objects.all().update(points=0)
+                    message = f"Successfully reset points to 0 for {updated_count} distributor(s)"
+                    log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} distributors to 0"
+                else:
+                    # Single SQL UPDATE query using F() expression for atomic increment
+                    updated_count = Distributor.objects.all().update(points=F('points') + points_delta)
+                    message = f"Successfully updated points for {updated_count} distributor(s)"
+                    log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} distributors"
             
             response_data = {
                 "message": message,
                 "updated_count": updated_count,
-                "failed_count": failed_count,
-                "total_affected": len(distributors),
+                "failed_count": 0,
+                "total_affected": updated_count,
                 "operation": operation
             }
             
             if not reset_to_zero:
                 response_data["points_delta"] = points_delta
-            
-            if failed_count > 0:
-                response_data["failed_distributors"] = failed_distributors
-                response_data["message"] = f"Updated {updated_count} of {len(distributors)} distributors. {failed_count} failed."
             
             logger.info(log_message)
             
@@ -444,12 +426,12 @@ class DistributorBulkUpdatePointsView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DistributorBatchUpdatePointsView(APIView):
-    """Batch update points for specific distributors (optimized single request)"""
+    """Batch update points for specific distributors (optimized with bulk_update)"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = []
     
     def post(self, request):
-        """Update points for multiple specific distributors in a single request"""
+        """Update points for multiple specific distributors using bulk_update for performance"""
         # Check authentication
         if not request.user.is_authenticated:
             return Response({
@@ -463,7 +445,8 @@ class DistributorBatchUpdatePointsView(APIView):
                 "error": "No updates provided"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        updated_ids = []
+        # Validate and prepare updates
+        update_map = {}
         failed = []
         
         for update in updates:
@@ -475,17 +458,48 @@ class DistributorBatchUpdatePointsView(APIView):
                     failed.append({'id': distributor_id, 'error': 'Missing id or points'})
                     continue
                 
-                distributor = Distributor.objects.get(id=distributor_id)
-                distributor.points = int(new_points)  # Allow negative points
-                distributor.save(update_fields=['points'])
-                updated_ids.append(distributor_id)
-            except Distributor.DoesNotExist:
-                failed.append({'id': distributor_id, 'error': 'Distributor not found'})
-            except (ValueError, TypeError) as e:
-                failed.append({'id': distributor_id, 'error': f'Invalid points value: {str(e)}'})
+                # Convert and validate points value
+                try:
+                    new_points = int(new_points)
+                except (ValueError, TypeError) as e:
+                    failed.append({'id': distributor_id, 'error': f'Invalid points value: {str(e)}'})
+                    continue
+                
+                update_map[distributor_id] = new_points
+                
             except Exception as e:
-                logger.error(f"Failed to update points for distributor {distributor_id}: {str(e)}")
+                logger.error(f"Error preparing update for distributor {distributor_id}: {str(e)}")
                 failed.append({'id': distributor_id, 'error': str(e)})
+        
+        # Fetch all distributors that need updating
+        distributor_ids = list(update_map.keys())
+        distributors_to_update = Distributor.objects.filter(id__in=distributor_ids)
+        
+        # Check for missing distributors
+        found_ids = set(distributors_to_update.values_list('id', flat=True))
+        missing_ids = set(distributor_ids) - found_ids
+        for missing_id in missing_ids:
+            failed.append({'id': missing_id, 'error': 'Distributor not found'})
+        
+        # Apply updates to distributor objects
+        updated_distributors = []
+        for distributor in distributors_to_update:
+            distributor.points = update_map[distributor.id]
+            updated_distributors.append(distributor)
+        
+        # Perform bulk update in a transaction
+        updated_ids = []
+        try:
+            with transaction.atomic():
+                if updated_distributors:
+                    Distributor.objects.bulk_update(updated_distributors, ['points'])
+                    updated_ids = [d.id for d in updated_distributors]
+        except Exception as e:
+            logger.error(f"Failed to bulk update distributors: {str(e)}")
+            return Response({
+                "error": "Failed to update distributors",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({
             "message": f"Updated {len(updated_ids)} distributor(s)",

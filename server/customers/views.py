@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.db import transaction
+from django.db.models import F
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -337,12 +339,12 @@ class CustomerExportView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CustomerBulkUpdatePointsView(APIView):
-    """Bulk update points for all customers with password verification"""
+    """Bulk update points for all customers with password verification (optimized with single query)"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = []
     
     def post(self, request):
-        """Apply points delta to all customers"""
+        """Apply points delta to all customers using optimized bulk operations"""
         # Check authentication
         if not request.user.is_authenticated:
             return Response({
@@ -394,49 +396,29 @@ class CustomerBulkUpdatePointsView(APIView):
             operation = "update"
         
         try:
-            # Get all customers
-            customers = Customer.objects.all()
-            
-            updated_count = 0
-            failed_count = 0
-            failed_customers = []
-            
-            # Update each customer's points
-            for customer in customers:
-                try:
-                    if reset_to_zero:
-                        customer.points = 0
-                    else:
-                        # Allow negative values
-                        customer.points = (customer.points or 0) + points_delta
-                    customer.save()
-                    updated_count += 1
-                except Exception as e:
-                    logger.error(f"Failed to update points for customer {customer.name}: {str(e)}")
-                    failed_count += 1
-                    failed_customers.append(customer.name)
-            
-            if reset_to_zero:
-                message = f"Successfully reset points to 0 for {updated_count} customer(s)"
-                log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} customers to 0"
-            else:
-                message = f"Successfully updated points for {updated_count} customer(s)"
-                log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} customers"
+            # Use atomic transaction for data consistency
+            with transaction.atomic():
+                if reset_to_zero:
+                    # Single SQL UPDATE query to reset all customers to 0
+                    updated_count = Customer.objects.all().update(points=0)
+                    message = f"Successfully reset points to 0 for {updated_count} customer(s)"
+                    log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} customers to 0"
+                else:
+                    # Single SQL UPDATE query using F() expression for atomic increment
+                    updated_count = Customer.objects.all().update(points=F('points') + points_delta)
+                    message = f"Successfully updated points for {updated_count} customer(s)"
+                    log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} customers"
             
             response_data = {
                 "message": message,
                 "updated_count": updated_count,
-                "failed_count": failed_count,
-                "total_affected": len(customers),
+                "failed_count": 0,
+                "total_affected": updated_count,
                 "operation": operation
             }
             
             if not reset_to_zero:
                 response_data["points_delta"] = points_delta
-            
-            if failed_count > 0:
-                response_data["failed_customers"] = failed_customers
-                response_data["message"] = f"Updated {updated_count} of {len(customers)} customers. {failed_count} failed."
             
             logger.info(log_message)
             
@@ -452,12 +434,12 @@ class CustomerBulkUpdatePointsView(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CustomerBatchUpdatePointsView(APIView):
-    """Batch update points for specific customers (optimized single request)"""
+    """Batch update points for specific customers (optimized with bulk_update)"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = []
     
     def post(self, request):
-        """Update points for multiple specific customers in a single request"""
+        """Update points for multiple specific customers using bulk_update for performance"""
         # Check authentication
         if not request.user.is_authenticated:
             return Response({
@@ -471,7 +453,8 @@ class CustomerBatchUpdatePointsView(APIView):
                 "error": "No updates provided"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        updated_ids = []
+        # Validate and prepare updates
+        update_map = {}
         failed = []
         
         for update in updates:
@@ -483,17 +466,48 @@ class CustomerBatchUpdatePointsView(APIView):
                     failed.append({'id': customer_id, 'error': 'Missing id or points'})
                     continue
                 
-                customer = Customer.objects.get(id=customer_id)
-                customer.points = int(new_points)  # Allow negative points
-                customer.save(update_fields=['points'])
-                updated_ids.append(customer_id)
-            except Customer.DoesNotExist:
-                failed.append({'id': customer_id, 'error': 'Customer not found'})
-            except (ValueError, TypeError) as e:
-                failed.append({'id': customer_id, 'error': f'Invalid points value: {str(e)}'})
+                # Convert and validate points value
+                try:
+                    new_points = int(new_points)
+                except (ValueError, TypeError) as e:
+                    failed.append({'id': customer_id, 'error': f'Invalid points value: {str(e)}'})
+                    continue
+                
+                update_map[customer_id] = new_points
+                
             except Exception as e:
-                logger.error(f"Failed to update points for customer {customer_id}: {str(e)}")
+                logger.error(f"Error preparing update for customer {customer_id}: {str(e)}")
                 failed.append({'id': customer_id, 'error': str(e)})
+        
+        # Fetch all customers that need updating
+        customer_ids = list(update_map.keys())
+        customers_to_update = Customer.objects.filter(id__in=customer_ids)
+        
+        # Check for missing customers
+        found_ids = set(customers_to_update.values_list('id', flat=True))
+        missing_ids = set(customer_ids) - found_ids
+        for missing_id in missing_ids:
+            failed.append({'id': missing_id, 'error': 'Customer not found'})
+        
+        # Apply updates to customer objects
+        updated_customers = []
+        for customer in customers_to_update:
+            customer.points = update_map[customer.id]
+            updated_customers.append(customer)
+        
+        # Perform bulk update in a transaction
+        updated_ids = []
+        try:
+            with transaction.atomic():
+                if updated_customers:
+                    Customer.objects.bulk_update(updated_customers, ['points'])
+                    updated_ids = [c.id for c in updated_customers]
+        except Exception as e:
+            logger.error(f"Failed to bulk update customers: {str(e)}")
+            return Response({
+                "error": "Failed to update customers",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({
             "message": f"Updated {len(updated_ids)} customer(s)",

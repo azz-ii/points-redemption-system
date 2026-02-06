@@ -10,7 +10,7 @@ import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
 import { Bell, Search, Plus, Users, LogOut } from "lucide-react";
 
-import { customersApi, type Customer } from "@/lib/customers-api";
+import { customersApi, type Customer, type ChunkedUpdateProgress } from "@/lib/customers-api";
 import {
   CreateCustomerModal,
   EditCustomerModal,
@@ -111,6 +111,7 @@ function Customers() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [settingPoints, setSettingPoints] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
 
   // Handle create customer submission
   const handleCreateCustomer = async () => {
@@ -237,24 +238,53 @@ function Customers() {
     }
   };
 
-  // Handle set points submission - batch updates (only changed customers)
+  // Handle set points submission - batch updates with chunking for large datasets
   const handleSetPoints = async (updates: { id: number; points: number }[]) => {
     try {
       setSettingPoints(true);
+      setUpdateProgress(null);
 
-      // Use batch API for efficiency
-      const result = await customersApi.batchUpdatePoints(updates);
-
-      setShowSetPointsModal(false);
-
-      if (result.failed_count === 0) {
-        alert(
-          `Successfully updated points for ${result.updated_count} customer(s)`,
+      // Use chunked API for large batches (>100 records), regular API for small batches
+      if (updates.length > 100) {
+        const result = await customersApi.batchUpdatePointsChunked(
+          updates,
+          (progress) => {
+            setUpdateProgress(progress);
+          },
+          150 // Chunk size
         );
+
+        setShowSetPointsModal(false);
+        setUpdateProgress(null);
+
+        if (result.success) {
+          alert(
+            `Successfully updated points for ${result.totalUpdated} customer(s)`,
+          );
+        } else if (result.partialSuccess) {
+          alert(
+            `Updated ${result.totalUpdated} of ${updates.length} customer(s). ${result.totalFailed} failed.`,
+          );
+        } else {
+          alert(
+            `Failed to update points. ${result.totalFailed} customer(s) failed.`,
+          );
+        }
       } else {
-        alert(
-          `Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`,
-        );
+        // Use regular batch API for smaller updates
+        const result = await customersApi.batchUpdatePoints(updates);
+
+        setShowSetPointsModal(false);
+
+        if (result.failed_count === 0) {
+          alert(
+            `Successfully updated points for ${result.updated_count} customer(s)`,
+          );
+        } else {
+          alert(
+            `Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`,
+          );
+        }
       }
 
       // Refresh customers list
@@ -264,6 +294,7 @@ function Customers() {
       alert("Error updating points");
     } finally {
       setSettingPoints(false);
+      setUpdateProgress(null);
     }
   };
 
@@ -621,6 +652,7 @@ function Customers() {
         onSubmit={handleSetPoints}
         onBulkSubmit={handleBulkSetPoints}
         onResetAll={handleResetAllPoints}
+        progress={updateProgress}
       />
     </div>
   );
