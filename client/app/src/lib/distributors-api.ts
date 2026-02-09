@@ -116,14 +116,14 @@ export const distributorsApi = {
     return data;
   },
 
-  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+  batchUpdatePoints: async (updates: { id: number; points: number }[], reason?: string): Promise<BatchUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/distributors/batch_update_points/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ updates }),
+      body: JSON.stringify({ updates, reason: reason || '' }),
     });
     
     const data = await response.json();
@@ -138,7 +138,8 @@ export const distributorsApi = {
   batchUpdatePointsChunked: async (
     updates: { id: number; points: number }[],
     onProgress?: (progress: ChunkedUpdateProgress) => void,
-    chunkSize: number = 150
+    chunkSize: number = 150,
+    reason?: string
   ): Promise<ChunkedUpdateResult> => {
     // Split updates into chunks
     const chunks: { id: number; points: number }[][] = [];
@@ -161,7 +162,7 @@ export const distributorsApi = {
 
       while (!chunkSuccess && retryCount <= maxRetries) {
         try {
-          const result = await distributorsApi.batchUpdatePoints(chunk);
+          const result = await distributorsApi.batchUpdatePoints(chunk, reason);
           
           totalUpdated += result.updated_count;
           totalFailed += result.failed_count;

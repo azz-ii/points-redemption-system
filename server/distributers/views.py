@@ -16,6 +16,8 @@ from .serializers import DistributorSerializer
 import io
 import logging
 from datetime import datetime
+from points_audit.utils import bulk_log_points_changes, generate_batch_id
+from points_audit.models import PointsAuditLog
 
 # Configure logger for distributor operations
 logger = logging.getLogger('distributors')
@@ -390,6 +392,9 @@ class DistributorBulkUpdatePointsView(APIView):
         try:
             # Use atomic transaction for data consistency
             with transaction.atomic():
+                # Snapshot current points for audit logging
+                all_distributors = list(Distributor.objects.all().values('id', 'name', 'points'))
+                
                 if reset_to_zero:
                     # Single SQL UPDATE query to reset all distributors to 0
                     updated_count = Distributor.objects.all().update(points=0)
@@ -400,6 +405,29 @@ class DistributorBulkUpdatePointsView(APIView):
                     updated_count = Distributor.objects.all().update(points=F('points') + points_delta)
                     message = f"Successfully updated points for {updated_count} distributor(s)"
                     log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} distributors"
+            
+            # Create audit log entries from snapshot
+            batch_id = generate_batch_id()
+            audit_entries = []
+            for d in all_distributors:
+                old_pts = d['points'] or 0
+                new_pts = 0 if reset_to_zero else old_pts + points_delta
+                audit_entries.append({
+                    'entity_type': PointsAuditLog.EntityType.DISTRIBUTOR,
+                    'entity_id': d['id'],
+                    'entity_name': d['name'],
+                    'previous_points': old_pts,
+                    'new_points': new_pts,
+                    'action_type': PointsAuditLog.ActionType.BULK_RESET if reset_to_zero else PointsAuditLog.ActionType.BULK_DELTA,
+                    'changed_by': request.user,
+                    'reason': 'Bulk reset to 0' if reset_to_zero else f'Bulk delta {points_delta:+d}',
+                    'batch_id': batch_id,
+                })
+            if audit_entries:
+                try:
+                    bulk_log_points_changes(audit_entries)
+                except Exception as e:
+                    logger.error(f"Failed to create audit log entries: {str(e)}")
             
             response_data = {
                 "message": message,
@@ -439,6 +467,7 @@ class DistributorBatchUpdatePointsView(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
         
         updates = request.data.get('updates', [])
+        reason = request.data.get('reason', '')
         
         if not updates:
             return Response({
@@ -481,9 +510,11 @@ class DistributorBatchUpdatePointsView(APIView):
         for missing_id in missing_ids:
             failed.append({'id': missing_id, 'error': 'Distributor not found'})
         
-        # Apply updates to distributor objects
+        # Snapshot old points and apply updates to distributor objects
+        old_points_map = {}
         updated_distributors = []
         for distributor in distributors_to_update:
+            old_points_map[distributor.id] = distributor.points or 0
             distributor.points = update_map[distributor.id]
             updated_distributors.append(distributor)
         
@@ -500,6 +531,29 @@ class DistributorBatchUpdatePointsView(APIView):
                 "error": "Failed to update distributors",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        # Create audit log entries
+        if updated_ids:
+            batch_id = generate_batch_id()
+            audit_entries = []
+            for d in updated_distributors:
+                if d.id in updated_ids:
+                    audit_entries.append({
+                        'entity_type': PointsAuditLog.EntityType.DISTRIBUTOR,
+                        'entity_id': d.id,
+                        'entity_name': d.name,
+                        'previous_points': old_points_map.get(d.id, 0),
+                        'new_points': d.points,
+                        'action_type': PointsAuditLog.ActionType.INDIVIDUAL_SET,
+                        'changed_by': request.user,
+                        'reason': reason,
+                        'batch_id': batch_id,
+                    })
+            if audit_entries:
+                try:
+                    bulk_log_points_changes(audit_entries)
+                except Exception as e:
+                    logger.error(f"Failed to create audit log entries: {str(e)}")
         
         return Response({
             "message": f"Updated {len(updated_ids)} distributor(s)",

@@ -16,7 +16,7 @@ interface SetPointsModalProps {
   onClose: () => void;
   onFetchPage: (page: number, pageSize: number, searchQuery: string) => Promise<PaginatedAccountsResponse>;
   loading: boolean;
-  onSubmit: (updates: { id: number; points: number }[]) => void;
+  onSubmit: (updates: { id: number; points: number }[], reason: string) => void;
   onBulkSubmit?: (pointsDelta: number, password: string) => void;
   onResetAll?: (password: string) => void;
 }
@@ -32,6 +32,7 @@ export function SetPointsModal({
 }: SetPointsModalProps) {
   const { resolvedTheme } = useTheme();
   const [pointsToAdd, setPointsToAdd] = useState<Record<number, number>>({});
+  const [reason, setReason] = useState("");
 
   // Data state
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -56,8 +57,8 @@ export function SetPointsModal({
   const [confirmationType, setConfirmationType] = useState<"bulk" | "reset">("bulk");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Filter to only show active and not banned users
-  const activeAccounts = accounts.filter((account) => account.is_activated && !account.is_banned);
+  // Filter to only show not banned users
+  const activeAccounts = (accounts || []).filter((account) => !account.is_banned);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -79,12 +80,8 @@ export function SetPointsModal({
     try {
       setIsLoadingPage(true);
       const data = await onFetchPage(currentPage, itemsPerPage, debouncedSearchQuery);
-      // Filter for active and not banned accounts on client side
-      const filteredResults = data.results.filter(acc => acc.is_activated && !acc.is_banned);
-      setAccounts(filteredResults);
-      // Note: totalCount might not be accurate if we filter client-side
-      // Ideally backend should support filtering active accounts
-      setTotalCount(data.count);
+      setAccounts(data.results || []);
+      setTotalCount(data.count || 0);
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
       setAccounts([]);
@@ -112,6 +109,7 @@ export function SetPointsModal({
       setCurrentPage(1);
       setSearchQuery("");
       setDebouncedSearchQuery("");
+      setReason("");
     }
   }, [isOpen]);
 
@@ -154,13 +152,13 @@ export function SetPointsModal({
       return;
     }
     
-    onSubmit(updates);
+    onSubmit(updates, reason);
   };
 
   const handleBulkSubmit = () => {
     if (!onBulkSubmit) return;
     if (!confirmBulkUpdate) {
-      alert("Please confirm that you understand this will affect all active accounts.");
+      alert("Please confirm that you understand this will affect all accounts.");
       return;
     }
     if (bulkPointsDelta === 0) {
@@ -218,7 +216,7 @@ export function SetPointsModal({
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
-              {activeAccounts.length} active account{activeAccounts.length !== 1 ? "s" : ""}
+              {activeAccounts.length} account{activeAccounts.length !== 1 ? "s" : ""}
             </p>
           </div>
           <button
@@ -241,7 +239,7 @@ export function SetPointsModal({
               resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            Add or subtract points for active users. Enter positive numbers to add points, negative numbers to deduct. Changes will be applied when you click Save.
+            Add or subtract points for users. Enter positive numbers to add points, negative numbers to deduct. Changes will be applied when you click Save.
           </p>
 
           {/* Search Bar */}
@@ -365,7 +363,7 @@ export function SetPointsModal({
             >
               {searchQuery
                 ? "No accounts match your search"
-                : "No active accounts found"}
+                : "No accounts found"}
             </div>
           )}
         </div>
@@ -493,7 +491,7 @@ export function SetPointsModal({
                     }`}
                   >
                     This will apply the same points adjustment to all{" "}
-                    {activeAccounts.length} active account(s). This action cannot
+                    {activeAccounts.length} account(s). This action cannot
                     be undone.
                   </p>
                 </div>
@@ -560,13 +558,13 @@ export function SetPointsModal({
                       }`}
                     >
                       I understand this will affect all {activeAccounts.length}{" "}
-                      active account(s) and cannot be undone
+                      account(s) and cannot be undone
                     </span>
                   </label>
                 </div>
 
                 {/* Bulk Submit Button */}
-                <button
+                   <button
                   onClick={handleBulkSubmit}
                   disabled={
                     loading ||
@@ -626,6 +624,20 @@ export function SetPointsModal({
             resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
         >
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Reason / Note (optional)"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                resolvedTheme === "dark"
+                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+              }`}
+              disabled={loading}
+            />
+          </div>
           <button
             onClick={onClose}
             className={`px-4 py-2 rounded-lg transition-colors ${

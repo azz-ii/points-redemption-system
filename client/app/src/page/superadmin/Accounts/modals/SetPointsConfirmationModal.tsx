@@ -91,7 +91,7 @@ export function SetPointsConfirmationModal({
                   <span className="font-bold text-red-500">
                     {activeAccountsCount}
                   </span>{" "}
-                  active account(s).
+                  account(s).
                 </p>
                 <p className="text-sm">
                   This action is <strong>permanent</strong> and cannot be undone.
@@ -115,7 +115,7 @@ export function SetPointsConfirmationModal({
                   <span className="font-bold text-orange-500">
                     {activeAccountsCount}
                   </span>{" "}
-                  active account(s).
+                  account(s).
                 </p>
                 <p className="text-sm">
                   This action is <strong>permanent</strong> and cannot be undone.

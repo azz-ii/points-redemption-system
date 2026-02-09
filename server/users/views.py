@@ -12,6 +12,8 @@ import logging
 import io
 from datetime import datetime
 from utils.email_service import send_account_created_email
+from points_audit.utils import log_points_change, bulk_log_points_changes, generate_batch_id
+from points_audit.models import PointsAuditLog
 
 # Configure logger for user operations
 logger = logging.getLogger('email')
@@ -480,10 +482,9 @@ class BulkUpdatePointsView(APIView):
             operation = "update"
         
         try:
-            # Get all active, non-banned users (excluding superusers)
+            # Get all non-banned users (excluding superusers)
             active_users = User.objects.filter(
                 is_superuser=False,
-                profile__is_activated=True,
                 profile__is_banned=False
             ).select_related('profile')
             
@@ -491,16 +492,34 @@ class BulkUpdatePointsView(APIView):
             failed_count = 0
             failed_users = []
             
+            # Generate batch_id for audit grouping
+            batch_id = generate_batch_id()
+            audit_entries = []
+            
             # Update each user's points
             for user in active_users:
                 try:
                     if hasattr(user, 'profile'):
+                        old_points = user.profile.points or 0
                         if reset_to_zero:
                             user.profile.points = 0
                         else:
-                            user.profile.points = (user.profile.points or 0) + points_delta
+                            user.profile.points = old_points + points_delta
                         user.profile.save()
                         updated_count += 1
+                        
+                        # Collect audit entry
+                        audit_entries.append({
+                            'entity_type': PointsAuditLog.EntityType.USER,
+                            'entity_id': user.id,
+                            'entity_name': user.profile.full_name or user.username,
+                            'previous_points': old_points,
+                            'new_points': user.profile.points,
+                            'action_type': PointsAuditLog.ActionType.BULK_RESET if reset_to_zero else PointsAuditLog.ActionType.BULK_DELTA,
+                            'changed_by': request.user,
+                            'reason': f'Bulk reset to 0' if reset_to_zero else f'Bulk delta {points_delta:+d}',
+                            'batch_id': batch_id,
+                        })
                     else:
                         failed_count += 1
                         failed_users.append(user.username)
@@ -508,6 +527,13 @@ class BulkUpdatePointsView(APIView):
                     logger.error(f"Failed to update points for user {user.username}: {str(e)}")
                     failed_count += 1
                     failed_users.append(user.username)
+            
+            # Bulk create audit log entries
+            if audit_entries:
+                try:
+                    bulk_log_points_changes(audit_entries)
+                except Exception as e:
+                    logger.error(f"Failed to create audit log entries: {str(e)}")
             
             if reset_to_zero:
                 message = f"Successfully reset points to 0 for {updated_count} account(s)"
@@ -558,6 +584,7 @@ class BatchUpdatePointsView(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
         
         updates = request.data.get('updates', [])
+        reason = request.data.get('reason', '')
         
         if not updates:
             return Response({
@@ -566,6 +593,8 @@ class BatchUpdatePointsView(APIView):
         
         updated_ids = []
         failed = []
+        batch_id = generate_batch_id()
+        audit_entries = []
         
         for update in updates:
             try:
@@ -578,9 +607,24 @@ class BatchUpdatePointsView(APIView):
                 
                 user = User.objects.select_related('profile').get(id=user_id, is_superuser=False)
                 if hasattr(user, 'profile'):
-                    user.profile.points = int(new_points)  # Allow negative points
+                    old_points = user.profile.points or 0
+                    new_points_int = int(new_points)  # Allow negative points
+                    user.profile.points = new_points_int
                     user.profile.save(update_fields=['points'])
                     updated_ids.append(user_id)
+                    
+                    # Collect audit entry
+                    audit_entries.append({
+                        'entity_type': PointsAuditLog.EntityType.USER,
+                        'entity_id': user_id,
+                        'entity_name': user.profile.full_name or user.username,
+                        'previous_points': old_points,
+                        'new_points': new_points_int,
+                        'action_type': PointsAuditLog.ActionType.INDIVIDUAL_SET,
+                        'changed_by': request.user,
+                        'reason': reason,
+                        'batch_id': batch_id,
+                    })
                 else:
                     failed.append({'id': user_id, 'error': 'User has no profile'})
             except User.DoesNotExist:
@@ -590,6 +634,13 @@ class BatchUpdatePointsView(APIView):
             except Exception as e:
                 logger.error(f"Failed to update points for user {user_id}: {str(e)}")
                 failed.append({'id': user_id, 'error': str(e)})
+        
+        # Bulk create audit log entries
+        if audit_entries:
+            try:
+                bulk_log_points_changes(audit_entries)
+            except Exception as e:
+                logger.error(f"Failed to create audit log entries: {str(e)}")
         
         return Response({
             "message": f"Updated {len(updated_ids)} account(s)",

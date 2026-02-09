@@ -8,6 +8,7 @@ export interface Account {
   position: string;
   points: number;
   is_activated: boolean;
+  is_active?: boolean;
   is_banned: boolean;
   profile_picture?: string | null;
 }

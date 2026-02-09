@@ -67,6 +67,8 @@ urlpatterns = [
     path('api/otp/', include('otp.urls')),
     # Teams Management API
     path('api/', include('teams.urls')),
+    # Points Audit Log API
+    path('api/points-audit/', include('points_audit.urls')),
 ]
 
 # Serve static and media files in development

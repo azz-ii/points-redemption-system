@@ -17,7 +17,7 @@ interface SetPointsModalProps {
   onClose: () => void;
   onFetchPage: (page: number, pageSize: number, searchQuery: string) => Promise<PaginatedDistributorsResponse>;
   loading: boolean;
-  onSubmit: (updates: { id: number; points: number }[]) => void;
+  onSubmit: (updates: { id: number; points: number }[], reason: string) => void;
   onBulkSubmit?: (pointsDelta: number, password: string) => void;
   onResetAll?: (password: string) => void;
   progress?: ChunkedUpdateProgress | null;
@@ -35,6 +35,7 @@ export function SetPointsModal({
 }: SetPointsModalProps) {
   const { resolvedTheme } = useTheme();
   const [pointsToAdd, setPointsToAdd] = useState<Record<number, number>>({});
+  const [reason, setReason] = useState("");
 
   // Data state
   const [distributors, setDistributors] = useState<Distributor[]>([]);
@@ -108,6 +109,7 @@ export function SetPointsModal({
       setCurrentPage(1);
       setSearchQuery("");
       setDebouncedSearchQuery("");
+      setReason("");
     }
   }, [isOpen]);
 
@@ -150,7 +152,7 @@ export function SetPointsModal({
       return;
     }
     
-    onSubmit(updates);
+    onSubmit(updates, reason);
   };
 
   const handleBulkSubmit = () => {
@@ -680,6 +682,20 @@ export function SetPointsModal({
               resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
             }`}
           >
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Reason / Note (optional)"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
+                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                }`}
+                disabled={loading || !!progress}
+              />
+            </div>
             <button
               onClick={onClose}
               className={`px-4 py-2 rounded-lg transition-colors ${

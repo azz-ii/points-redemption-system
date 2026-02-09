@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     'requests',
     'otp',
     'teams',
-    'utils'
+    'utils',
+    'points_audit'
 ]
 
 MIDDLEWARE = [

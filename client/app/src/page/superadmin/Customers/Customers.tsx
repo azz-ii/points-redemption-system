@@ -20,6 +20,7 @@ import {
   SetPointsModal,
 } from "./modals";
 import { CustomersTable, CustomersMobileCards } from "./components";
+import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Customers() {
   const navigate = useNavigate();
@@ -110,6 +111,8 @@ function Customers() {
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [showPointsHistory, setShowPointsHistory] = useState(false);
+  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Customer | null>(null);
   const [settingPoints, setSettingPoints] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
 
@@ -239,7 +242,7 @@ function Customers() {
   };
 
   // Handle set points submission - batch updates with chunking for large datasets
-  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
       setSettingPoints(true);
       setUpdateProgress(null);
@@ -251,7 +254,8 @@ function Customers() {
           (progress) => {
             setUpdateProgress(progress);
           },
-          150 // Chunk size
+          150, // Chunk size
+          reason
         );
 
         setShowSetPointsModal(false);
@@ -272,7 +276,7 @@ function Customers() {
         }
       } else {
         // Use regular batch API for smaller updates
-        const result = await customersApi.batchUpdatePoints(updates);
+        const result = await customersApi.batchUpdatePoints(updates, reason);
 
         setShowSetPointsModal(false);
 
@@ -505,6 +509,10 @@ function Customers() {
               refreshing={loading}
               onExport={() => setShowExportModal(true)}
               onSetPoints={() => setShowSetPointsModal(true)}
+              onViewPointsHistory={(customer) => {
+                setPointsHistoryTarget(customer);
+                setShowPointsHistory(true);
+              }}
             />
           )}
         </div>
@@ -654,6 +662,19 @@ function Customers() {
         onResetAll={handleResetAllPoints}
         progress={updateProgress}
       />
+
+      {pointsHistoryTarget && (
+        <PointsHistoryModal
+          isOpen={showPointsHistory}
+          onClose={() => {
+            setShowPointsHistory(false);
+            setPointsHistoryTarget(null);
+          }}
+          entityType="CUSTOMER"
+          entityId={pointsHistoryTarget.id}
+          entityName={pointsHistoryTarget.name}
+        />
+      )}
     </div>
   );
 }

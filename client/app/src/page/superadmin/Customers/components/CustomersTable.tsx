@@ -14,6 +14,7 @@ interface CustomersTableProps {
   refreshing?: boolean;
   onExport?: () => void;
   onSetPoints?: () => void;
+  onViewPointsHistory?: (customer: Customer) => void;
 }
 
 export function CustomersTable({
@@ -28,11 +29,13 @@ export function CustomersTable({
   refreshing,
   onExport,
   onSetPoints,
+  onViewPointsHistory,
 }: CustomersTableProps) {
   const columns = createColumns({
     onView,
     onEdit,
     onDelete,
+    onViewPointsHistory,
   });
 
   return (

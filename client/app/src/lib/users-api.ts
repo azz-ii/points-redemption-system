@@ -10,6 +10,7 @@ export interface Account {
   position: string;
   points: number;
   is_activated: boolean;
+  is_active?: boolean;
   is_banned: boolean;
   profile_picture?: string | null;
 }
@@ -40,21 +41,49 @@ export const usersApi = {
     const response = await fetch(url.toString());
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
-    // Ensure we return paginated format
+    
+    // Handle { accounts: [...] } format from backend
+    let allResults: Account[] = [];
     if (Array.isArray(data)) {
-      return { count: data.length, next: null, previous: null, results: data };
+      allResults = data;
+    } else if (data.accounts && Array.isArray(data.accounts)) {
+      allResults = data.accounts;
+    } else if (data.results && Array.isArray(data.results)) {
+      // It's already paginated by server
+      return data;
     }
-    return data;
+
+    // Server returned all items, so we emulate pagination here
+    // 1. Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      allResults = allResults.filter(acc => 
+        (acc.username || '').toLowerCase().includes(q) ||
+        (acc.full_name || '').toLowerCase().includes(q) ||
+        (acc.email || '').toLowerCase().includes(q)
+      );
+    }
+
+    // 2. Paginate
+    const startIndex = (page - 1) * pageSize;
+    const sliced = allResults.slice(startIndex, startIndex + pageSize);
+
+    return { 
+      count: allResults.length, 
+      next: startIndex + pageSize < allResults.length ? 'has_more' : null, 
+      previous: startIndex > 0 ? 'has_prev' : null, 
+      results: sliced 
+    };
   },
 
-  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+  batchUpdatePoints: async (updates: { id: number; points: number }[], reason?: string): Promise<BatchUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/users/batch_update_points/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ updates }),
+      body: JSON.stringify({ updates, reason: reason || '' }),
     });
     
     const data = await response.json();

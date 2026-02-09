@@ -20,6 +20,7 @@ import {
   SetPointsModal,
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
+import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Distributors() {
   const navigate = useNavigate();
@@ -116,6 +117,8 @@ function Distributors() {
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [showPointsHistory, setShowPointsHistory] = useState(false);
+  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Distributor | null>(null);
   const [settingPoints, setSettingPoints] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
 
@@ -258,7 +261,7 @@ function Distributors() {
   };
 
   // Handle set points submission - batch updates with chunking for large datasets
-  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
       setSettingPoints(true);
       setUpdateProgress(null);
@@ -270,7 +273,8 @@ function Distributors() {
           (progress) => {
             setUpdateProgress(progress);
           },
-          150 // Chunk size
+          150, // Chunk size
+          reason
         );
 
         setShowSetPointsModal(false);
@@ -291,7 +295,7 @@ function Distributors() {
         }
       } else {
         // Use regular batch API for smaller updates
-        const result = await distributorsApi.batchUpdatePoints(updates);
+        const result = await distributorsApi.batchUpdatePoints(updates, reason);
 
         setShowSetPointsModal(false);
 
@@ -534,6 +538,10 @@ function Distributors() {
               refreshing={loading}
               onExport={() => setShowExportModal(true)}
               onSetPoints={() => setShowSetPointsModal(true)}
+              onViewPointsHistory={(distributor) => {
+                setPointsHistoryTarget(distributor);
+                setShowPointsHistory(true);
+              }}
             />
           )}
         </div>
@@ -683,6 +691,19 @@ function Distributors() {
         onResetAll={handleResetAllPoints}
         progress={updateProgress}
       />
+
+      {pointsHistoryTarget && (
+        <PointsHistoryModal
+          isOpen={showPointsHistory}
+          onClose={() => {
+            setShowPointsHistory(false);
+            setPointsHistoryTarget(null);
+          }}
+          entityType="DISTRIBUTOR"
+          entityId={pointsHistoryTarget.id}
+          entityName={pointsHistoryTarget.name}
+        />
+      )}
     </div>
   );
 }

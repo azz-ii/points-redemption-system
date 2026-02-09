@@ -23,6 +23,7 @@ import {
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
+import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Accounts() {
   const navigate = useNavigate();
@@ -89,6 +90,8 @@ function Accounts() {
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [showPointsHistory, setShowPointsHistory] = useState(false);
+  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Account | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -708,12 +711,12 @@ function Accounts() {
   );
 
   // Handle set points submission - batch updates (only changed accounts)
-  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
       setLoading(true);
 
       // Use batch API for efficiency
-      const result = await usersApi.batchUpdatePoints(updates);
+      const result = await usersApi.batchUpdatePoints(updates, reason);
 
       setShowSetPointsModal(false);
 
@@ -993,6 +996,10 @@ function Accounts() {
             onRefresh={fetchAccounts}
             refreshing={loading}
             onExport={() => setShowExportModal(true)}
+            onViewPointsHistory={(account) => {
+              setPointsHistoryTarget(account);
+              setShowPointsHistory(true);
+            }}
             editingRowId={editingRowId}
             editedData={editedData}
             onToggleInlineEdit={handleToggleInlineEdit}
@@ -1187,6 +1194,19 @@ function Accounts() {
         onBulkSubmit={handleBulkSetPoints}
         onResetAll={handleResetAllPoints}
       />
+
+      {pointsHistoryTarget && (
+        <PointsHistoryModal
+          isOpen={showPointsHistory}
+          onClose={() => {
+            setShowPointsHistory(false);
+            setPointsHistoryTarget(null);
+          }}
+          entityType="USER"
+          entityId={pointsHistoryTarget.id}
+          entityName={pointsHistoryTarget.full_name || pointsHistoryTarget.username}
+        />
+      )}
 
       {/* Toast Notification */}
       {toast && (
