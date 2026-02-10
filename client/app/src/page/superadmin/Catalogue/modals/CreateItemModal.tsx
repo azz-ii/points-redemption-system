@@ -59,13 +59,13 @@ export function CreateItemModal({
         aria-labelledby="create-item-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="create-item-title" className="text-xl font-semibold">
+            <h2 id="create-item-title" className="text-lg font-semibold">
               Add Catalogue Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Create a new product in the catalogue
+            <p className="text-xs text-gray-500 mt-0.5">
+              Create a new product
             </p>
           </div>
           <button
@@ -78,23 +78,23 @@ export function CreateItemModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
 
           {/* Shared Fields */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
 
             {/* Item Code */}
             <div>
               <label
                 htmlFor="item-code-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Item Code *
               </label>
@@ -105,7 +105,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, item_code: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -119,7 +119,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="item-name-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Item Name *
               </label>
@@ -130,7 +130,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, item_name: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -144,7 +144,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="category-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Category
               </label>
@@ -155,11 +155,11 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, category: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 placeholder="e.g., Size M, Color Blue"
               />
             </div>
@@ -168,7 +168,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="description-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Description
               </label>
@@ -178,12 +178,12 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, description: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm resize-none ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 resize-none text-base`}
-                rows={3}
+                } focus:outline-none focus:border-blue-500`}
+                rows={2}
                 placeholder="Detailed description of the item"
               />
             </div>
@@ -192,7 +192,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="purpose-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Purpose
               </label>
@@ -202,11 +202,11 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, purpose: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm resize-none ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 resize-none text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 rows={2}
                 placeholder="Purpose of the item"
               />
@@ -216,7 +216,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="specs-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Specifications
               </label>
@@ -226,11 +226,11 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, specifications: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm resize-none ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 resize-none text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 rows={2}
                 placeholder="Specifications (e.g., 100% cotton, XS-XXL)"
               />
@@ -240,7 +240,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="legend-select"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Legend *
               </label>
@@ -260,11 +260,11 @@ export function CreateItemModal({
                       | "OTHERS",
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 aria-required="true"
               >
                 <option value="GIVEAWAY">Giveaway</option>
@@ -281,7 +281,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="pricing-type-select"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Pricing Type *
               </label>
@@ -294,11 +294,11 @@ export function CreateItemModal({
                     pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 aria-required="true"
               >
                 {PRICING_TYPE_OPTIONS.map((option) => (
@@ -313,7 +313,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="points-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 {newItem.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -329,11 +329,11 @@ export function CreateItemModal({
                     [newItem.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 placeholder={
                   newItem.pricing_type === "FIXED"
                     ? "e.g., 500"
@@ -358,7 +358,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="price-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 {newItem.pricing_type === "FIXED"
                   ? "Price *"
@@ -374,11 +374,11 @@ export function CreateItemModal({
                     [newItem.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 placeholder={
                   newItem.pricing_type === "FIXED"
                     ? "e.g., ₱130.00"
@@ -389,11 +389,11 @@ export function CreateItemModal({
             </div>
 
             {/* Order Quantity Limits */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="min-order-qty-input"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Min Order Qty *
                 </label>
@@ -405,11 +405,11 @@ export function CreateItemModal({
                   onChange={(e) =>
                     setNewItem({ ...newItem, min_order_qty: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500 text-base`}
+                  } focus:outline-none focus:border-blue-500`}
                   placeholder="1"
                   aria-required="true"
                 />
@@ -417,7 +417,7 @@ export function CreateItemModal({
               <div>
                 <label
                   htmlFor="max-order-qty-input"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Max Order Qty
                 </label>
@@ -429,11 +429,11 @@ export function CreateItemModal({
                   onChange={(e) =>
                     setNewItem({ ...newItem, max_order_qty: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500 text-base`}
+                  } focus:outline-none focus:border-blue-500`}
                   placeholder="Leave empty for unlimited"
                 />
                 <p
@@ -450,7 +450,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="stock-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Initial Stock
               </label>
@@ -463,11 +463,11 @@ export function CreateItemModal({
                   setNewItem({ ...newItem, stock: e.target.value })
                 }
                 disabled={!newItem.has_stock}
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                } focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                 placeholder="e.g., 100"
               />
             </div>
@@ -527,11 +527,11 @@ export function CreateItemModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
             disabled={creating}
-            className={`px-6 py-3 rounded-lg font-semibold border transition-colors ${
+            className={`px-3 py-2 rounded-lg font-semibold border transition-colors text-sm ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
@@ -542,7 +542,7 @@ export function CreateItemModal({
           <button
             onClick={onConfirm}
             disabled={creating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50"
+            className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 text-sm"
           >
             {creating ? "Creating..." : "Create Product"}
           </button>

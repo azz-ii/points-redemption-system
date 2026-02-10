@@ -55,13 +55,13 @@ export function BanAccountModal({
         aria-modal="true"
         aria-labelledby="ban-account-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="ban-account-title" className="text-xl font-semibold">
+            <h2 id="ban-account-title" className="text-lg font-semibold">
               Ban User
             </h2>
-            <p className="text-xs text-gray-500 mt-1">
-              Ban user {account.full_name}{" "}
+            <p className="text-xs text-gray-500 mt-0.5">
+              {account.full_name}
             </p>
           </div>
           <button
@@ -73,11 +73,11 @@ export function BanAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           <div>
             <label
               htmlFor="ban-reason"
-              className="text-xs text-gray-500 mb-2 block"
+              className="text-xs text-gray-500 mb-1 block"
             >
               Ban Reason *
             </label>
@@ -85,7 +85,7 @@ export function BanAccountModal({
               id="ban-reason"
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
-              className={`w-full px-3 py-2 rounded border ${
+              className={`w-full px-2 py-1 rounded border text-sm resize-none ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-gray-900"
@@ -97,7 +97,7 @@ export function BanAccountModal({
           <div>
             <label
               htmlFor="ban-message"
-              className="text-xs text-gray-500 mb-2 block"
+              className="text-xs text-gray-500 mb-1 block"
             >
               Ban Message
             </label>
@@ -105,7 +105,7 @@ export function BanAccountModal({
               id="ban-message"
               value={banMessage}
               onChange={(e) => setBanMessage(e.target.value)}
-              className={`w-full px-3 py-2 rounded border ${
+              className={`w-full px-2 py-1 rounded border text-sm resize-none ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-gray-900"
@@ -117,7 +117,7 @@ export function BanAccountModal({
           <div>
             <label
               htmlFor="ban-duration"
-              className="text-xs text-gray-500 mb-2 block"
+              className="text-xs text-gray-500 mb-1 block"
             >
               Ban Duration *
             </label>
@@ -127,7 +127,7 @@ export function BanAccountModal({
               onChange={(e) =>
                 setBanDuration(e.target.value as "1" | "7" | "30" | "permanent")
               }
-              className={`w-full px-3 py-2 rounded border ${
+              className={`w-full px-2 py-1 rounded border text-sm ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 border-gray-600 text-white"
                   : "bg-white border-gray-300 text-gray-900"
@@ -142,16 +142,16 @@ export function BanAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           {error && (
-            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
           <div className="flex justify-end gap-3">
             <button
               onClick={handleClose}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              className={`px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
@@ -162,7 +162,7 @@ export function BanAccountModal({
             <button
               onClick={onSubmit}
               disabled={loading}
-              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+              className="px-3 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
             >
               {loading ? "Banning..." : "Ban User"}
             </button>

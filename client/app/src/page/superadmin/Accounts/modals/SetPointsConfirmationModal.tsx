@@ -43,12 +43,12 @@ export function SetPointsConfirmationModal({
       >
         {/* Header */}
         <div
-          className={`flex items-center gap-3 p-6 border-b ${
+          className={`flex items-center gap-2 p-4 border-b ${
             resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
         >
           <div
-            className={`p-2 rounded-full ${
+            className={`p-1 rounded-full ${
               confirmationType === "reset"
                 ? resolvedTheme === "dark"
                   ? "bg-red-900/30"
@@ -59,7 +59,7 @@ export function SetPointsConfirmationModal({
             }`}
           >
             <AlertTriangle
-              className={`h-6 w-6 ${
+              className={`h-4 w-4 ${
                 confirmationType === "reset"
                   ? "text-red-500"
                   : "text-orange-500"
@@ -67,7 +67,7 @@ export function SetPointsConfirmationModal({
             />
           </div>
           <h3
-            className={`text-lg font-semibold ${
+            className={`text-sm font-semibold ${
               resolvedTheme === "dark" ? "text-white" : "text-gray-900"
             }`}
           >
@@ -78,30 +78,28 @@ export function SetPointsConfirmationModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           <div
-            className={`mb-4 ${
+            className={`mb-3 ${
               resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
             {confirmationType === "reset" ? (
               <>
-                <p className="font-medium mb-2">
+                <p className="font-medium text-xs mb-1">
                   You are about to reset ALL points to 0 for{" "}
                   <span className="font-bold text-red-500">
                     {activeAccountsCount}
                   </span>{" "}
                   account(s).
                 </p>
-                <p className="text-sm">
+                <p className="text-xs">
                   This action is <strong>permanent</strong> and cannot be undone.
-                  All affected accounts will have their points balance set to
-                  zero.
                 </p>
               </>
             ) : (
               <>
-                <p className="font-medium mb-2">
+                <p className="font-medium text-xs mb-1">
                   You are about to apply{" "}
                   <span
                     className={`font-bold ${
@@ -117,7 +115,7 @@ export function SetPointsConfirmationModal({
                   </span>{" "}
                   account(s).
                 </p>
-                <p className="text-sm">
+                <p className="text-xs">
                   This action is <strong>permanent</strong> and cannot be undone.
                 </p>
               </>
@@ -125,9 +123,9 @@ export function SetPointsConfirmationModal({
           </div>
 
           {/* Password Input */}
-          <div className="mb-4">
+          <div className="mb-3">
             <label
-              className={`block text-sm font-medium mb-2 ${
+              className={`block text-xs font-medium mb-1 ${
                 resolvedTheme === "dark"
                   ? "text-gray-300"
                   : "text-gray-700"
@@ -146,7 +144,7 @@ export function SetPointsConfirmationModal({
                   handleConfirm();
                 }
               }}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 resolvedTheme === "dark"
                   ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                   : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
@@ -156,7 +154,7 @@ export function SetPointsConfirmationModal({
           </div>
 
           <p
-            className={`text-xs mt-3 ${
+            className={`text-xs mt-2 ${
               resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
             }`}
           >
@@ -166,14 +164,14 @@ export function SetPointsConfirmationModal({
 
         {/* Footer */}
         <div
-          className={`flex gap-3 p-6 border-t ${
+          className={`flex gap-3 p-4 border-t ${
             resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
         >
           <button
             onClick={onClose}
             disabled={loading}
-            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -184,7 +182,7 @@ export function SetPointsConfirmationModal({
           <button
             onClick={handleConfirm}
             disabled={loading || !password.trim()}
-            className={`flex-1 px-4 py-2 rounded-lg transition-colors text-white ${
+            className={`flex-1 px-3 py-1.5 rounded-lg text-sm transition-colors text-white ${
               confirmationType === "reset"
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-orange-600 hover:bg-orange-700"

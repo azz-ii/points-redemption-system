@@ -42,12 +42,12 @@ export function DeleteAccountModal({
             : "border-gray-200 divide-gray-200"
         }`}
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-account-title" className="text-xl font-semibold">
+            <h2 id="delete-account-title" className="text-lg font-semibold">
               Delete User
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               This action cannot be undone.
             </p>
           </div>
@@ -60,17 +60,17 @@ export function DeleteAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
-          <p id="delete-account-message" className="text-base">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          <p id="delete-account-message" className="text-sm">
             Are you sure you want to delete <strong>{account.full_name}</strong>{" "}
             ({account.username})?
           </p>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-3 justify-end">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-white hover:bg-gray-100 text-gray-900"
                 : "bg-gray-200 hover:bg-gray-300 text-gray-900"
@@ -82,7 +82,7 @@ export function DeleteAccountModal({
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
                 : "bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"

@@ -68,13 +68,13 @@ export function EditAccountModal({
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-account-title" className="text-xl font-semibold">
+            <h2 id="edit-account-title" className="text-lg font-semibold">
               Edit Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Update account details for {account.full_name}
+            <p className="text-xs text-gray-500 mt-0.5">
+              Update details for {account.full_name}
             </p>
           </div>
           <button
@@ -87,16 +87,16 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Credentials
             </h3>
             <div>
               <label
                 htmlFor="edit-username"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Username *
               </label>
@@ -107,7 +107,7 @@ export function EditAccountModal({
                 onChange={(e) =>
                   setEditAccount({ ...editAccount, username: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -119,15 +119,15 @@ export function EditAccountModal({
           </div>
 
           {/* Personal Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Personal Information
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <label
                   htmlFor="edit-fullName"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Full Name *
                 </label>
@@ -141,7 +141,7 @@ export function EditAccountModal({
                       full_name: e.target.value,
                     })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
@@ -154,7 +154,7 @@ export function EditAccountModal({
               <div>
                 <label
                   htmlFor="edit-email"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Email Address *
                 </label>
@@ -165,7 +165,7 @@ export function EditAccountModal({
                   onChange={(e) =>
                     setEditAccount({ ...editAccount, email: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
@@ -178,8 +178,8 @@ export function EditAccountModal({
           </div>
 
           {/* Profile Picture Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Profile Picture
             </h3>
             <ProfilePictureUpload
@@ -191,15 +191,15 @@ export function EditAccountModal({
           </div>
 
           {/* Role & Points Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Role & Points
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <label
                   htmlFor="edit-position"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Position *
                 </label>
@@ -209,7 +209,7 @@ export function EditAccountModal({
                   onChange={(e) =>
                     setEditAccount({ ...editAccount, position: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
@@ -227,7 +227,7 @@ export function EditAccountModal({
               <div>
                 <label
                   htmlFor="edit-points"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Points *
                 </label>
@@ -243,7 +243,7 @@ export function EditAccountModal({
                         points: parseInt(e.target.value) || 0,
                       })
                     }
-                    className={`flex-1 px-4 py-3 rounded border ${
+                    className={`flex-1 px-3 py-2 rounded border text-sm ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
@@ -260,7 +260,7 @@ export function EditAccountModal({
                       })
                     }
                     aria-label="Add 10 points"
-                    className={`px-4 py-3 rounded border font-semibold text-sm transition-colors ${
+                    className={`px-2 py-2 rounded border font-semibold text-xs transition-colors ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 hover:bg-gray-700 text-white"
                         : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
@@ -277,7 +277,7 @@ export function EditAccountModal({
                       })
                     }
                     aria-label="Add 100 points"
-                    className={`px-4 py-3 rounded border font-semibold text-sm transition-colors ${
+                    className={`px-2 py-2 rounded border font-semibold text-xs transition-colors ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 hover:bg-gray-700 text-white"
                         : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
@@ -292,16 +292,16 @@ export function EditAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t">
+        <div className="p-4 border-t">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
           <button
             onClick={onSubmit}
             disabled={loading}
-            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`w-full px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
                 : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"

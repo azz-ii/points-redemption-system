@@ -32,12 +32,12 @@ export function ViewProductModal({
         aria-modal="true"
         aria-labelledby="view-product-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-product-title" className="text-xl font-semibold">
+            <h2 id="view-product-title" className="text-lg font-semibold">
               View Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Product details
             </p>
           </div>
@@ -50,11 +50,11 @@ export function ViewProductModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Product ID */}
             <div>
-              <label className="block text-sm font-medium mb-2">Product ID</label>
+              <label className="block text-xs font-medium mb-1">Product ID</label>
               <input
                 type="text"
                 value={product.id}
@@ -69,7 +69,7 @@ export function ViewProductModal({
 
             {/* Item Code */}
             <div>
-              <label className="block text-sm font-medium mb-2">Item Code</label>
+              <label className="block text-xs font-medium mb-1">Item Code</label>
               <input
                 type="text"
                 value={product.item_code}
@@ -84,7 +84,7 @@ export function ViewProductModal({
 
             {/* Item Name */}
             <div>
-              <label className="block text-sm font-medium mb-2">Item Name</label>
+              <label className="block text-xs font-medium mb-1">Item Name</label>
               <input
                 type="text"
                 value={product.item_name}
@@ -99,7 +99,7 @@ export function ViewProductModal({
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
+              <label className="block text-xs font-medium mb-1">Category</label>
               <input
                 type="text"
                 value={product.category || "-"}
@@ -112,36 +112,9 @@ export function ViewProductModal({
               />
             </div>
 
-            {/* Legend */}
-            <div>
-              <p className="text-xs text-gray-500 mb-2">Legend</p>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
-                  product.legend
-                )}`}
-              >
-                {product.legend.replace(/_/g, " ")}
-              </span>
-            </div>
-
-            {/* Points */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Points Required</label>
-              <input
-                type="text"
-                value={product.points}
-                disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
-              />
-            </div>
-
             {/* Price */}
             <div>
-              <label className="block text-sm font-medium mb-2">Price</label>
+              <label className="block text-xs font-medium mb-1">Price</label>
               <input
                 type="text"
                 value={product.price}
@@ -154,9 +127,36 @@ export function ViewProductModal({
               />
             </div>
 
+            {/* Points */}
+            <div>
+              <label className="block text-xs font-medium mb-1">Points Required</label>
+              <input
+                type="text"
+                value={product.points}
+                disabled
+                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
+                  resolvedTheme === "dark"
+                    ? "bg-gray-700 border-gray-600 text-gray-300"
+                    : "bg-gray-100 border-gray-300 text-gray-600"
+                } focus:outline-none`}
+              />
+            </div>
+
+            {/* Legend */}
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Legend</p>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
+                  product.legend
+                )}`}
+              >
+                {product.legend.replace(/_/g, " ")}
+              </span>
+            </div>
+
             {/* Pricing Type */}
             <div>
-              <label className="block text-sm font-medium mb-2">Pricing Type</label>
+              <label className="block text-xs font-medium mb-1">Pricing Type</label>
               <input
                 type="text"
                 value={pricingLabel}
@@ -171,7 +171,7 @@ export function ViewProductModal({
 
             {/* Tracks Inventory */}
             <div>
-              <p className="text-xs text-gray-500 mb-2">Inventory Tracking</p>
+              <p className="text-xs text-gray-500 mb-1">Inventory Tracking</p>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                   product.has_stock
@@ -187,7 +187,7 @@ export function ViewProductModal({
             {product.has_stock ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Total Stock</label>
+                  <label className="block text-xs font-medium mb-1">Total Stock</label>
                   <input
                     type="text"
                     value={product.stock}
@@ -201,7 +201,7 @@ export function ViewProductModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Available Stock</label>
+                  <label className="block text-xs font-medium mb-1">Available Stock</label>
                   <input
                     type="text"
                     value={product.available_stock}
@@ -215,7 +215,7 @@ export function ViewProductModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Committed Stock</label>
+                  <label className="block text-xs font-medium mb-1">Committed Stock</label>
                   <input
                     type="text"
                     value={product.committed_stock}
@@ -230,7 +230,7 @@ export function ViewProductModal({
               </>
             ) : (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Stock Status</label>
+                <label className="block text-xs font-medium mb-1">Stock Status</label>
                 <input
                   type="text"
                   value="Made to order - No stock tracking"
@@ -246,7 +246,7 @@ export function ViewProductModal({
 
             {/* Order Quantity Limits */}
             <div>
-              <label className="block text-sm font-medium mb-2">Min Order Qty</label>
+              <label className="block text-xs font-medium mb-1">Min Order Qty</label>
               <input
                 type="text"
                 value={product.min_order_qty ?? 1}
@@ -260,7 +260,7 @@ export function ViewProductModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Max Order Qty</label>
+              <label className="block text-xs font-medium mb-1">Max Order Qty</label>
               <input
                 type="text"
                 value={product.max_order_qty ?? "Unlimited"}
@@ -276,7 +276,7 @@ export function ViewProductModal({
             {/* Description */}
             {product.description && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-xs font-medium mb-1">Description</label>
                 <textarea
                   value={product.description}
                   disabled
@@ -326,10 +326,10 @@ export function ViewProductModal({
           </div>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg border transition-colors ${
+            className={`px-3 py-2 rounded-lg border transition-colors text-sm ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

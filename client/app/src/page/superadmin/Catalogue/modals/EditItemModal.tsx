@@ -59,12 +59,12 @@ export function EditItemModal({
         aria-labelledby="edit-item-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-item-title" className="text-xl font-semibold">
+            <h2 id="edit-item-title" className="text-lg font-semibold">
               Edit Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Update product details
             </p>
           </div>
@@ -78,23 +78,23 @@ export function EditItemModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-4 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
 
           {/* Product Fields */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
 
             {/* Item Code */}
             <div>
               <label
                 htmlFor="edit-item-code"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Item Code *
               </label>
@@ -105,7 +105,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, item_code: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -119,7 +119,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-item-name"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Item Name *
               </label>
@@ -130,7 +130,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, item_name: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -144,7 +144,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-category"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Category
               </label>
@@ -155,7 +155,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, category: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -168,7 +168,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-description"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Description
               </label>
@@ -178,7 +178,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, description: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm resize-none ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -192,7 +192,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-purpose"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Purpose
               </label>
@@ -202,7 +202,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, purpose: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm resize-none ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -216,7 +216,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-specs"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Specifications
               </label>
@@ -226,7 +226,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, specifications: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm resize-none ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -240,7 +240,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-legend"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Legend *
               </label>
@@ -260,11 +260,11 @@ export function EditItemModal({
                       | "OTHERS",
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500 text-base`}
+                } focus:outline-none focus:border-blue-500`}
                 aria-required="true"
               >
                 <option value="GIVEAWAY">Giveaway</option>
@@ -281,7 +281,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-pricing-type"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Pricing Type *
               </label>
@@ -294,7 +294,7 @@ export function EditItemModal({
                     pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -313,7 +313,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-points"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 {editItem.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -329,7 +329,7 @@ export function EditItemModal({
                     [editItem.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -358,7 +358,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-price"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 {editItem.pricing_type === "FIXED"
                   ? "Price *"
@@ -374,7 +374,7 @@ export function EditItemModal({
                     [editItem.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -389,11 +389,11 @@ export function EditItemModal({
             </div>
 
             {/* Order Quantity Limits */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="edit-min-order-qty"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Min Order Qty *
                 </label>
@@ -405,7 +405,7 @@ export function EditItemModal({
                   onChange={(e) =>
                     setEditItem({ ...editItem, min_order_qty: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
@@ -417,7 +417,7 @@ export function EditItemModal({
               <div>
                 <label
                   htmlFor="edit-max-order-qty"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Max Order Qty
                 </label>
@@ -429,7 +429,7 @@ export function EditItemModal({
                   onChange={(e) =>
                     setEditItem({ ...editItem, max_order_qty: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
+                  className={`w-full px-3 py-2 rounded border text-sm ${
                     resolvedTheme === "dark"
                       ? "bg-gray-800 border-gray-600 text-white"
                       : "bg-white border-gray-300 text-gray-900"
@@ -450,7 +450,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-stock"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Stock
               </label>
@@ -463,7 +463,7 @@ export function EditItemModal({
                   setEditItem({ ...editItem, stock: e.target.value })
                 }
                 disabled={!editItem.has_stock}
-                className={`w-full px-4 py-3 rounded border ${
+                className={`w-full px-3 py-2 rounded border text-sm ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 border-gray-600 text-white"
                     : "bg-white border-gray-300 text-gray-900"
@@ -527,11 +527,11 @@ export function EditItemModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
             disabled={updating}
-            className={`px-6 py-3 rounded-lg font-semibold border transition-colors ${
+            className={`px-3 py-2 rounded-lg font-semibold border transition-colors text-sm ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
@@ -542,7 +542,7 @@ export function EditItemModal({
           <button
             onClick={onConfirm}
             disabled={updating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50"
+            className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 text-sm"
           >
             {updating ? "Updating..." : "Update Product"}
           </button>

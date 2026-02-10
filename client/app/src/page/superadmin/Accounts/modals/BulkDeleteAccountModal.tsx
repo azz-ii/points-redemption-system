@@ -37,15 +37,15 @@ export function BulkDeleteAccountModal({
         aria-modal="true"
         aria-labelledby="bulk-delete-account-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
             <h2
               id="bulk-delete-account-title"
-              className="text-xl font-semibold"
+              className="text-lg font-semibold"
             >
               Delete Multiple Users
             </h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               This action cannot be undone.
             </p>
           </div>
@@ -58,17 +58,17 @@ export function BulkDeleteAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
-          <p>
+        <div className="p-4 space-y-3">
+          <p className="text-sm">
             Are you sure you want to delete <strong>{accounts.length}</strong>{" "}
             user{accounts.length > 1 ? "s" : ""}?
           </p>
 
-          <div className="space-y-1 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
             {accounts.map((account) => (
               <div
                 key={account.id}
-                className={`text-sm px-3 py-2 rounded ${
+                className={`text-xs px-2 py-1 rounded ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 text-gray-300"
                     : "bg-gray-100 text-gray-700"
@@ -81,10 +81,10 @@ export function BulkDeleteAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-3">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
@@ -95,7 +95,7 @@ export function BulkDeleteAccountModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+            className="px-3 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
           >
             {loading
               ? "Deleting..."
