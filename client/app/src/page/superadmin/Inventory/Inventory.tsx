@@ -393,10 +393,10 @@ function Inventory() {
           {/* Search and Actions */}
           <div className="flex justify-between items-center mb-6">
             <div
-              className={`relative flex items-center ${
+              className={`relative flex items-center border rounded-lg ${
                 resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
+                  ? "border-gray-700"
+                  : "border-gray-300"
               }`}
             >
               <Search className="absolute left-3 h-5 w-5 text-gray-500" />
