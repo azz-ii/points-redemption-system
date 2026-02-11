@@ -12,6 +12,9 @@ import ForgotPassword from "./ForgotPassword";
 import ActivateAccount from "./ActivateAccount";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import buildingImage from "@/assets/building.png";
+import oracleLogo from "@/assets/oracle-logo.png";
+import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -118,7 +121,7 @@ function Login() {
         {/* Building backdrop with low opacity */}
         <div className="absolute inset-0">
           <img
-            src="/src/assets/building.jpg"
+            src={buildingImage}
             alt="Building exterior"
             className="object-cover w-full h-full opacity-20 dark:opacity-30 transition-opacity"
             onError={(e) => {
@@ -132,7 +135,7 @@ function Login() {
         {/* Centered Oracle Logo */}
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <img
-            src="/src/assets/oracle-logo.png"
+            src={oracleLogo}
             alt="Oracle Petroleum"
             className="w-130 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
             onError={(e) => {
@@ -153,7 +156,7 @@ function Login() {
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-48 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
               onError={(e) => {

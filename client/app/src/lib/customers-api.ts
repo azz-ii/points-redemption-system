@@ -57,7 +57,9 @@ export const customersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch customers');
     const data = await response.json();
     // Ensure we return paginated format
@@ -183,7 +185,9 @@ export const customersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch customers');
     const data = await response.json();
     // Handle both array and paginated response formats
@@ -200,7 +204,9 @@ export const customersApi = {
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch customers');
       
       const data = await response.json();
@@ -216,12 +222,16 @@ export const customersApi = {
     return allCustomers;
   },
   getAll: async (): Promise<Customer[]> => {
-    const response = await fetch(`${API_BASE_URL}/customers/`);
+    const response = await fetch(`${API_BASE_URL}/customers/`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch customers');
     return response.json();
   },
   getListAll: async (): Promise<{id: number; name: string; location: string}[]> => {
-    const response = await fetch(`${API_BASE_URL}/customers/list_all/`);
+    const response = await fetch(`${API_BASE_URL}/customers/list_all/`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch customers list');
     return response.json();
   },

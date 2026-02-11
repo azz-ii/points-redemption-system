@@ -139,7 +139,9 @@ function Accounts() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/users/`);
+      const response = await fetch(`${API_URL}/users/`, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (response.ok) {

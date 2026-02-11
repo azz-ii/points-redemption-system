@@ -17,6 +17,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { XCircle } from "lucide-react";
+import buildingImage from "@/assets/building.png";
+import oracleLogo from "@/assets/oracle-logo.png";
+import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
 
 interface ActivateAccountProps {
   username: string;
@@ -117,7 +120,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
         <div className="absolute inset-0 bg-linear-to-br from-slate-200/50 to-slate-300/50 dark:from-slate-900/80 dark:to-slate-900/90 z-10 transition-colors" />
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <img
-            src="/src/assets/oracle-logo.png"
+            src={oracleLogo}
             alt="Oracle Petroleum"
             className="w-130 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
             onError={(e) => {
@@ -138,7 +141,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-48 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
               onError={(e) => {

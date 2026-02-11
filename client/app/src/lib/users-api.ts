@@ -38,7 +38,9 @@ export const usersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
     
@@ -73,7 +75,9 @@ export const usersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
     // Handle both array and paginated response formats
@@ -90,7 +94,9 @@ export const usersApi = {
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch accounts');
       
       const data = await response.json();

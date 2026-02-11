@@ -20,6 +20,7 @@ import {
   type MarketingUser,
   type LegendAssignment,
 } from "./components";
+import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
 
 function Marketing() {
   const handleLogout = useLogout();
@@ -49,8 +50,12 @@ function Marketing() {
 
       // Fetch users and assignments in parallel
       const [usersResponse, assignmentsResponse] = await Promise.all([
-        fetch(`${API_URL}/users/`),
-        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`),
+        fetch(`${API_URL}/users/`, {
+          credentials: 'include',
+        }),
+        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, {
+          credentials: 'include',
+        }),
       ]);
 
       const usersData = await usersResponse.json();
@@ -187,7 +192,7 @@ function Marketing() {
           } flex items-center justify-between`}
         >
           <img
-            src="/src/assets/oracle-logo-mb.png"
+            src={oracleLogoMobile}
             alt="Oracle Petroleum"
             className="w-8 h-auto object-contain"
             onError={(e) => {
