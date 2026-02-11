@@ -57,7 +57,7 @@ function Marketing() {
       const assignmentsData = await assignmentsResponse.json();
 
       if (usersResponse.ok) {
-        const accounts = (usersData.accounts || []).filter(
+        const accounts = (usersData.results || []).filter(
           (account: Account) =>
             account.position === "Marketing" || account.position === "Admin",
         );
