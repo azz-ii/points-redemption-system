@@ -64,6 +64,7 @@ function Catalogue() {
       stock: 100,
       committed_stock: 10,
       available_stock: 90,
+      image: null,
       is_archived: false,
       date_added: new Date().toISOString().split("T")[0],
       added_by: null,
@@ -151,6 +152,7 @@ function Catalogue() {
         stock: product.stock || 0,
         committed_stock: product.committed_stock || 0,
         available_stock: product.available_stock || 0,
+        image: product.image || null,
         is_archived: product.is_archived || false,
         date_added: product.date_added,
         added_by: product.added_by,
@@ -184,6 +186,8 @@ function Catalogue() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({
     item_code: "",
     item_name: "",
@@ -257,6 +261,10 @@ function Catalogue() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editCurrentImage, setEditCurrentImage] = useState<string | null>(null);
+  const [editImageRemoved, setEditImageRemoved] = useState(false);
 
   // Additional modal state for product/variant operations
   const [viewProductTarget, setViewProductTarget] = useState<Product | null>(
@@ -353,14 +361,22 @@ function Catalogue() {
         requires_sales_approval: newItem.requires_sales_approval,
       };
 
+      // Build FormData for multipart upload (supports image)
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
+      });
+      if (createImageFile) {
+        formData.append('image', createImageFile);
+      }
+
       console.log("[Catalogue] Creating product (POST) payload:", payload);
       const response = await fetch(`${API_URL}/catalogue/`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
       });
       console.log("[Catalogue] POST response status:", response.status);
 
@@ -396,6 +412,8 @@ function Catalogue() {
       });
       setShowCreateModal(false);
       setCreateError(null);
+      setCreateImageFile(null);
+      setCreateImagePreview(null);
 
       // Refresh items list
       fetchCatalogueItems();
@@ -417,6 +435,10 @@ function Catalogue() {
 
     // Populate edit form with selected product's data
     const isFixed = item.pricing_type === "FIXED";
+    setEditImageFile(null);
+    setEditImagePreview(null);
+    setEditCurrentImage(item.image || null);
+    setEditImageRemoved(false);
     setEditItem({
       item_code: item.item_code,
       item_name: item.item_name,
@@ -506,6 +528,19 @@ function Catalogue() {
         requires_sales_approval: editItem.requires_sales_approval ?? true,
       };
 
+      // Build FormData for multipart upload (supports image)
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
+      });
+      if (editImageFile) {
+        formData.append('image', editImageFile);
+      } else if (editImageRemoved) {
+        formData.append('remove_image', 'true');
+      }
+
       console.log(
         "[Catalogue] Updating product (PATCH) id=",
         editingProductId,
@@ -515,10 +550,7 @@ function Catalogue() {
 
       const response = await fetchWithCsrf(`/api/catalogue/${editingProductId}/`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       console.log("[Catalogue] PATCH response status:", response.status);
@@ -902,6 +934,20 @@ function Catalogue() {
         creating={creating}
         error={createError}
         onConfirm={handleCreateItem}
+        imageFile={createImageFile}
+        imagePreview={createImagePreview}
+        onImageSelect={(file) => {
+          setCreateImageFile(file);
+          if (file) {
+            setCreateImagePreview(URL.createObjectURL(file));
+          } else {
+            setCreateImagePreview(null);
+          }
+        }}
+        onImageRemove={() => {
+          setCreateImageFile(null);
+          setCreateImagePreview(null);
+        }}
       />
 
       <EditItemModal
@@ -912,6 +958,24 @@ function Catalogue() {
         updating={updating}
         error={editError}
         onConfirm={handleUpdateItem}
+        currentImage={editCurrentImage}
+        imageFile={editImageFile}
+        imagePreview={editImagePreview}
+        onImageSelect={(file) => {
+          setEditImageFile(file);
+          setEditImageRemoved(false);
+          if (file) {
+            setEditImagePreview(URL.createObjectURL(file));
+          } else {
+            setEditImagePreview(null);
+          }
+        }}
+        onImageRemove={() => {
+          setEditImageFile(null);
+          setEditImagePreview(null);
+          setEditCurrentImage(null);
+          setEditImageRemoved(true);
+        }}
       />
 
       <ViewItemModal

@@ -2,6 +2,7 @@ import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { PRICING_TYPE_OPTIONS } from "./types";
+import { CatalogueImageUpload } from "../components/CatalogueImageUpload";
 
 interface NewItem {
   item_code: string;
@@ -29,6 +30,10 @@ interface CreateItemModalProps extends ModalBaseProps {
   creating: boolean;
   error: string | null;
   onConfirm: () => void;
+  imageFile: File | null;
+  imagePreview: string | null;
+  onImageSelect: (file: File | null) => void;
+  onImageRemove: () => void;
 }
 
 export function CreateItemModal({
@@ -39,6 +44,10 @@ export function CreateItemModal({
   creating,
   error,
   onConfirm,
+  imageFile: _imageFile,
+  imagePreview,
+  onImageSelect,
+  onImageRemove,
 }: CreateItemModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -89,6 +98,13 @@ export function CreateItemModal({
           {/* Shared Fields */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
+
+            {/* Product Image Upload */}
+            <CatalogueImageUpload
+              onImageSelect={onImageSelect}
+              onImageRemove={onImageRemove}
+              preview={imagePreview}
+            />
 
             {/* Item Code */}
             <div>

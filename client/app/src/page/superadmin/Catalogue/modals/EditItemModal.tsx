@@ -2,6 +2,7 @@ import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { PRICING_TYPE_OPTIONS } from "./types";
+import { CatalogueImageUpload } from "../components/CatalogueImageUpload";
 
 interface EditItem {
   item_code: string;
@@ -29,6 +30,11 @@ interface EditItemModalProps extends ModalBaseProps {
   updating: boolean;
   error: string | null;
   onConfirm: () => void;
+  currentImage?: string | null;
+  imageFile: File | null;
+  imagePreview: string | null;
+  onImageSelect: (file: File | null) => void;
+  onImageRemove: () => void;
 }
 
 export function EditItemModal({
@@ -39,6 +45,11 @@ export function EditItemModal({
   updating,
   error,
   onConfirm,
+  currentImage,
+  imageFile: _imageFile,
+  imagePreview,
+  onImageSelect,
+  onImageRemove,
 }: EditItemModalProps) {
   const { resolvedTheme } = useTheme();
 
@@ -89,6 +100,14 @@ export function EditItemModal({
           {/* Product Fields */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
+
+            {/* Product Image Upload */}
+            <CatalogueImageUpload
+              currentImage={currentImage}
+              onImageSelect={onImageSelect}
+              onImageRemove={onImageRemove}
+              preview={imagePreview}
+            />
 
             {/* Item Code */}
             <div>

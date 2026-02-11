@@ -1,5 +1,5 @@
 import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { X, Package } from "lucide-react";
 import type { ModalBaseProps, Product } from "./types";
 import { getLegendColor } from "./types";
 
@@ -52,6 +52,24 @@ export function ViewItemModal({
           {/* Product Details */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT DETAILS</h3>
+
+            {/* Product Image */}
+            <div className="flex justify-center">
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.item_name}
+                  className="w-48 h-48 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
+                />
+              ) : (
+                <div className={`w-48 h-48 rounded-lg flex flex-col items-center justify-center ${
+                  resolvedTheme === "dark" ? "bg-gray-800 border-gray-700" : "bg-gray-100 border-gray-300"
+                } border-2`}>
+                  <Package className="w-12 h-12 text-gray-400 mb-2" />
+                  <p className="text-xs text-gray-400">No image</p>
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* ID */}

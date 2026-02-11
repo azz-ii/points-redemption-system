@@ -1,5 +1,5 @@
 import { useTheme } from "next-themes";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Edit, Trash2, Package } from "lucide-react";
 import type { Product } from "../modals/types";
 import { getLegendColor } from "../modals/types";
 
@@ -78,19 +78,36 @@ export function CatalogueMobileCards({
         >
           {/* Product Info Header */}
           <div className="flex justify-between items-start mb-3">
-            <div className="flex-1">
-              <p className="font-semibold text-sm">
-                {product.item_name}
-              </p>
-              <p
-                className={`text-xs font-mono ${
-                  resolvedTheme === "dark"
-                    ? "text-gray-400"
-                    : "text-gray-600"
-                }`}
-              >
-                {product.item_code}
-              </p>
+            <div className="flex items-center gap-3 flex-1">
+              {/* Product Thumbnail */}
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.item_name}
+                  className="w-12 h-12 rounded-lg object-cover shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              ) : (
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${
+                  resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                }`}>
+                  <Package className="w-6 h-6 text-gray-400" />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="font-semibold text-sm">
+                  {product.item_name}
+                </p>
+                <p
+                  className={`text-xs font-mono ${
+                    resolvedTheme === "dark"
+                      ? "text-gray-400"
+                      : "text-gray-600"
+                  }`}
+                >
+                  {product.item_code}
+                </p>
+              </div>
             </div>
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${getLegendColor(

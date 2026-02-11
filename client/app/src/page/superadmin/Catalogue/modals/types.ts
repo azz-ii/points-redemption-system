@@ -26,6 +26,7 @@ export interface Product {
   stock: number;
   committed_stock: number;
   available_stock: number;
+  image: string | null;
   is_archived: boolean;
   date_added: string;
   added_by: number | null;
