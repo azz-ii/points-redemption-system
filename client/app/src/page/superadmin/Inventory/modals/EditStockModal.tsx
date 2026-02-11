@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { InventoryItem, ModalBaseProps } from "./types";
 import { getStatusColor, getLegendColor } from "./types";
@@ -26,8 +25,6 @@ export function EditStockModal({
   error,
   onConfirm,
 }: EditStockModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !item) return null;
 
   // Calculate preview status based on current form values
@@ -43,13 +40,7 @@ export function EditStockModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-stock-title"
@@ -90,19 +81,13 @@ export function EditStockModal({
               Item Information
             </h3>
             <div
-              className={`p-4 rounded-lg ${
-                resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-              }`}
+              className="p-4 rounded-lg bg-card"
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <p className="font-semibold">{item.item_name}</p>
                   <p
-                    className={`text-sm font-mono ${
-                      resolvedTheme === "dark"
-                        ? "text-gray-400"
-                        : "text-gray-500"
-                    }`}
+                    className="text-sm font-mono text-muted-foreground"
                   >
                     {item.item_code}
                   </p>
@@ -117,9 +102,7 @@ export function EditStockModal({
               </div>
               {item.category && (
                 <p
-                  className={`text-sm ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className="text-sm text-muted-foreground"
                 >
                   Category: {item.category}
                 </p>
@@ -135,11 +118,7 @@ export function EditStockModal({
             
             {/* Current Stock Info (Read-only) */}
             <div
-              className={`p-3 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800/50 border-gray-700"
-                  : "bg-blue-50 border-blue-200"
-              }`}
+              className="p-3 rounded-lg border bg-card border-border"
             >
               <p className="text-xs text-gray-500 mb-2">Current Stock Breakdown</p>
               <div className="grid grid-cols-3 gap-2 text-sm">
@@ -184,11 +163,7 @@ export function EditStockModal({
                 value={data.stock}
                 onChange={(e) => setData({ ...data, stock: e.target.value })}
                 min="0"
-                className={`w-full px-4 py-3 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="Enter stock quantity"
                 aria-required="true"
               />
@@ -210,11 +185,7 @@ export function EditStockModal({
             <button
               onClick={onClose}
               disabled={updating}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-white hover:bg-gray-100 text-gray-900"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-              } disabled:opacity-50`}
+              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
               Cancel
             </button>
@@ -222,11 +193,7 @@ export function EditStockModal({
             <button
               onClick={onConfirm}
               disabled={updating}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                  : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-              }`}
+              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
               {updating ? "Updating..." : "Update Stock"}
             </button>

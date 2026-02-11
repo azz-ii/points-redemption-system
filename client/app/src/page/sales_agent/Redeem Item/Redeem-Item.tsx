@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
-import { SidebarSales } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSales } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import CartModal, { type CartItem } from "@/components/cart-modal";
 import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser } from "@/lib/api";
 import { toast } from "sonner";
@@ -20,12 +16,9 @@ import type { SalesPages } from "./types";
 export default function RedeemItem() {
   const _navigate = useNavigate();
   const _handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
   const _currentPage = "redeem-items" as SalesPages;
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [notificationOpen, setNotificationOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
   const [currentPage_num, setCurrentPage_num] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -188,61 +181,48 @@ export default function RedeemItem() {
   };
 
   return (
-    <div className="flex h-screen">
-      <SidebarSales />
+    <div
+      className="flex-1 overflow-y-auto pb-20 md:pb-0"
+    >
+      {/* Header */}
+      <div className="p-4 md:p-8 md:pb-6">
+        <RedeemItemHeader
+          userPoints={userPoints}
+          userLoading={userLoading}
+          cartItemsCount={cartItems.length}
+          onCartClick={() => setCartOpen(true)}
+        />
 
-      <div
-        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${
-          isDark ? "bg-black text-white" : "bg-white text-gray-900"
-        }`}
-      >
-        {/* Header */}
-        <div className="p-4 md:p-8 md:pb-6">
-          <RedeemItemHeader
-            userPoints={userPoints}
-            userLoading={userLoading}
-            cartItemsCount={cartItems.length}
-            onCartClick={() => setCartOpen(true)}
-            onNotificationClick={() => setNotificationOpen(!notificationOpen)}
-          />
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by ID, Name......"
+        />
 
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by ID, Name......"
-          />
+        <CategoryFilters
+          categories={categories}
+          activeCategory={activeCategory}
+          onCategoryChange={(category) => {
+            setActiveCategory(category);
+            setCurrentPage_num(1);
+          }}
+        />
 
-          <CategoryFilters
-            categories={categories}
-            activeCategory={activeCategory}
-            onCategoryChange={(category) => {
-              setActiveCategory(category);
-              setCurrentPage_num(1);
-            }}
-          />
+        <ItemsGrid
+          items={paginatedItems}
+          loading={loading}
+          error={error}
+          searchQuery={searchQuery}
+          activeCategory={activeCategory}
+          onAddToCart={handleAddToCart}
+        />
 
-          <ItemsGrid
-            items={paginatedItems}
-            loading={loading}
-            error={error}
-            searchQuery={searchQuery}
-            activeCategory={activeCategory}
-            onAddToCart={handleAddToCart}
-          />
-
-          <Pagination
-            currentPage={currentPage_num}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage_num}
-          />
-        </div>
+        <Pagination
+          currentPage={currentPage_num}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage_num}
+        />
       </div>
-
-      {/* Notification Panel */}
-      <NotificationPanel
-        isOpen={notificationOpen}
-        onClose={() => setNotificationOpen(false)}
-      />
 
       {/* Cart Modal */}
       <CartModal
@@ -254,9 +234,6 @@ export default function RedeemItem() {
         onRemoveItem={handleRemoveFromCart}
         availablePoints={userPoints}
       />
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSales />
     </div>
   );
 }

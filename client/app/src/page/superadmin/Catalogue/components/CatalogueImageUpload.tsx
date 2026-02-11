@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useTheme } from "next-themes";
 import { Upload, X, Package } from "lucide-react";
 
 interface CatalogueImageUploadProps {
@@ -15,7 +14,6 @@ export function CatalogueImageUpload({
   onImageRemove,
   preview,
 }: CatalogueImageUploadProps) {
-  const { resolvedTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -81,11 +79,7 @@ export function CatalogueImageUpload({
       <div className="flex items-center gap-4">
         {/* Preview */}
         <div
-          className={`w-24 h-24 rounded-lg flex items-center justify-center overflow-hidden ${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 border-gray-600"
-              : "bg-gray-100 border-gray-300"
-          } border-2`}
+          className="w-24 h-24 rounded-lg flex items-center justify-center overflow-hidden bg-muted border-border border-2"
         >
           {displayImage ? (
             <img
@@ -108,9 +102,7 @@ export function CatalogueImageUpload({
             className={`relative border-2 border-dashed rounded-lg p-4 transition-colors ${
               dragActive
                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : resolvedTheme === "dark"
-                ? "border-gray-600 bg-gray-800"
-                : "border-gray-300 bg-gray-50"
+                : "border-border bg-muted"
             }`}
           >
             <input

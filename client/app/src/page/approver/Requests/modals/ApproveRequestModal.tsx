@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { ModalBaseProps, RequestItem } from "./types";
 
@@ -14,7 +13,6 @@ export function ApproveRequestModal({
   request,
   onConfirm,
 }: ApproveRequestModalProps) {
-  const { resolvedTheme } = useTheme();
   const [remarks, setRemarks] = useState("");
 
   if (!isOpen || !request) return null;
@@ -32,13 +30,7 @@ export function ApproveRequestModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-md w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border"
         role="dialog"
         aria-modal="true"
         aria-labelledby="approve-request-title"
@@ -81,11 +73,7 @@ export function ApproveRequestModal({
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="Add any remarks..."
-              className={`w-full px-4 py-3 rounded border resize-none ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              } focus:outline-none focus:border-blue-500`}
+              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500"
               rows={3}
             />
           </div>
@@ -95,11 +83,7 @@ export function ApproveRequestModal({
         <div className="p-8 flex gap-3">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground"
           >
             Cancel
           </button>

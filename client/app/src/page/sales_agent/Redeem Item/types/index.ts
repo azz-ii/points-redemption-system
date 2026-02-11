@@ -12,7 +12,6 @@ export interface RedeemItemHeaderProps {
   userLoading: boolean;
   cartItemsCount: number;
   onCartClick: () => void;
-  onNotificationClick: () => void;
 }
 
 export interface SearchBarProps {

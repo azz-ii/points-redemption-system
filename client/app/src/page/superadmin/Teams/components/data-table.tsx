@@ -1,7 +1,6 @@
 ﻿"use client"
 
 import * as React from "react"
-import { useTheme } from "next-themes"
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -63,8 +62,6 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [globalFilter, setGlobalFilter] = React.useState("")
-  const { resolvedTheme } = useTheme()
-
   const table = useReactTable({
     data,
     columns,
@@ -183,11 +180,7 @@ export function DataTable<TData, TValue>({
         {onCreateNew && (
           <button
             onClick={onCreateNew}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-              resolvedTheme === "dark"
-                ? "bg-white text-black hover:bg-gray-200"
-                : "bg-gray-900 text-white hover:bg-gray-700"
-            } transition-colors font-semibold ml-auto`}
+            className="px-4 py-2 rounded-lg flex items-center gap-2 bg-card text-black hover:bg-accent transition-colors font-semibold ml-auto"
           >
             <UserPlus className="h-5 w-5" />
             <span>{createButtonLabel}</span>

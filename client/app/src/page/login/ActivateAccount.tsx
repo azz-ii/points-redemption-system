@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "next-themes";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,6 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [userPosition, setUserPosition] = useState("");
-  const { resolvedTheme } = useTheme();
 
   const handleActivateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,13 +151,11 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
 
           <div className="space-y-2">
             <h1
-              className={`text-3xl font-semibold transition-colors ${
-                resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+              className="text-3xl font-semibold transition-colors text-foreground"
             >
               Activate Your Account
             </h1>
-            <p className="text-gray-800 dark:text-gray-400 text-sm transition-colors">
+            <p className="text-muted-foreground text-sm transition-colors">
               Welcome, <strong>{username}</strong>! Please set a new password to activate your account.
             </p>
           </div>
@@ -176,9 +172,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
             <div className="space-y-2">
               <Label
                 htmlFor="newPassword"
-                className={`transition-colors ${
-                  resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                }`}
+                className="transition-colors text-foreground"
               >
                 New Password
               </Label>
@@ -189,13 +183,13 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pr-10 transition-colors"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pr-10 transition-colors"
                   placeholder="Enter your new password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showNewPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -209,9 +203,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
             <div className="space-y-2">
               <Label
                 htmlFor="confirmPassword"
-                className={`transition-colors ${
-                  resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                }`}
+                className="transition-colors text-foreground"
               >
                 Confirm Password
               </Label>
@@ -222,13 +214,13 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pr-10 transition-colors"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pr-10 transition-colors"
                   placeholder="Confirm your new password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -242,11 +234,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
             <Button
               type="submit"
               disabled={isLoading}
-              className={`w-full h-12 font-medium transition-colors duration-200 cursor-pointer ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-300"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="w-full h-12 font-medium transition-colors duration-200 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Activating..." : "Activate Account"}
             </Button>
@@ -256,25 +244,19 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
 
       {/* Success Dialog */}
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <AlertDialogContent className={`${
-          resolvedTheme === "dark" ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
-        }`}>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className={resolvedTheme === "dark" ? "text-white" : "text-gray-900"}>
+            <AlertDialogTitle className="text-foreground">
               Account Activated Successfully
             </AlertDialogTitle>
-            <AlertDialogDescription className={resolvedTheme === "dark" ? "text-gray-300" : "text-gray-600"}>
+            <AlertDialogDescription className="text-muted-foreground">
               Your account has been activated. Logging you in automatically...
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-2 justify-end">
             <AlertDialogAction 
               onClick={handleAutoLogin}
-              className={`${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              }`}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Continue
             </AlertDialogAction>

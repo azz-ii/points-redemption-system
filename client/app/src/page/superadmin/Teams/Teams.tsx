@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
 import {
-  Bell,
   Search,
-  LogOut,
   X,
   Users,
   Eye,
@@ -38,13 +30,8 @@ import type { Team } from "./components/columns";
 
 function Teams() {
   const navigate = useNavigate();
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
   const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-
-  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -485,81 +472,8 @@ function Teams() {
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
+    <>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 border-b flex justify-between items-center ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">I</span>
-            </div>
-            <span className="font-medium text-sm">Welcome, Izza!</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => fetchTeams()}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Refresh Teams"
-            >
-              <RotateCw className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Warehouse className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
@@ -567,25 +481,10 @@ function Teams() {
             <div>
               <h1 className="text-3xl font-semibold">Teams</h1>
               <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm text-muted-foreground"
               >
                 View and manage sales teams.
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
             </div>
           </div>
 
@@ -610,9 +509,7 @@ function Teams() {
           <div className="p-4 space-y-4">
             <h2 className="text-2xl font-semibold mb-2">Teams</h2>
             <p
-              className={`text-xs mb-4 ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+              className="text-xs mb-4 text-muted-foreground"
             >
               Manage sales teams
             </p>
@@ -620,11 +517,7 @@ function Teams() {
             {/* Mobile Search */}
             <div className="mb-4">
               <div
-                className={`relative flex items-center rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-300"
-                }`}
+                className="relative flex items-center rounded-lg border bg-card border-border"
               >
                 <Search className="absolute left-3 h-4 w-4 text-gray-500" />
                 <Input
@@ -634,11 +527,7 @@ function Teams() {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className={`pl-10 w-full text-sm ${
-                    resolvedTheme === "dark"
-                      ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                      : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                  }`}
+                  className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             </div>
@@ -649,11 +538,7 @@ function Teams() {
                 console.log("DEBUG Teams: Opening create modal (mobile)");
                 setIsCreateModalOpen(true);
               }}
-              className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              } transition-colors font-semibold text-sm`}
+              className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 bg-card text-black hover:bg-accent transition-colors font-semibold text-sm"
             >
               <Users className="h-5 w-5" />
               <span>Create Team</span>
@@ -673,20 +558,12 @@ function Teams() {
                 paginatedTeams.map((team) => (
                   <div
                     key={team.id}
-                    className={`p-4 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-900 border-gray-700"
-                        : "bg-white border-gray-200"
-                    } transition-colors`}
+                    className="p-4 rounded-lg border bg-card border-border transition-colors"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
                         <p
-                          className={`text-xs font-semibold mb-2 ${
-                            resolvedTheme === "dark"
-                              ? "text-gray-400"
-                              : "text-gray-600"
-                          }`}
+                          className="text-xs font-semibold mb-2 text-muted-foreground"
                         >
                           ID {team.id}
                         </p>
@@ -717,11 +594,7 @@ function Teams() {
                               openMenuId === team.id ? null : team.id,
                             )
                           }
-                          className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                            resolvedTheme === "dark"
-                              ? "bg-gray-800 hover:bg-gray-700 text-white"
-                              : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                          } transition-colors`}
+                          className="px-4 py-2 rounded-lg text-sm font-medium bg-card hover:bg-accent text-foreground transition-colors"
                           disabled={loading}
                         >
                           Actions
@@ -729,11 +602,7 @@ function Teams() {
 
                         {openMenuId === team.id && (
                           <div
-                            className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-10 ${
-                              resolvedTheme === "dark"
-                                ? "bg-gray-800 border-gray-700"
-                                : "bg-white border-gray-200"
-                            }`}
+                            className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-10 bg-card border-border"
                           >
                             <div className="py-1">
                               <button
@@ -741,11 +610,7 @@ function Teams() {
                                   setOpenMenuId(null);
                                   handleViewTeam(team.id);
                                 }}
-                                className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-700"
-                                    : "hover:bg-gray-100"
-                                }`}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
                               >
                                 <Eye className="h-4 w-4" />
                                 View Details
@@ -755,11 +620,7 @@ function Teams() {
                                   setOpenMenuId(null);
                                   handleEditClick(team);
                                 }}
-                                className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-700"
-                                    : "hover:bg-gray-100"
-                                }`}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
                               >
                                 <Pencil className="h-4 w-4" />
                                 Edit Team
@@ -769,11 +630,7 @@ function Teams() {
                                   setOpenMenuId(null);
                                   handleDeleteClick(team);
                                 }}
-                                className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 text-red-500 ${
-                                  resolvedTheme === "dark"
-                                    ? "hover:bg-gray-700"
-                                    : "hover:bg-gray-100"
-                                }`}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 text-red-500 hover:bg-accent"
                               >
                                 <Trash2 className="h-4 w-4" />
                                 Delete Team
@@ -792,11 +649,7 @@ function Teams() {
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 <ChevronLeft className="h-4 w-4" /> Prev
               </button>
@@ -808,26 +661,13 @@ function Teams() {
                   setCurrentPage(Math.min(totalPages, safePage + 1))
                 }
                 disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSuperAdmin />
-
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
 
       {/* Toast Notification */}
       {toast && (
@@ -910,7 +750,7 @@ function Teams() {
         loading={deleteLoading}
         onConfirm={handleDeleteTeam}
       />
-    </div>
+    </>
   );
 }
 

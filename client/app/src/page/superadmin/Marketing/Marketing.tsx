@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import { Bell, LogOut, X, RotateCw, Download } from "lucide-react";
+import { X, RotateCw, Download } from "lucide-react";
 import {
   ViewAccountModal,
   EditAccountModal,
@@ -20,17 +14,10 @@ import {
   type MarketingUser,
   type LegendAssignment,
 } from "./components";
-import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
-
 function Marketing() {
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
   const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [error, setError] = useState("");  const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
   const [showViewModal, setShowViewModal] = useState(false);
@@ -173,75 +160,12 @@ function Marketing() {
   const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   return (
-    <div
-      className={`flex flex-col h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-b border-gray-700"
-              : "bg-white border-b border-gray-100"
-          } flex items-center justify-between`}
-        >
-          <img
-            src={oracleLogoMobile}
-            alt="Oracle Petroleum"
-            className="w-8 h-auto object-contain"
-            onError={(e) => {
-              e.currentTarget.src =
-                'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
-            }}
-          />
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "hover:bg-gray-800"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "hover:bg-gray-800"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+    <>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:p-8">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold">Marketing Users</h1>
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                }`}
-              >
-                <Bell className="h-5 w-5" />
-              </button>
-            </div>
           </div>
 
           {error && (
@@ -271,11 +195,7 @@ function Marketing() {
             <button
               onClick={fetchData}
               disabled={loading}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-              } disabled:opacity-50`}
+              className="p-2 rounded-lg bg-card text-foreground hover:bg-accent disabled:opacity-50"
             >
               <RotateCw
                 className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
@@ -313,14 +233,6 @@ function Marketing() {
             onEditAccount={handleEditClick}
           />
         </div>
-      </div>
-
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
-
       {toast && (
         <div
           className={`fixed bottom-4 right-4 z-50 p-4 rounded-lg ${
@@ -358,7 +270,7 @@ function Marketing() {
         onClose={() => setShowExportModal(false)}
         users={marketingUsers}
       />
-    </div>
+    </>
   );
 }
 

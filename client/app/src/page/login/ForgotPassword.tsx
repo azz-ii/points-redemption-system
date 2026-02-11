@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
@@ -41,7 +40,6 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
   const [verifiedUsername, setVerifiedUsername] = useState("");
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
   const [otpSentTime, setOtpSentTime] = useState<number | null>(null);
-  const { resolvedTheme } = useTheme();
 
   // Timer countdown for OTP expiration
   useEffect(() => {
@@ -262,7 +260,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
         {/* Back button */}
         <button
           onClick={onBackToLogin}
-          className="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+          className="absolute top-6 left-6 z-50 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium">Back</span>
@@ -289,8 +287,8 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                     currentStep >= step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {currentStep > step ? (
@@ -303,8 +301,8 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   <div
                     className={`w-12 h-1 mx-2 transition-all ${
                       currentStep > step
-                        ? "bg-blue-600"
-                        : "bg-gray-200 dark:bg-gray-700"
+                        ? "bg-primary"
+                        : "bg-muted"
                     }`}
                   />
                 )}
@@ -314,15 +312,13 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
 
           <div className="space-y-2">
             <h1
-              className={`text-3xl font-semibold transition-colors ${
-                resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-              }`}
+              className="text-3xl font-semibold transition-colors text-foreground"
             >
               {currentStep === 1 && "Reset Password"}
               {currentStep === 2 && "Verify OTP"}
               {currentStep === 3 && "Create New Password"}
             </h1>
-            <p className="text-gray-800 dark:text-gray-400 text-sm transition-colors">
+            <p className="text-muted-foreground text-sm transition-colors">
               {currentStep === 1 &&
                 "Enter your email address to receive a verification code."}
               {currentStep === 2 &&
@@ -346,9 +342,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
-                  className={`transition-colors ${
-                    resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                  }`}
+                  className="transition-colors text-foreground"
                 >
                   Email Address
                 </Label>
@@ -360,7 +354,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pl-10 transition-colors"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pl-10 transition-colors"
                     placeholder="Enter your email address"
                   />
                 </div>
@@ -369,11 +363,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full h-12 font-medium transition-colors duration-200 cursor-pointer ${
-                  resolvedTheme === "dark"
-                    ? "bg-white text-black hover:bg-gray-300"
-                    : "bg-gray-900 text-white hover:bg-gray-700"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className="w-full h-12 font-medium transition-colors duration-200 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Sending OTP..." : "Send Verification Code"}
               </Button>
@@ -386,9 +376,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <div className="space-y-2">
                 <Label
                   htmlFor="otpCode"
-                  className={`transition-colors ${
-                    resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                  }`}
+                  className="transition-colors text-foreground"
                 >
                   Verification Code
                 </Label>
@@ -404,16 +392,16 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     }}
                     required
                     maxLength={6}
-                    className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pl-10 text-center text-2xl tracking-widest transition-colors"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pl-10 text-center text-2xl tracking-widest transition-colors"
                     placeholder="000000"
                   />
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-muted-foreground">
                     Check your email for the code
                   </p>
                   {timeLeft > 0 && (
-                    <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                    <div className="flex items-center gap-1 text-primary">
                       <Timer className="h-4 w-4" />
                       <span className="font-mono">{formatTime(timeLeft)}</span>
                     </div>
@@ -433,11 +421,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                 <Button
                   type="submit"
                   disabled={isLoading || otpCode.length !== 6}
-                  className={`flex-1 h-12 font-medium transition-colors duration-200 cursor-pointer ${
-                    resolvedTheme === "dark"
-                      ? "bg-white text-black hover:bg-gray-300"
-                      : "bg-gray-900 text-white hover:bg-gray-700"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className="flex-1 h-12 font-medium transition-colors duration-200 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? "Verifying..." : "Verify Code"}
                 </Button>
@@ -462,9 +446,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <div className="space-y-2">
                 <Label
                   htmlFor="newPassword"
-                  className={`transition-colors ${
-                    resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                  }`}
+                  className="transition-colors text-foreground"
                 >
                   New Password
                 </Label>
@@ -475,13 +457,13 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
-                    className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pr-10 transition-colors"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pr-10 transition-colors"
                     placeholder="Enter your new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showNewPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -495,9 +477,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <div className="space-y-2">
                 <Label
                   htmlFor="confirmPassword"
-                  className={`transition-colors ${
-                    resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                  }`}
+                  className="transition-colors text-foreground"
                 >
                   Confirm Password
                 </Label>
@@ -508,13 +488,13 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pr-10 transition-colors"
+                    className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pr-10 transition-colors"
                     placeholder="Confirm your new password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -537,11 +517,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className={`flex-1 h-12 font-medium transition-colors duration-200 cursor-pointer ${
-                    resolvedTheme === "dark"
-                      ? "bg-white text-black hover:bg-gray-300"
-                      : "bg-gray-900 text-white hover:bg-gray-700"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className="flex-1 h-12 font-medium transition-colors duration-200 cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? "Resetting Password..." : "Reset Password"}
                 </Button>

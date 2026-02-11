@@ -1,5 +1,4 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
@@ -43,8 +42,6 @@ export function CreateAccountModal({
   onImageSelect,
   onImageRemove,
 }: CreateAccountModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -58,13 +55,7 @@ export function CreateAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-account-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -107,11 +98,7 @@ export function CreateAccountModal({
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, username: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter username"
                   aria-required="true"
                 />
@@ -131,11 +118,7 @@ export function CreateAccountModal({
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, password: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter password"
                   aria-required="true"
                 />
@@ -163,11 +146,7 @@ export function CreateAccountModal({
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, full_name: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter full name"
                   aria-required="true"
                 />
@@ -187,11 +166,7 @@ export function CreateAccountModal({
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, email: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter email address"
                   aria-required="true"
                 />
@@ -231,11 +206,7 @@ export function CreateAccountModal({
                   onChange={(e) =>
                     setNewAccount({ ...newAccount, position: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   aria-required="true"
                 >
                   {POSITION_OPTIONS.map((option) => (
@@ -264,11 +235,7 @@ export function CreateAccountModal({
                       points: parseInt(e.target.value) || 0,
                     })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter points"
                   aria-required="true"
                 />
@@ -287,11 +254,7 @@ export function CreateAccountModal({
           <button
             onClick={onSubmit}
             disabled={loading}
-            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-            }`}
+            className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
           >
             {loading ? "Creating..." : "Create Account"}
           </button>

@@ -5,7 +5,7 @@ function App() {
   return (
     <>
       <AppRoutes />
-      <Toaster />
+      <Toaster theme="system" position="top-right" richColors closeButton />
     </>
   );
 }
