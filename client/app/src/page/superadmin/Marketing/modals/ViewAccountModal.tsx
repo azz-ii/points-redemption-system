@@ -80,12 +80,12 @@ export function ViewAccountModal({
             : "border-gray-200 divide-gray-200"
         }`}
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-account-title" className="text-xl font-semibold">
+            <h2 id="view-account-title" className="text-lg font-semibold">
               Marketing User Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">{account.full_name}</p>
+            <p className="text-xs text-gray-500 mt-1">{account.full_name}</p>
           </div>
           <button
             onClick={onClose}
@@ -96,36 +96,36 @@ export function ViewAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* User Info Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               User Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
                   Username
                 </label>
-                <p className="font-medium">{account.username}</p>
+                <p className="font-medium text-xs">{account.username}</p>
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
                   Email
                 </label>
-                <p className="font-medium">{account.email}</p>
+                <p className="font-medium text-xs">{account.email}</p>
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
                   Position
                 </label>
-                <p className="font-medium">{account.position}</p>
+                <p className="font-medium text-xs">{account.position}</p>
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">
                   Status
                 </label>
-                <p className="font-medium">
+                <p className="font-medium text-xs">
                   {account.is_activated ? "Active" : "Inactive"}
                   {account.is_banned && " • Banned"}
                 </p>
@@ -134,8 +134,8 @@ export function ViewAccountModal({
           </div>
 
           {/* Assigned Legends Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-2">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-2">
               <Package className="h-4 w-4" />
               Assigned Item Legends
             </h3>
@@ -145,7 +145,7 @@ export function ViewAccountModal({
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : assignments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {assignments.map((assignment) => (
                   <div
                     key={assignment.legend}
@@ -157,14 +157,14 @@ export function ViewAccountModal({
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${getLegendColor(
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getLegendColor(
                           assignment.legend
                         )}`}
                       >
                         {getLegendLabel(assignment.legend)}
                       </span>
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-xs text-gray-500">
                       {assignment.item_count} item
                       {assignment.item_count !== 1 ? "s" : ""}
                     </span>
@@ -186,10 +186,10 @@ export function ViewAccountModal({
           </div>
         </div>
 
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"

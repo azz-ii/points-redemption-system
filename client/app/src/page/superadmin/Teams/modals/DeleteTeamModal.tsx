@@ -58,9 +58,9 @@ export function DeleteTeamModal({
         aria-modal="true"
         aria-labelledby="delete-team-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-team-title" className="text-xl font-semibold">
+            <h2 id="delete-team-title" className="text-lg font-semibold">
               Delete Team
             </h2>
             <p className="text-xs text-gray-500 mt-1">
@@ -76,7 +76,7 @@ export function DeleteTeamModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 space-y-3">
           <p>
             Are you sure you want to delete <strong>{team.name}</strong>?
           </p>
@@ -111,10 +111,10 @@ export function DeleteTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-2">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
@@ -125,7 +125,7 @@ export function DeleteTeamModal({
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
           >
             {loading ? "Deleting..." : "Delete"}
           </button>

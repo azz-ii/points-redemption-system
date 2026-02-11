@@ -23,20 +23,20 @@ export function ViewCustomerModal({
         aria-labelledby="view-customer-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
           resolvedTheme === "dark"
             ? "border-gray-700 divide-gray-700"
             : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-customer-title" className="text-xl font-semibold">
+            <h2 id="view-customer-title" className="text-lg font-semibold">
               Customer Details
             </h2>
             <p
-              className={`text-sm ${
+              className={`text-xs ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
@@ -53,8 +53,8 @@ export function ViewCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-2">
             {/* ID */}
             <div>
               <label className="block text-sm font-medium mb-2">ID</label>
@@ -150,10 +150,10 @@ export function ViewCustomerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg border font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"

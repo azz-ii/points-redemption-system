@@ -55,21 +55,21 @@ export function EditStockModal({
         aria-labelledby="edit-stock-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
             <div className="flex items-center gap-3">
-              <h2 id="edit-stock-title" className="text-xl font-semibold">
+              <h2 id="edit-stock-title" className="text-lg font-semibold">
                 Update Stock
               </h2>
               <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(
                   previewStatus
                 )}`}
               >
                 {previewStatus}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Modify stock levels for {item.item_name}
             </p>
           </div>
@@ -83,14 +83,14 @@ export function EditStockModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Item Info (Read-only) */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Item Information
             </h3>
             <div
-              className={`p-4 rounded-lg ${
+              className={`p-3 rounded-lg ${
                 resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
               }`}
             >
@@ -200,17 +200,17 @@ export function EditStockModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-2 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={onClose}
               disabled={updating}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                 resolvedTheme === "dark"
                   ? "bg-white hover:bg-gray-100 text-gray-900"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-900"
@@ -222,7 +222,7 @@ export function EditStockModal({
             <button
               onClick={onConfirm}
               disabled={updating}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                 resolvedTheme === "dark"
                   ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
                   : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"

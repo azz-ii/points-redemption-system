@@ -31,20 +31,20 @@ export function CreateCustomerModal({
         aria-labelledby="create-customer-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
           resolvedTheme === "dark"
             ? "border-gray-700 divide-gray-700"
             : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="create-customer-title" className="text-xl font-semibold">
+            <h2 id="create-customer-title" className="text-lg font-semibold">
               Add Customer
             </h2>
             <p
-              className={`text-sm ${
+              className={`text-xs ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
@@ -61,7 +61,7 @@ export function CreateCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
@@ -69,7 +69,7 @@ export function CreateCustomerModal({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
             {/* Name */}
             <div>
               <label className="block text-sm font-medium mb-2">Name *</label>
@@ -158,11 +158,11 @@ export function CreateCustomerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={creating}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg border font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
                 : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
@@ -173,7 +173,7 @@ export function CreateCustomerModal({
           <button
             onClick={onSubmit}
             disabled={creating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {creating ? "Creating..." : "Create Customer"}
           </button>

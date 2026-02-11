@@ -199,20 +199,20 @@ export function SetInventoryModal({
         >
           {/* Header */}
           <div
-            className={`flex justify-between items-center p-6 border-b ${
+            className={`flex justify-between items-center p-4 border-b ${
               resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
             }`}
           >
             <div>
               <h2
-                className={`text-2xl font-semibold ${
+                className={`text-lg font-semibold ${
                   resolvedTheme === "dark" ? "text-white" : "text-gray-900"
                 }`}
               >
                 Set Inventory
               </h2>
               <p
-                className={`text-sm mt-1 ${
+                className={`text-xs mt-1 ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -233,9 +233,9 @@ export function SetInventoryModal({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4">
             <p
-              className={`text-sm mb-4 ${
+              className={`text-xs mb-3 ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
@@ -243,7 +243,7 @@ export function SetInventoryModal({
             </p>
 
             {/* Search Bar */}
-            <div className="mb-4">
+            <div className="mb-3">
               <div className="relative">
                 <Search
                   className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
@@ -255,7 +255,7 @@ export function SetInventoryModal({
                   placeholder="Search by item name, code, or category..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full pl-10 pr-4 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     resolvedTheme === "dark"
                       ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                       : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
@@ -268,7 +268,7 @@ export function SetInventoryModal({
             <div className="space-y-2">
               {/* Header Row */}
               <div
-                className={`grid grid-cols-12 gap-4 font-semibold text-sm pb-2 border-b ${
+                className={`grid grid-cols-12 gap-2 font-semibold text-xs pb-1 border-b ${
                   resolvedTheme === "dark"
                     ? "text-gray-300 border-gray-700"
                     : "text-gray-700 border-gray-200"
@@ -290,7 +290,7 @@ export function SetInventoryModal({
                 return (
                   <div
                     key={item.id}
-                    className={`grid grid-cols-12 gap-4 items-center py-3 border-b ${
+                    className={`grid grid-cols-12 gap-2 items-center py-1.5 border-b ${
                       resolvedTheme === "dark"
                         ? "border-gray-700 hover:bg-gray-700/50"
                         : "border-gray-100 hover:bg-gray-50"
@@ -329,7 +329,7 @@ export function SetInventoryModal({
                           handleStockChange(item.id, e.target.value)
                         }
                         placeholder="0"
-                        className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`w-full px-2 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           resolvedTheme === "dark"
                             ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                             : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
@@ -371,12 +371,12 @@ export function SetInventoryModal({
           {/* Pagination Controls */}
           {totalCount > itemsPerPage && (
             <div
-              className={`flex items-center justify-between px-6 py-4 border-t ${
+              className={`flex items-center justify-between px-4 py-2 border-t ${
                 resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
               }`}
             >
               <div
-                className={`text-sm ${
+                className={`text-xs ${
                   resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
@@ -396,7 +396,7 @@ export function SetInventoryModal({
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <span
-                  className={`text-sm px-3 ${
+                  className={`text-xs px-2 ${
                     resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
                   }`}
                 >
@@ -460,7 +460,7 @@ export function SetInventoryModal({
               {/* Advanced Section Content */}
               {showAdvanced && (
                 <div
-                  className={`p-4 border-t ${
+                  className={`p-3 border-t ${
                     resolvedTheme === "dark"
                       ? "border-gray-700 bg-gray-700/30"
                       : "border-gray-200 bg-gray-50"
@@ -468,23 +468,23 @@ export function SetInventoryModal({
                 >
                   {/* Warning Alert */}
                   <div
-                    className={`mb-4 p-3 rounded-lg border-l-4 ${
+                    className={`mb-3 p-2 rounded-lg border-l-4 ${
                       resolvedTheme === "dark"
                         ? "bg-orange-900/20 border-orange-500"
                         : "bg-orange-50 border-orange-500"
                     }`}
                   >
                     <p
-                      className={`text-sm font-medium ${
+                      className={`text-xs font-medium ${
                         resolvedTheme === "dark"
                           ? "text-orange-300"
                           : "text-orange-800"
                       }`}
                     >
-                      ⚠️ Warning: Bulk Update
+                      ⚠️ Bulk Update
                     </p>
                     <p
-                      className={`text-sm mt-1 ${
+                      className={`text-xs mt-0.5 ${
                         resolvedTheme === "dark"
                           ? "text-orange-200"
                           : "text-orange-700"
@@ -499,7 +499,7 @@ export function SetInventoryModal({
                   {/* Bulk Stock Delta Input */}
                   <div className="mb-4">
                     <label
-                      className={`block text-sm font-medium mb-2 ${
+                      className={`block text-xs font-medium mb-1 ${
                         resolvedTheme === "dark"
                           ? "text-gray-300"
                           : "text-gray-700"
@@ -522,7 +522,7 @@ export function SetInventoryModal({
                         }
                       }}
                       placeholder="Enter positive or negative number"
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-2 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         resolvedTheme === "dark"
                           ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
@@ -530,7 +530,7 @@ export function SetInventoryModal({
                       disabled={loading}
                     />
                     <p
-                      className={`text-xs mt-1 ${
+                      className={`text-xs mt-0.5 ${
                         resolvedTheme === "dark"
                           ? "text-gray-400"
                           : "text-gray-500"
@@ -541,17 +541,17 @@ export function SetInventoryModal({
                   </div>
 
                   {/* Confirmation Checkbox */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label className="flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={confirmBulkUpdate}
                         onChange={(e) => setConfirmBulkUpdate(e.target.checked)}
-                        className="mt-1"
+                        className="mt-0.5"
                         disabled={loading}
                       />
                       <span
-                        className={`text-sm ${
+                        className={`text-xs ${
                           resolvedTheme === "dark"
                             ? "text-gray-300"
                             : "text-gray-700"
@@ -571,7 +571,7 @@ export function SetInventoryModal({
                       !confirmBulkUpdate ||
                       bulkStockDelta === 0
                     }
-                    className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       resolvedTheme === "dark"
                         ? "bg-orange-600 text-white hover:bg-orange-700"
                         : "bg-orange-500 text-white hover:bg-orange-600"
@@ -584,7 +584,7 @@ export function SetInventoryModal({
                   {/* Reset All Button */}
                   {onResetAll && (
                     <>
-                      <div className="relative my-4">
+                      <div className="relative my-2">
                         <div className="absolute inset-0 flex items-center">
                           <div className={`w-full border-t ${
                             resolvedTheme === "dark" ? "border-gray-600" : "border-gray-300"
@@ -602,7 +602,7 @@ export function SetInventoryModal({
                       <button
                         onClick={handleResetAll}
                         disabled={loading}
-                        className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                           resolvedTheme === "dark"
                             ? "bg-red-600 text-white hover:bg-red-700"
                             : "bg-red-500 text-white hover:bg-red-600"
@@ -620,7 +620,7 @@ export function SetInventoryModal({
 
           {/* Footer */}
           <div
-            className={`flex justify-end gap-3 p-6 border-t ${
+            className={`flex justify-end gap-2 p-4 border-t ${
               resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
             }`}
           >

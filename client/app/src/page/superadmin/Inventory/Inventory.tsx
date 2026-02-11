@@ -509,13 +509,7 @@ function Inventory() {
           </div>
 
           {/* Table */}
-          <div
-            className={`border rounded-lg flex flex-col ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
-          >
+          <div className="border rounded-lg flex flex-col">
             <InventoryTable
               items={items}
               loading={loading}
@@ -524,14 +518,9 @@ function Inventory() {
               onEditItem={handleEditClick}
               onRetry={fetchInventoryItems}
               searchQuery={searchQuery}
-            />
-
-            <InventoryPagination
-              page={safePage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              onPageChange={setPage}
-              onRowsPerPageChange={setRowsPerPage}
+              onRefresh={fetchInventoryItems}
+              onExport={() => setShowExportModal(true)}
+              onSetInventory={() => setShowSetInventoryModal(true)}
             />
           </div>
         </div>

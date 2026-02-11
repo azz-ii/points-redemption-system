@@ -106,12 +106,12 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="export-modal-title" className="text-xl font-semibold">
+            <h2 id="export-modal-title" className="text-lg font-semibold">
               Export Inventory
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               {items.length} item{items.length !== 1 ? "s" : ""} will be exported
             </p>
             <div className="flex gap-3 mt-2 text-xs">
@@ -130,10 +130,10 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Export Format
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -196,7 +196,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
           </div>
 
           {/* Column Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                 Columns to Export
@@ -259,8 +259,8 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
           </div>
 
           {/* Sort Options */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Sort Options
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -333,16 +333,16 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-6">
+        <div className="p-4">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-2 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClose}
-              className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${
+              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                 resolvedTheme === "dark"
                   ? "bg-gray-800 hover:bg-gray-700 text-white"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-900"
@@ -353,7 +353,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
             <button
               onClick={handleExport}
               disabled={exporting || enabledCount === 0}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
                 resolvedTheme === "dark"
                   ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
                   : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"

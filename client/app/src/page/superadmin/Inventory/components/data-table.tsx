@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTheme } from "next-themes";
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -20,6 +21,8 @@ import {
   ChevronRight,
   Settings2,
   RotateCw,
+  Trash2,
+  Download,
 } from "lucide-react";
 
 import {
@@ -53,6 +56,11 @@ interface DataTableProps<TData, TValue> {
   showSearch?: boolean;
   showPagination?: boolean;
   showColumnVisibility?: boolean;
+  onDeleteSelected?: (selectedRows: TData[]) => void;
+  onCreateNew?: () => void;
+  createButtonLabel?: string;
+  onExport?: () => void;
+  onSetInventory?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -67,6 +75,11 @@ export function DataTable<TData, TValue>({
   showSearch = true,
   showPagination = true,
   showColumnVisibility = true,
+  onDeleteSelected,
+  onCreateNew,
+  createButtonLabel = "Add New",
+  onExport,
+  onSetInventory,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -74,7 +87,9 @@ export function DataTable<TData, TValue>({
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const { resolvedTheme } = useTheme();
 
   const table = useReactTable({
     data,
@@ -83,8 +98,11 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       columnVisibility,
+      rowSelection,
       globalFilter,
     },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -112,32 +130,33 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const selectedRows = table.getFilteredSelectedRowModel().rows.map(row => row.original);
+  const hasSelection = selectedRows.length > 0;
+
   return (
     <div className="space-y-4">
-      {(showSearch || showColumnVisibility) && (
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            {showSearch && (
-              <Input
-                placeholder="Filter by item name, code, or category..."
-                value={globalFilter ?? ""}
-                onChange={(event) => setGlobalFilter(event.target.value)}
-                className="max-w-sm"
-              />
-            )}
-            {onRefresh && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefresh}
-                disabled={refreshing}
-                className="h-9 flex gap-2"
-              >
-                <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            )}
-          </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {showSearch && (
+            <Input
+              placeholder="Filter by item name, code, or category..."
+              value={globalFilter ?? ""}
+              onChange={(event) => setGlobalFilter(event.target.value)}
+              className="max-w-sm"
+            />
+          )}
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={refreshing}
+              className="h-9 flex gap-2"
+            >
+              <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          )}
           {showColumnVisibility && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -173,8 +192,55 @@ export function DataTable<TData, TValue>({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          {onExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExport}
+              className="h-9 flex gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+          {hasSelection && onDeleteSelected && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDeleteSelected(selectedRows)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete {selectedRows.length}
+            </Button>
+          )}
         </div>
-      )}
+        {onCreateNew && (
+          <div className="flex gap-2">
+            {onSetInventory && (
+              <button
+                onClick={onSetInventory}
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                  resolvedTheme === "dark"
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                } transition-colors font-semibold`}
+              >
+                <span>Set Inventory</span>
+              </button>
+            )}
+            <button
+              onClick={onCreateNew}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                resolvedTheme === "dark"
+                  ? "bg-white text-black hover:bg-gray-200"
+                  : "bg-gray-900 text-white hover:bg-gray-700"
+              } transition-colors font-semibold`}
+            >
+              <span>{createButtonLabel}</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       <div
         className="border rounded-lg overflow-hidden flex flex-col"
@@ -239,7 +305,7 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="border-b"
+                    data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
@@ -270,10 +336,16 @@ export function DataTable<TData, TValue>({
         {showPagination && (
           <div className="flex items-center justify-between p-4 border-t">
             <div className="flex-1 text-sm text-muted-foreground">
-              <span>
-                Showing {table.getRowModel().rows.length} of{" "}
-                {table.getFilteredRowModel().rows.length} results
-              </span>
+              {hasSelection ? (
+                <span>
+                  {selectedRows.length} of {table.getFilteredRowModel().rows.length} row(s) selected
+                </span>
+              ) : (
+                <span>
+                  Showing {table.getRowModel().rows.length} of{" "}
+                  {table.getFilteredRowModel().rows.length} results
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Button

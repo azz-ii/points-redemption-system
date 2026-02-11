@@ -323,17 +323,17 @@ export function SetPointsModal({
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-0">
               {/* Header Row */}
               <div
-                className={`grid grid-cols-12 gap-4 font-semibold text-sm pb-2 border-b ${
+                className={`grid grid-cols-12 gap-2 font-semibold text-xs pb-1 border-b ${
                   resolvedTheme === "dark"
                     ? "text-gray-300 border-gray-700"
                     : "text-gray-700 border-gray-200"
                 }`}
               >
-                <div className="col-span-4">Name</div>
-                <div className="col-span-3">Location</div>
+                <div className="col-span-3">Name</div>
+                <div className="col-span-4">Location</div>
                 <div className="col-span-2">Current</div>
                 <div className="col-span-2">Add/Subtract</div>
                 <div className="col-span-1">New Total</div>
@@ -348,21 +348,21 @@ export function SetPointsModal({
                 return (
                   <div
                     key={customer.id}
-                    className={`grid grid-cols-12 gap-4 items-center py-3 border-b ${
+                    className={`grid grid-cols-12 gap-2 items-center py-1.5 border-b ${
                       resolvedTheme === "dark"
                         ? "border-gray-700 hover:bg-gray-700/50"
                         : "border-gray-100 hover:bg-gray-50"
                     }`}
                   >
                     <div
-                      className={`col-span-4 text-sm font-medium ${
+                      className={`col-span-3 text-xs font-medium ${
                         resolvedTheme === "dark" ? "text-white" : "text-gray-900"
                       }`}
                     >
                       {customer.name}
                     </div>
                     <div
-                      className={`col-span-3 text-sm ${
+                      className={`col-span-4 text-xs ${
                         resolvedTheme === "dark"
                           ? "text-gray-400"
                           : "text-gray-600"
@@ -371,7 +371,7 @@ export function SetPointsModal({
                       {customer.location}
                     </div>
                     <div
-                      className={`col-span-2 text-sm ${
+                      className={`col-span-2 text-xs ${
                         resolvedTheme === "dark"
                           ? "text-gray-400"
                           : "text-gray-500"
@@ -387,7 +387,7 @@ export function SetPointsModal({
                           handlePointsChange(customer.id, e.target.value)
                         }
                         placeholder="0"
-                        className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`w-full px-2 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           resolvedTheme === "dark"
                             ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                             : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
@@ -396,7 +396,7 @@ export function SetPointsModal({
                       />
                     </div>
                     <div
-                      className={`col-span-1 text-sm font-semibold ${
+                      className={`col-span-1 text-xs font-semibold ${
                         delta > 0
                           ? "text-green-500"
                           : delta < 0
@@ -516,7 +516,7 @@ export function SetPointsModal({
               {/* Advanced Section Content */}
               {showAdvanced && (
                 <div
-                  className={`p-4 border-t ${
+                  className={`p-3 border-t ${
                     resolvedTheme === "dark"
                       ? "border-gray-700 bg-gray-700/30"
                       : "border-gray-200 bg-gray-50"
@@ -524,38 +524,38 @@ export function SetPointsModal({
                 >
                   {/* Warning Alert */}
                   <div
-                    className={`mb-4 p-3 rounded-lg border-l-4 ${
+                    className={`mb-3 p-2 rounded-lg border-l-4 ${
                       resolvedTheme === "dark"
                         ? "bg-orange-900/20 border-orange-500"
                         : "bg-orange-50 border-orange-500"
                     }`}
                   >
                     <p
-                      className={`text-sm font-medium ${
+                      className={`text-xs font-medium ${
                         resolvedTheme === "dark"
                           ? "text-orange-300"
                           : "text-orange-800"
                       }`}
                     >
-                      ⚠️ Warning: Bulk Update
+                      ⚠️ Bulk Update
                     </p>
                     <p
-                      className={`text-sm mt-1 ${
+                      className={`text-xs mt-0.5 ${
                         resolvedTheme === "dark"
                           ? "text-orange-200"
                           : "text-orange-700"
                       }`}
                     >
-                      This will apply the same points adjustment to all{" "}
+                      This will apply the same points adjustment to all {" "}
                     {totalCount} customer(s). This action cannot
                       be undone.
                     </p>
                   </div>
 
                   {/* Bulk Points Delta Input */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label
-                      className={`block text-sm font-medium mb-2 ${
+                      className={`block text-xs font-medium mb-1 ${
                         resolvedTheme === "dark"
                           ? "text-gray-300"
                           : "text-gray-700"
@@ -578,7 +578,7 @@ export function SetPointsModal({
                         }
                       }}
                       placeholder="Enter positive or negative number"
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         resolvedTheme === "dark"
                           ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
@@ -586,35 +586,34 @@ export function SetPointsModal({
                       disabled={loading}
                     />
                     <p
-                      className={`text-xs mt-1 ${
+                      className={`text-xs mt-0.5 ${
                         resolvedTheme === "dark"
                           ? "text-gray-400"
                           : "text-gray-500"
                       }`}
                     >
-                      Positive numbers add points, negative numbers subtract
+                      Positive to add, negative to subtract
                     </p>
                   </div>
 
                   {/* Confirmation Checkbox */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label className="flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={confirmBulkUpdate}
                         onChange={(e) => setConfirmBulkUpdate(e.target.checked)}
-                        className="mt-1"
+                        className="mt-0.5"
                         disabled={loading}
                       />
                       <span
-                        className={`text-sm ${
+                        className={`text-xs ${
                           resolvedTheme === "dark"
                             ? "text-gray-300"
                             : "text-gray-700"
                         }`}
                       >
-                      I understand this will affect all {totalCount}{" "}
-                        customer(s) and cannot be undone
+                        I understand this will affect all {totalCount} customer(s) and cannot be undone
                       </span>
                     </label>
                   </div>
@@ -627,20 +626,20 @@ export function SetPointsModal({
                       !confirmBulkUpdate ||
                       bulkPointsDelta === 0
                     }
-                    className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       resolvedTheme === "dark"
                         ? "bg-orange-600 text-white hover:bg-orange-700"
                         : "bg-orange-500 text-white hover:bg-orange-600"
                     }`}
                   >
                     <AlertTriangle className="h-4 w-4" />
-                    {loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All Customers`}
+                    {loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All`}
                   </button>
 
                   {/* Reset All Button */}
                   {onResetAll && (
                     <>
-                      <div className="relative my-4">
+                      <div className="relative my-2">
                         <div className="absolute inset-0 flex items-center">
                           <div className={`w-full border-t ${
                             resolvedTheme === "dark" ? "border-gray-600" : "border-gray-300"
@@ -658,14 +657,14 @@ export function SetPointsModal({
                       <button
                         onClick={handleResetAll}
                         disabled={loading}
-                        className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                           resolvedTheme === "dark"
                             ? "bg-red-600 text-white hover:bg-red-700"
                             : "bg-red-500 text-white hover:bg-red-600"
                         }`}
                       >
                         <AlertTriangle className="h-4 w-4" />
-                        {loading ? "Resetting..." : `Reset All ${totalCount} Customers to 0 Points`}
+                        {loading ? "Resetting..." : `Reset All ${totalCount} Accounts to 0`}
                       </button>
                     </>
                   )}

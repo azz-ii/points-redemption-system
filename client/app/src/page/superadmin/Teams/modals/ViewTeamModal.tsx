@@ -276,15 +276,15 @@ export function ViewTeamModal({
         aria-labelledby="view-team-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
           resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-team-title" className="text-xl font-semibold">View Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="view-team-title" className="text-lg font-semibold">View Team</h2>
+            <p className="text-xs text-gray-500 mt-1">
               {teamDetails?.name || "Loading..."}
             </p>
           </div>
@@ -298,7 +298,7 @@ export function ViewTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-500 py-8">
               Loading team details...
@@ -306,13 +306,13 @@ export function ViewTeamModal({
           ) : teamDetails ? (
             <>
               {/* Team Details Section */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-500">
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold text-gray-500">
                   Team Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Team Name</label>
+                    <label className="block text-xs font-medium mb-1">Team Name</label>
                     <input
                       type="text"
                       value={teamDetails.name}
@@ -325,7 +325,7 @@ export function ViewTeamModal({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Approver</label>
+                    <label className="block text-xs font-medium mb-1">Approver</label>
                     <input
                       type="text"
                       value={teamDetails.approver_details ? teamDetails.approver_details.full_name : "No Approver"}
@@ -342,14 +342,14 @@ export function ViewTeamModal({
 
               {/* Members Section */}
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-sm font-semibold text-gray-500">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xs font-semibold text-gray-500">
                     Team Members ({teamDetails.members?.length || 0})
                   </h3>
                   <button
                     onClick={() => setShowAddMember(!showAddMember)}
                     disabled={actionLoading}
-                    className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                    className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
                       resolvedTheme === "dark"
                         ? "bg-white text-black hover:bg-gray-100"
                         : "bg-gray-900 text-white hover:bg-gray-800"
@@ -362,8 +362,8 @@ export function ViewTeamModal({
 
                 {/* Add Member Form */}
                 {showAddMember && (
-                  <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
-                    <label className="text-xs text-gray-500 mb-2 block">
+                  <div className="mb-3 p-3 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+                    <label className="block text-xs font-medium mb-1">
                       Select Sales Agent
                     </label>
                     <div className="flex gap-2">
@@ -379,11 +379,11 @@ export function ViewTeamModal({
                           );
                           setSelectedSalesAgent(value);
                         }}
-                        className={`flex-1 px-3 py-2 rounded border ${
+                        className={`flex-1 px-2 py-1 rounded border text-xs ${
                           resolvedTheme === "dark"
                             ? "bg-gray-800 border-gray-600 text-white"
                             : "bg-white border-gray-300 text-gray-900"
-                        } focus:outline-none focus:border-blue-500 text-sm`}
+                        } focus:outline-none focus:border-blue-500 text-xs`}
                       >
                         <option value="">Select an agent...</option>
                         {filteredSalesAgents.map((agent) => (
@@ -396,7 +396,7 @@ export function ViewTeamModal({
                       <button
                         onClick={handleAddMember}
                         disabled={!selectedSalesAgent || actionLoading}
-                        className={`px-4 py-2 rounded text-sm font-semibold ${
+                        className={`px-3 py-1 rounded text-xs font-semibold ${
                           resolvedTheme === "dark"
                             ? "bg-white text-black hover:bg-gray-100"
                             : "bg-gray-900 text-white hover:bg-gray-800"
@@ -430,19 +430,19 @@ export function ViewTeamModal({
                         }`}
                       >
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
+                          <th className="px-3 py-2 text-left text-xs font-semibold">
                             Full Name
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
+                          <th className="px-3 py-2 text-left text-xs font-semibold">
                             Email
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
+                          <th className="px-3 py-2 text-left text-xs font-semibold">
                             Points
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold">
+                          <th className="px-3 py-2 text-left text-xs font-semibold">
                             Joined
                           </th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold">
+                          <th className="px-3 py-2 text-right text-xs font-semibold">
                             Actions
                           </th>
                         </tr>
@@ -457,19 +457,19 @@ export function ViewTeamModal({
                                 : "bg-gray-50"
                             } transition-colors`}
                           >
-                            <td className="px-4 py-3 text-sm">
+                            <td className="px-3 py-2 text-xs">
                               {member.user_details.full_name}
                             </td>
-                            <td className="px-4 py-3 text-sm">
+                            <td className="px-3 py-2 text-xs">
                               {member.user_details.email}
                             </td>
-                            <td className="px-4 py-3 text-sm">
+                            <td className="px-3 py-2 text-xs">
                               {member.user_details.points}
                             </td>
-                            <td className="px-4 py-3 text-sm">
+                            <td className="px-3 py-2 text-xs">
                               {new Date(member.joined_at).toLocaleDateString()}
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="px-3 py-2 text-right">
                               <button
                                 onClick={() =>
                                   handleRemoveMember(
@@ -510,7 +510,7 @@ export function ViewTeamModal({
               resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
             }`}
           >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-red-500 bg-opacity-20">
                   <AlertCircle className="h-5 w-5 text-red-500" />
@@ -533,17 +533,17 @@ export function ViewTeamModal({
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4">
               <p className="text-sm">{errorDialog.message}</p>
             </div>
 
-            <div className="p-6 border-t border-gray-700 flex justify-end">
+            <div className="p-4 border-t border-gray-700 flex justify-end">
               <button
                 onClick={() => {
                   console.log("DEBUG ViewTeamModal: Closing error dialog");
                   setErrorDialog({ show: false, title: "", message: "" });
                 }}
-                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+                className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                   resolvedTheme === "dark"
                     ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"

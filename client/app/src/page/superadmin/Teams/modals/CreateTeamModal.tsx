@@ -185,15 +185,15 @@ export function CreateTeamModal({
         aria-labelledby="create-team-title"
         className={`${
           resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
+        } rounded-lg shadow-2xl max-w-lg w-full border divide-y {
           resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="create-team-title" className="text-xl font-semibold">Create Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="create-team-title" className="text-lg font-semibold">Create Team</h2>
+            <p className="text-xs text-gray-500 mt-1">
               Add a new team to your organization
             </p>
           </div>
@@ -207,11 +207,9 @@ export function CreateTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           <div>
-            <label className="text-xs text-gray-500 mb-2 block">
-              Team Name *
-            </label>
+            <label className="block text-sm font-medium mb-2">Team Name *</label>
             <input
               type="text"
               value={newTeam.name}
@@ -229,7 +227,7 @@ export function CreateTeamModal({
           </div>
 
           <div>
-            <label className="text-xs text-gray-500 mb-2 block">
+            <label className="block text-sm font-medium mb-2">
               Approver (Optional)
             </label>
             <select
@@ -270,14 +268,14 @@ export function CreateTeamModal({
           </div>
 
           {/* Members Section */}
-          <div className="pt-4 border-t border-gray-700">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-semibold text-gray-500">
+          <div className="pt-2 border-t border-gray-700">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-xs font-semibold text-gray-500">
                 Team Members ({selectedMembers.length})
               </h3>
               <button
                 onClick={() => setShowAddMember(!showAddMember)}
-                className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
                   resolvedTheme === "dark"
                     ? "bg-white text-black hover:bg-gray-100"
                     : "bg-gray-900 text-white hover:bg-gray-800"
@@ -290,8 +288,8 @@ export function CreateTeamModal({
 
             {/* Add Member Form */}
             {showAddMember && (
-              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
-                <label className="text-xs text-gray-500 mb-2 block">
+              <div className="mb-3 p-3 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+                <label className="block text-xs font-medium mb-1">
                   Select Sales Agent
                 </label>
                 <div className="flex gap-2">
@@ -302,7 +300,7 @@ export function CreateTeamModal({
                       console.log("DEBUG CreateTeamModal: Sales agent selected", value);
                       setSelectedSalesAgent(value);
                     }}
-                    className={`flex-1 px-3 py-2 rounded border ${
+                    className={`flex-1 px-2 py-1 rounded border text-xs ${
                       resolvedTheme === "dark"
                         ? "bg-gray-800 border-gray-600 text-white"
                         : "bg-white border-gray-300 text-gray-900"
@@ -318,7 +316,7 @@ export function CreateTeamModal({
                   <button
                     onClick={handleAddMember}
                     disabled={!selectedSalesAgent}
-                    className={`px-4 py-2 rounded text-sm font-semibold ${
+                    className={`px-3 py-1 rounded text-xs font-semibold ${
                       resolvedTheme === "dark"
                         ? "bg-white text-black hover:bg-gray-100"
                         : "bg-gray-900 text-white hover:bg-gray-800"
@@ -359,7 +357,7 @@ export function CreateTeamModal({
                       <th className="px-4 py-3 text-left text-xs font-semibold">
                         Points
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold">
+                      <th className="px-3 py-2 text-right text-xs font-semibold">
                         Actions
                       </th>
                     </tr>
@@ -372,10 +370,10 @@ export function CreateTeamModal({
                           resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
                         } transition-colors`}
                       >
-                        <td className="px-4 py-3 text-sm">{member.full_name}</td>
-                        <td className="px-4 py-3 text-sm">{member.email}</td>
-                        <td className="px-4 py-3 text-sm">{member.points}</td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-2 text-xs">{member.full_name}</td>
+                        <td className="px-3 py-2 text-xs">{member.email}</td>
+                        <td className="px-3 py-2 text-xs">{member.points}</td>
+                        <td className="px-3 py-2 text-right">
                           <button
                             onClick={() => handleRemoveMember(member.id)}
                             className="text-red-500 hover:text-red-600"
@@ -393,7 +391,7 @@ export function CreateTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           {error && (
             <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
@@ -402,7 +400,7 @@ export function CreateTeamModal({
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
           >
             {loading ? "Creating..." : "Create Team"}
           </button>

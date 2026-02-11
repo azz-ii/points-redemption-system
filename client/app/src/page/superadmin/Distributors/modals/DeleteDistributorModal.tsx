@@ -33,16 +33,12 @@ export function DeleteDistributorModal({
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-distributor-title" className="text-xl font-semibold">
+            <h2 id="delete-distributor-title" className="text-lg font-semibold">
               Delete Distributor
             </h2>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-xs text-gray-500 mt-0.5">
               Confirm deletion
             </p>
           </div>
@@ -56,18 +52,18 @@ export function DeleteDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
-          <p id="delete-distributor-message" className="text-base">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          <p id="delete-distributor-message" className="text-sm">
             Are you sure you want to delete <strong>{distributor.name}</strong>?
             This action cannot be undone.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex gap-3 justify-end">
+        <div className="p-4 flex gap-2 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"
@@ -77,7 +73,7 @@ export function DeleteDistributorModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
+            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"
           >
             Delete
           </button>

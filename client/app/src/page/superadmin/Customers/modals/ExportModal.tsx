@@ -101,12 +101,12 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="export-modal-title" className="text-xl font-semibold">
+            <h2 id="export-modal-title" className="text-lg font-semibold">
               Export Customers
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               {customers.length} customer{customers.length !== 1 ? "s" : ""} will be exported
             </p>
           </div>
@@ -120,13 +120,13 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Export Format
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setFormat("excel")}
@@ -253,7 +253,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Sort Options
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label
                   htmlFor="sortField"
@@ -323,13 +323,13 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-6">
+        <div className="p-4">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClose}
               className={`flex-1 px-6 py-3 rounded-lg font-medium transition-colors ${

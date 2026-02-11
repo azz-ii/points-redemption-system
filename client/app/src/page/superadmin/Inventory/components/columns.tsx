@@ -218,9 +218,10 @@ export const createColumns = (
             <Eye className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => context.onEditItem(item)}
+            className="bg-gray-500 hover:bg-gray-600 text-white"
             title="Edit Stock"
           >
             <Edit className="h-4 w-4" />

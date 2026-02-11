@@ -11,6 +11,12 @@ interface InventoryTableProps {
   onEditItem: (item: InventoryItem) => void;
   onRetry: () => void;
   searchQuery: string;
+  onDeleteSelected?: (items: InventoryItem[]) => void;
+  onCreateNew?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  onExport?: () => void;
+  onSetInventory?: () => void;
 }
 
 export function InventoryTable({
@@ -21,6 +27,12 @@ export function InventoryTable({
   onEditItem,
   onRetry,
   searchQuery,
+  onDeleteSelected,
+  onCreateNew,
+  onRefresh,
+  refreshing,
+  onExport,
+  onSetInventory,
 }: InventoryTableProps) {
   const columns = useMemo(
     () =>
@@ -39,9 +51,16 @@ export function InventoryTable({
       error={error}
       onRetry={onRetry}
       searchQuery={searchQuery}
-      showSearch={false}
-      showPagination={false}
-      showColumnVisibility={false}
+      showSearch={true}
+      showPagination={true}
+      showColumnVisibility={true}
+      onDeleteSelected={onDeleteSelected}
+      onCreateNew={onCreateNew}
+      createButtonLabel="Add Item"
+      onRefresh={onRefresh}
+      refreshing={refreshing}
+      onExport={onExport}
+      onSetInventory={onSetInventory}
     />
   );
 }

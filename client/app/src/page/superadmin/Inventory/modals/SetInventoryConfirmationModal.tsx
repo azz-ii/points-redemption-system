@@ -43,7 +43,7 @@ export function SetInventoryConfirmationModal({
       >
         {/* Header */}
         <div
-          className={`flex items-center gap-3 p-6 border-b ${
+          className={`flex items-center gap-3 p-4 border-b ${
             resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
         >
@@ -78,7 +78,7 @@ export function SetInventoryConfirmationModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           <div
             className={`mb-4 ${
               resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
@@ -165,7 +165,7 @@ export function SetInventoryConfirmationModal({
 
         {/* Footer */}
         <div
-          className={`flex gap-3 p-6 border-t ${
+          className={`flex gap-3 p-4 border-t ${
             resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
           }`}
         >

@@ -33,13 +33,13 @@ export function DeleteCustomerModal({
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-customer-title" className="text-xl font-semibold">
+            <h2 id="delete-customer-title" className="text-lg font-semibold">
               Delete Customer
             </h2>
             <p
-              className={`text-sm ${
+              className={`text-xs ${
                 resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
               }`}
             >
@@ -56,7 +56,7 @@ export function DeleteCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p id="delete-customer-message" className="text-base">
             Are you sure you want to delete <strong>{customer.name}</strong>?
             This action cannot be undone.
@@ -64,10 +64,10 @@ export function DeleteCustomerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex gap-3 justify-end">
+        <div className="p-4 flex gap-2 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
+            className={`px-4 py-2 rounded-lg border font-semibold transition-colors ${
               resolvedTheme === "dark"
                 ? "border-gray-600 hover:bg-gray-800"
                 : "border-gray-300 hover:bg-gray-50"
@@ -77,7 +77,7 @@ export function DeleteCustomerModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
+            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
           >
             Delete
           </button>
