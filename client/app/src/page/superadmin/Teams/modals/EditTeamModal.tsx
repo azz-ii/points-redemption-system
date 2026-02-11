@@ -125,12 +125,12 @@ export function EditTeamModal({
       const data = await response.json();
       console.log("DEBUG EditTeamModal: Users fetched", {
         status: response.status,
-        totalUsers: data.accounts?.length || 0,
+        totalUsers: data.results?.length || 0,
       });
 
-      if (response.ok && data.accounts) {
+      if (response.ok && data.results) {
         // Filter for Sales Agents only
-        const salesAgents = data.accounts.filter(
+        const salesAgents = data.results.filter(
           (user: { position: string }) => user.position === "Sales Agent"
         );
 

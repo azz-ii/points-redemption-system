@@ -60,15 +60,15 @@ export function CreateTeamModal({
       const data = await response.json();
       console.log("DEBUG CreateTeamModal: Users fetched", {
         status: response.status,
-        totalUsers: data.accounts?.length || 0,
+        totalUsers: data.results?.length || 0,
       });
 
-      if (response.ok && data.accounts) {
+      if (response.ok && data.results) {
         // Store all users for team membership checking
-        setAllUsers(data.accounts.map((u: { id: number; team: number | null }) => ({ id: u.id, team: u.team })));
+        setAllUsers(data.results.map((u: { id: number; team: number | null }) => ({ id: u.id, team: u.team })));
         
         // Filter for Sales Agents only
-        const salesAgents = data.accounts.filter(
+        const salesAgents = data.results.filter(
           (user: { position: string }) => user.position === "Sales Agent"
         );
         

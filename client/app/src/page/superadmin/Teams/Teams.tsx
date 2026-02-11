@@ -125,11 +125,11 @@ function Teams() {
 
       console.log("DEBUG Teams: Users fetched", {
         status: response.status,
-        totalUsers: data.accounts?.length || 0,
+        totalUsers: data.results?.length || 0,
       });
 
-      if (response.ok && data.accounts) {
-        const approversList = data.accounts
+      if (response.ok && data.results) {
+        const approversList = data.results
           .filter((user: { position: string }) => user.position === "Approver")
           .map((user: { id: number; full_name: string; email: string }) => ({
             id: user.id,
@@ -163,11 +163,11 @@ function Teams() {
 
       console.log("DEBUG Teams: Users fetched for marketing admins", {
         status: response.status,
-        totalUsers: data.accounts?.length || 0,
+        totalUsers: data.results?.length || 0,
       });
 
-      if (response.ok && data.accounts) {
-        const marketingAdminsList = data.accounts
+      if (response.ok && data.results) {
+        const marketingAdminsList = data.results
           .filter((user: { position: string }) => user.position === "Marketing")
           .map((user: { id: number; full_name: string; email: string }) => ({
             id: user.id,
