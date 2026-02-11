@@ -1,4 +1,4 @@
-import { ReactNode, InputHTMLAttributes } from "react";
+import type { ReactNode, InputHTMLAttributes } from "react";
 import { useTheme } from "next-themes";
 
 interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {

@@ -384,6 +384,7 @@ export const dashboardApi = {
 export interface AgentDashboardStats {
   pending_count: number;
   approved_count: number;
+  rejected_count: number;
   processed_count: number;
   agent_points: number;
   active_distributors_count: number;

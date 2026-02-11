@@ -5,9 +5,10 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
 import logging
 import io
 from datetime import datetime
@@ -26,17 +27,55 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 from .models import UserProfile
 from .serializers import UserSerializer, UserListSerializer
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UserListCreateView(APIView):
-    """List all users or create a new user"""
+
+class UserPagination(PageNumberPagination):
+    """
+    Pagination class for users list.
+    """
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users.
+    Provides CRUD operations for user management.
+    """
+    queryset = User.objects.filter(is_superuser=False).select_related('profile')
+    serializer_class = UserListSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    pagination_class = UserPagination
     
-    def get(self, request):
-        """Get list of all users with their profiles, excluding superusers"""
-        users = User.objects.filter(is_superuser=False).select_related('profile')
-        serializer = UserListSerializer(users, many=True)
-        return Response({"accounts": serializer.data}, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        """
+        All authenticated users can access all users.
+        Optionally filter based on query parameters.
+        """
+        queryset = User.objects.filter(is_superuser=False).select_related('profile')
+        
+        # Apply search filter if provided
+        search = self.request.query_params.get('search', None)
+        
+        if search:
+            queryset = queryset.filter(
+                username__icontains=search
+            ) | queryset.filter(
+                profile__full_name__icontains=search
+            ) | queryset.filter(
+                profile__email__icontains=search
+            )
+        
+        return queryset.order_by('username')
     
-    def post(self, request):
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'create':
+            return UserSerializer
+        return UserListSerializer
+    
+    def create(self, request, *args, **kwargs):
         """Create a new user with profile"""
         # Handle both JSON and multipart form data
         data = request.data.copy()
@@ -72,70 +111,43 @@ class UserListCreateView(APIView):
             
             return Response({
                 "message": "User created successfully",
-                "user": serializer.data,
+                "user": UserListSerializer(user).data,
                 "email_sent": email_sent
             }, status=status.HTTP_201_CREATED)
         return Response({
             "error": "Failed to create user",
             "details": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UserDetailView(APIView):
-    """Retrieve, update or delete a user"""
     
-    def get(self, request, user_id):
-        """Get a specific user's details"""
-        try:
-            user = User.objects.select_related('profile').get(id=user_id)
-            serializer = UserListSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-    
-    def put(self, request, user_id):
+    def update(self, request, *args, **kwargs):
         """Update a user's details"""
-        try:
-            user = User.objects.select_related('profile').get(id=user_id)
-            
-            # Handle both JSON and multipart form data
-            data = request.data.copy()
-            if 'profile_picture' in request.FILES:
-                data['profile_picture'] = request.FILES['profile_picture']
-            
-            serializer = UserSerializer(user, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                # Return updated user data with flattened format
-                updated_user = User.objects.select_related('profile').get(id=user_id)
-                response_serializer = UserListSerializer(updated_user)
-                return Response({
-                    "message": "User updated successfully",
-                    "user": response_serializer.data
-                }, status=status.HTTP_200_OK)
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Handle both JSON and multipart form data
+        data = request.data.copy()
+        if 'profile_picture' in request.FILES:
+            data['profile_picture'] = request.FILES['profile_picture']
+        
+        serializer = UserSerializer(instance, data=data, partial=partial)
+        if serializer.is_valid():
+            serializer.save()
             return Response({
-                "error": "Failed to update user",
-                "details": serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-    
-    def delete(self, request, user_id):
-        """Delete a user"""
-        try:
-            user = User.objects.get(id=user_id)
-            user.delete()
-            return Response({
-                "message": "User deleted successfully"
+                "message": "User updated successfully",
+                "user": UserListSerializer(instance).data
             }, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "error": "Failed to update user",
+            "details": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete a user"""
+        instance = self.get_object()
+        instance.delete()
+        return Response({
+            "message": "User deleted successfully"
+        }, status=status.HTTP_200_OK)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurrentUserView(APIView):

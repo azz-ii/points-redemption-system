@@ -42,38 +42,11 @@ export const usersApi = {
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
     
-    // Handle { accounts: [...] } format from backend
-    let allResults: Account[] = [];
+    // Ensure we return paginated format (backend now returns standard DRF pagination)
     if (Array.isArray(data)) {
-      allResults = data;
-    } else if (data.accounts && Array.isArray(data.accounts)) {
-      allResults = data.accounts;
-    } else if (data.results && Array.isArray(data.results)) {
-      // It's already paginated by server
-      return data;
+      return { count: data.length, next: null, previous: null, results: data };
     }
-
-    // Server returned all items, so we emulate pagination here
-    // 1. Filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      allResults = allResults.filter(acc => 
-        (acc.username || '').toLowerCase().includes(q) ||
-        (acc.full_name || '').toLowerCase().includes(q) ||
-        (acc.email || '').toLowerCase().includes(q)
-      );
-    }
-
-    // 2. Paginate
-    const startIndex = (page - 1) * pageSize;
-    const sliced = allResults.slice(startIndex, startIndex + pageSize);
-
-    return { 
-      count: allResults.length, 
-      next: startIndex + pageSize < allResults.length ? 'has_more' : null, 
-      previous: startIndex > 0 ? 'has_prev' : null, 
-      results: sliced 
-    };
+    return data;
   },
 
   batchUpdatePoints: async (updates: { id: number; points: number }[], reason?: string): Promise<BatchUpdateResponse> => {

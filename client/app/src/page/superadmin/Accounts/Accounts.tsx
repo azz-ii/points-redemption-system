@@ -143,7 +143,7 @@ function Accounts() {
       const data = await response.json();
 
       if (response.ok) {
-        setAccounts(data.accounts || []);
+        setAccounts(data.results || []);
       } else {
         setError("Failed to load accounts");
       }

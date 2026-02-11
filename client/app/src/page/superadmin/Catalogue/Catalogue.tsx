@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/sidebar/sidebar";
 import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
 import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
+import { fetchWithCsrf } from "@/lib/csrf";
 import {
   Bell,
   Search,
@@ -512,9 +513,8 @@ function Catalogue() {
         payload,
       );
 
-      const response = await fetch(`/api/catalogue/${editingProductId}/`, {
+      const response = await fetchWithCsrf(`/api/catalogue/${editingProductId}/`, {
         method: "PATCH",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -564,9 +564,8 @@ function Catalogue() {
 
     try {
       console.log("[Catalogue] Deleting product (DELETE) id=", deleteTarget.id);
-      const response = await fetch(`/api/catalogue/${deleteTarget.id}/`, {
+      const response = await fetchWithCsrf(`/api/catalogue/${deleteTarget.id}/`, {
         method: "DELETE",
-        credentials: "include",
       });
       console.log("[Catalogue] DELETE response status:", response.status);
 
@@ -663,9 +662,8 @@ function Catalogue() {
         payload.price_multiplier = editVariantData.price_multiplier;
       }
 
-      const response = await fetch(`/api/catalogue/${editVariantTarget.id}/`, {
+      const response = await fetchWithCsrf(`/api/catalogue/${editVariantTarget.id}/`, {
         method: "PUT",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

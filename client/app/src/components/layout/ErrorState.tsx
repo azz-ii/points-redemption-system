@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { AlertCircle } from "lucide-react";
 

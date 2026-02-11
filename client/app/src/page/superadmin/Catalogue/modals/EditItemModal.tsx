@@ -18,7 +18,7 @@ interface EditItem {
   max_order_qty: string;
   stock: string;
   has_stock: boolean;
-  requires_sales_approval?: boolean;
+  requires_sales_approval: boolean;
   points_multiplier: string;
   price_multiplier: string;
 }

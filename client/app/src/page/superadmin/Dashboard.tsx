@@ -467,8 +467,7 @@ function Dashboard() {
                       </p>
                       <button
                         onClick={() => {
-                          setSelectedRedemption(request);
-                          setShowViewModal(true);
+                          setSelectedRequest(request);
                         }}
                         className="w-full py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors"
                       >

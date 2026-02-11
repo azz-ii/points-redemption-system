@@ -31,6 +31,7 @@ export interface Product {
   added_by: number | null;
   date_archived: string | null;
   archived_by: number | null;
+  requires_sales_approval?: boolean;
 }
 
 export const LEGEND_OPTIONS = [

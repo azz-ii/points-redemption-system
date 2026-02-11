@@ -28,7 +28,16 @@ from views import (
     ChangePasswordView,
     ActivateAccountView,
 )
-from users.views import UserListCreateView, UserDetailView, CurrentUserView, UserExportView, BulkUpdatePointsView, BatchUpdatePointsView
+from views import (
+    LoginView,
+    DashboardView,
+    HistoryView,
+    AccountsView,
+    ApproveRequestView,
+    RejectRequestView,
+    ChangePasswordView,
+    ActivateAccountView,
+)
 from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView
 
 urlpatterns = [
@@ -42,12 +51,7 @@ urlpatterns = [
     path('requests/<str:request_id>/approve/', ApproveRequestView.as_view(), name='approve_request'),
     path('requests/<str:request_id>/reject/', RejectRequestView.as_view(), name='reject_request'),
     # User Management API
-    path('api/users/', UserListCreateView.as_view(), name='user_list_create'),
-    path('api/users/export/', UserExportView.as_view(), name='user_export'),
-    path('api/users/bulk_update_points/', BulkUpdatePointsView.as_view(), name='bulk_update_points'),
-    path('api/users/batch_update_points/', BatchUpdatePointsView.as_view(), name='batch_update_points'),
-    path('api/users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
-    path('api/users/me/', CurrentUserView.as_view(), name='current_user'),
+    path('', include('users.urls')),
     # Catalogue/Product Management API
     path('api/catalogue/', ProductListCreateView.as_view(), name='catalogue_list_create'),
     path('api/catalogue/<int:product_id>/', ProductDetailView.as_view(), name='catalogue_detail'),
