@@ -3,6 +3,7 @@ import { X, AlertTriangle, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { RequestTimeline } from "@/components/modals";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { StatusChip } from "../components/StatusChip";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export interface WithdrawConfirmationModalProps {
@@ -124,19 +125,15 @@ export function ViewRedemptionStatusModal({
   request,
   onRequestWithdrawn,
 }: ViewRedemptionStatusModalProps & { onRequestWithdrawn?: () => void }) {
-  const [imageLoading, setImageLoading] = useState(true);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  if (!isOpen || !item || !request) return null;
+  if (!isOpen || !request) return null;
 
-  const imageUrl = "/images/tshirt.png";
   const normalizedStatus = request.status.toUpperCase();
 
-  // Check if request can be withdrawn:
-  // - Status must be PENDING
-  // - Sales approval must NOT be APPROVED
+  // Check if request can be withdrawn
   const canWithdraw =
     normalizedStatus === "PENDING" &&
     request.sales_approval_status !== "APPROVED";
@@ -166,65 +163,23 @@ export function ViewRedemptionStatusModal({
     }
   };
 
-  // Determine status display based on approval and processing status
-  const getStatusDisplay = () => {
-    if (normalizedStatus === "APPROVED") {
-      if (request.processing_status === "PROCESSED") {
-        return {
-          label: "Processed",
-          colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-500 dark:text-white",
-          withTooltip: false,
-        };
-      }
-      if (request.processing_status === "CANCELLED") {
-        return {
-          label: "Cancelled",
-          colorClass: "bg-red-100 text-red-700 dark:bg-red-500 dark:text-white",
-          withTooltip: true,
-          tooltipText: "An Admin Has Cancelled this Request",
-        };
-      }
-      return {
-        label: "Approved",
-        colorClass: "bg-green-100 text-green-700 dark:bg-green-500 dark:text-black",
-        withTooltip: false,
-      };
-    }
-
-    if (normalizedStatus === "PENDING") {
-      return {
-        label: "Pending",
-        colorClass: "bg-yellow-100 text-yellow-700 dark:bg-yellow-400 dark:text-black",
-        withTooltip: false,
-      };
-    }
-
-    return {
-      label: "Rejected",
-      colorClass: "bg-red-100 text-red-700 dark:bg-red-500 dark:text-white",
-      withTooltip: false,
-    };
-  };
-
-  const statusDisplay = getStatusDisplay();
-
   return (
     <TooltipProvider>
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50 backdrop-blur-sm">
         <div
-          className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-border"
+          className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
           role="dialog"
           aria-modal="true"
           aria-labelledby="view-redemption-status-title"
         >
           {/* Header */}
-          <div className="flex justify-between items-center p-8">
+          <div className="flex justify-between items-center p-6">
             <div>
               <h2 id="view-redemption-status-title" className="text-xl font-semibold">
-                Redemption Item Details
+                Request Details
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Request #{request.id}
+                Request #{request.id} • {new Date(request.date_requested).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
             <button
@@ -237,104 +192,97 @@ export function ViewRedemptionStatusModal({
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-            <div className="md:flex md:gap-6">
-              {/* Image */}
-              <div className="overflow-hidden rounded-lg md:w-1/2 relative">
-                {imageLoading && (
-                  <div className="absolute inset-0 bg-gray-300 dark:bg-gray-700 animate-pulse" />
-                )}
-                <img
-                  src={imageUrl}
-                  alt={item.product_name}
-                  onLoad={() => setImageLoading(false)}
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/tshirt.png";
-                    setImageLoading(false);
-                  }}
-                  className={`w-full h-auto object-cover transition-opacity duration-300 ${
-                    imageLoading ? "opacity-0" : "opacity-100"
-                  }`}
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Details */}
-              <div className="md:w-1/2 mt-4 md:mt-0 space-y-4">
-                {/* Item Information */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Item Information
-                  </h3>
-                  <p
-                    className="text-sm font-semibold text-green-600 dark:text-green-400"
-                  >
-                    {item.product_code}
-                  </p>
-                  <h4 className="text-xl font-bold">{item.product_name}</h4>
-                  {item.category && (
-                    <p className="text-sm text-muted-foreground">
-                      {item.category}
-                    </p>
-                  )}
+          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+            {/* Customer Information */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Customer Information
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Customer Name</label>
+                  <p className="text-sm font-medium">{request.requested_for_name}</p>
                 </div>
-
-                {/* Order Details */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Order Details
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">Quantity</label>
-                      <p className="text-sm font-medium">{item.quantity} unit{item.quantity !== 1 ? 's' : ''}</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">Points per Item</label>
-                      <p className="text-sm font-medium">{item.points_per_item} points</p>
-                    </div>
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Requested By</label>
+                  <p className="text-sm font-medium">{request.requested_by_name}</p>
+                </div>
+                {request.team_name && (
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Team</label>
+                    <p className="text-sm font-medium">{request.team_name}</p>
                   </div>
-                </div>
-
-                {/* Status */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Status
-                  </h3>
-                  {statusDisplay.withTooltip ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold cursor-help ${statusDisplay.colorClass}`}
-                        >
-                          {statusDisplay.label}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>{statusDisplay.tooltipText}</TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusDisplay.colorClass}`}
-                    >
-                      {statusDisplay.label}
-                    </span>
-                  )}
+                )}
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Points Source</label>
+                  <p className="text-sm font-medium">{request.points_deducted_from_display}</p>
                 </div>
               </div>
             </div>
 
-            {/* Total Points Bar */}
-            <div
-              className="flex items-center justify-between rounded-lg px-4 py-3 bg-muted"
-            >
-              <p className="text-sm text-foreground">
-                Total for this item
+            {/* Items List */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Items ({request.items.length})
+              </h3>
+              <div className="border rounded-lg overflow-hidden border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-3 font-semibold">Item</th>
+                        <th className="text-left p-3 font-semibold">Code</th>
+                        <th className="text-right p-3 font-semibold">Qty</th>
+                        <th className="text-right p-3 font-semibold">Points/Item</th>
+                        <th className="text-right p-3 font-semibold">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {request.items.map((item, idx) => (
+                        <tr key={idx} className="border-t border-border">
+                          <td className="p-3">
+                            <div>
+                              <p className="font-medium">{item.product_name}</p>
+                              {item.category && (
+                                <p className="text-xs text-muted-foreground">{item.category}</p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-1 rounded text-xs font-semibold bg-muted text-foreground">
+                              {item.product_code}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">{item.quantity}</td>
+                          <td className="p-3 text-right">{item.points_per_item}</td>
+                          <td className="p-3 text-right font-semibold">{item.total_points}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Points */}
+            <div className="flex items-center justify-between rounded-lg px-4 py-3 bg-muted">
+              <p className="text-sm font-semibold text-foreground">
+                Total Points for Request
               </p>
-              <p
-                className="text-sm font-bold text-yellow-600 dark:text-yellow-300"
-              >
-                {item.total_points} Points
+              <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                {request.total_points} Points
               </p>
+            </div>
+
+            {/* Status */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Current Status
+              </h3>
+              <StatusChip 
+                status={request.status as any} 
+                processingStatus={request.processing_status as any} 
+              />
             </div>
 
             {/* Request Timeline */}
@@ -369,25 +317,25 @@ export function ViewRedemptionStatusModal({
           </div>
 
           {/* Footer */}
-          <div className="p-8 flex justify-between items-center">
+          <div className="p-6">
             {withdrawError && (
-              <p className="text-destructive text-sm">{withdrawError}</p>
+              <p className="text-destructive text-sm mb-3">{withdrawError}</p>
             )}
-            <div className="flex gap-3 ml-auto">
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
+              >
+                Close
+              </button>
               {canWithdraw && (
                 <button
                   onClick={() => setShowWithdrawModal(true)}
-                  className="px-6 py-3 rounded-lg font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white"
+                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white"
                 >
                   Cancel Request
                 </button>
               )}
-              <button
-                onClick={onClose}
-                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>

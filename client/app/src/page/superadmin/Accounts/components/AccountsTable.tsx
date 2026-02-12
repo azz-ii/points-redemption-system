@@ -17,7 +17,7 @@ interface AccountsTableProps {
   onSetPoints?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
-  onExport?: () => void;
+  onExport?: (selectedRows: Account[]) => void;
   onViewPointsHistory?: (account: Account) => void;
   editingRowId?: number | null;
   editedData?: Record<string, any>;

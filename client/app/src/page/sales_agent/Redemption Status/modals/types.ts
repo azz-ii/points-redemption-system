@@ -75,6 +75,7 @@ export interface RedemptionRequest {
 export interface ViewRedemptionStatusModalProps extends ModalBaseProps {
   item: RedemptionRequestItem | null;
   request: RedemptionRequest | null;
+  onRequestWithdrawn?: () => void;
 }
 
 export interface WithdrawConfirmationModalProps {
@@ -82,5 +83,13 @@ export interface WithdrawConfirmationModalProps {
   onClose: () => void;
   onConfirm: (reason: string) => Promise<void>;
   requestId: number;
+  isSubmitting: boolean;
+}
+
+export interface BulkWithdrawModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => Promise<void>;
+  requests: RedemptionRequest[];
   isSubmitting: boolean;
 }

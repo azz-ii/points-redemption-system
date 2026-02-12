@@ -4,7 +4,6 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -12,8 +11,9 @@ import {
   MarkItemsProcessedModal,
   type RequestItem,
   type MyProcessingStatus,
+  type FlattenedRequestItem,
 } from "./modals";
-import { ProcessRequestsTable, ProcessRequestsMobileCards } from "./components";
+import { ProcessRequestsTable, ProcessRequestsMobileCards, BulkMarkProcessedModal } from "./components";
 import { marketingRequestsApi } from "@/lib/api";
 
 function ProcessRequests() {
@@ -27,8 +27,12 @@ function ProcessRequests() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showProcessModal, setShowProcessModal] = useState(false);
+  const [showBulkProcessModal, setShowBulkProcessModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const [bulkProcessTargets, setBulkProcessTargets] = useState<FlattenedRequestItem[]>([]);
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchRequests = useCallback(async (isRefresh = false) => {
     try {
@@ -67,33 +71,54 @@ function ProcessRequests() {
     }
   };
 
+  // Flatten requests to items for table display
+  const flattenedItems: FlattenedRequestItem[] = requests.flatMap((request) =>
+    request.items.map((item) => ({
+      ...item,
+      requestId: request.id,
+      requested_by_name: request.requested_by_name,
+      requested_for_name: request.requested_for_name,
+      request_status: request.status,
+      request_status_display: request.status_display,
+      request_processing_status: request.processing_status,
+      request_processing_status_display: request.processing_status_display,
+      date_requested: request.date_requested,
+      request: request,
+    }))
+  );
+
+  // Mobile filtering and pagination
   const pageSize = 7;
-  const filteredRequests = requests.filter((request) => {
+  const filtered = flattenedItems.filter((item) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
-      request.id.toString().includes(query) ||
-      request.requested_by_name.toLowerCase().includes(query) ||
-      request.requested_for_name.toLowerCase().includes(query) ||
-      request.status.toLowerCase().includes(query)
+      item.requestId.toString().includes(query) ||
+      item.product_code.toLowerCase().includes(query) ||
+      item.product_name.toLowerCase().includes(query) ||
+      item.requested_for_name.toLowerCase().includes(query) ||
+      item.requested_by_name.toLowerCase().includes(query) ||
+      (item.category && item.category.toLowerCase().includes(query))
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  const paginatedItems = filtered.slice(startIndex, endIndex);
 
-  const handleViewClick = async (request: RequestItem) => {
-    setSelectedRequest(request);
-    await fetchMyProcessingStatus(request.id);
+  const handleViewClick = async (item: FlattenedRequestItem) => {
+    setSelectedItem(item);
+    setSelectedRequest(item.request);
+    await fetchMyProcessingStatus(item.requestId);
     setShowViewModal(true);
   };
 
-  const handleMarkProcessedClick = async (request: RequestItem) => {
-    setSelectedRequest(request);
-    const status = await fetchMyProcessingStatus(request.id);
+  const handleMarkItemProcessedClick = async (item: FlattenedRequestItem) => {
+    setSelectedItem(item);
+    setSelectedRequest(item.request);
+    const status = await fetchMyProcessingStatus(item.requestId);
     if (status && status.pending_items > 0) {
       setShowProcessModal(true);
     } else {
@@ -104,176 +129,168 @@ function ProcessRequests() {
   const handleMarkProcessedConfirm = async () => {
     if (!selectedRequest) return;
 
+    setIsSubmitting(true);
     try {
       await marketingRequestsApi.markItemsProcessed(selectedRequest.id);
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
+      setSelectedItem(null);
       setSelectedRequest(null);
       setMyProcessingStatus(null);
       fetchRequests(true);
     } catch (err) {
       console.error("Error marking items as processed:", err);
       toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Check if the current user can mark this request's items as processed
-  const canMarkProcessed = (request: RequestItem): boolean => {
-    // Only approved requests that aren't cancelled can be processed
-    return (
-      request.status === "APPROVED" &&
-      request.processing_status !== "CANCELLED" &&
-      request.processing_status !== "PROCESSED"
-    );
+  const handleBulkMarkProcessed = (selectedItems: FlattenedRequestItem[]) => {
+    // Filter to only show items that haven't been processed yet
+    const processableItems = selectedItems.filter(item => !item.item_processed_by);
+    
+    if (processableItems.length === 0) {
+      toast.info("All selected items have already been processed");
+      return;
+    }
+    
+    setBulkProcessTargets(processableItems);
+    setShowBulkProcessModal(true);
+  };
+
+  const handleBulkMarkProcessedConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      // Group items by request ID
+      const requestGroups = bulkProcessTargets.reduce((acc, item) => {
+        if (!acc[item.requestId]) {
+          acc[item.requestId] = [];
+        }
+        acc[item.requestId].push(item);
+        return acc;
+      }, {} as Record<number, FlattenedRequestItem[]>);
+
+      // Mark items in each request as processed
+      const results = await Promise.allSettled(
+        Object.keys(requestGroups).map(requestId =>
+          marketingRequestsApi.markItemsProcessed(Number(requestId))
+        )
+      );
+
+      const succeeded = results.filter(r => r.status === "fulfilled").length;
+      const failed = results.filter(r => r.status === "rejected").length;
+
+      if (succeeded > 0) {
+        toast.success(`Successfully marked ${succeeded} request(s) as processed${failed > 0 ? `, ${failed} failed` : ""}`);
+      } else {
+        throw new Error("All processing operations failed");
+      }
+
+      setShowBulkProcessModal(false);
+      setBulkProcessTargets([]);
+      fetchRequests(true);
+    } catch (err) {
+      console.error("Bulk mark processed failed:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <>
-    <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className="md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b bg-card border-border"
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center"
-            >
-              <span className="text-white font-semibold text-xs">M</span>
-            </div>
-            <span className="font-medium text-sm">Process Requests</span>
+      {/* Mobile Layout */}
+      <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-1">Process Requests</h1>
+          <p className="text-xs text-muted-foreground">
+            View and process approved redemption requests for your assigned items
+          </p>
+        </div>
+
+        {/* Mobile Search Bar */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border bg-background border-border">
+            <Search className="h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="flex-1 bg-transparent outline-none border-none text-foreground placeholder-muted-foreground p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
           </div>
-          <div className="flex items-center gap-2">
+        </div>
+
+        <ProcessRequestsMobileCards
+          items={paginatedItems}
+          loading={loading}
+          onViewRequest={handleViewClick}
+          onMarkItemProcessed={handleMarkItemProcessedClick}
+        />
+
+        {/* Mobile Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
             <button
-              onClick={() => fetchRequests(true)}
-              disabled={refreshing}
-              className={`p-2 rounded-lg bg-muted hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
-              title="Refresh"
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent text-foreground"
             >
-              <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+              <ChevronLeft className="h-4 w-4" />
+              Prev
+            </button>
+            <span className="text-xs font-medium text-foreground">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent text-foreground"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
+        )}
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-4xl font-bold mb-1">Process Requests</h1>
+          <p className="text-base text-muted-foreground">
+            View and process approved redemption requests for your assigned items
+          </p>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto">
-          <div className="p-4">
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search requests..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-10 h-12"
-              />
-            </div>
-
-            <ProcessRequestsMobileCards
-              requests={paginatedRequests}
-              loading={loading}
-              onView={handleViewClick}
-              onMarkProcessed={handleMarkProcessedClick}
-              canMarkProcessed={canMarkProcessed}
-            />
-
-            {/* Mobile Pagination */}
-            <div className="flex items-center justify-between mt-6">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </button>
-              <span className="text-xs font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+        {error ? (
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+            {error}
           </div>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Process Requests</h1>
-              <p className="text-sm text-muted-foreground">
-                View and process approved redemption requests for your assigned items
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => fetchRequests(true)}
-                disabled={refreshing}
-                className={`p-2 rounded-lg bg-muted hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
-                title="Refresh"
-              >
-                <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-          </div>
-
-          
-
-          {error ? (
-            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          ) : (
-            <ProcessRequestsTable
-              requests={paginatedRequests}
-              loading={loading}
-              onView={handleViewClick}
-              onMarkProcessed={handleMarkProcessedClick}
-              canMarkProcessed={canMarkProcessed}
-            />
-          )}
-
-          {/* Desktop Pagination */}
-          {!loading && !error && (
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <span className="text-sm font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
+        ) : (
+          <ProcessRequestsTable
+            items={flattenedItems}
+            loading={loading}
+            onViewRequest={handleViewClick}
+            onMarkItemProcessed={handleMarkItemProcessedClick}
+            onBulkMarkProcessed={handleBulkMarkProcessed}
+            onRefresh={() => fetchRequests(true)}
+            refreshing={refreshing}
+          />
+        )}
       </div>
 
       <ViewRequestModal
         isOpen={showViewModal}
         onClose={() => {
           setShowViewModal(false);
+          setSelectedItem(null);
           setSelectedRequest(null);
           setMyProcessingStatus(null);
         }}
@@ -285,6 +302,7 @@ function ProcessRequests() {
         isOpen={showProcessModal}
         onClose={() => {
           setShowProcessModal(false);
+          setSelectedItem(null);
           setSelectedRequest(null);
           setMyProcessingStatus(null);
         }}
@@ -293,6 +311,19 @@ function ProcessRequests() {
         pendingCount={myProcessingStatus?.pending_items || 0}
         onConfirm={handleMarkProcessedConfirm}
       />
+
+      {showBulkProcessModal && (
+        <BulkMarkProcessedModal
+          isOpen={showBulkProcessModal}
+          onClose={() => {
+            setShowBulkProcessModal(false);
+            setBulkProcessTargets([]);
+          }}
+          onConfirm={handleBulkMarkProcessedConfirm}
+          items={bulkProcessTargets}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </>
   );
 }

@@ -2,27 +2,15 @@ import { X, Package, CheckCircle } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RequestItem } from "./types";
 
-interface ViewRequestModalProps extends ModalBaseProps {
+interface ViewHistoryModalProps extends ModalBaseProps {
   request: RequestItem | null;
-  myItems?: Array<{
-    id: number;
-    product_name: string;
-    product_code: string;
-    quantity: number;
-    points_per_item: number;
-    total_points: number;
-    item_processed_by?: number | null;
-    item_processed_by_name?: string | null;
-    item_processed_at?: string | null;
-  }>;
 }
 
-export function ViewRequestModal({
+export function ViewHistoryModal({
   isOpen,
   onClose,
   request,
-  myItems,
-}: ViewRequestModalProps) {
+}: ViewHistoryModalProps) {
   if (!isOpen || !request) return null;
 
   const getStatusBadgeColor = (status: string) => {
@@ -51,16 +39,13 @@ export function ViewRequestModal({
     }
   };
 
-  // Use myItems if provided (filtered items for this marketing user), otherwise fall back to all items
-  const displayItems = myItems || request.items;
-
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50">
       <div
         className="bg-card rounded-lg shadow-xl max-w-3xl w-full border border-border max-h-[90vh] overflow-hidden flex flex-col"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="view-request-title"
+        aria-labelledby="view-history-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
@@ -69,7 +54,7 @@ export function ViewRequestModal({
               <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 id="view-request-title" className="text-lg font-semibold">
+              <h2 id="view-history-title" className="text-lg font-semibold">
                 Request Details
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -95,12 +80,22 @@ export function ViewRequestModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <label className="block text-xs text-muted-foreground mb-1">Requested By</label>
+                <p className="font-semibold">{request.requested_by_name}</p>
+              </div>
+              <div>
                 <label className="block text-xs text-muted-foreground mb-1">Requested For</label>
                 <p className="font-semibold">{request.requested_for_name}</p>
               </div>
               <div>
                 <label className="block text-xs text-muted-foreground mb-1">Total Points</label>
                 <p className="font-semibold">{request.total_points.toLocaleString()} pts</p>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Date Requested</label>
+                <p className="font-semibold">
+                  {new Date(request.date_requested).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </div>
@@ -132,6 +127,14 @@ export function ViewRequestModal({
                 </span>
               </div>
             </div>
+            {request.date_processed && (
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Date Processed</label>
+                <p className="font-semibold">
+                  {new Date(request.date_processed).toLocaleDateString()}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Request Timeline */}
@@ -170,10 +173,10 @@ export function ViewRequestModal({
           <div className="space-y-4 pt-6">
             <h3 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">
               <Package className="inline h-4 w-4 mr-1" />
-              {myItems ? "My Assigned Items" : "Items"} ({displayItems.length})
+              Items ({request.items.length})
             </h3>
             <div className="space-y-2">
-              {displayItems.map((item) => (
+              {request.items.map((item) => (
                 <div
                   key={item.id}
                   className="p-4 rounded-lg border bg-muted/50 border-border"
@@ -190,6 +193,11 @@ export function ViewRequestModal({
                         Qty: {item.quantity} × {item.points_per_item} pts ={" "}
                         {item.total_points} pts
                       </p>
+                      {item.item_processed_by_name && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Processed by: {item.item_processed_by_name}
+                        </p>
+                      )}
                     </div>
                     {item.item_processed_by && (
                       <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">

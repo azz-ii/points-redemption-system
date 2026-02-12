@@ -86,3 +86,25 @@ export interface MyProcessingStatus {
   overall_processing_complete: boolean;
   items: RequestItemVariant[];
 }
+
+// Flattened item for table display (item + parent request data)
+export interface FlattenedRequestItem extends RequestItemVariant {
+  requestId: number;
+  requested_by_name: string;
+  requested_for_name: string;
+  request_status: string;
+  request_status_display: string;
+  request_processing_status: string;
+  request_processing_status_display: string;
+  date_requested: string;
+  request: RequestItem;
+}
+
+// Props for bulk mark processed modal
+export interface BulkMarkProcessedModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  items: FlattenedRequestItem[];
+  isSubmitting: boolean;
+}

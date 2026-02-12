@@ -1,596 +1,400 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLogout } from "@/context/AuthContext";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+import { marketingRequestsApi } from "@/lib/api";
+import type {
+  RequestItem,
+  FlattenedRequestItem,
+  MyProcessingStatus,
+} from "../ProcessRequests/modals/types";
 import {
-  Search,
-  Check,
-  X,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-
-interface CampaignItem {
-  id: string;
-  agent: string;
-  details: string;
-  quantity: number;
-  status: "Pending" | "Approved" | "Rejected";
-}
+  ViewRequestModal,
+  MarkItemsProcessedModal,
+} from "../ProcessRequests/modals";
+import { BulkMarkProcessedModal } from "../ProcessRequests/components";
+import { DashboardTable, DashboardMobileCards } from "./components";
 
 function MarketingDashboard() {
-  const _navigate = useNavigate();
-  const _handleLogout = useLogout();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"incoming" | "handled">("incoming");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [editItem, setEditItem] = useState<CampaignItem | null>(null);
-  const [campaigns] = useState<CampaignItem[]>([
-    {
-      id: "SA220011",
-      agent: "Kim Molina",
-      details: "Platinum Polo",
-      quantity: 12,
-      status: "Pending",
-    },
-    {
-      id: "SA220012",
-      agent: "Jerald Napoles",
-      details: "Platinum Cap",
-      quantity: 4,
-      status: "Pending",
-    },
-    {
-      id: "SA220013",
-      agent: "Maria Santos",
-      details: "Premium Jacket",
-      quantity: 8,
-      status: "Approved",
-    },
-    {
-      id: "SA220014",
-      agent: "Juan Cruz",
-      details: "Executive Shirt",
-      quantity: 6,
-      status: "Pending",
-    },
-    {
-      id: "SA220015",
-      agent: "Ana Garcia",
-      details: "Corporate Tie",
-      quantity: 10,
-      status: "Rejected",
-    },
-  ]);
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [historyRequests, setHistoryRequests] = useState<RequestItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const pageSize = 5;
-  const filteredCampaigns = campaigns.filter((campaign) => {
+  // Modal states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [showBulkProcessModal, setShowBulkProcessModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const [bulkProcessTargets, setBulkProcessTargets] = useState<FlattenedRequestItem[]>([]);
+  const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchData = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+      const [requestsData, historyData] = await Promise.all([
+        marketingRequestsApi.getRequests(),
+        marketingRequestsApi.getHistory(),
+      ]);
+      setRequests(requestsData as unknown as RequestItem[]);
+      setHistoryRequests(historyData as unknown as RequestItem[]);
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+      toast.error("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const fetchMyProcessingStatus = async (requestId: number) => {
+    try {
+      const status = await marketingRequestsApi.getMyProcessingStatus(requestId);
+      setMyProcessingStatus(status as unknown as MyProcessingStatus);
+      return status;
+    } catch (err) {
+      console.error("Error fetching processing status:", err);
+      toast.error("Failed to load processing status");
+      return null;
+    }
+  };
+
+  // Flatten requests to items for table display
+  const flattenedItems: FlattenedRequestItem[] = requests.flatMap((request) =>
+    request.items.map((item) => ({
+      ...item,
+      requestId: request.id,
+      requested_by_name: request.requested_by_name,
+      requested_for_name: request.requested_for_name,
+      request_status: request.status,
+      request_status_display: request.status_display,
+      request_processing_status: request.processing_status,
+      request_processing_status_display: request.processing_status_display,
+      date_requested: request.date_requested,
+      request: request,
+    }))
+  );
+
+  // Compute stats
+  const itemsToProcess = flattenedItems.filter((item) => !item.item_processed_by).length;
+  const processedItemsCount = historyRequests.reduce(
+    (count, req) => count + req.items.filter((item) => !!item.item_processed_by).length,
+    0
+  );
+  const totalRequests = requests.length;
+
+  // Mobile pagination
+  const pageSize = 7;
+  const filtered = flattenedItems.filter((item) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
-      campaign.id.toLowerCase().includes(query) ||
-      campaign.agent.toLowerCase().includes(query) ||
-      campaign.details.toLowerCase().includes(query) ||
-      campaign.status.toLowerCase().includes(query)
+      item.requestId.toString().includes(query) ||
+      item.product_code.toLowerCase().includes(query) ||
+      item.product_name.toLowerCase().includes(query) ||
+      item.requested_for_name.toLowerCase().includes(query) ||
+      item.requested_by_name.toLowerCase().includes(query) ||
+      (item.category && item.category.toLowerCase().includes(query))
     );
   });
 
-  const pendingCount = campaigns.filter((c) => c.status === "Pending").length;
-  const approvedCount = campaigns.filter((c) => c.status === "Approved").length;
-  const onBoardCount = 20;
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredCampaigns.length / pageSize)
-  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCampaigns = filteredCampaigns.slice(startIndex, endIndex);
+  const paginatedItems = filtered.slice(startIndex, endIndex);
+
+  // Modal handlers
+  const handleViewClick = async (item: FlattenedRequestItem) => {
+    setSelectedItem(item);
+    setSelectedRequest(item.request);
+    await fetchMyProcessingStatus(item.requestId);
+    setShowViewModal(true);
+  };
+
+  const handleMarkItemProcessedClick = async (item: FlattenedRequestItem) => {
+    setSelectedItem(item);
+    setSelectedRequest(item.request);
+    const status = await fetchMyProcessingStatus(item.requestId);
+    if (status && (status as unknown as MyProcessingStatus).pending_items > 0) {
+      setShowProcessModal(true);
+    } else {
+      toast.info("All your items have already been processed");
+    }
+  };
+
+  const handleMarkProcessedConfirm = async () => {
+    if (!selectedRequest) return;
+
+    setIsSubmitting(true);
+    try {
+      await marketingRequestsApi.markItemsProcessed(selectedRequest.id);
+      toast.success("Items marked as processed successfully");
+      setShowProcessModal(false);
+      setSelectedItem(null);
+      setSelectedRequest(null);
+      setMyProcessingStatus(null);
+      fetchData(true);
+    } catch (err) {
+      console.error("Error marking items as processed:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkMarkProcessed = (selectedItems: FlattenedRequestItem[]) => {
+    const processableItems = selectedItems.filter((item) => !item.item_processed_by);
+
+    if (processableItems.length === 0) {
+      toast.info("All selected items have already been processed");
+      return;
+    }
+
+    setBulkProcessTargets(processableItems);
+    setShowBulkProcessModal(true);
+  };
+
+  const handleBulkMarkProcessedConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      const requestGroups = bulkProcessTargets.reduce((acc, item) => {
+        if (!acc[item.requestId]) {
+          acc[item.requestId] = [];
+        }
+        acc[item.requestId].push(item);
+        return acc;
+      }, {} as Record<number, FlattenedRequestItem[]>);
+
+      const results = await Promise.allSettled(
+        Object.keys(requestGroups).map((requestId) =>
+          marketingRequestsApi.markItemsProcessed(Number(requestId))
+        )
+      );
+
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      if (succeeded > 0) {
+        toast.success(
+          `Successfully marked ${succeeded} request(s) as processed${failed > 0 ? `, ${failed} failed` : ""}`
+        );
+      } else {
+        throw new Error("All processing operations failed");
+      }
+
+      setShowBulkProcessModal(false);
+      setBulkProcessTargets([]);
+      fetchData(true);
+    } catch (err) {
+      console.error("Bulk mark processed failed:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto">
-          <div className="p-4">
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-10 h-12"
-              />
-            </div>
+    <>
+      {/* Mobile Layout */}
+      <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
+          <p className="text-xs text-muted-foreground">
+            Manage points, track redemptions and process items
+          </p>
+        </div>
 
-            {/* Mobile Filter Dropdown */}
-            <div className="relative mb-6">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-card border-border transition-colors"
-              >
-                <span className="font-semibold text-sm">
-                  {viewMode === "incoming"
-                    ? "All Incoming Submission Request"
-                    : "Handled Items"}
-                </span>
-                <ChevronLeft
-                  className={`h-4 w-4 transition-transform ${
-                    isDropdownOpen ? "rotate-90" : "-rotate-90"
-                  }`}
-                />
-              </button>
-              {isDropdownOpen && (
-                <div
-                  className="absolute top-full mt-2 left-0 w-full rounded-lg border shadow-lg z-50 bg-card border-border"
-                >
-                  <button
-                    onClick={() => {
-                      setViewMode("incoming");
-                      setIsDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-accent transition-colors first:rounded-t-lg"
-                  >
-                    All Incoming Submission Request
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewMode("handled");
-                      setIsDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-accent transition-colors last:rounded-b-lg"
-                  >
-                    Handled Items
-                  </button>
-                </div>
-              )}
+        {/* Mobile Stats Cards */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="p-3 rounded-lg border bg-card border-border">
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-full bg-yellow-500" />
+              <p className="font-semibold text-xs">To Process</p>
             </div>
-
-            {/* Campaign Cards */}
-            <div className="space-y-3">
-              {paginatedCampaigns.map((campaign) => (
-                <div
-                  key={campaign.id}
-                  className="p-4 rounded-lg border bg-card border-border"
-                >
-                  {viewMode === "incoming" ? (
-                    // Incoming Request Card
-                    <>
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <p className="font-semibold text-sm">{campaign.id}</p>
-                          <p className="text-xs text-gray-500">
-                            {campaign.agent}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            campaign.status === "Pending"
-                              ? "bg-yellow-400 text-black"
-                              : campaign.status === "Approved"
-                              ? "bg-green-500 text-white"
-                              : "bg-red-500 text-white"
-                          }`}
-                        >
-                          {campaign.status}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium mb-2">
-                        {campaign.details}
-                      </p>
-                      <p className="text-xs text-gray-500 mb-3">
-                        Qty: {campaign.quantity}
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        <button className="w-full py-2.5 rounded bg-green-500 text-white hover:bg-green-600 text-sm font-semibold transition-colors">
-                          Accept
-                        </button>
-                        <button className="w-full py-2.5 rounded bg-red-500 text-white hover:bg-red-600 text-sm font-semibold transition-colors">
-                          Reject
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    // Handled Items Card
-                    <>
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-400">{campaign.id}</p>
-                        <p className="font-semibold text-base mt-1">T-Shirt</p>
-                        <p className="text-sm text-gray-500">
-                          {campaign.details}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span
-                          className={`flex items-center gap-2 text-xs font-semibold ${
-                            campaign.status === "Pending"
-                              ? "text-yellow-400"
-                              : campaign.status === "Approved"
-                              ? "text-green-400"
-                              : "text-red-400"
-                          }`}
-                        >
-                          <span className="w-2 h-2 rounded-full bg-current"></span>
-                          {campaign.status}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          2025-12-31
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setEditItem(campaign)}
-                        className="w-full py-2.5 rounded bg-white text-gray-900 hover:bg-gray-50 border border-gray-300 text-sm font-semibold transition-colors"
-                      >
-                        Edit Details
-                      </button>
-                    </>
-                  )}
-                </div>
-              ))}
+            <p className="text-2xl font-bold">{itemsToProcess}</p>
+          </div>
+          <div className="p-3 rounded-lg border bg-card border-border">
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <p className="font-semibold text-xs">Processed</p>
             </div>
-
-            {/* Mobile Pagination */}
-            <div className="flex justify-between items-center mt-6">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </button>
-              <span className="text-sm">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
+            <p className="text-2xl font-bold">{processedItemsCount}</p>
+          </div>
+          <div className="p-3 rounded-lg border bg-card border-border">
+            <div className="flex items-center gap-1.5 mb-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <p className="font-semibold text-xs">Requests</p>
             </div>
+            <p className="text-2xl font-bold">{totalRequests}</p>
           </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Welcome, Marketing</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage points, track redemptions and redeem items
-              </p>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            <div
-              className="p-6 rounded-lg border bg-card border-border transition-colors"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="w-2 h-2 rounded-full bg-yellow-500"
-                />
-                <p className="font-semibold">Pending Request</p>
-              </div>
-              <p className="text-4xl font-bold">
-                {pendingCount}{" "}
-                <span className="text-lg text-muted-foreground">
-                  / {pendingCount + approvedCount}
-                </span>
-              </p>
-            </div>
-
-            <div
-              className="p-6 rounded-lg border bg-card border-border transition-colors"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="w-2 h-2 rounded-full bg-green-500"
-                />
-                <p className="font-semibold">Approved Requests</p>
-              </div>
-              <p className="text-4xl font-bold">{approvedCount}</p>
-            </div>
-
-            <div
-              className="p-6 rounded-lg border bg-card border-border transition-colors"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="w-2 h-2 rounded-full bg-blue-500"
-                />
-                <p className="font-semibold">On-board</p>
-              </div>
-              <p className="text-4xl font-bold">{onBoardCount}</p>
-            </div>
-          </div>
-
-          {/* Filter and Search */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border bg-card border-border hover:bg-accent transition-colors"
-              >
-                {viewMode === "incoming"
-                  ? "All Incoming Submission Request"
-                  : "Handled Items"}
-                <ChevronLeft
-                  className={`h-4 w-4 transition-transform ${
-                    isDropdownOpen ? "rotate-90" : "-rotate-90"
-                  }`}
-                />
-              </button>
-              {isDropdownOpen && (
-                <div
-                  className="absolute top-full mt-2 left-0 min-w-[250px] rounded-lg border shadow-lg z-50 bg-card border-border"
-                >
-                  <button
-                    onClick={() => {
-                      setViewMode("incoming");
-                      setIsDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors first:rounded-t-lg"
-                  >
-                    All Incoming Submission Request
-                  </button>
-                  <button
-                    onClick={() => {
-                      setViewMode("handled");
-                      setIsDropdownOpen(false);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors last:rounded-b-lg"
-                  >
-                    Handled Items
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="relative max-w-md flex-1 ml-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-10 h-10"
-              />
-            </div>
-          </div>
-
-          {/* Table */}
-          <div
-            className="border rounded-lg overflow-hidden bg-card border-border transition-colors"
-          >
-            <table className="w-full">
-              <thead className="bg-muted text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    ID
-                  </th>
-                  {viewMode === "handled" && (
-                    <th className="px-6 py-4 text-left text-sm font-semibold">
-                      Type
-                    </th>
-                  )}
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Details
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {paginatedCampaigns.map((campaign) => (
-                  <tr
-                    key={campaign.id}
-                    className="hover:bg-accent transition-colors"
-                  >
-                    <td className="px-6 py-4 text-sm">{campaign.id}</td>
-                    {viewMode === "handled" && (
-                      <td className="px-6 py-4">
-                        <span className="inline-block rounded-full px-2 py-1 text-xs font-semibold bg-green-500 text-white">
-                          T-shirt
-                        </span>
-                      </td>
-                    )}
-                    <td className="px-6 py-4 text-sm">{campaign.details}</td>
-                    <td className="px-6 py-4 text-sm">{campaign.quantity}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          campaign.status === "Pending"
-                            ? "bg-yellow-400 text-black"
-                            : campaign.status === "Approved"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
-                      >
-                        {campaign.status}
-                      </span>
-                    </td>
-                    {viewMode === "incoming" ? (
-                      <td className="px-6 py-4 flex justify-end gap-3">
-                        <button
-                          className="flex items-center gap-1 px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-medium"
-                          title="Confirm"
-                        >
-                          <Check className="w-4 h-4" /> Confirm
-                        </button>
-                        <button
-                          className="flex items-center gap-1 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
-                          title="Reject"
-                        >
-                          <X className="w-4 h-4" /> Reject
-                        </button>
-                      </td>
-                    ) : (
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => setEditItem(campaign)}
-                          className="px-3 py-1 rounded bg-yellow-500 text-black hover:bg-yellow-600 transition-colors text-sm font-semibold"
-                        >
-                          Edit Details
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Desktop Pagination */}
-            <div
-              className="flex justify-between items-center px-6 py-4 border-t border-border"
-            >
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </button>
-              <span className="text-sm">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+        {/* Mobile Search Bar */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border bg-background border-border">
+            <Search className="h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="flex-1 bg-transparent outline-none border-none text-foreground placeholder-muted-foreground p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
           </div>
         </div>
 
-        {/* Edit Account Modal */}
-        {editItem && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div
-              className="relative w-full max-w-md rounded-lg shadow-xl bg-card text-foreground"
+        <DashboardMobileCards
+          items={paginatedItems}
+          loading={loading}
+          onViewRequest={handleViewClick}
+          onMarkItemProcessed={handleMarkItemProcessedClick}
+        />
+
+        {/* Mobile Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent text-foreground"
             >
-              {/* Header */}
-              <div className="p-6 border-b border-border">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-bold">Edit Item</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Update item quantity for {editItem.details}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setEditItem(null)}
-                    className="p-1 hover:bg-accent rounded transition-colors"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Form Content */}
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">ID</label>
-                  <input
-                    type="text"
-                    value={editItem.id}
-                    disabled
-                    className="w-full px-4 py-3 rounded-lg border bg-muted border-border text-muted-foreground cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">
-                    Item Name
-                  </label>
-                  <input
-                    type="text"
-                    value={editItem.details}
-                    disabled
-                    className="w-full px-4 py-3 rounded-lg border bg-muted border-border text-muted-foreground cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">
-                    Item Type
-                  </label>
-                  <input
-                    type="text"
-                    value="T-shirt"
-                    disabled
-                    className="w-full px-4 py-3 rounded-lg border bg-muted border-border text-muted-foreground cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">
-                    Quantity <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={editItem.quantity}
-                    min="1"
-                    className="w-full px-4 py-3 rounded-lg border bg-card border-border text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Footer Button */}
-              <div className="p-6 pt-0">
-                <button
-                  onClick={() => {
-                    // Handle update logic here
-                    setEditItem(null);
-                  }}
-                  className="w-full py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-colors"
-                >
-                  Update Item
-                </button>
-              </div>
-            </div>
+              <ChevronLeft className="h-4 w-4" />
+              Prev
+            </button>
+            <span className="text-xs font-medium text-foreground">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent text-foreground"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         )}
-    </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-semibold">Welcome, Marketing</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage points, track redemptions and process items
+            </p>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-yellow-500" />
+              <p className="font-semibold">Items to Process</p>
+            </div>
+            <p className="text-4xl font-bold">
+              {itemsToProcess}{" "}
+              <span className="text-lg text-muted-foreground">
+                / {flattenedItems.length}
+              </span>
+            </p>
+          </div>
+
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <p className="font-semibold">Processed Items</p>
+            </div>
+            <p className="text-4xl font-bold">{processedItemsCount}</p>
+          </div>
+
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <p className="font-semibold">Total Requests</p>
+            </div>
+            <p className="text-4xl font-bold">{totalRequests}</p>
+          </div>
+        </div>
+
+        {error ? (
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+            {error}
+          </div>
+        ) : (
+          <DashboardTable
+            items={flattenedItems}
+            loading={loading}
+            onViewRequest={handleViewClick}
+            onMarkItemProcessed={handleMarkItemProcessedClick}
+            onBulkMarkProcessed={handleBulkMarkProcessed}
+            onRefresh={() => fetchData(true)}
+            refreshing={refreshing}
+          />
+        )}
+      </div>
+
+      <ViewRequestModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedItem(null);
+          setSelectedRequest(null);
+          setMyProcessingStatus(null);
+        }}
+        request={selectedRequest}
+        myItems={myProcessingStatus?.items}
+      />
+
+      <MarkItemsProcessedModal
+        isOpen={showProcessModal}
+        onClose={() => {
+          setShowProcessModal(false);
+          setSelectedItem(null);
+          setSelectedRequest(null);
+          setMyProcessingStatus(null);
+        }}
+        request={selectedRequest}
+        myItems={myProcessingStatus?.items || []}
+        pendingCount={myProcessingStatus?.pending_items || 0}
+        onConfirm={handleMarkProcessedConfirm}
+      />
+
+      {showBulkProcessModal && (
+        <BulkMarkProcessedModal
+          isOpen={showBulkProcessModal}
+          onClose={() => {
+            setShowBulkProcessModal(false);
+            setBulkProcessTargets([]);
+          }}
+          onConfirm={handleBulkMarkProcessedConfirm}
+          items={bulkProcessTargets}
+          isSubmitting={isSubmitting}
+        />
+      )}
+    </>
   );
 }
 

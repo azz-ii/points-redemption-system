@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import type { FlattenedRequestItem } from "../modals/types";
+import type { Row } from "@tanstack/react-table";
+import type { FlattenedRequestItem } from "../../ProcessRequests/modals/types";
 import { DataTable } from "@/components/shared/data-table";
 import { createColumns } from "./columns";
 
-interface ProcessRequestsTableProps {
+interface DashboardTableProps {
   items: FlattenedRequestItem[];
   loading: boolean;
   onViewRequest: (item: FlattenedRequestItem) => void;
@@ -13,7 +14,7 @@ interface ProcessRequestsTableProps {
   refreshing?: boolean;
 }
 
-export function ProcessRequestsTable({
+export function DashboardTable({
   items,
   loading,
   onViewRequest,
@@ -21,7 +22,7 @@ export function ProcessRequestsTable({
   onBulkMarkProcessed,
   onRefresh,
   refreshing = false,
-}: ProcessRequestsTableProps) {
+}: DashboardTableProps) {
   const columns = useMemo(
     () =>
       createColumns({
@@ -31,12 +32,10 @@ export function ProcessRequestsTable({
     [onViewRequest, onMarkItemProcessed]
   );
 
-  // Custom global filter function that searches across multiple fields
-  const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
+  const globalFilterFn = (row: Row<FlattenedRequestItem>, _columnId: string, filterValue: string) => {
     const item = row.original as FlattenedRequestItem;
     const searchLower = String(filterValue).toLowerCase();
-    
-    // Search in: request ID, product code, product name, customer, category
+
     const searchableFields = [
       String(item.requestId),
       item.product_code?.toLowerCase() || '',
@@ -47,7 +46,7 @@ export function ProcessRequestsTable({
       item.request_status_display?.toLowerCase() || '',
       item.request_processing_status_display?.toLowerCase() || '',
     ];
-    
+
     return searchableFields.some(field => field.includes(searchLower));
   };
 
@@ -69,7 +68,7 @@ export function ProcessRequestsTable({
         pageSize={15}
         initialSorting={[{ id: "date_requested", desc: true }]}
         loadingMessage="Loading items..."
-        emptyMessage="No items found"
+        emptyMessage="No items to process"
       />
     </div>
   );

@@ -3,26 +3,42 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { Eye, ArrowUpDown, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { RedemptionRequestItem, RedemptionRequest } from "../modals/types"
+import { Checkbox } from "@/components/ui/checkbox"
+import type { RedemptionRequest } from "../modals/types"
 import { StatusChip } from "./StatusChip"
 
-type ExtendedItem = RedemptionRequestItem & {
-  requestId: number
-  status: string
-  status_display: string
-  processing_status: string
-  date_requested: string
-  request: RedemptionRequest
-}
-
 interface ColumnContext {
-  onViewItem: (item: ExtendedItem) => void
-  onCancelRequest: (item: ExtendedItem) => void
+  onViewRequest: (request: RedemptionRequest) => void
+  onCancelRequest: (request: RedemptionRequest) => void
 }
 
-export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[] => [
+export const createColumns = (context: ColumnContext): ColumnDef<RedemptionRequest>[] => [
   {
-    accessorKey: "requestId",
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "id",
     header: ({ column }) => {
       return (
         <Button
@@ -36,25 +52,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
       )
     },
     cell: ({ row }) => (
-      <div className="font-medium">#{row.getValue("requestId")}</div>
+      <div className="font-medium">#{row.getValue("id")}</div>
     ),
   },
   {
-    accessorKey: "product_code",
-    header: "Item Code",
-    cell: ({ row }) => {
-      const code = row.getValue("product_code") as string
-      return (
-        <span
-          className="px-3 py-1 rounded-full text-xs font-semibold bg-muted text-foreground"
-        >
-          {code}
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: "product_name",
+    accessorKey: "requested_for_name",
     header: ({ column }) => {
       return (
         <Button
@@ -62,13 +64,13 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="px-0 hover:bg-transparent"
         >
-          Item Name
+          Customer
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
     cell: ({ row }) => {
-      const name = row.getValue("product_name") as string
+      const name = row.getValue("requested_for_name") as string
       return (
         <div className="text-foreground">
           {name}
@@ -77,32 +79,18 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
     },
   },
   {
-    accessorKey: "category",
-    header: "Category",
+    accessorKey: "items",
+    header: "Items",
     cell: ({ row }) => {
-      const category = row.getValue("category") as string | null
+      const items = row.getValue("items") as any[]
+      const itemCount = items?.length || 0
       return (
         <div className="text-sm text-muted-foreground">
-          {category || "-"}
+          {itemCount} item{itemCount !== 1 ? 's' : ''}
         </div>
       )
     },
-  },
-  {
-    accessorKey: "quantity",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Quantity
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("quantity")}</div>,
+    enableSorting: false,
   },
   {
     accessorKey: "total_points",
@@ -113,7 +101,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="px-0 hover:bg-transparent"
         >
-          Points
+          Total Points
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -123,48 +111,74 @@ export const createColumns = (context: ColumnContext): ColumnDef<ExtendedItem>[]
     ),
   },
   {
+    accessorKey: "date_requested",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Date Requested
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const dateStr = row.getValue("date_requested") as string
+      const date = new Date(dateStr)
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+        </div>
+      )
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const item = row.original
+      const request = row.original
       return (
         <StatusChip
-          status={item.status as any}
-          processingStatus={item.processing_status as any}
+          status={request.status as any}
+          processingStatus={request.processing_status as any}
         />
       )
     },
   },
   {
     id: "actions",
-    header: () => <div className="text-right"></div>,
+    header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
-      const item = row.original
-      const normalizedStatus = item.status.toUpperCase()
+      const request = row.original
+      const normalizedStatus = request.status.toUpperCase()
       const canCancel = 
         normalizedStatus === "PENDING" &&
-        item.request.sales_approval_status !== "APPROVED"
+        request.sales_approval_status !== "APPROVED"
       
       return (
         <div className="flex justify-end gap-2">
-          {canCancel && (
-            <button
-              onClick={() => context.onCancelRequest(item)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-destructive text-white hover:bg-destructive/90"
-              aria-label="Cancel request"
-            >
-              <XCircle className="h-4 w-4" />
-              Cancel
-            </button>
-          )}
-          <button
-            onClick={() => context.onViewItem(item)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
-            aria-label="View"
+          <Button
+            onClick={() => context.onViewRequest(request)}
+            variant="default"
+            size="sm"
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            title="View"
           >
             <Eye className="h-4 w-4" />
-            View
-          </button>
+          </Button>
+          {canCancel && (
+            <Button
+              onClick={() => context.onCancelRequest(request)}
+              variant="default"
+              size="sm"
+              className="bg-red-500 hover:bg-red-600 text-white"
+              title="Cancel"
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )
     },

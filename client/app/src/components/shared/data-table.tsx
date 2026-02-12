@@ -65,7 +65,12 @@ interface DataTableProps<TData, TValue> {
   onSetPoints?: () => void
   onRefresh?: () => void
   refreshing?: boolean
-  onExport?: () => void
+  onExport?: (selectedRows: TData[]) => void
+
+  // Row selection
+  enableRowSelection?: boolean
+  // Custom labels
+  deleteSelectedLabel?: string
 
   // Search
   searchPlaceholder?: string
@@ -102,6 +107,8 @@ export function DataTable<TData, TValue>({
   onRefresh,
   refreshing = false,
   onExport,
+  enableRowSelection: enableRowSelectionProp,
+  deleteSelectedLabel = "Delete",
   searchPlaceholder = "Search...",
   globalFilterFn,
   showSearch = true,
@@ -122,7 +129,7 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [globalFilter, setGlobalFilter] = React.useState("")
 
-  const enableRowSelection = !!(onDeleteSelected || onBanSelected)
+  const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected || onBanSelected)
   const CreateIcon = createButtonIcon === "user" ? UserPlus : Plus
 
   const table = useReactTable({
@@ -229,11 +236,11 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onExport}
+                onClick={() => onExport(selectedRows)}
                 className="h-9 flex gap-2"
               >
                 <Download className="h-4 w-4" />
-                Export
+                Export{hasSelection ? ` (${selectedRows.length})` : ""}
               </Button>
             )}
             {hasSelection && onBanSelected && (
@@ -254,7 +261,7 @@ export function DataTable<TData, TValue>({
                 onClick={() => onDeleteSelected(selectedRows)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete {selectedRows.length}
+                {deleteSelectedLabel} {selectedRows.length}
               </Button>
             )}
           </div>

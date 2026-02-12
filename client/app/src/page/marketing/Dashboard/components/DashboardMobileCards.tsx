@@ -1,19 +1,19 @@
 import { Eye, CheckCircle } from "lucide-react";
-import type { FlattenedRequestItem } from "../modals/types";
+import type { FlattenedRequestItem } from "../../ProcessRequests/modals/types";
 
-interface ProcessRequestsMobileCardsProps {
+interface DashboardMobileCardsProps {
   items: FlattenedRequestItem[];
   loading: boolean;
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
 }
 
-export function ProcessRequestsMobileCards({
+export function DashboardMobileCards({
   items,
   loading,
   onViewRequest,
   onMarkItemProcessed,
-}: ProcessRequestsMobileCardsProps) {
+}: DashboardMobileCardsProps) {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -41,7 +41,7 @@ export function ProcessRequestsMobileCards({
   if (items.length === 0) {
     return (
       <div className="flex justify-center items-center py-8">
-        <p className="text-sm text-muted-foreground">No items found</p>
+        <p className="text-sm text-muted-foreground">No items to process</p>
       </div>
     );
   }

@@ -4,7 +4,8 @@ import { useLogout } from "@/context/AuthContext";
 import { Search } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./modals/ViewRedemptionStatusModal";
-import type { RedemptionRequest, RedemptionRequestItem } from "./modals/types";
+import { BulkWithdrawModal } from "./modals/BulkWithdrawModal";
+import type { RedemptionRequest } from "./modals/types";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
 import {
@@ -12,31 +13,34 @@ import {
   RedemptionStatusMobileCards,
 } from "./components";
 
-// SalesPages type (single declaration)
-type SalesPages = "dashboard" | "redemption-status" | "redeem-items";
-
 export default function RedemptionStatus() {
   const _navigate = useNavigate();
   const _handleLogout = useLogout();
-  const _currentPage = "redemption-status" as SalesPages;
 
-  // Use currentPage from props to reflect parent routing state
-  const [searchQuery, setSearchQuery] = useState(""); // Only for mobile view
-  const [selectedItem, setSelectedItem] = useState<RedemptionRequestItem | null>(null);
+  // State for data
+  const [searchQuery, setSearchQuery] = useState(""); // Mobile only
   const [selectedRequest, setSelectedRequest] = useState<RedemptionRequest | null>(null);
-  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showBulkWithdrawModal, setShowBulkWithdrawModal] = useState(false);
+  const [bulkWithdrawTargets, setBulkWithdrawTargets] = useState<RedemptionRequest[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentPageIndex, setCurrentPageIndex] = useState(1); // Only for mobile view
+  const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const [requests, setRequests] = useState<RedemptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 7; // Only for mobile view
+  const itemsPerPage = 7; // Mobile only
 
   // Fetch redemption requests from API
-  const fetchRequests = async () => {
+  const fetchRequests = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
+      
       const response = await fetch(`${API_URL}/redemption-requests/`, {
         credentials: "include",
       });
@@ -52,6 +56,7 @@ export default function RedemptionStatus() {
       setError(err instanceof Error ? err.message : "Failed to load requests");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -59,28 +64,17 @@ export default function RedemptionStatus() {
     fetchRequests();
   }, []);
 
-  // Flatten request items for display
-  const flattenedItems = requests.flatMap((request) =>
-    request.items.map((item) => ({
-      ...item,
-      requestId: request.id,
-      status: request.status,
-      status_display: request.status_display,
-      processing_status: request.processing_status,
-      date_requested: request.date_requested,
-      request: request,
-    }))
-  );
-
-  // Filtering and pagination for mobile view only
-  const filtered = flattenedItems.filter((item) => {
+  // Mobile filtering and pagination
+  const filtered = requests.filter((request) => {
     const q = searchQuery.toLowerCase();
     return (
-      item.requestId.toString().includes(q) ||
-      item.product_code.toLowerCase().includes(q) ||
-      item.product_name.toLowerCase().includes(q) ||
-      (item.category && item.category.toLowerCase().includes(q)) ||
-      item.status_display.toLowerCase().includes(q)
+      request.id.toString().includes(q) ||
+      request.requested_for_name.toLowerCase().includes(q) ||
+      request.status_display.toLowerCase().includes(q) ||
+      request.items.some(item => 
+        item.product_code.toLowerCase().includes(q) ||
+        item.product_name.toLowerCase().includes(q)
+      )
     );
   });
 
@@ -88,24 +82,23 @@ export default function RedemptionStatus() {
   const safePage = Math.min(currentPageIndex, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = filtered.slice(startIndex, endIndex);
+  const paginatedRequests = filtered.slice(startIndex, endIndex);
 
-  const openDetails = (item: RedemptionRequestItem & { request: RedemptionRequest }) => {
-    setSelectedItem(item);
-    setSelectedRequest(item.request);
+  const openDetails = (request: RedemptionRequest) => {
+    setSelectedRequest(request);
   };
+  
   const closeDetails = () => {
-    setSelectedItem(null);
     setSelectedRequest(null);
   };
 
-  const openCancelModal = (item: RedemptionRequestItem & { request: RedemptionRequest }) => {
-    setSelectedItem(item);
-    setSelectedRequest(item.request);
-    setShowCancelModal(true);
+  const openWithdrawModal = (request: RedemptionRequest) => {
+    setSelectedRequest(request);
+    setShowWithdrawModal(true);
   };
-  const closeCancelModal = () => {
-    setShowCancelModal(false);
+  
+  const closeWithdrawModal = () => {
+    setShowWithdrawModal(false);
   };
 
   const handleWithdraw = async (reason: string) => {
@@ -124,8 +117,9 @@ export default function RedemptionStatus() {
         throw new Error(data.error || "Failed to cancel request");
       }
 
-      closeCancelModal();
-      fetchRequests();
+      closeWithdrawModal();
+      closeDetails();
+      fetchRequests(true);
     } catch (err) {
       console.error("Failed to cancel request:", err);
       alert(err instanceof Error ? err.message : "Failed to cancel request");
@@ -134,36 +128,63 @@ export default function RedemptionStatus() {
     }
   };
 
+  const handleBulkWithdraw = async (selectedRequests: RedemptionRequest[]) => {
+    setBulkWithdrawTargets(selectedRequests);
+    setShowBulkWithdrawModal(true);
+  };
+
+  const handleBulkWithdrawConfirm = async (reason: string) => {
+    setIsSubmitting(true);
+    try {
+      const results = await Promise.allSettled(
+        bulkWithdrawTargets.map(request =>
+          fetchWithCsrf(`${API_URL}/redemption-requests/${request.id}/withdraw_request/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ withdrawal_reason: reason }),
+          })
+        )
+      );
+
+      const succeeded = results.filter(r => r.status === "fulfilled").length;
+      const failed = results.filter(r => r.status === "rejected").length;
+
+      if (succeeded > 0) {
+        alert(`Successfully cancelled ${succeeded} request(s)${failed > 0 ? `, ${failed} failed` : ""}`);
+      } else {
+        throw new Error("All cancellations failed");
+      }
+
+      setShowBulkWithdrawModal(false);
+      setBulkWithdrawTargets([]);
+      fetchRequests(true);
+    } catch (err) {
+      console.error("Bulk withdraw failed:", err);
+      alert(err instanceof Error ? err.message : "Failed to cancel requests");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div
-      className="flex-1 overflow-y-auto pb-20 md:pb-0"
-    >
-      {/* Header */}
-      <div className="p-4 md:p-8 md:pb-6">
-        <div className="flex justify-between items-start mb-4 md:mb-6">
-          <div>
-            <h1 className="text-2xl md:text-4xl font-bold mb-1">
-              Redemption Status
-            </h1>
-            <p
-              className="text-xs md:text-base text-muted-foreground"
-            >
-              See exactly where your rewards are
-            </p>
-          </div>
+    <div className="md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      {/* Mobile Layout */}
+      <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
+        {/* Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-1">Redemption Status</h1>
+          <p className="text-xs text-muted-foreground">
+            See exactly where your rewards are
+          </p>
         </div>
 
         {/* Mobile Search Bar */}
-        <div className="flex md:hidden items-center gap-3 mb-4">
-          <div
-            className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border bg-background border-border"
-          >
-            <Search
-              className="h-5 w-5 text-muted-foreground"
-            />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border bg-background border-border">
+            <Search className="h-5 w-5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search by ID, Name......"
+              placeholder="Search by ID, Customer..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent outline-none text-foreground placeholder-muted-foreground"
@@ -172,18 +193,10 @@ export default function RedemptionStatus() {
         </div>
 
         <TooltipProvider>
-          <RedemptionStatusTable
-            items={flattenedItems}
-            onViewItem={openDetails}
-            onCancelRequest={openCancelModal}
-            loading={loading}
-            error={error}
-          />
-
           <RedemptionStatusMobileCards
-            items={paginatedItems}
+            requests={paginatedRequests}
             filteredCount={filtered.length}
-            onViewItem={openDetails}
+            onViewRequest={openDetails}
             currentPage={safePage}
             totalPages={totalPages}
             onPageChange={setCurrentPageIndex}
@@ -193,20 +206,54 @@ export default function RedemptionStatus() {
         </TooltipProvider>
       </div>
 
+      {/* Desktop Layout */}
+      <div className="hidden md:block">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-4xl font-bold mb-1">Redemption Status</h1>
+          <p className="text-base text-muted-foreground">
+            See exactly where your rewards are
+          </p>
+        </div>
+
+        <TooltipProvider>
+          <RedemptionStatusTable
+            requests={requests}
+            onViewRequest={openDetails}
+            onCancelRequest={openWithdrawModal}
+            onBulkCancel={handleBulkWithdraw}
+            onRefresh={() => fetchRequests(true)}
+            refreshing={refreshing}
+            loading={loading}
+            error={error}
+          />
+        </TooltipProvider>
+      </div>
+
       <ViewRedemptionStatusModal
-        isOpen={!!selectedItem && !showCancelModal}
+        isOpen={!!selectedRequest && !showWithdrawModal}
         onClose={closeDetails}
-        item={selectedItem}
+        item={selectedRequest?.items[0] || null}
         request={selectedRequest}
-        onRequestWithdrawn={fetchRequests}
+        onRequestWithdrawn={() => fetchRequests(true)}
       />
 
-      {showCancelModal && selectedRequest && (
+      {showWithdrawModal && selectedRequest && (
         <WithdrawConfirmationModal
-          isOpen={showCancelModal}
-          onClose={closeCancelModal}
+          isOpen={showWithdrawModal}
+          onClose={closeWithdrawModal}
           onConfirm={handleWithdraw}
           requestId={selectedRequest.id}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {showBulkWithdrawModal && (
+        <BulkWithdrawModal
+          isOpen={showBulkWithdrawModal}
+          onClose={() => setShowBulkWithdrawModal(false)}
+          onConfirm={handleBulkWithdrawConfirm}
+          requests={bulkWithdrawTargets}
           isSubmitting={isSubmitting}
         />
       )}

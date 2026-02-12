@@ -1,21 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLogout } from "@/context/AuthContext";
-import { RefreshCw } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { marketingRequestsApi } from "@/lib/api";
 import { toast } from "sonner";
-import type { RequestItem, MarketingProcessingStatusItem } from "@/page/marketing/ProcessRequests/modals/types";
+import type { RequestItem } from "@/page/marketing/ProcessRequests/modals/types";
 import { HistoryTable } from "./components/HistoryTable";
 import { HistoryMobileCards } from "./components/HistoryMobileCards";
-import { ViewRequestModal } from "@/page/marketing/ProcessRequests/modals/ViewRequestModal";
+import { ViewHistoryModal } from "./modals/ViewHistoryModal";
+import { ExportModal } from "./modals/ExportModal";
+import { exportToCSV, exportToExcel } from "./utils/exportUtils";
 
 export default function MarketingHistory() {
-  const _navigate = useNavigate();
-  const _handleLogout = useLogout();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 7;
+  const pageSize = 15; // Increased from 7 for mobile pagination
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -23,8 +21,10 @@ export default function MarketingHistory() {
   
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [myProcessedItems, setMyProcessedItems] = useState<MarketingProcessingStatusItem[]>([]);
+  const [selectedRequests, setSelectedRequests] = useState<RequestItem[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
 
   const fetchHistory = useCallback(async (isRefresh = false) => {
     try {
@@ -51,15 +51,47 @@ export default function MarketingHistory() {
     fetchHistory();
   }, [fetchHistory]);
 
+  // Handlers
+  const handleViewClick = (request: RequestItem) => {
+    setSelectedRequest(request);
+    setShowViewModal(true);
+  };
+
+  const handleExport = (selected: RequestItem[]) => {
+    setSelectedRequests(selected);
+    setShowExportModal(true);
+  };
+
+  const handleExportConfirm = async (format: "csv" | "excel") => {
+    try {
+      setIsExporting(true);
+      const itemsToExport = selectedRequests.length > 0 ? selectedRequests : requests;
+      
+      if (format === "csv") {
+        exportToCSV(itemsToExport, `history_export_${new Date().toISOString().split("T")[0]}`);
+      } else {
+        exportToExcel(itemsToExport, `history_export_${new Date().toISOString().split("T")[0]}`);
+      }
+      
+      toast.success(`Exported ${itemsToExport.length} record(s) successfully`);
+      setShowExportModal(false);
+      setSelectedRequests([]);
+    } catch (err) {
+      console.error("Export error:", err);
+      toast.error("Failed to export data");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Mobile pagination - filter and paginate for mobile cards only
   const filteredRequests = requests.filter((request) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
       request.id.toString().includes(query) ||
       request.requested_by_name.toLowerCase().includes(query) ||
-      request.requested_for_name.toLowerCase().includes(query) ||
-      request.status.toLowerCase().includes(query) ||
-      request.processing_status.toLowerCase().includes(query)
+      request.requested_for_name.toLowerCase().includes(query)
     );
   });
 
@@ -69,103 +101,110 @@ export default function MarketingHistory() {
   const endIndex = startIndex + pageSize;
   const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
 
-  const handleViewClick = (request: RequestItem) => {
-    setSelectedRequest(request);
-    // Filter items that were processed by this user from the request data
-    const processedItems = (request.items?.filter(item => item.item_processed_by !== null) || []) as MarketingProcessingStatusItem[];
-    setMyProcessedItems(processedItems);
-    setShowViewModal(true);
-  };
-
   return (
     <>
-    <div className="flex-1 overflow-y-auto">
+      {/* Mobile Layout */}
+      <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
         {/* Header */}
-        <div className="sticky top-0 z-30 px-4 py-4 md:px-8 md:py-5 mt-2 md:mt-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">
-              Marketing History
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              View your processed requests
-            </p>
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-1">History</h1>
+          <p className="text-xs text-muted-foreground">
+            View your processed redemption requests
+          </p>
+        </div>
+
+        {/* Mobile Search Bar */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border bg-background border-border">
+            <Search className="h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search history..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="flex-1 bg-transparent outline-none border-none text-foreground placeholder-muted-foreground p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
           </div>
-          <div className="flex items-center gap-4">
+        </div>
+
+        <HistoryMobileCards
+          requests={paginatedRequests}
+          loading={loading}
+          onView={handleViewClick}
+        />
+
+        {/* Mobile Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
             <button
-              onClick={() => fetchHistory(true)}
-              disabled={refreshing}
-              className={`p-2 rounded-lg transition-colors border border-transparent hover:bg-accent hover:border-border ${refreshing ? "opacity-50" : ""}`}
-              aria-label="Refresh"
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent text-foreground"
             >
-              <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
+              <ChevronLeft className="h-4 w-4" />
+              Prev
+            </button>
+            <span className="text-xs font-medium text-foreground">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent text-foreground"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-        </div>
-
-        
-
-        {/* Mobile Cards */}
-        <div className="md:hidden px-4">
-          <HistoryMobileCards
-            requests={paginatedRequests}
-            loading={loading}
-            onView={handleViewClick}
-          />
-        </div>
-
-        {/* Desktop Table */}
-        <div className="hidden md:block px-4 md:px-8">
-          {error ? (
-            <div className="text-center py-12">
-              <p className="text-red-500">{error}</p>
-              <button
-                onClick={() => fetchHistory()}
-                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          ) : (
-            <HistoryTable
-              requests={paginatedRequests}
-              loading={loading}
-              onView={handleViewClick}
-            />
-          )}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 md:px-8 py-4">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-2 rounded-md font-medium bg-muted text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-muted-foreground">
-            Page {safePage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-2 rounded-md font-medium bg-muted text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* View Request Modal */}
-      <ViewRequestModal
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-4xl font-bold mb-1">History</h1>
+          <p className="text-base text-muted-foreground">
+            View your processed redemption requests
+          </p>
+        </div>
+
+        {error ? (
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+            {error}
+          </div>
+        ) : (
+          <HistoryTable
+            requests={requests}
+            loading={loading}
+            onView={handleViewClick}
+            onExport={handleExport}
+            onRefresh={() => fetchHistory(true)}
+            refreshing={refreshing}
+          />
+        )}
+      </div>
+
+      <ViewHistoryModal
         isOpen={showViewModal}
         onClose={() => {
           setShowViewModal(false);
           setSelectedRequest(null);
-          setMyProcessedItems([]);
         }}
         request={selectedRequest}
-        myItems={myProcessedItems}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => {
+          setShowExportModal(false);
+          setSelectedRequests([]);
+        }}
+        onConfirm={handleExportConfirm}
+        selectedItems={selectedRequests.length > 0 ? selectedRequests : requests}
+        isExporting={isExporting}
       />
     </>
   );

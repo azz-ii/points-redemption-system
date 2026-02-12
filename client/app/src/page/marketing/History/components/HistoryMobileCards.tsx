@@ -118,7 +118,7 @@ export function HistoryMobileCards({
 
           <button
             onClick={() => onView(request)}
-            className="w-full px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-muted hover:bg-accent text-foreground"
+            className="w-full px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
           >
             <Eye className="h-4 w-4" />
             View Details
