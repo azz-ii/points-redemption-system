@@ -51,6 +51,9 @@ function getCellValue(customer: Customer, key: ExportColumn["key"]): string | nu
     return formatDate(customer.date_added);
   }
   const value = customer[key as keyof Customer];
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
   return value ?? "";
 }
 
@@ -63,8 +66,8 @@ function sortCustomers(
   sortDirection: SortDirection
 ): Customer[] {
   return [...customers].sort((a, b) => {
-    let aVal: string | number | undefined;
-    let bVal: string | number | undefined;
+    let aVal: string | number | boolean | null | undefined;
+    let bVal: string | number | boolean | null | undefined;
 
     if (sortField === "formatted_date") {
       aVal = a.date_added || "";

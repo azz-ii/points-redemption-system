@@ -14,6 +14,10 @@ export interface Distributor {
   date_added?: string;
   created_at?: string;
   updated_at?: string;
+  is_archived: boolean;
+  date_archived?: string | null;
+  archived_by?: number | null;
+  archived_by_username?: string | null;
 }
 
 export interface PaginatedDistributorsResponse {
@@ -294,7 +298,7 @@ export const distributorsApi = {
     return response.json();
   },
   // Alias for backwards compatibility
-  createDistributor: async (data: Omit<Distributor, 'id' | 'date_added'>): Promise<Distributor> => {
+  createDistributor: async (data: Omit<Distributor, 'id' | 'date_added' | 'is_archived' | 'date_archived' | 'archived_by' | 'archived_by_username' | 'created_at' | 'updated_at'>): Promise<Distributor> => {
     const response = await fetch(`${API_BASE_URL}/distributors/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -51,6 +51,9 @@ function getCellValue(distributor: Distributor, key: ExportColumn["key"]): strin
     return formatDate(distributor.date_added);
   }
   const value = distributor[key as keyof Distributor];
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
   return value ?? "";
 }
 
@@ -63,8 +66,8 @@ function sortDistributors(
   sortDirection: SortDirection
 ): Distributor[] {
   return [...distributors].sort((a, b) => {
-    let aVal: string | number | undefined;
-    let bVal: string | number | undefined;
+    let aVal: string | number | boolean | null | undefined;
+    let bVal: string | number | boolean | null | undefined;
 
     if (sortField === "formatted_date") {
       aVal = a.date_added || "";

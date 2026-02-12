@@ -1,6 +1,6 @@
 "use client"
 
-import type { ColumnDef } from "@tantml:react-table"
+import type { ColumnDef } from "@tanstack/react-table"
 import { Eye, Pencil, Trash2, ArrowUpDown, Clock, Archive, ArchiveRestore } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"

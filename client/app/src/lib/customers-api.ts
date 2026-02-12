@@ -14,6 +14,10 @@ export interface Customer {
   updated_at?: string;
   added_by?: number;
   added_by_name?: string;
+  is_archived: boolean;
+  date_archived?: string | null;
+  archived_by?: number | null;
+  archived_by_username?: string | null;
 }
 
 export interface PaginatedCustomersResponse {
@@ -244,7 +248,7 @@ export const customersApi = {
     if (!response.ok) throw new Error('Failed to create customer');
     return response.json();
   },
-  createCustomer: async (data: Omit<Customer, 'id' | 'date_added'>): Promise<Customer> => {
+  createCustomer: async (data: Omit<Customer, 'id' | 'date_added' | 'is_archived' | 'date_archived' | 'archived_by' | 'archived_by_username' | 'created_at' | 'updated_at' | 'added_by' | 'added_by_name'>): Promise<Customer> => {
     const response = await fetch(`${API_BASE_URL}/customers/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
