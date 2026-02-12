@@ -1,5 +1,4 @@
 ﻿import { X, Package, CheckCircle } from "lucide-react";
-import { useTheme } from "next-themes";
 import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types";
 
@@ -14,8 +13,6 @@ export function ViewRedemptionModal({
   item,
   myItems,
 }: ViewRedemptionModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !item) return null;
 
   const getStatusBadgeColor = (status: string) => {
@@ -50,13 +47,7 @@ export function ViewRedemptionModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-redemption-title"
@@ -168,11 +159,7 @@ export function ViewRedemptionModal({
               {displayItems.map((it) => (
                 <div
                   key={it.id}
-                  className={`p-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
+                  className="p-3 rounded border bg-card border-border"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -203,11 +190,7 @@ export function ViewRedemptionModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Close
           </button>

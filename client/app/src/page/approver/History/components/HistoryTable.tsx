@@ -1,5 +1,4 @@
 import { Eye } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { HistoryItem } from "../types.js";
 
 interface HistoryTableProps {
@@ -13,8 +12,6 @@ export function HistoryTable({
   loading,
   onView,
 }: HistoryTableProps) {
-  const { resolvedTheme } = useTheme();
-
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "APPROVED":
@@ -28,20 +25,12 @@ export function HistoryTable({
 
   return (
     <div
-      className={`rounded-lg border ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-700"
-          : "bg-white border-gray-200"
-      } overflow-hidden`}
+      className="rounded-lg border bg-card border-border overflow-hidden"
     >
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead
-            className={`${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-gray-300"
-                : "bg-gray-50 text-gray-700"
-            }`}
+            className="bg-muted text-foreground"
           >
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
@@ -71,7 +60,7 @@ export function HistoryTable({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+          <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
                 <td colSpan={9} className="px-6 py-12 text-center">
@@ -91,9 +80,7 @@ export function HistoryTable({
               historyItems.map((item) => (
                 <tr
                   key={item.id}
-                  className={`hover:${
-                    resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                  } transition-colors`}
+                  className="hover:bg-accent transition-colors"
                 >
                   <td className="px-6 py-4 text-sm">#{item.id}</td>
                   <td className="px-6 py-4 text-sm">
@@ -129,7 +116,7 @@ export function HistoryTable({
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => onView(item)}
-                        className="px-4 py-2 rounded flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors text-sm"
+                        className="px-4 py-2 rounded flex items-center gap-1 bg-primary hover:bg-primary/90 text-white font-semibold transition-colors text-sm"
                         title="View"
                       >
                         <Eye className="h-4 w-4" />

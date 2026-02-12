@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
 
 interface ContentCardProps {
   children: ReactNode;
@@ -24,8 +23,6 @@ export function ContentCard({
   padding = "md",
   noBorder = false,
 }: ContentCardProps) {
-  const { resolvedTheme } = useTheme();
-
   const paddingClasses = {
     none: "",
     sm: "p-3 sm:p-4",
@@ -36,34 +33,18 @@ export function ContentCard({
   return (
     <div
       className={`rounded-lg ${
-        noBorder
-          ? ""
-          : resolvedTheme === "dark"
-            ? "border border-gray-800 bg-gray-800/50"
-            : "border border-gray-200 bg-white shadow-sm"
+        noBorder ? "" : "border border-border bg-card shadow-sm"
       } ${className}`}
     >
       {(title || headerActions) && (
-        <div
-          className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b px-4 sm:px-6 py-4 ${
-            resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
-        >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border px-4 sm:px-6 py-4">
           {title && (
             <div className="min-w-0 flex-1">
-              <h2
-                className={`text-lg sm:text-xl font-semibold truncate ${
-                  resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h2 className="text-lg sm:text-xl font-semibold truncate text-foreground">
                 {title}
               </h2>
               {subtitle && (
-                <p
-                  className={`mt-1 text-sm ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
+                <p className="mt-1 text-sm text-muted-foreground">
                   {subtitle}
                 </p>
               )}

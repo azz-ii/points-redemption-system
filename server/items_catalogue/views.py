@@ -1,5 +1,6 @@
 from django.shortcuts import render
 import logging
+import os
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.db.models import Q, Case, When, Value, CharField, F, Count
@@ -9,8 +10,12 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Product
 from .serializers import ProductSerializer, ProductInventorySerializer
+
+ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +37,7 @@ class ProductListCreateView(APIView):
     """List all products or create a new product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request):
         """Get paginated list of products"""
@@ -58,13 +64,32 @@ class ProductListCreateView(APIView):
     
     def post(self, request):
         """Create a new product"""
-        serializer = ProductSerializer(data=request.data)
+        data = request.data.copy()
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            image = request.FILES['image']
+            if image.content_type not in ALLOWED_IMAGE_TYPES:
+                return Response({
+                    "error": "Invalid image type. Allowed: JPG, PNG, WebP"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if image.size > MAX_IMAGE_SIZE:
+                return Response({
+                    "error": "Image size must be less than 5MB"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            data['image'] = image
+        
+        # Handle explicit image removal
+        if data.get('image') == '' or data.get('image') == 'null':
+            data['image'] = None
+
+        serializer = ProductSerializer(data=data)
         if serializer.is_valid():
             user = request.user if request.user.is_authenticated else None
             product = serializer.save(added_by=user)
             return Response({
                 "message": "Product created successfully",
-                "product": ProductSerializer(product).data
+                "product": ProductSerializer(product, context={'request': request}).data
             }, status=status.HTTP_201_CREATED)
         return Response({
             "error": "Failed to create product",
@@ -76,6 +101,7 @@ class ProductDetailView(APIView):
     """Retrieve, update or delete a product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request, product_id):
         """Get a specific product's details"""
@@ -88,16 +114,48 @@ class ProductDetailView(APIView):
                 "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
     
+    def _handle_image(self, request, data, product=None):
+        """Handle image upload/removal for product updates"""
+        if 'image' in request.FILES:
+            image = request.FILES['image']
+            if image.content_type not in ALLOWED_IMAGE_TYPES:
+                return Response({
+                    "error": "Invalid image type. Allowed: JPG, PNG, WebP"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if image.size > MAX_IMAGE_SIZE:
+                return Response({
+                    "error": "Image size must be less than 5MB"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            # Delete old image if replacing
+            if product and product.image:
+                old_path = product.image.path
+                if os.path.isfile(old_path):
+                    os.remove(old_path)
+            data['image'] = image
+        elif data.get('remove_image') == 'true' or data.get('image') == '':
+            # Explicit removal
+            if product and product.image:
+                old_path = product.image.path
+                if os.path.isfile(old_path):
+                    os.remove(old_path)
+            data['image'] = None
+            data.pop('remove_image', None)
+        return None  # No error
+
     def put(self, request, product_id):
         """Update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            serializer = ProductSerializer(product, data=request.data, partial=True)
+            data = request.data.copy()
+            error_response = self._handle_image(request, data, product)
+            if error_response:
+                return error_response
+            serializer = ProductSerializer(product, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({
                     "message": "Product updated successfully",
-                    "product": serializer.data
+                    "product": ProductSerializer(product, context={'request': request}).data
                 }, status=status.HTTP_200_OK)
             return Response({
                 "error": "Failed to update product",
@@ -112,12 +170,16 @@ class ProductDetailView(APIView):
         """Partially update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            serializer = ProductSerializer(product, data=request.data, partial=True)
+            data = request.data.copy()
+            error_response = self._handle_image(request, data, product)
+            if error_response:
+                return error_response
+            serializer = ProductSerializer(product, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({
                     "message": "Product updated successfully",
-                    "product": serializer.data
+                    "product": ProductSerializer(product, context={'request': request}).data
                 }, status=status.HTTP_200_OK)
             return Response({
                 "error": "Failed to update product",

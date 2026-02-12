@@ -10,6 +10,7 @@ export interface Account {
   position: string;
   points: number;
   is_activated: boolean;
+  is_active?: boolean;
   is_banned: boolean;
   profile_picture?: string | null;
 }
@@ -37,24 +38,27 @@ export const usersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
-    // Ensure we return paginated format
+    
+    // Ensure we return paginated format (backend now returns standard DRF pagination)
     if (Array.isArray(data)) {
       return { count: data.length, next: null, previous: null, results: data };
     }
     return data;
   },
 
-  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+  batchUpdatePoints: async (updates: { id: number; points: number }[], reason?: string): Promise<BatchUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/users/batch_update_points/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ updates }),
+      body: JSON.stringify({ updates, reason: reason || '' }),
     });
     
     const data = await response.json();
@@ -71,7 +75,9 @@ export const usersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
     // Handle both array and paginated response formats
@@ -88,7 +94,9 @@ export const usersApi = {
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch accounts');
       
       const data = await response.json();

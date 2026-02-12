@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     'requests',
     'otp',
     'teams',
-    'utils'
+    'utils',
+    'points_audit'
 ]
 
 MIDDLEWARE = [
@@ -160,6 +161,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://points.n01tb.com",  # Production subdomain (HTTP)
     "https://points.n01tb.com",  # Production subdomain (HTTPS)
     "http://points-redemption.n01tb.com",  # Production subdomain HTTP
+    "http://points-redemption.n01tb.com:8000",  # Production API port
     "https://points-redemption.n01tb.com",  # Production subdomain HTTPS
     "https://points-redemption-system.onrender.com",
 ]
@@ -173,6 +175,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://points.n01tb.com",  # Production subdomain (HTTP)
     "https://points.n01tb.com",  # Production subdomain (HTTPS)
     "http://points-redemption.n01tb.com",  # Production subdomain HTTP
+    "http://points-redemption.n01tb.com:8000",  # Production API port
     "https://points-redemption.n01tb.com",  # Production subdomain HTTPS
     "https://points-redemption-system.onrender.com",
 ]

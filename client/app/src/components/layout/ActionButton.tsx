@@ -1,5 +1,4 @@
-import { ReactNode, ButtonHTMLAttributes } from "react";
-import { useTheme } from "next-themes";
+import type { ReactNode, ButtonHTMLAttributes } from "react";
 
 interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -25,21 +24,15 @@ export function ActionButton({
   disabled,
   ...props
 }: ActionButtonProps) {
-  const { resolvedTheme } = useTheme();
-
   const variantClasses = {
     primary:
-      "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl disabled:bg-blue-400",
+      "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm disabled:opacity-50",
     secondary:
-      resolvedTheme === "dark"
-        ? "bg-gray-700 hover:bg-gray-600 text-white border border-gray-600"
-        : "bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm",
+      "bg-secondary hover:bg-accent text-secondary-foreground border border-border shadow-sm",
     destructive:
-      "bg-red-600 hover:bg-red-700 text-white shadow-lg disabled:bg-red-400",
+      "bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-sm disabled:opacity-50",
     ghost:
-      resolvedTheme === "dark"
-        ? "hover:bg-gray-800 text-gray-300"
-        : "hover:bg-gray-100 text-gray-700",
+      "hover:bg-accent text-foreground",
   };
 
   const sizeClasses = {
@@ -50,7 +43,7 @@ export function ActionButton({
 
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
         variantClasses[variant]
       } ${sizeClasses[size]} ${
         fullWidthOnMobile ? "w-full sm:w-auto" : ""

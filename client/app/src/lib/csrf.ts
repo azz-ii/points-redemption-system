@@ -1,3 +1,5 @@
+import { API_BASE_URL } from './config';
+
 /**
  * Get CSRF token from cookie
  */
@@ -20,9 +22,16 @@ export function getCsrfToken(): string | null {
 }
 
 /**
- * Fetch wrapper that automatically includes CSRF token for unsafe methods
+ * Fetch wrapper that automatically includes CSRF token for unsafe methods.
+ * Resolves relative URLs (e.g. /api/users/1/) against API_BASE_URL so
+ * requests are routed to the Django backend in production.
  */
 export async function fetchWithCsrf(url: string, options: RequestInit = {}): Promise<Response> {
+  // Resolve relative URLs against the configured API base URL
+  if (url.startsWith('/')) {
+    url = `${API_BASE_URL}${url}`;
+  }
+
   const method = options.method?.toUpperCase() || 'GET';
   const unsafeMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
   

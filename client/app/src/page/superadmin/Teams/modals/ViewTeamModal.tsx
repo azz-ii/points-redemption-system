@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTheme } from "next-themes";
 import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
@@ -16,7 +15,6 @@ export function ViewTeamModal({
   team,
   onRefresh,
 }: ViewTeamModalProps) {
-  const { resolvedTheme } = useTheme();
   const [teamDetails, setTeamDetails] = useState<TeamDetail | null>(null);
   const [availableSalesAgents, setAvailableSalesAgents] = useState<
     SalesAgentOption[]
@@ -274,11 +272,7 @@ export function ViewTeamModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-team-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -317,11 +311,7 @@ export function ViewTeamModal({
                       type="text"
                       value={teamDetails.name}
                       disabled
-                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-700 border-gray-600 text-gray-300"
-                          : "bg-gray-100 border-gray-300 text-gray-600"
-                      } focus:outline-none`}
+                      className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                     />
                   </div>
                   <div>
@@ -330,11 +320,7 @@ export function ViewTeamModal({
                       type="text"
                       value={teamDetails.approver_details ? teamDetails.approver_details.full_name : "No Approver"}
                       disabled
-                      className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-700 border-gray-600 text-gray-300"
-                          : "bg-gray-100 border-gray-300 text-gray-600"
-                      } focus:outline-none`}
+                      className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                     />
                   </div>
                 </div>
@@ -349,11 +335,7 @@ export function ViewTeamModal({
                   <button
                     onClick={() => setShowAddMember(!showAddMember)}
                     disabled={actionLoading}
-                    className={`px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
-                      resolvedTheme === "dark"
-                        ? "bg-white text-black hover:bg-gray-100"
-                        : "bg-gray-900 text-white hover:bg-gray-800"
-                    } transition-colors disabled:opacity-50`}
+                    className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-card text-black hover:bg-accent transition-colors disabled:opacity-50"
                   >
                     <UserPlus className="h-3 w-3" />
                     {showAddMember ? "Cancel" : "Add Member"}
@@ -379,11 +361,7 @@ export function ViewTeamModal({
                           );
                           setSelectedSalesAgent(value);
                         }}
-                        className={`flex-1 px-3 py-2 rounded border ${
-                          resolvedTheme === "dark"
-                            ? "bg-gray-800 border-gray-600 text-white"
-                            : "bg-white border-gray-300 text-gray-900"
-                        } focus:outline-none focus:border-blue-500 text-sm`}
+                        className="flex-1 px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 text-sm"
                       >
                         <option value="">Select an agent...</option>
                         {filteredSalesAgents.map((agent) => (
@@ -396,11 +374,7 @@ export function ViewTeamModal({
                       <button
                         onClick={handleAddMember}
                         disabled={!selectedSalesAgent || actionLoading}
-                        className={`px-4 py-2 rounded text-sm font-semibold ${
-                          resolvedTheme === "dark"
-                            ? "bg-white text-black hover:bg-gray-100"
-                            : "bg-gray-900 text-white hover:bg-gray-800"
-                        } transition-colors disabled:opacity-50`}
+                        className="px-4 py-2 rounded text-sm font-semibold bg-card text-black hover:bg-accent transition-colors disabled:opacity-50"
                       >
                         {actionLoading ? "Adding..." : "Add"}
                       </button>
@@ -410,11 +384,7 @@ export function ViewTeamModal({
 
                 {/* Members Table */}
                 <div
-                  className={`border rounded-lg overflow-hidden ${
-                    resolvedTheme === "dark"
-                      ? "border-gray-700"
-                      : "border-gray-200"
-                  }`}
+                  className="border rounded-lg overflow-hidden border-border"
                 >
                   {!teamDetails.members || teamDetails.members.length === 0 ? (
                     <div className="text-center text-gray-500 py-8 text-sm">
@@ -423,11 +393,7 @@ export function ViewTeamModal({
                   ) : (
                     <table className="w-full">
                       <thead
-                        className={`${
-                          resolvedTheme === "dark"
-                            ? "bg-gray-800 text-gray-300"
-                            : "bg-gray-50 text-gray-700"
-                        }`}
+                        className="bg-card text-foreground"
                       >
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-semibold">
@@ -451,11 +417,7 @@ export function ViewTeamModal({
                         {teamDetails.members.map((member) => (
                           <tr
                             key={member.id}
-                            className={`hover:${
-                              resolvedTheme === "dark"
-                                ? "bg-gray-800"
-                                : "bg-gray-50"
-                            } transition-colors`}
+                            className="hover:bg-card transition-colors"
                           >
                             <td className="px-4 py-3 text-sm">
                               {member.user_details.full_name}
@@ -504,11 +466,7 @@ export function ViewTeamModal({
       {errorDialog.show && (
         <div className="fixed inset-0 flex items-center justify-center z-60 p-4 bg-black/50 backdrop-blur-sm">
           <div
-            className={`${
-              resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-            } rounded-lg shadow-2xl max-w-md w-full border ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
+            className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
           >
             <div className="flex justify-between items-center p-6 border-b border-gray-700">
               <div className="flex items-center gap-3">
@@ -543,11 +501,7 @@ export function ViewTeamModal({
                   console.log("DEBUG ViewTeamModal: Closing error dialog");
                   setErrorDialog({ show: false, title: "", message: "" });
                 }}
-                className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-                }`}
+                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
               >
                 Got it
               </button>

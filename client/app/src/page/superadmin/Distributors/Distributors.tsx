@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import { Bell, Search, Plus, Store, LogOut } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 
-import { distributorsApi, type Distributor } from "@/lib/distributors-api";
+import { distributorsApi, type Distributor, type ChunkedUpdateProgress } from "@/lib/distributors-api";
 import {
   CreateDistributorModal,
   EditDistributorModal,
@@ -20,14 +13,10 @@ import {
   SetPointsModal,
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
+import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Distributors() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const currentPage = "distributors";
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const currentPage = "distributors";  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [distributors, setDistributors] = useState<Distributor[]>([]);
 
@@ -116,7 +105,10 @@ function Distributors() {
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [showPointsHistory, setShowPointsHistory] = useState(false);
+  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Distributor | null>(null);
   const [settingPoints, setSettingPoints] = useState(false);
+  const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
 
   // Handle create distributor submission
   const handleCreateDistributor = async () => {
@@ -256,24 +248,54 @@ function Distributors() {
     }
   };
 
-  // Handle set points submission - batch updates (only changed distributors)
-  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+  // Handle set points submission - batch updates with chunking for large datasets
+  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
       setSettingPoints(true);
+      setUpdateProgress(null);
 
-      // Use batch API for efficiency
-      const result = await distributorsApi.batchUpdatePoints(updates);
-
-      setShowSetPointsModal(false);
-
-      if (result.failed_count === 0) {
-        alert(
-          `Successfully updated points for ${result.updated_count} distributor(s)`,
+      // Use chunked API for large batches (>100 records), regular API for small batches
+      if (updates.length > 100) {
+        const result = await distributorsApi.batchUpdatePointsChunked(
+          updates,
+          (progress) => {
+            setUpdateProgress(progress);
+          },
+          150, // Chunk size
+          reason
         );
+
+        setShowSetPointsModal(false);
+        setUpdateProgress(null);
+
+        if (result.success) {
+          alert(
+            `Successfully updated points for ${result.totalUpdated} distributor(s)`,
+          );
+        } else if (result.partialSuccess) {
+          alert(
+            `Updated ${result.totalUpdated} of ${updates.length} distributor(s). ${result.totalFailed} failed.`,
+          );
+        } else {
+          alert(
+            `Failed to update points. ${result.totalFailed} distributor(s) failed.`,
+          );
+        }
       } else {
-        alert(
-          `Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`,
-        );
+        // Use regular batch API for smaller updates
+        const result = await distributorsApi.batchUpdatePoints(updates, reason);
+
+        setShowSetPointsModal(false);
+
+        if (result.failed_count === 0) {
+          alert(
+            `Successfully updated points for ${result.updated_count} distributor(s)`,
+          );
+        } else {
+          alert(
+            `Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`,
+          );
+        }
       }
 
       // Refresh distributors list
@@ -283,6 +305,7 @@ function Distributors() {
       alert("Error updating points");
     } finally {
       setSettingPoints(false);
+      setUpdateProgress(null);
     }
   };
 
@@ -379,69 +402,8 @@ function Distributors() {
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
+    <>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">I</span>
-            </div>
-            <span className="text-sm font-medium">Izza</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Store className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
@@ -449,25 +411,10 @@ function Distributors() {
             <div>
               <h1 className="text-3xl font-semibold">Distributors</h1>
               <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm text-muted-foreground"
               >
                 View and manage distributor information.
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
             </div>
           </div>
 
@@ -503,6 +450,10 @@ function Distributors() {
               refreshing={loading}
               onExport={() => setShowExportModal(true)}
               onSetPoints={() => setShowSetPointsModal(true)}
+              onViewPointsHistory={(distributor) => {
+                setPointsHistoryTarget(distributor);
+                setShowPointsHistory(true);
+              }}
             />
           )}
         </div>
@@ -511,9 +462,7 @@ function Distributors() {
         <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
           <h2 className="text-2xl font-semibold mb-2">Distributors</h2>
           <p
-            className={`text-xs mb-4 ${
-              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className="text-xs mb-4 text-muted-foreground"
           >
             Manage distributors
           </p>
@@ -521,22 +470,14 @@ function Distributors() {
           {/* Mobile Search */}
           <div className="mb-4">
             <div
-              className={`relative flex items-center rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
+              className="relative flex items-center rounded-lg border bg-card border-border"
             >
               <Search className="absolute left-3 h-4 w-4 text-gray-500" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 w-full text-sm ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -544,11 +485,7 @@ function Distributors() {
           <div className="mb-4">
             <button
               onClick={() => setShowCreateModal(true)}
-              className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-gray-900 border-gray-200 hover:bg-gray-200"
-                  : "bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
-              }`}
+              className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-card text-foreground border-border hover:bg-accent"
             >
               <Plus className="h-4 w-4" />
               Add Distributor
@@ -589,14 +526,6 @@ function Distributors() {
             />
           )}
         </div>
-      </div>
-
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
-
       {/* Create Distributor Modal */}
       <CreateDistributorModal
         isOpen={showCreateModal}
@@ -650,8 +579,22 @@ function Distributors() {
         onSubmit={handleSetPoints}
         onBulkSubmit={handleBulkSetPoints}
         onResetAll={handleResetAllPoints}
+        progress={updateProgress}
       />
-    </div>
+
+      {pointsHistoryTarget && (
+        <PointsHistoryModal
+          isOpen={showPointsHistory}
+          onClose={() => {
+            setShowPointsHistory(false);
+            setPointsHistoryTarget(null);
+          }}
+          entityType="DISTRIBUTOR"
+          entityId={pointsHistoryTarget.id}
+          entityName={pointsHistoryTarget.name}
+        />
+      )}
+    </>
   );
 }
 

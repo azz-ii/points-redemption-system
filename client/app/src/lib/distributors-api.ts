@@ -80,6 +80,24 @@ export interface BatchUpdateResponse {
   failed?: { id: number; error: string }[] | null;
 }
 
+export interface ChunkedUpdateProgress {
+  currentChunk: number;
+  totalChunks: number;
+  processedRecords: number;
+  totalRecords: number;
+  successCount: number;
+  failedCount: number;
+}
+
+export interface ChunkedUpdateResult {
+  success: boolean;
+  totalUpdated: number;
+  totalFailed: number;
+  allUpdatedIds: number[];
+  allFailed: { id: number; error: string }[];
+  partialSuccess: boolean;
+}
+
 export const distributorsApi = {
   getDistributorsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedDistributorsResponse> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
@@ -88,7 +106,9 @@ export const distributorsApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors');
     const data = await response.json();
     // Ensure we return paginated format
@@ -98,14 +118,14 @@ export const distributorsApi = {
     return data;
   },
 
-  batchUpdatePoints: async (updates: { id: number; points: number }[]): Promise<BatchUpdateResponse> => {
+  batchUpdatePoints: async (updates: { id: number; points: number }[], reason?: string): Promise<BatchUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/distributors/batch_update_points/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ updates }),
+      body: JSON.stringify({ updates, reason: reason || '' }),
     });
     
     const data = await response.json();
@@ -117,12 +137,106 @@ export const distributorsApi = {
     return data;
   },
 
+  batchUpdatePointsChunked: async (
+    updates: { id: number; points: number }[],
+    onProgress?: (progress: ChunkedUpdateProgress) => void,
+    chunkSize: number = 150,
+    reason?: string
+  ): Promise<ChunkedUpdateResult> => {
+    // Split updates into chunks
+    const chunks: { id: number; points: number }[][] = [];
+    for (let i = 0; i < updates.length; i += chunkSize) {
+      chunks.push(updates.slice(i, i + chunkSize));
+    }
+
+    const totalChunks = chunks.length;
+    let totalUpdated = 0;
+    let totalFailed = 0;
+    const allUpdatedIds: number[] = [];
+    const allFailed: { id: number; error: string }[] = [];
+
+    // Process each chunk sequentially with retry logic
+    for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+      const chunk = chunks[chunkIndex];
+      let retryCount = 0;
+      const maxRetries = 1;
+      let chunkSuccess = false;
+
+      while (!chunkSuccess && retryCount <= maxRetries) {
+        try {
+          const result = await distributorsApi.batchUpdatePoints(chunk, reason);
+          
+          totalUpdated += result.updated_count;
+          totalFailed += result.failed_count;
+          allUpdatedIds.push(...result.updated_ids);
+          if (result.failed) {
+            allFailed.push(...result.failed);
+          }
+
+          chunkSuccess = true;
+
+          // Report progress
+          if (onProgress) {
+            onProgress({
+              currentChunk: chunkIndex + 1,
+              totalChunks,
+              processedRecords: (chunkIndex + 1) * chunkSize,
+              totalRecords: updates.length,
+              successCount: totalUpdated,
+              failedCount: totalFailed,
+            });
+          }
+        } catch (error) {
+          retryCount++;
+          if (retryCount > maxRetries) {
+            // Mark all items in this chunk as failed
+            chunk.forEach(item => {
+              allFailed.push({
+                id: item.id,
+                error: `Chunk ${chunkIndex + 1} failed after ${maxRetries} retries: ${error instanceof Error ? error.message : 'Unknown error'}`
+              });
+            });
+            totalFailed += chunk.length;
+
+            // Report progress even on failure
+            if (onProgress) {
+              onProgress({
+                currentChunk: chunkIndex + 1,
+                totalChunks,
+                processedRecords: (chunkIndex + 1) * chunkSize,
+                totalRecords: updates.length,
+                successCount: totalUpdated,
+                failedCount: totalFailed,
+              });
+            }
+            
+            chunkSuccess = true; // Exit retry loop and continue with next chunk
+          } else {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+    }
+
+    return {
+      success: totalFailed === 0,
+      totalUpdated,
+      totalFailed,
+      allUpdatedIds,
+      allFailed,
+      partialSuccess: totalUpdated > 0 && totalFailed > 0,
+    };
+  },
+
   getDistributors: async (searchQuery: string = ''): Promise<Distributor[]> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors');
     const data = await response.json();
     // Handle both array and paginated response formats
@@ -139,7 +253,9 @@ export const distributorsApi = {
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch distributors');
       
       const data = await response.json();
@@ -155,12 +271,16 @@ export const distributorsApi = {
     return allDistributors;
   },
   getAll: async (): Promise<Distributor[]> => {
-    const response = await fetch(`${API_BASE_URL}/distributors/`);
+    const response = await fetch(`${API_BASE_URL}/distributors/`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors');
     return response.json();
   },
   getListAll: async (): Promise<{id: number; name: string; location: string}[]> => {
-    const response = await fetch(`${API_BASE_URL}/distributors/list_all/`);
+    const response = await fetch(`${API_BASE_URL}/distributors/list_all/`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors list');
     return response.json();
   },
@@ -274,6 +394,7 @@ export const dashboardApi = {
 export interface AgentDashboardStats {
   pending_count: number;
   approved_count: number;
+  rejected_count: number;
   processed_count: number;
   agent_points: number;
   active_distributors_count: number;

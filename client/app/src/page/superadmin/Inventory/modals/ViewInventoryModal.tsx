@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { InventoryItem, ModalBaseProps } from "./types";
 import { getStatusColor, getLegendColor } from "./types";
@@ -12,20 +11,12 @@ export function ViewInventoryModal({
   onClose,
   item,
 }: ViewInventoryModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !item) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-inventory-title"
@@ -74,11 +65,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.item_name}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -89,11 +76,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.item_code}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-mono ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed font-mono bg-muted border-gray-600 text-foreground focus:outline-none"
                 />
               </div>
             </div>
@@ -106,11 +89,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.category}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -140,11 +119,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.points}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -153,11 +128,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.price}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                 />
               </div>
             </div>
@@ -177,11 +148,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.stock.toString()}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -192,11 +159,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.committed_stock.toString()}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-orange-400"
-                      : "bg-gray-100 border-gray-300 text-orange-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed font-semibold bg-muted border-gray-600 text-orange-400 focus:outline-none"
                 />
               </div>
               <div>
@@ -207,11 +170,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.available_stock.toString()}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600"
-                      : "bg-gray-100 border-gray-300"
-                  } ${
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold bg-muted border-gray-600 ${
                     item.available_stock === 0
                       ? "text-red-500"
                       : "text-green-500"
@@ -220,9 +179,7 @@ export function ViewInventoryModal({
               </div>
             </div>
             <p
-              className={`text-xs ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
+              className="text-xs text-muted-foreground"
             >
               Available Stock = Total Stock - Committed Stock (reserved for pending/approved requests)
             </p>
@@ -233,11 +190,7 @@ export function ViewInventoryModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Close
           </button>

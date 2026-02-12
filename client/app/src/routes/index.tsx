@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute, PublicRoute } from "./ProtectedRoute";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 // Login pages
 import Login from "../page/login/Login";
@@ -97,72 +98,74 @@ export function AppRoutes() {
 
       {/* Protected routes - require authentication */}
       <Route element={<ProtectedRoute />}>
-        {/* Generic dashboard/history redirects based on role */}
-        <Route path="/dashboard" element={<DashboardRouter />} />
-        <Route path="/history" element={<HistoryRouter />} />
+        <Route element={<DashboardLayout />}>
+          {/* Generic dashboard/history redirects based on role */}
+          <Route path="/dashboard" element={<DashboardRouter />} />
+          <Route path="/history" element={<HistoryRouter />} />
 
-        {/* Admin/SuperAdmin routes */}
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={["Admin", "SuperAdmin", "admin"]} />
-          }
-        >
-          <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/admin/accounts" element={<Accounts />} />
-          <Route path="/admin/catalogue" element={<Catalogue />} />
-          <Route path="/admin/redemption" element={<Redemption />} />
-          <Route path="/admin/request-history" element={<RequestHistory />} />
-          <Route path="/admin/inventory" element={<Inventory />} />
-          <Route path="/admin/marketing" element={<Marketing />} />
-          <Route path="/admin/distributors" element={<Distributors />} />
-          <Route path="/admin/customers" element={<Customers />} />
-          <Route path="/admin/teams" element={<Teams />} />
-        </Route>
-
-        {/* Approver routes */}
-        <Route element={<ProtectedRoute allowedRoles={["Approver"]} />}>
-          <Route path="/approver/requests" element={<ApproverRequests />} />
-          <Route path="/approver/history" element={<ApproverHistory />} />
-        </Route>
-
-        {/* Sales Agent routes */}
-        <Route element={<ProtectedRoute allowedRoles={["Sales Agent"]} />}>
-          <Route path="/sales/dashboard" element={<SalesDashboard />} />
-          <Route path="/sales/redeem-items" element={<RedeemItem />} />
+          {/* Admin/SuperAdmin routes */}
           <Route
-            path="/sales/redemption-status"
-            element={<RedemptionStatus />}
-          />
-        </Route>
+            element={
+              <ProtectedRoute allowedRoles={["Admin", "SuperAdmin", "admin"]} />
+            }
+          >
+            <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/admin/accounts" element={<Accounts />} />
+            <Route path="/admin/catalogue" element={<Catalogue />} />
+            <Route path="/admin/redemption" element={<Redemption />} />
+            <Route path="/admin/request-history" element={<RequestHistory />} />
+            <Route path="/admin/inventory" element={<Inventory />} />
+            <Route path="/admin/marketing" element={<Marketing />} />
+            <Route path="/admin/distributors" element={<Distributors />} />
+            <Route path="/admin/customers" element={<Customers />} />
+            <Route path="/admin/teams" element={<Teams />} />
+          </Route>
 
-        {/* Marketing routes */}
-        <Route element={<ProtectedRoute allowedRoles={["Marketing"]} />}>
-          <Route path="/marketing/dashboard" element={<MarketingDashboard />} />
-          <Route
-            path="/marketing/process-requests"
-            element={<MarketingProcessRequests />}
-          />
-          <Route path="/marketing/history" element={<MarketingHistory />} />
-        </Route>
+          {/* Approver routes */}
+          <Route element={<ProtectedRoute allowedRoles={["Approver"]} />}>
+            <Route path="/approver/requests" element={<ApproverRequests />} />
+            <Route path="/approver/history" element={<ApproverHistory />} />
+          </Route>
 
-        {/* Reception routes */}
-        <Route element={<ProtectedRoute allowedRoles={["Reception"]} />}>
-          <Route path="/reception/dashboard" element={<ReceptionDashboard />} />
-          <Route path="/reception/history" element={<ReceptionHistory />} />
-        </Route>
+          {/* Sales Agent routes */}
+          <Route element={<ProtectedRoute allowedRoles={["Sales Agent"]} />}>
+            <Route path="/sales/dashboard" element={<SalesDashboard />} />
+            <Route path="/sales/redeem-items" element={<RedeemItem />} />
+            <Route
+              path="/sales/redemption-status"
+              element={<RedemptionStatus />}
+            />
+          </Route>
 
-        {/* Executive Assistant routes */}
-        <Route
-          element={<ProtectedRoute allowedRoles={["Executive Assistant"]} />}
-        >
+          {/* Marketing routes */}
+          <Route element={<ProtectedRoute allowedRoles={["Marketing"]} />}>
+            <Route path="/marketing/dashboard" element={<MarketingDashboard />} />
+            <Route
+              path="/marketing/process-requests"
+              element={<MarketingProcessRequests />}
+            />
+            <Route path="/marketing/history" element={<MarketingHistory />} />
+          </Route>
+
+          {/* Reception routes */}
+          <Route element={<ProtectedRoute allowedRoles={["Reception"]} />}>
+            <Route path="/reception/dashboard" element={<ReceptionDashboard />} />
+            <Route path="/reception/history" element={<ReceptionHistory />} />
+          </Route>
+
+          {/* Executive Assistant routes */}
           <Route
-            path="/executive-assistant/dashboard"
-            element={<ExecutiveAssistantDashboard />}
-          />
-          <Route
-            path="/executive-assistant/history"
-            element={<ExecutiveAssistantHistory />}
-          />
+            element={<ProtectedRoute allowedRoles={["Executive Assistant"]} />}
+          >
+            <Route
+              path="/executive-assistant/dashboard"
+              element={<ExecutiveAssistantDashboard />}
+            />
+            <Route
+              path="/executive-assistant/history"
+              element={<ExecutiveAssistantHistory />}
+            />
+          </Route>
         </Route>
       </Route>
 

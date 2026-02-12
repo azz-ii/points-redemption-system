@@ -1,6 +1,5 @@
 import type { InventoryItem } from '@/page/superadmin/Inventory/modals/types';
-
-const API_BASE_URL = '/api'; // Proxied to Django backend
+import { API_URL as API_BASE_URL } from './config';
 
 export interface PaginatedInventoryResponse {
   count: number;

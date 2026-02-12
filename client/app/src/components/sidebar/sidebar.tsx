@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLogout } from "@/context/AuthContext";
 import { ViewAccountModal } from "@/components/modals";
+import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
 
 export function Sidebar() {
   const { resolvedTheme } = useTheme();
@@ -138,7 +139,7 @@ export function Sidebar() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
@@ -389,7 +390,7 @@ export function SidebarSuperAdmin() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
@@ -608,7 +609,7 @@ export function SidebarSales() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
@@ -821,7 +822,7 @@ export function SidebarApprover() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
@@ -1040,7 +1041,7 @@ export function SidebarMarketing() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
@@ -1253,7 +1254,7 @@ export function SidebarReception() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {
@@ -1462,7 +1463,7 @@ export function SidebarExecutiveAssistant() {
         <div className="flex items-center justify-between mb-2 px-2">
           {sidebarExpanded && (
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
               className="w-14 h-auto object-contain shrink-0"
               onError={(e) => {

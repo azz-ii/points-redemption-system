@@ -88,6 +88,14 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     committed_stock = models.PositiveIntegerField(default=0)
     
+    # Image
+    image = models.ImageField(
+        upload_to='catalogue_images/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text='Product image (max 5MB, PNG/JPG/WebP)'
+    )
+
     # Audit fields
     is_archived = models.BooleanField(default=False)
     date_added = models.DateTimeField(auto_now_add=True)

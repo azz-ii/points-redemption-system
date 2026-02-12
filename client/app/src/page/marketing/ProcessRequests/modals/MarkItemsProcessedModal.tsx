@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "next-themes";
 import { Package, CheckCircle, Loader2, X } from "lucide-react";
 import type { ModalBaseProps, RequestItem, RequestItemVariant } from "./types";
 
@@ -18,7 +17,6 @@ export function MarkItemsProcessedModal({
   pendingCount,
   onConfirm,
 }: MarkItemsProcessedModalProps) {
-  const { resolvedTheme } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen || !request) return null;
@@ -44,13 +42,7 @@ export function MarkItemsProcessedModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-md w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mark-processed-title"
@@ -94,11 +86,7 @@ export function MarkItemsProcessedModal({
               {pendingItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`p-3 rounded border text-sm ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
+                  className="p-3 rounded border text-sm bg-muted border-border"
                 >
                   <p className="font-medium">{item.product_name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -109,11 +97,7 @@ export function MarkItemsProcessedModal({
             </div>
           </div>
 
-          <div className={`p-3 rounded text-sm ${
-            resolvedTheme === "dark"
-              ? "bg-blue-900/30 border border-blue-800"
-              : "bg-blue-50 border border-blue-200"
-          }`}>
+          <div className="p-3 rounded text-sm bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
             <p className="text-blue-700 dark:text-blue-300">
               This action will mark all your pending items in this request as processed.
             </p>
@@ -125,11 +109,7 @@ export function MarkItemsProcessedModal({
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 bg-muted hover:bg-accent text-foreground border border-border"
           >
             Cancel
           </button>

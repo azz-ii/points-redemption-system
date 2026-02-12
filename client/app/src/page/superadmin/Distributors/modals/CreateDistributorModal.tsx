@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { ModalBaseProps, DistributorFormData } from "./types";
 
 interface CreateDistributorModalProps extends ModalBaseProps {
@@ -19,8 +18,6 @@ export function CreateDistributorModal({
   error,
   onSubmit,
 }: CreateDistributorModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen) return null;
 
   return (
@@ -29,13 +26,7 @@ export function CreateDistributorModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-distributor-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-3xl w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -44,9 +35,7 @@ export function CreateDistributorModal({
               Add Distributor
             </h2>
             <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+              className="text-sm text-muted-foreground"
             >
               Create a new distributor
             </p>
@@ -79,11 +68,7 @@ export function CreateDistributorModal({
                 onChange={(e) =>
                   setNewDistributor({ ...newDistributor, name: e.target.value })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="Enter distributor name"
               />
             </div>
@@ -102,11 +87,7 @@ export function CreateDistributorModal({
                     contact_email: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="email@example.com"
               />
             </div>
@@ -123,11 +104,7 @@ export function CreateDistributorModal({
                     phone: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="+63 XXX XXX XXXX"
               />
             </div>
@@ -146,11 +123,7 @@ export function CreateDistributorModal({
                     location: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="City, Province"
               />
             </div>
@@ -162,11 +135,7 @@ export function CreateDistributorModal({
           <button
             onClick={onClose}
             disabled={creating}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
-                : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
-            }`}
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent disabled:opacity-50"
           >
             Cancel
           </button>

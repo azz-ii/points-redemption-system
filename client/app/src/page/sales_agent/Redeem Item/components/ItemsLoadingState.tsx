@@ -1,11 +1,7 @@
-import { useTheme } from "next-themes";
-
-function SkeletonCard({ isDark }: { isDark: boolean }) {
+function SkeletonCard() {
   return (
     <div
-      className={`rounded-lg overflow-hidden border ${
-        isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
-      }`}
+      className="rounded-lg overflow-hidden border bg-card border-border"
     >
       {/* Image skeleton */}
       <div className="bg-gray-300 dark:bg-gray-700 h-40 md:h-48 animate-pulse" />
@@ -15,31 +11,23 @@ function SkeletonCard({ isDark }: { isDark: boolean }) {
           <div className="flex-1">
             {/* Title skeleton */}
             <div
-              className={`h-4 md:h-5 rounded mb-2 animate-pulse ${
-                isDark ? "bg-gray-700" : "bg-gray-300"
-              }`}
+              className="h-4 md:h-5 rounded mb-2 animate-pulse bg-muted"
               style={{ width: "70%" }}
             />
             {/* Points skeleton */}
             <div
-              className={`h-3 md:h-4 rounded mb-2 animate-pulse ${
-                isDark ? "bg-gray-700" : "bg-gray-300"
-              }`}
+              className="h-3 md:h-4 rounded mb-2 animate-pulse bg-muted"
               style={{ width: "40%" }}
             />
             {/* Category skeleton */}
             <div
-              className={`h-3 rounded animate-pulse ${
-                isDark ? "bg-gray-700" : "bg-gray-300"
-              }`}
+              className="h-3 rounded animate-pulse bg-muted"
               style={{ width: "50%" }}
             />
           </div>
           {/* Button skeleton */}
           <div
-            className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 animate-pulse ${
-              isDark ? "bg-gray-700" : "bg-gray-300"
-            }`}
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 animate-pulse bg-muted"
           />
         </div>
       </div>
@@ -48,13 +36,10 @@ function SkeletonCard({ isDark }: { isDark: boolean }) {
 }
 
 export function ItemsLoadingState() {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
       {Array.from({ length: 6 }).map((_, index) => (
-        <SkeletonCard key={index} isDark={isDark} />
+        <SkeletonCard key={index} />
       ))}
     </div>
   );

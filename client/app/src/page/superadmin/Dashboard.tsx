@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
-import { useLogout } from "@/context/AuthContext";
 import {
-  Bell,
   RotateCcw,
-  Warehouse,
-  LogOut,
   X,
   AlertCircle,
   RefreshCw,
@@ -30,13 +21,10 @@ import {
   CancelRequestModal,
   type RedemptionItem,
 } from "./Redemption/modals";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 function Dashboard() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
-  const handleLogout = useLogout();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [pointAmount, setPointAmount] = useState<string>("");
@@ -268,91 +256,15 @@ function Dashboard() {
   );
 
   return (
-    <div
-      className={`flex flex-col h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">D</span>
-            </div>
-            <span className="font-medium text-sm">Dashboard</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Warehouse className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
+    <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
+        <div className="md:hidden pb-20">
           <div className="p-4">
             {/* Stats Cards */}
             <div className="space-y-3 mb-6">
-              <div
-                className={`p-4 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
-              >
+              <div className="p-4 rounded-lg border bg-card border-border">
                 <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      resolvedTheme === "dark"
-                        ? "bg-yellow-400"
-                        : "bg-yellow-500"
-                    }`}
-                  />
+                  <div className="w-2 h-2 rounded-full bg-warning" />
                   <p className="text-sm font-semibold">Pending Requests</p>
                 </div>
                 <p className="text-3xl font-bold">
@@ -360,19 +272,9 @@ function Dashboard() {
                 </p>
               </div>
 
-              <div
-                className={`p-4 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
-              >
+              <div className="p-4 rounded-lg border bg-card border-border">
                 <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
-                    }`}
-                  />
+                  <div className="w-2 h-2 rounded-full bg-success" />
                   <p className="text-sm font-semibold">Approved Requests</p>
                 </div>
                 <p className="text-3xl font-bold">
@@ -380,19 +282,9 @@ function Dashboard() {
                 </p>
               </div>
 
-              <div
-                className={`p-4 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
-              >
+              <div className="p-4 rounded-lg border bg-card border-border">
                 <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
-                    }`}
-                  />
+                  <div className="w-2 h-2 rounded-full bg-primary" />
                   <p className="text-sm font-semibold">On-board</p>
                 </div>
                 <p className="text-3xl font-bold">
@@ -408,11 +300,7 @@ function Dashboard() {
                 <button
                   onClick={handleRefreshRequests}
                   disabled={isRefreshing}
-                  className={`p-2 rounded-lg ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-900 hover:bg-gray-800"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  } transition-colors disabled:opacity-50`}
+                  className="p-2 rounded-lg bg-muted hover:bg-accent transition-colors disabled:opacity-50"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
@@ -422,27 +310,23 @@ function Dashboard() {
 
               {requestsLoading ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">Loading requests...</p>
+                  <p className="text-muted-foreground">Loading requests...</p>
                 </div>
               ) : tableRequests.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No pending requests</p>
+                  <p className="text-muted-foreground">No pending requests</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {tableRequests.slice(0, 5).map((request) => (
                     <div
                       key={request.id}
-                      className={`p-4 rounded-lg border ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-900 border-gray-700"
-                          : "bg-white border-gray-200"
-                      }`}
+                      className="p-4 rounded-lg border bg-card border-border"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-semibold text-sm">#{request.id}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {request.requested_by_name}
                           </p>
                         </div>
@@ -461,16 +345,15 @@ function Dashboard() {
                       <p className="text-sm mb-1">
                         For: {request.requested_for_name}
                       </p>
-                      <p className="text-xs text-gray-500 mb-3">
+                      <p className="text-xs text-muted-foreground mb-3">
                         {request.total_points} points ·{" "}
                         {new Date(request.date_requested).toLocaleDateString()}
                       </p>
                       <button
                         onClick={() => {
-                          setSelectedRedemption(request);
-                          setShowViewModal(true);
+                          setSelectedRequest(request);
                         }}
-                        className="w-full py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors"
+                        className="w-full py-2 rounded bg-primary text-white hover:bg-primary/90 text-sm font-semibold transition-colors"
                       >
                         View Details
                       </button>
@@ -491,48 +374,12 @@ function Dashboard() {
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Dashboard</h1>
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                Manage points, track redemptions and redeem items
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-5 w-5" />
-              </button>
-              <ThemeToggle />
-            </div>
-          </div>
-
+        <div className="hidden md:flex md:flex-col">
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-6 mb-8">
-            <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
-            >
+            <div className="p-6 rounded-lg border bg-card border-border transition-colors">
               <div className="flex items-center gap-2 mb-4">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-yellow-400" : "bg-yellow-500"
-                  }`}
-                />
+                <div className="w-2 h-2 rounded-full bg-warning" />
                 <p className="font-semibold">Pending Requests</p>
               </div>
               <p className="text-4xl font-bold">
@@ -540,19 +387,9 @@ function Dashboard() {
               </p>
             </div>
 
-            <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
-            >
+            <div className="p-6 rounded-lg border bg-card border-border transition-colors">
               <div className="flex items-center gap-2 mb-4">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
-                  }`}
-                />
+                <div className="w-2 h-2 rounded-full bg-success" />
                 <p className="font-semibold">Approved Requests</p>
               </div>
               <p className="text-4xl font-bold">
@@ -560,19 +397,9 @@ function Dashboard() {
               </p>
             </div>
 
-            <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
-            >
+            <div className="p-6 rounded-lg border bg-card border-border transition-colors">
               <div className="flex items-center gap-2 mb-4">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
-                  }`}
-                />
+                <div className="w-2 h-2 rounded-full bg-primary" />
                 <p className="font-semibold">On-board</p>
               </div>
               <p className="text-4xl font-bold">
@@ -593,9 +420,7 @@ function Dashboard() {
                 className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
                   isRefreshing
                     ? "opacity-50 cursor-not-allowed"
-                    : resolvedTheme === "dark"
-                      ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
-                      : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
+                    : "bg-card border-border text-foreground hover:bg-accent"
                 }`}
                 title="Refresh requests"
               >
@@ -615,7 +440,6 @@ function Dashboard() {
             />
           </div>
         </div>
-      </div>
 
       {isResetModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -626,11 +450,7 @@ function Dashboard() {
             }}
           />
           <div
-            className={`relative w-full max-w-md rounded-xl border shadow-2xl p-6 space-y-4 ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700 text-white"
-                : "bg-white border-gray-200 text-gray-900"
-            }`}
+            className="relative w-full max-w-md rounded-xl border shadow-2xl p-6 space-y-4 bg-card border-border text-foreground"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -646,11 +466,7 @@ function Dashboard() {
                     setPassword("");
                   }
                 }}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "hover:bg-gray-800"
-                    : "hover:bg-gray-100"
-                }`}
+                className="p-2 rounded-lg hover:bg-accent"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -665,11 +481,7 @@ function Dashboard() {
                   <select
                     value={selectedClient}
                     onChange={(e) => setSelectedClient(e.target.value)}
-                    className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white focus:border-gray-500 focus:ring-0"
-                        : "bg-white border-gray-300 text-gray-900 focus:border-gray-500 focus:ring-0"
-                    }`}
+                    className="w-full rounded-lg border px-3 py-2 text-sm transition-colors bg-card border-border text-foreground focus:border-muted-foreground focus:ring-0"
                   >
                     <option value="">Choose a client</option>
                   </select>
@@ -689,21 +501,13 @@ function Dashboard() {
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <button
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                        : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100"
-                    }`}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors bg-card border-border text-foreground hover:bg-accent"
                     onClick={() => setShowPasswordStep(true)}
                   >
                     Reset All Points
                   </button>
                   <button
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-primary text-white hover:bg-primary/90"
                     onClick={() => setIsResetModalOpen(false)}
                   >
                     Apply
@@ -713,16 +517,10 @@ function Dashboard() {
             ) : (
               <>
                 <div
-                  className={`p-3 rounded-lg flex items-start gap-3 ${
-                    resolvedTheme === "dark"
-                      ? "bg-red-900/20 border border-red-800"
-                      : "bg-red-50 border border-red-200"
-                  }`}
+                  className="p-3 rounded-lg flex items-start gap-3 bg-destructive/10 border border-destructive/30"
                 >
                   <AlertCircle
-                    className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                      resolvedTheme === "dark" ? "text-red-400" : "text-red-600"
-                    }`}
+                    className="h-5 w-5 flex-shrink-0 mt-0.5 text-destructive"
                   />
                   <p className="text-sm">
                     This will reset <strong>all points to zero</strong> for both
@@ -741,11 +539,7 @@ function Dashboard() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     disabled={isResettingPoints}
-                    className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-gray-500 focus:ring-0"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:ring-0"
-                    }`}
+                    className="w-full rounded-lg border px-3 py-2 text-sm transition-colors bg-card border-border text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:ring-0"
                     onKeyPress={(e) =>
                       e.key === "Enter" && handleResetAllPointsConfirm()
                     }
@@ -754,11 +548,7 @@ function Dashboard() {
 
                 <div className="flex items-center justify-between gap-3 pt-2">
                   <button
-                    className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white hover:bg-gray-700 disabled:opacity-50"
-                        : "bg-white border-gray-200 text-gray-900 hover:bg-gray-100 disabled:opacity-50"
-                    }`}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border font-semibold text-sm transition-colors bg-card border-border text-foreground hover:bg-accent disabled:opacity-50"
                     onClick={() => {
                       setShowPasswordStep(false);
                       setPassword("");
@@ -772,11 +562,7 @@ function Dashboard() {
                       !password || isResettingPoints
                         ? "opacity-50 cursor-not-allowed"
                         : ""
-                    } ${
-                      resolvedTheme === "dark"
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-red-600 text-white hover:bg-red-700"
-                    }`}
+                    } bg-destructive text-white hover:bg-destructive/90`}
                     onClick={handleResetAllPointsConfirm}
                     disabled={!password || isResettingPoints}
                   >
@@ -839,11 +625,6 @@ function Dashboard() {
         />
       )}
 
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
     </div>
   );
 }

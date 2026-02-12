@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { SidebarApprover } from "@/components/sidebar";
-import { MobileBottomNavApprover } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import {
-  Bell,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -23,8 +17,6 @@ import { RequestsTable, RequestsMobileCards } from "./components";
 type RequestItemAPI = RedemptionRequestResponse;
 
 function ApproverRequests() {
-  const { resolvedTheme } = useTheme();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<RequestItemAPI[]>([]);
@@ -159,170 +151,25 @@ function ApproverRequests() {
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <SidebarApprover />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-blue-600" : "bg-blue-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">A</span>
-            </div>
-            <span className="font-medium text-sm">Approver Requests</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-          </div>
-        </div>
-
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
-          <div className="p-4">
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search requests..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 h-12 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
-
-            <RequestsMobileCards
-              requests={paginatedRequests as RequestItem[]}
-              loading={loading}
-              onView={handleViewClick}
-              onApprove={handleApproveClick}
-              onReject={handleRejectClick}
-            />
-
-            {/* Mobile Pagination */}
-            <div className="flex items-center justify-between mt-6">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </button>
-              <span className="text-xs font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Redemption Requests</h1>
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                Review and approve incoming redemption requests
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-5 w-5" />
-              </button>
-              <ThemeToggle />
-            </div>
-          </div>
-
+    <>
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto pb-20">
+        <div className="p-4">
           {/* Search */}
-          <div className="mb-6">
-            <div
-              className={`relative flex items-center h-12 rounded-md border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search by ID, Requested By, Requested For, or Status..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className={`pl-10 w-full h-full ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
-              />
-            </div>
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search requests..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground"
+            />
           </div>
 
-          <RequestsTable
+          <RequestsMobileCards
             requests={paginatedRequests as RequestItem[]}
             loading={loading}
             onView={handleViewClick}
@@ -330,46 +177,93 @@ function ApproverRequests() {
             onReject={handleRejectClick}
           />
 
-          {/* Desktop Pagination */}
-          {!loading && !error && (
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <span className="text-sm font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          {/* Mobile Pagination */}
+          <div className="flex items-center justify-between mt-6">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Prev
+            </button>
+            <span className="text-xs font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, safePage + 1))
+              }
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Notification Panel */}
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-semibold">Redemption Requests</h1>
+            <p className="text-sm text-muted-foreground">
+              Review and approve incoming redemption requests
+            </p>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative flex items-center h-12 rounded-md border bg-card border-border">
+            <Search className="absolute left-3 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search by ID, Requested By, Requested For, or Status..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10 w-full h-full bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
+        </div>
+
+        <RequestsTable
+          requests={paginatedRequests as RequestItem[]}
+          loading={loading}
+          onView={handleViewClick}
+          onApprove={handleApproveClick}
+          onReject={handleRejectClick}
+        />
+
+        {/* Desktop Pagination */}
+        {!loading && !error && (
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              <ChevronLeft className="h-4 w-4" /> Previous
+            </button>
+            <span className="text-sm font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, safePage + 1))
+              }
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
 
       <ViewRequestModal
         isOpen={showViewModal}
@@ -399,10 +293,7 @@ function ApproverRequests() {
         request={selectedRequest}
         onConfirm={handleRejectConfirm}
       />
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNavApprover />
-    </div>
+    </>
   );
 }
 

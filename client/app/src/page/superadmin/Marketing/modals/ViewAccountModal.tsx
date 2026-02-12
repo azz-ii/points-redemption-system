@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTheme } from "next-themes";
 import { X, Package, Loader2 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import type { Account, ModalBaseProps, LegendAssignment } from "./types";
@@ -14,7 +13,6 @@ export function ViewAccountModal({
   onClose,
   account,
 }: ViewAccountModalProps) {
-  const { resolvedTheme } = useTheme();
   const [assignments, setAssignments] = useState<LegendAssignment[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -72,13 +70,7 @@ export function ViewAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-account-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-2xl w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700"
       >
         <div className="flex justify-between items-center p-8">
           <div>
@@ -149,11 +141,7 @@ export function ViewAccountModal({
                 {assignments.map((assignment) => (
                   <div
                     key={assignment.legend}
-                    className={`flex items-center justify-between p-4 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "border-gray-700 bg-gray-800"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
                   >
                     <div className="flex items-center gap-3">
                       <span
@@ -173,11 +161,7 @@ export function ViewAccountModal({
               </div>
             ) : (
               <div
-                className={`text-center py-8 rounded-lg border-2 border-dashed ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 text-gray-500"
-                    : "border-gray-200 text-gray-400"
-                }`}
+                className="text-center py-8 rounded-lg border-2 border-dashed border-border text-muted-foreground"
               >
                 <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No item legends assigned</p>
@@ -189,11 +173,7 @@ export function ViewAccountModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Close
           </button>

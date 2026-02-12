@@ -1,5 +1,4 @@
 import { Eye, CheckCircle, XCircle } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { RequestItem } from "../modals/types";
 
 interface RequestsMobileCardsProps {
@@ -17,8 +16,6 @@ export function RequestsMobileCards({
   onApprove,
   onReject,
 }: RequestsMobileCardsProps) {
-  const { resolvedTheme } = useTheme();
-
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -56,11 +53,7 @@ export function RequestsMobileCards({
       {requests.map((request) => (
         <div
           key={request.id}
-          className={`p-4 rounded-lg border ${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 border-gray-700"
-              : "bg-white border-gray-200"
-          }`}
+          className="p-4 rounded-lg border bg-card border-border"
         >
           <div className="flex justify-between items-start mb-3">
             <div>
@@ -106,11 +99,7 @@ export function RequestsMobileCards({
           <div className="flex gap-2">
             <button
               onClick={() => onView(request)}
-              className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              }`}
+              className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-muted hover:bg-accent text-foreground"
             >
               <Eye className="h-4 w-4" />
               View
