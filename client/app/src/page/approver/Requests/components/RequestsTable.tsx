@@ -1,5 +1,4 @@
 import { Eye, CheckCircle, XCircle } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { RequestItem } from "../modals/types";
 
 interface RequestsTableProps {
@@ -17,8 +16,6 @@ export function RequestsTable({
   onApprove,
   onReject,
 }: RequestsTableProps) {
-  const { resolvedTheme } = useTheme();
-
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -34,20 +31,12 @@ export function RequestsTable({
 
   return (
     <div
-      className={`rounded-lg border ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-700"
-          : "bg-white border-gray-200"
-      } overflow-hidden`}
+      className="rounded-lg border bg-card border-border overflow-hidden"
     >
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead
-            className={`${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-gray-300"
-                : "bg-gray-50 text-gray-700"
-            }`}
+            className="bg-muted text-foreground"
           >
             <tr>
               <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
@@ -74,7 +63,7 @@ export function RequestsTable({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+          <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
                 <td colSpan={8} className="px-6 py-12 text-center">
@@ -94,9 +83,7 @@ export function RequestsTable({
               requests.map((request) => (
                 <tr
                   key={request.id}
-                  className={`hover:${
-                    resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                  } transition-colors`}
+                  className="hover:bg-accent transition-colors"
                 >
                   <td className="px-6 py-4 text-sm">#{request.id}</td>
                   <td className="px-6 py-4 text-sm">
@@ -127,7 +114,7 @@ export function RequestsTable({
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => onView(request)}
-                        className="px-4 py-2 rounded flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors text-sm"
+                        className="px-4 py-2 rounded flex items-center gap-1 bg-primary hover:bg-primary/90 text-white font-semibold transition-colors text-sm"
                         title="View"
                       >
                         <Eye className="h-4 w-4" />

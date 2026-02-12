@@ -1,10 +1,6 @@
-import { useTheme } from "next-themes";
 import type { PaginationProps } from "../types";
 
 export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   if (totalPages <= 1) {
     return null;
   }
@@ -16,12 +12,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         className={`px-3 py-2 rounded-lg ${
           currentPage === 1
-            ? isDark
-              ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-              : "bg-gray-200 text-gray-600 cursor-not-allowed"
-            : isDark
-            ? "bg-gray-800 text-white hover:bg-gray-700"
-            : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
+            : "bg-muted text-foreground hover:bg-accent"
         }`}
       >
         Previous
@@ -32,12 +24,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
           onClick={() => onPageChange(page)}
           className={`px-3 py-2 rounded-lg ${
             page === currentPage
-              ? isDark
-                ? "bg-blue-600 text-white"
-                : "bg-blue-600 text-white"
-              : isDark
-              ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-foreground hover:bg-accent"
           }`}
         >
           {page}
@@ -48,12 +36,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         className={`px-3 py-2 rounded-lg ${
           currentPage === totalPages
-            ? isDark
-              ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-              : "bg-gray-200 text-gray-600 cursor-not-allowed"
-            : isDark
-            ? "bg-gray-800 text-white hover:bg-gray-700"
-            : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
+            : "bg-muted text-foreground hover:bg-accent"
         }`}
       >
         Next

@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { User, Calendar, CheckCircle, XCircle, Package, Ban } from "lucide-react";
 
 export interface RequestTimelineData {
@@ -61,7 +60,6 @@ function TimelineItem({
   person,
   date,
   extraInfo,
-  isDark,
 }: {
   icon: React.ElementType;
   iconColor: string;
@@ -69,27 +67,26 @@ function TimelineItem({
   person: string | null | undefined;
   date: string | null | undefined;
   extraInfo?: React.ReactNode;
-  isDark: boolean;
 }) {
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-2">
       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${iconColor}`}>
         <Icon className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-900"}`}>
+        <p className={`text-sm font-medium text-foreground`}>
           {title}
         </p>
         <div className="mt-1 space-y-1">
           <div className="flex items-center gap-2 text-sm">
             <User className="w-3 h-3 text-gray-400" />
-            <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+            <span className="text-muted-foreground">
               {person || "N/A"}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="w-3 h-3 text-gray-400" />
-            <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+            <span className="text-muted-foreground">
               {formatDate(date)}
             </span>
           </div>
@@ -105,9 +102,6 @@ export function RequestTimeline({
   showProcessing = true,
   showCancellation = true,
 }: RequestTimelineProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-
   // Determine if dual approval is enabled
   const hasDualApproval = data.requires_sales_approval || data.requires_marketing_approval;
 
@@ -115,31 +109,30 @@ export function RequestTimeline({
   const getApprovalStatusColor = (status: string | null | undefined) => {
     switch (status?.toUpperCase()) {
       case "APPROVED":
-        return isDark ? "bg-green-900/50 text-green-400" : "bg-green-100 text-green-700";
+        return "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400";
       case "REJECTED":
-        return isDark ? "bg-red-900/50 text-red-400" : "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400";
       case "PENDING":
-        return isDark ? "bg-yellow-900/50 text-yellow-400" : "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400";
       default:
-        return isDark ? "bg-gray-700 text-gray-400" : "bg-gray-100 text-gray-600";
+        return "bg-muted text-muted-foreground";
     }
   };
 
   return (
     <div className="space-y-4">
-      <h3 className={`text-sm font-semibold uppercase tracking-wide ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+      <h3 className={`text-sm font-semibold uppercase tracking-wide text-foreground`}>
         Request Timeline
       </h3>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Requested */}
         <TimelineItem
           icon={User}
-          iconColor={isDark ? "bg-blue-900/50 text-blue-400" : "bg-blue-100 text-blue-600"}
+          iconColor="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400"
           title="Requested"
           person={data.requested_by_name}
           date={data.date_requested}
-          isDark={isDark}
         />
 
         {/* Approval Section */}
@@ -151,15 +144,14 @@ export function RequestTimeline({
                 icon={data.sales_approval_status?.toUpperCase() === "REJECTED" ? XCircle : CheckCircle}
                 iconColor={
                   data.sales_approval_status?.toUpperCase() === "APPROVED"
-                    ? isDark ? "bg-green-900/50 text-green-400" : "bg-green-100 text-green-600"
+                    ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400"
                     : data.sales_approval_status?.toUpperCase() === "REJECTED"
-                    ? isDark ? "bg-red-900/50 text-red-400" : "bg-red-100 text-red-600"
-                    : isDark ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-500"
+                    ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+                    : "bg-muted text-muted-foreground"
                 }
                 title="Sales Approval"
                 person={data.sales_approved_by_name}
                 date={data.sales_approval_date}
-                isDark={isDark}
                 extraInfo={
                   <>
                     <div className="flex items-center gap-2 mt-1">
@@ -168,7 +160,7 @@ export function RequestTimeline({
                       </span>
                     </div>
                     {data.sales_rejection_reason && (
-                      <p className={`text-xs mt-1 ${isDark ? "text-red-400" : "text-red-600"}`}>
+                      <p className={`text-xs mt-1 text-destructive`}>
                         Reason: {data.sales_rejection_reason}
                       </p>
                     )}
@@ -183,15 +175,14 @@ export function RequestTimeline({
                 icon={data.marketing_approval_status?.toUpperCase() === "REJECTED" ? XCircle : CheckCircle}
                 iconColor={
                   data.marketing_approval_status?.toUpperCase() === "APPROVED"
-                    ? isDark ? "bg-green-900/50 text-green-400" : "bg-green-100 text-green-600"
+                    ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400"
                     : data.marketing_approval_status?.toUpperCase() === "REJECTED"
-                    ? isDark ? "bg-red-900/50 text-red-400" : "bg-red-100 text-red-600"
-                    : isDark ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-500"
+                    ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+                    : "bg-muted text-muted-foreground"
                 }
                 title="Marketing Approval"
                 person={data.marketing_approved_by_name}
                 date={data.marketing_approval_date}
-                isDark={isDark}
                 extraInfo={
                   <>
                     <div className="flex items-center gap-2 mt-1">
@@ -200,7 +191,7 @@ export function RequestTimeline({
                       </span>
                     </div>
                     {data.marketing_rejection_reason && (
-                      <p className={`text-xs mt-1 ${isDark ? "text-red-400" : "text-red-600"}`}>
+                      <p className={`text-xs mt-1 text-destructive`}>
                         Reason: {data.marketing_rejection_reason}
                       </p>
                     )}
@@ -215,22 +206,21 @@ export function RequestTimeline({
             icon={data.status?.toUpperCase() === "REJECTED" ? XCircle : CheckCircle}
             iconColor={
               data.status?.toUpperCase() === "APPROVED"
-                ? isDark ? "bg-green-900/50 text-green-400" : "bg-green-100 text-green-600"
+                ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400"
                 : data.status?.toUpperCase() === "REJECTED"
-                ? isDark ? "bg-red-900/50 text-red-400" : "bg-red-100 text-red-600"
-                : isDark ? "bg-gray-700 text-gray-400" : "bg-gray-200 text-gray-500"
+                ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+                : "bg-muted text-muted-foreground"
             }
             title="Reviewed"
             person={data.reviewed_by_name}
             date={data.date_reviewed}
-            isDark={isDark}
             extraInfo={
               data.rejection_reason ? (
-                <p className={`text-xs mt-1 ${isDark ? "text-red-400" : "text-red-600"}`}>
+                <p className={`text-xs mt-1 text-destructive`}>
                   Reason: {data.rejection_reason}
                 </p>
               ) : data.remarks ? (
-                <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                <p className={`text-xs mt-1 text-muted-foreground`}>
                   Remarks: {data.remarks}
                 </p>
               ) : null
@@ -242,11 +232,10 @@ export function RequestTimeline({
         {showProcessing && (data.processed_by_name || data.date_processed || data.processing_status?.toUpperCase() === "PROCESSED") && (
           <TimelineItem
             icon={Package}
-            iconColor={isDark ? "bg-blue-900/50 text-blue-400" : "bg-blue-100 text-blue-600"}
+            iconColor="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400"
             title="Processed"
             person={data.processed_by_name}
             date={data.date_processed}
-            isDark={isDark}
           />
         )}
 
@@ -254,20 +243,19 @@ export function RequestTimeline({
         {showCancellation && (data.cancelled_by_name || data.date_cancelled || data.processing_status?.toUpperCase() === "CANCELLED") && (
           <TimelineItem
             icon={Ban}
-            iconColor={isDark ? "bg-red-900/50 text-red-400" : "bg-red-100 text-red-600"}
+            iconColor="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
             title="Cancelled"
             person={data.cancelled_by_name}
             date={data.date_cancelled}
-            isDark={isDark}
           />
         )}
       </div>
 
       {/* General Remarks (if not shown in approval and exists) */}
       {hasDualApproval && data.remarks && (
-        <div className={`mt-4 p-3 rounded ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-          <p className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>Remarks</p>
-          <p className={`text-sm mt-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>{data.remarks}</p>
+        <div className={`mt-4 p-3 rounded bg-muted`}>
+          <p className={`text-xs font-medium text-muted-foreground`}>Remarks</p>
+          <p className={`text-sm mt-1 text-foreground`}>{data.remarks}</p>
         </div>
       )}
     </div>

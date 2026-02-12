@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { ModalBaseProps, Customer } from "./types";
 
 interface DeleteCustomerModalProps extends ModalBaseProps {
@@ -13,8 +12,6 @@ export function DeleteCustomerModal({
   customer,
   onConfirm,
 }: DeleteCustomerModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !customer) return null;
 
   return (
@@ -24,24 +21,16 @@ export function DeleteCustomerModal({
         aria-modal="true"
         aria-labelledby="delete-customer-title"
         aria-describedby="delete-customer-message"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-customer-title" className="text-xl font-semibold">
+            <h2 id="delete-customer-title" className="text-lg font-semibold">
               Delete Customer
             </h2>
             <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+              className="text-sm text-muted-foreground"
             >
               Confirm deletion
             </p>
@@ -56,7 +45,7 @@ export function DeleteCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p id="delete-customer-message" className="text-base">
             Are you sure you want to delete <strong>{customer.name}</strong>?
             This action cannot be undone.
@@ -64,14 +53,10 @@ export function DeleteCustomerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex gap-3 justify-end">
+        <div className="p-4 flex gap-2 justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg border font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "border-gray-600 hover:bg-gray-800"
-                : "border-gray-300 hover:bg-gray-50"
-            }`}
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent"
           >
             Cancel
           </button>

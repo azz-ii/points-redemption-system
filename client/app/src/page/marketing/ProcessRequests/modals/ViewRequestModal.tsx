@@ -1,5 +1,4 @@
 import { X, Package, CheckCircle } from "lucide-react";
-import { useTheme } from "next-themes";
 import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RequestItem } from "./types";
 
@@ -24,8 +23,6 @@ export function ViewRequestModal({
   request,
   myItems,
 }: ViewRequestModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !request) return null;
 
   const getStatusBadgeColor = (status: string) => {
@@ -60,24 +57,18 @@ export function ViewRequestModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-request-title" className="text-xl font-semibold">
+            <h2 id="view-request-title" className="text-lg font-semibold">
               Request Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Request #{request.id}
             </p>
           </div>
@@ -91,7 +82,7 @@ export function ViewRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -178,11 +169,7 @@ export function ViewRequestModal({
               {displayItems.map((item) => (
                 <div
                   key={item.id}
-                  className={`p-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
+                  className="p-3 rounded border bg-muted border-border"
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -211,14 +198,10 @@ export function ViewRequestModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
           >
             Close
           </button>

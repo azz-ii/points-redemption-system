@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "next-themes";
 import { Trash2, X, ChevronDown, Info, Search } from "lucide-react";
 import { distributorsApi } from "@/lib/distributors-api";
 import { customersApi } from "@/lib/customers-api";
@@ -40,8 +39,6 @@ export default function CartModal({
   onRemoveItem,
   availablePoints,
 }: CartModalProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
   const [step, setStep] = useState<"cart" | "details">("cart");
   const [remarks, setRemarks] = useState("");
   const [svcDate, setSvcDate] = useState<string>("");
@@ -287,9 +284,7 @@ export default function CartModal({
 
       {/* Desktop Modal */}
       <div
-        className={`relative hidden md:flex flex-col mx-4 w-full max-w-2xl max-h-[85vh] rounded-xl shadow-2xl ${
-          isDark ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
+        className={`relative hidden md:flex flex-col mx-4 w-full max-w-2xl max-h-[85vh] rounded-xl shadow-2xl bg-card text-foreground`}
       >
         {step === "cart" ? (
           <>
@@ -300,18 +295,14 @@ export default function CartModal({
                   Confirm your Redemption Items
                 </h2>
                 <p
-                  className={`text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
+                  className={`text-sm text-muted-foreground`}
                 >
                   Please review the items and quantities below before confirming
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className={`p-2 rounded-md ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md hover:bg-accent`}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -323,35 +314,25 @@ export default function CartModal({
                 <table className="w-full">
                   <thead>
                     <tr
-                      className={`border-b ${
-                        isDark ? "border-gray-800" : "border-gray-200"
-                      }`}
+                      className={`border-b border-border`}
                     >
                       <th
-                        className={`text-left py-3 px-4 text-sm font-semibold ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className={`text-left py-3 px-4 text-sm font-semibold text-muted-foreground`}
                       >
                         Item
                       </th>
                       <th
-                        className={`text-center py-3 px-4 text-sm font-semibold ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className={`text-center py-3 px-4 text-sm font-semibold text-muted-foreground`}
                       >
                         Quantity
                       </th>
                       <th
-                        className={`text-right py-3 px-4 text-sm font-semibold ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className={`text-right py-3 px-4 text-sm font-semibold text-muted-foreground`}
                       >
                         Points
                       </th>
                       <th
-                        className={`text-right py-3 px-4 text-sm font-semibold ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className={`text-right py-3 px-4 text-sm font-semibold text-muted-foreground`}
                       ></th>
                     </tr>
                   </thead>
@@ -359,12 +340,10 @@ export default function CartModal({
                     {items.map((item) => (
                       <tr
                         key={item.id}
-                        className={`border-b ${
-                          isDark ? "border-gray-800" : "border-gray-200"
-                        }`}
+                        className={`border-b border-border`}
                       >
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <img
                               src={item.image}
                               alt={item.name}
@@ -375,7 +354,7 @@ export default function CartModal({
                                 {item.name}
                               </span>
                               {item.pricing_type !== 'FIXED' && (
-                                <span className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                                <span className={`text-xs text-blue-600 dark:text-blue-400`}>
                                   {item.points_multiplier || item.points} pts/{DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
                                 </span>
                               )}
@@ -397,9 +376,7 @@ export default function CartModal({
                                   className={`px-2 py-1 rounded ${
                                     item.quantity <= item.min_order_qty
                                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                                      : isDark
-                                        ? "bg-gray-800 hover:bg-gray-700"
-                                        : "bg-gray-200 hover:bg-gray-300"
+                                      : "bg-muted hover:bg-accent"
                                   }`}
                                 >
                                   −
@@ -422,9 +399,7 @@ export default function CartModal({
                                     item.quantity >= item.available_stock || 
                                     (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
                                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                                      : isDark
-                                        ? "bg-gray-800 hover:bg-gray-700"
-                                        : "bg-gray-200 hover:bg-gray-300"
+                                      : "bg-muted hover:bg-accent"
                                   }`}
                                 >
                                   +
@@ -434,7 +409,7 @@ export default function CartModal({
                                 item.quantity >= item.available_stock || 
                                 (item.max_order_qty !== null && item.quantity >= item.max_order_qty) 
                                   ? 'text-amber-500' 
-                                  : isDark ? 'text-gray-500' : 'text-gray-400'
+                                  : 'text-muted-foreground'
                               }`}>
                                 {item.quantity}/{item.available_stock} available
                                 {item.max_order_qty !== null && ` (max ${item.max_order_qty})`}
@@ -443,29 +418,25 @@ export default function CartModal({
                           ) : (
                             <div className="flex flex-col items-center gap-1 relative">
                               <div className="flex items-center gap-1">
-                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <label className={`text-xs text-muted-foreground`}>
                                   {DYNAMIC_QUANTITY_LABELS[item.pricing_type]}
                                 </label>
                                 <button
                                   onMouseEnter={() => setShowTooltips(prev => ({ ...prev, [item.id]: true }))}
                                   onMouseLeave={() => setShowTooltips(prev => ({ ...prev, [item.id]: false }))}
-                                  className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                                    isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-300 hover:bg-gray-400'
-                                  }`}
+                                  className={`w-4 h-4 rounded-full flex items-center justify-center bg-muted hover:bg-accent`}
                                 >
                                   <Info className="h-3 w-3" />
                                 </button>
                               </div>
                               {showTooltips[item.id] && (
-                                <div className={`absolute top-6 left-1/2 transform -translate-x-1/2 z-50 w-56 p-2 rounded shadow-lg text-xs ${
-                                  isDark ? 'bg-gray-800 text-gray-200 border border-gray-700' : 'bg-white text-gray-800 border border-gray-200'
-                                }`}>
+                                <div className={`absolute top-6 left-1/2 transform -translate-x-1/2 z-50 w-56 p-2 rounded shadow-lg text-xs bg-card text-foreground border border-border`}>
                                   {PRICING_TYPE_DESCRIPTIONS[item.pricing_type]}
                                 </div>
                               )}
                               <div className="flex items-center gap-1">
                                 {(item.pricing_type === 'PER_INVOICE' || item.pricing_type === 'PER_EU_SRP') && (
-                                  <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>$</span>
+                                  <span className={`text-xs text-muted-foreground`}>$</span>
                                 )}
                                 <input
                                   type="number"
@@ -486,13 +457,11 @@ export default function CartModal({
                                   className={`w-28 px-2 py-1 text-center rounded border outline-none ${
                                     inputErrors[item.id]
                                       ? 'border-red-500 focus:border-red-600'
-                                      : isDark
-                                        ? "bg-gray-800 border-gray-700 focus:border-blue-500"
-                                        : "bg-gray-100 border-gray-200 focus:border-blue-500"
+                                      : "bg-muted border-border focus:border-blue-500"
                                   }`}
                                 />
                                 {PRICING_TYPE_INPUT_HINTS[item.pricing_type] && (
-                                  <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                  <span className={`text-xs text-muted-foreground`}>
                                     {PRICING_TYPE_INPUT_HINTS[item.pricing_type]}
                                   </span>
                                 )}
@@ -501,7 +470,7 @@ export default function CartModal({
                                 <span className="text-xs text-red-500">{inputErrors[item.id]}</span>
                               )}
                               {!inputErrors[item.id] && item.dynamic_quantity && item.dynamic_quantity > 0 && (
-                                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <span className={`text-xs text-muted-foreground`}>
                                   {item.dynamic_quantity} × {item.points_multiplier || item.points} pts = {getItemPoints(item).toLocaleString()} pts
                                 </span>
                               )}
@@ -525,9 +494,7 @@ export default function CartModal({
                 </table>
               ) : (
                 <p
-                  className={`text-center py-8 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
+                  className={`text-center py-8 text-muted-foreground`}
                 >
                   No items in cart
                 </p>
@@ -537,14 +504,12 @@ export default function CartModal({
             {/* Summary */}
             {items.length > 0 && (
               <div
-                className={`px-6 py-4 border-t ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
+                className={`px-6 py-4 border-t border-border`}
               >
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span
-                      className={isDark ? "text-gray-400" : "text-gray-600"}
+                      className="text-muted-foreground"
                     >
                       Your current points:
                     </span>
@@ -554,7 +519,7 @@ export default function CartModal({
                   </div>
                   <div className="flex justify-between">
                     <span
-                      className={isDark ? "text-gray-400" : "text-gray-600"}
+                      className="text-muted-foreground"
                     >
                       Total points for this request:
                     </span>
@@ -563,12 +528,10 @@ export default function CartModal({
                     </span>
                   </div>
                   <div
-                    className={`flex justify-between pt-2 border-t ${
-                      isDark ? "border-gray-800" : "border-gray-200"
-                    }`}
+                    className={`flex justify-between pt-2 border-t border-border`}
                   >
                     <span
-                      className={isDark ? "text-gray-300" : "text-gray-700"}
+                      className="text-foreground"
                     >
                       Balance:
                     </span>
@@ -585,14 +548,10 @@ export default function CartModal({
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 p-6 border-t border-gray-200 md:border-gray-800">
+            <div className="flex gap-2 p-6 border-t border-border">
               <button
                 onClick={onClose}
-                className={`flex-1 px-4 py-2 rounded-lg font-semibold ${
-                  isDark
-                    ? "bg-gray-800 text-white hover:bg-gray-700"
-                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-                }`}
+                className={`flex-1 px-4 py-2 rounded-lg font-semibold bg-muted text-foreground hover:bg-accent`}
               >
                 Cancel
               </button>
@@ -602,7 +561,7 @@ export default function CartModal({
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
                   items.length === 0 || remainingPoints < 0
                     ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
+                    : "bg-primary hover:bg-primary/90"
                 }`}
               >
                 Next
@@ -612,13 +571,11 @@ export default function CartModal({
         ) : (
           <>
             {/* Header - Redemption Details */}
-            <div className="p-6 border-b border-gray-200 md:border-gray-800 flex justify-between items-center">
+            <div className="p-6 border-b border-border flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold">Redemption Details</h2>
                 <p
-                  className={`text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
+                  className={`text-sm text-muted-foreground`}
                 >
                   Fill up the needed details below to complete your redemption
                   request
@@ -626,21 +583,17 @@ export default function CartModal({
               </div>
               <button
                 onClick={onClose}
-                className={`p-2 rounded-md ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md hover:bg-accent`}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Content - Forms */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {/* Customer/Distributor Details */}
               <div
-                className={`rounded-lg border ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
+                className={`rounded-lg border border-border`}
               >
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">Recipient Details</h3>
@@ -651,10 +604,8 @@ export default function CartModal({
                       onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
                         entityType === 'DISTRIBUTOR'
-                          ? 'bg-blue-600 text-white'
-                          : isDark
-                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground hover:bg-accent'
                       }`}
                     >
                       Distributor
@@ -663,10 +614,8 @@ export default function CartModal({
                       onClick={() => handleEntityTypeChange('CUSTOMER')}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
                         entityType === 'CUSTOMER'
-                          ? 'bg-blue-600 text-white'
-                          : isDark
-                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground hover:bg-accent'
                       }`}
                     >
                       Customer
@@ -678,9 +627,7 @@ export default function CartModal({
                       /* Distributor Searchable Combobox */
                       <div className="space-y-1">
                         <label
-                          className={`text-sm ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-sm text-foreground`}
                         >
                           Distributor Name
                         </label>
@@ -697,15 +644,9 @@ export default function CartModal({
                               onFocus={() => setShowDistributorDropdown(true)}
                               placeholder={loadingEntities ? "Loading..." : "Search or select a distributor..."}
                               disabled={loadingEntities}
-                              className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
-                                isDark
-                                  ? "bg-gray-800 border border-gray-700"
-                                  : "bg-gray-100 border border-gray-200"
-                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                              className={`w-full px-3 py-2 pr-10 rounded-md outline-none bg-muted border border-border ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
                             />
-                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none ${
-                              isDark ? "text-gray-500" : "text-gray-400"
-                            }`}>
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none text-muted-foreground`}>
                               <Search className="h-4 w-4" />
                               <ChevronDown className="h-4 w-4" />
                             </div>
@@ -713,14 +654,10 @@ export default function CartModal({
                           
                           {/* Dropdown List */}
                           {showDistributorDropdown && !loadingEntities && (
-                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
-                              isDark
-                                ? "bg-gray-800 border-gray-700"
-                                : "bg-white border-gray-200"
-                            }`}>
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto bg-card border-border`}>
                               {filteredDistributors.length === 0 ? (
                                 <div className="px-3 py-2 text-sm text-center">
-                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                  <span className="text-muted-foreground">
                                     No distributors found
                                   </span>
                                 </div>
@@ -734,18 +671,10 @@ export default function CartModal({
                                       setDistributorSearch("");
                                       setShowDistributorDropdown(false);
                                     }}
-                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
-                                      isDark
-                                        ? "hover:bg-white"
-                                        : "hover:bg-gray-900"
-                                    } ${selectedDistributorId === distributor.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
-                                      isDark ? "border-gray-700" : "border-gray-200"
-                                    }`}
+                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-accent ${selectedDistributorId === distributor.id ? 'bg-accent' : ''} border-b last:border-b-0 border-border`}
                                   >
                                     <div className="font-medium">{distributor.name}</div>
-                                    <div className={`text-xs mt-0.5 ${
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }`}>
+                                    <div className={`text-xs mt-0.5 text-muted-foreground`}>
                                       {distributor.location}
                                     </div>
                                   </button>
@@ -759,9 +688,7 @@ export default function CartModal({
                       /* Customer Searchable Combobox */
                       <div className="space-y-1">
                         <label
-                          className={`text-sm ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-sm text-foreground`}
                         >
                           Customer Name
                         </label>
@@ -778,15 +705,9 @@ export default function CartModal({
                               onFocus={() => setShowCustomerDropdown(true)}
                               placeholder={loadingEntities ? "Loading..." : "Search or select a customer..."}
                               disabled={loadingEntities}
-                              className={`w-full px-3 py-2 pr-10 rounded-md outline-none ${
-                                isDark
-                                  ? "bg-gray-800 border border-gray-700"
-                                  : "bg-gray-100 border border-gray-200"
-                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                              className={`w-full px-3 py-2 pr-10 rounded-md outline-none bg-muted border border-border ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
                             />
-                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none ${
-                              isDark ? "text-gray-500" : "text-gray-400"
-                            }`}>
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none text-muted-foreground`}>
                               <Search className="h-4 w-4" />
                               <ChevronDown className="h-4 w-4" />
                             </div>
@@ -794,14 +715,10 @@ export default function CartModal({
                           
                           {/* Dropdown List */}
                           {showCustomerDropdown && !loadingEntities && (
-                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto ${
-                              isDark
-                                ? "bg-gray-800 border-gray-700"
-                                : "bg-white border-gray-200"
-                            }`}>
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto bg-card border-border`}>
                               {filteredCustomers.length === 0 ? (
                                 <div className="px-3 py-2 text-sm text-center">
-                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                  <span className="text-muted-foreground">
                                     No customers found
                                   </span>
                                 </div>
@@ -815,18 +732,10 @@ export default function CartModal({
                                       setCustomerSearch("");
                                       setShowCustomerDropdown(false);
                                     }}
-                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-opacity-10 ${
-                                      isDark
-                                        ? "hover:bg-white"
-                                        : "hover:bg-gray-900"
-                                    } ${selectedCustomerId === customer.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
-                                      isDark ? "border-gray-700" : "border-gray-200"
-                                    }`}
+                                    className={`w-full px-3 py-2 text-left text-sm hover:bg-accent ${selectedCustomerId === customer.id ? 'bg-accent' : ''} border-b last:border-b-0 border-border`}
                                   >
                                     <div className="font-medium">{customer.name}</div>
-                                    <div className={`text-xs mt-0.5 ${
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }`}>
+                                    <div className={`text-xs mt-0.5 text-muted-foreground`}>
                                       {customer.location}
                                     </div>
                                   </button>
@@ -839,9 +748,7 @@ export default function CartModal({
                     )}
                     <div className="space-y-1">
                       <label
-                        className={`text-sm ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
+                        className={`text-sm text-foreground`}
                       >
                         Purpose/Remarks
                       </label>
@@ -850,11 +757,7 @@ export default function CartModal({
                         onChange={(e) => setRemarks(e.target.value)}
                         placeholder="Enter Purpose or Remarks"
                         rows={4}
-                        className={`w-full px-3 py-2 rounded-md outline-none resize-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
+                        className={`w-full px-3 py-2 rounded-md outline-none resize-none bg-muted border border-border`}
                       />
                     </div>
                   </div>
@@ -863,14 +766,12 @@ export default function CartModal({
 
               {/* Points Deduction */}
               <div
-                className={`rounded-lg border ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
+                className={`rounded-lg border border-border`}
               >
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">Points Deduction</h3>
                   <div className="mt-4 space-y-2">
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         name="points_deduction"
@@ -879,11 +780,11 @@ export default function CartModal({
                         onChange={() => setPointsDeductedFrom('SELF')}
                         className="w-4 h-4"
                       />
-                      <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                      <span className="text-foreground">
                         Deduct from my points
                       </span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         name="points_deduction"
@@ -892,7 +793,7 @@ export default function CartModal({
                         onChange={() => setPointsDeductedFrom(entityType)}
                         className="w-4 h-4"
                       />
-                      <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                      <span className="text-foreground">
                         Deduct from {entityType === 'DISTRIBUTOR' ? "distributor's" : "customer's"} points
                       </span>
                     </label>
@@ -903,9 +804,7 @@ export default function CartModal({
               {/* Service Vehicle Use - Only show if items need driver */}
               {hasItemsNeedingDriver && (
                 <div
-                  className={`rounded-lg border ${
-                    isDark ? "border-gray-800" : "border-gray-200"
-                  }`}
+                  className={`rounded-lg border border-border`}
                 >
                   <div className="p-4">
                     <div className="flex items-baseline gap-2">
@@ -913,9 +812,7 @@ export default function CartModal({
                         Service Vehicle Use
                       </h3>
                       <span
-                        className={`text-xs ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className={`text-xs text-muted-foreground`}
                       >
                         (Required for selected items)
                       </span>
@@ -923,9 +820,7 @@ export default function CartModal({
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label
-                          className={`text-sm ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-sm text-foreground`}
                         >
                           Date
                         </label>
@@ -934,18 +829,12 @@ export default function CartModal({
                           value={svcDate}
                           onChange={(e) => setSvcDate(e.target.value)}
                           placeholder="mm/dd/yyyy"
-                          className={`w-full px-3 py-2 rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
                       <div className="space-y-1">
                         <label
-                          className={`text-sm ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-sm text-foreground`}
                         >
                           Time
                         </label>
@@ -953,20 +842,14 @@ export default function CartModal({
                           type="time"
                           value={svcTime}
                           onChange={(e) => setSvcTime(e.target.value)}
-                          className={`w-full px-3 py-2 rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
                     </div>
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label
-                          className={`text-sm ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-sm text-foreground`}
                         >
                           Plate Number
                         </label>
@@ -975,29 +858,19 @@ export default function CartModal({
                           value={plateNumber}
                           onChange={(e) => setPlateNumber(e.target.value)}
                           placeholder="e.g., ABC 1234"
-                          className={`w-full px-3 py-2 rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
                       <div className="space-y-1">
                         <label
-                          className={`text-sm ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-sm text-foreground`}
                         >
                           Driver
                         </label>
                         <select
                           value={svcDriver}
                           onChange={(e) => setSvcDriver(e.target.value)}
-                          className={`w-full px-3 py-2 rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
                         >
                           <option value="without">Without Driver</option>
                           <option value="with">With Driver</option>
@@ -1008,9 +881,7 @@ export default function CartModal({
                       <div className="mt-4">
                         <div className="space-y-1">
                           <label
-                            className={`text-sm ${
-                              isDark ? "text-gray-300" : "text-gray-700"
-                            }`}
+                            className={`text-sm text-foreground`}
                           >
                             Driver Name
                           </label>
@@ -1019,11 +890,7 @@ export default function CartModal({
                             value={driverName}
                             onChange={(e) => setDriverName(e.target.value)}
                             placeholder="Enter driver name"
-                            className={`w-full px-3 py-2 rounded-md outline-none ${
-                              isDark
-                                ? "bg-gray-800 border border-gray-700"
-                                : "bg-gray-100 border border-gray-200"
-                            }`}
+                            className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
                           />
                         </div>
                       </div>
@@ -1034,20 +901,16 @@ export default function CartModal({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 p-6 border-t border-gray-200 md:border-gray-800">
+            <div className="flex gap-2 p-6 border-t border-border">
               <button
                 onClick={() => setStep("cart")}
-                className={`flex-1 px-4 py-2 rounded-lg font-semibold ${
-                  isDark
-                    ? "bg-gray-800 text-white hover:bg-gray-700"
-                    : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-                }`}
+                className={`flex-1 px-4 py-2 rounded-lg font-semibold bg-muted text-foreground hover:bg-accent`}
               >
                 Back
               </button>
               <button 
                 onClick={handleSubmit}
-                className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-primary hover:bg-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
                 Submit Details
               </button>
@@ -1058,47 +921,37 @@ export default function CartModal({
 
       {/* Mobile Modal */}
       <div
-        className={`relative md:hidden mx-4 w-full max-w-md max-h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden ${
-          isDark ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-        }`}
+        className={`relative md:hidden mx-4 w-full max-w-md max-h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden bg-card text-foreground`}
       >
         {step === "cart" ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 md:border-gray-800 flex justify-between items-center">
+            <div className="p-4 border-b border-border flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold">Confirm your Redemption</h2>
                 <p
-                  className={`text-xs ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
+                  className={`text-xs text-muted-foreground`}
                 >
                   Please review the items and quantities below before confirming
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className={`p-2 rounded-md ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md hover:bg-accent`}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Items List */}
-            <div className="p-4 space-y-3 overflow-y-auto max-h-80">
+            <div className="p-4 space-y-2 overflow-y-auto max-h-80">
               {items.length > 0 ? (
                 items.map((item) => (
                   <div
                     key={item.id}
-                    className={`rounded-lg p-3 border ${
-                      isDark
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-gray-50 border-gray-200"
-                    }`}
+                    className={`rounded-lg p-3 border bg-muted border-border`}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <img
                         src={item.image}
                         alt={item.name}
@@ -1113,7 +966,7 @@ export default function CartModal({
                             </p>
                             <p
                               className={`text-xs mt-1 ${
-                                item.quantity >= item.available_stock ? 'text-amber-500' : isDark ? "text-gray-400" : "text-gray-600"
+                                item.quantity >= item.available_stock ? 'text-amber-500' : 'text-muted-foreground'
                               }`}
                             >
                               Qty: {item.quantity}/{item.available_stock} available
@@ -1121,15 +974,15 @@ export default function CartModal({
                           </>
                         ) : (
                           <>
-                            <p className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                            <p className={`text-xs text-blue-600 dark:text-blue-400`}>
                               {item.points_multiplier || item.points} pts/{DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
-                              <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              <label className={`text-xs text-muted-foreground`}>
                                 {DYNAMIC_QUANTITY_LABELS[item.pricing_type]}:
                               </label>
                               {(item.pricing_type === 'PER_INVOICE' || item.pricing_type === 'PER_EU_SRP') && (
-                                <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>$</span>
+                                <span className={`text-xs text-muted-foreground`}>$</span>
                               )}
                               <input
                                 type="number"
@@ -1150,13 +1003,11 @@ export default function CartModal({
                                 className={`w-24 px-2 py-1 text-xs rounded border outline-none ${
                                   inputErrors[item.id]
                                     ? 'border-red-500 focus:border-red-600'
-                                    : isDark
-                                      ? "bg-gray-700 border-gray-600 focus:border-blue-500"
-                                      : "bg-white border-gray-300 focus:border-blue-500"
+                                    : "bg-muted border-border focus:border-blue-500"
                                 }`}
                               />
                               {PRICING_TYPE_INPUT_HINTS[item.pricing_type] && (
-                                <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                <span className={`text-xs text-muted-foreground`}>
                                   {PRICING_TYPE_INPUT_HINTS[item.pricing_type]}
                                 </span>
                               )}
@@ -1169,7 +1020,7 @@ export default function CartModal({
                               <p className="text-xs text-green-500 font-semibold mt-1">
                                 = {getItemPoints(item).toLocaleString()} pts
                                 {item.dynamic_quantity && item.dynamic_quantity > 0 && (
-                                  <span className={`ml-1 font-normal ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  <span className={`ml-1 font-normal text-muted-foreground`}>
                                     ({item.dynamic_quantity} × {item.points_multiplier || item.points})
                                   </span>
                                 )}
@@ -1189,9 +1040,7 @@ export default function CartModal({
                 ))
               ) : (
                 <p
-                  className={`text-center py-8 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
+                  className={`text-center py-8 text-muted-foreground`}
                 >
                   No items in cart
                 </p>
@@ -1200,12 +1049,10 @@ export default function CartModal({
             {/* Summary */}
             {items.length > 0 && (
               <div
-                className={`px-4 py-3 border-t space-y-2 text-xs ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
+                className={`px-4 py-3 border-t space-y-2 text-xs border-border`}
               >
                 <div className="flex justify-between">
-                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                  <span className="text-muted-foreground">
                     Current points:
                   </span>
                   <span className="font-semibold">
@@ -1213,7 +1060,7 @@ export default function CartModal({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                  <span className="text-muted-foreground">
                     Total request:
                   </span>
                   <span className="font-semibold text-red-500">
@@ -1221,11 +1068,9 @@ export default function CartModal({
                   </span>
                 </div>
                 <div
-                  className={`flex justify-between pt-2 border-t ${
-                    isDark ? "border-gray-800" : "border-gray-200"
-                  }`}
+                  className={`flex justify-between pt-2 border-t border-border`}
                 >
-                  <span className={isDark ? "text-gray-300" : "text-gray-700"}>
+                  <span className="text-foreground">
                     Balance:
                   </span>
                   <span
@@ -1242,22 +1087,18 @@ export default function CartModal({
         ) : (
           <>
             {/* Header - Redemption Details */}
-            <div className="p-4 border-b border-gray-200 md:border-gray-800 flex justify-between items-center">
+            <div className="p-4 border-b border-border flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-bold">Redemption Details</h2>
                 <p
-                  className={`text-xs ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
+                  className={`text-xs text-muted-foreground`}
                 >
                   Fill up the needed details
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className={`p-2 rounded-md ${
-                  isDark ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md hover:bg-accent`}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1267,9 +1108,7 @@ export default function CartModal({
             <div className="p-4 overflow-y-auto flex-1 space-y-4 pb-20">
               {/* Customer/Distributor Details */}
               <div
-                className={`rounded-lg border ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
+                className={`rounded-lg border border-border`}
               >
                 <div className="p-3">
                   <h3 className="text-sm font-semibold">Recipient Details</h3>
@@ -1280,10 +1119,8 @@ export default function CartModal({
                       onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
                       className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
                         entityType === 'DISTRIBUTOR'
-                          ? 'bg-blue-600 text-white'
-                          : isDark
-                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground hover:bg-accent'
                       }`}
                     >
                       Distributor
@@ -1292,24 +1129,20 @@ export default function CartModal({
                       onClick={() => handleEntityTypeChange('CUSTOMER')}
                       className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
                         entityType === 'CUSTOMER'
-                          ? 'bg-blue-600 text-white'
-                          : isDark
-                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground hover:bg-accent'
                       }`}
                     >
                       Customer
                     </button>
                   </div>
                   
-                  <div className="mt-3 space-y-3">
+                  <div className="mt-3 space-y-2">
                     {entityType === 'DISTRIBUTOR' ? (
                       /* Distributor Searchable Combobox */
                       <div className="space-y-1">
                         <label
-                          className={`text-xs ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-xs text-foreground`}
                         >
                           Distributor Name
                         </label>
@@ -1326,15 +1159,9 @@ export default function CartModal({
                               onFocus={() => setShowDistributorDropdown(true)}
                               placeholder={loadingEntities ? "Loading..." : "Search or select..."}
                               disabled={loadingEntities}
-                              className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
-                                isDark
-                                  ? "bg-gray-800 border border-gray-700"
-                                  : "bg-gray-100 border border-gray-200"
-                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                              className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none bg-muted border border-border ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
                             />
-                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none ${
-                              isDark ? "text-gray-500" : "text-gray-400"
-                            }`}>
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none text-muted-foreground`}>
                               <Search className="h-3 w-3" />
                               <ChevronDown className="h-3 w-3" />
                             </div>
@@ -1342,14 +1169,10 @@ export default function CartModal({
                           
                           {/* Dropdown List */}
                           {showDistributorDropdown && !loadingEntities && (
-                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto ${
-                              isDark
-                                ? "bg-gray-800 border-gray-700"
-                                : "bg-white border-gray-200"
-                            }`}>
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto bg-card border-border`}>
                               {filteredDistributors.length === 0 ? (
                                 <div className="px-3 py-2 text-xs text-center">
-                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                  <span className="text-muted-foreground">
                                     No distributors found
                                   </span>
                                 </div>
@@ -1363,18 +1186,10 @@ export default function CartModal({
                                       setDistributorSearch("");
                                       setShowDistributorDropdown(false);
                                     }}
-                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
-                                      isDark
-                                        ? "hover:bg-white"
-                                        : "hover:bg-gray-900"
-                                    } ${selectedDistributorId === distributor.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
-                                      isDark ? "border-gray-700" : "border-gray-200"
-                                    }`}
+                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-accent ${selectedDistributorId === distributor.id ? 'bg-accent' : ''} border-b last:border-b-0 border-border`}
                                   >
                                     <div className="font-medium">{distributor.name}</div>
-                                    <div className={`text-xs mt-0.5 ${
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }`}>
+                                    <div className={`text-xs mt-0.5 text-muted-foreground`}>
                                       {distributor.location}
                                     </div>
                                   </button>
@@ -1385,9 +1200,7 @@ export default function CartModal({
                         </div>
                         
                         {selectedDistributor && (
-                          <div className={`text-xs mt-1 ${
-                            isDark ? "text-green-400" : "text-green-600"
-                          }`}>
+                          <div className={`text-xs mt-1 text-green-600 dark:text-green-400`}>
                             ✓ {selectedDistributor.name}
                           </div>
                         )}
@@ -1396,9 +1209,7 @@ export default function CartModal({
                       /* Customer Searchable Combobox */
                       <div className="space-y-1">
                         <label
-                          className={`text-xs ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-xs text-foreground`}
                         >
                           Customer Name
                         </label>
@@ -1415,15 +1226,9 @@ export default function CartModal({
                               onFocus={() => setShowCustomerDropdown(true)}
                               placeholder={loadingEntities ? "Loading..." : "Search or select..."}
                               disabled={loadingEntities}
-                              className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none ${
-                                isDark
-                                  ? "bg-gray-800 border border-gray-700"
-                                  : "bg-gray-100 border border-gray-200"
-                              } ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
+                              className={`w-full px-3 py-2 pr-10 text-sm rounded-md outline-none bg-muted border border-border ${loadingEntities ? 'opacity-50 cursor-wait' : ''}`}
                             />
-                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none ${
-                              isDark ? "text-gray-500" : "text-gray-400"
-                            }`}>
+                            <div className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 pointer-events-none text-muted-foreground`}>
                               <Search className="h-3 w-3" />
                               <ChevronDown className="h-3 w-3" />
                             </div>
@@ -1431,14 +1236,10 @@ export default function CartModal({
                           
                           {/* Dropdown List */}
                           {showCustomerDropdown && !loadingEntities && (
-                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto ${
-                              isDark
-                                ? "bg-gray-800 border-gray-700"
-                                : "bg-white border-gray-200"
-                            }`}>
+                            <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto bg-card border-border`}>
                               {filteredCustomers.length === 0 ? (
                                 <div className="px-3 py-2 text-xs text-center">
-                                  <span className={isDark ? "text-gray-400" : "text-gray-600"}>
+                                  <span className="text-muted-foreground">
                                     No customers found
                                   </span>
                                 </div>
@@ -1452,18 +1253,10 @@ export default function CartModal({
                                       setCustomerSearch("");
                                       setShowCustomerDropdown(false);
                                     }}
-                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-opacity-10 ${
-                                      isDark
-                                        ? "hover:bg-white"
-                                        : "hover:bg-gray-900"
-                                    } ${selectedCustomerId === customer.id ? (isDark ? 'bg-blue-900/30' : 'bg-blue-100') : ''} border-b last:border-b-0 ${
-                                      isDark ? "border-gray-700" : "border-gray-200"
-                                    }`}
+                                    className={`w-full px-3 py-2 text-left text-xs hover:bg-accent ${selectedCustomerId === customer.id ? 'bg-accent' : ''} border-b last:border-b-0 border-border`}
                                   >
                                     <div className="font-medium">{customer.name}</div>
-                                    <div className={`text-xs mt-0.5 ${
-                                      isDark ? "text-gray-400" : "text-gray-600"
-                                    }`}>
+                                    <div className={`text-xs mt-0.5 text-muted-foreground`}>
                                       {customer.location}
                                     </div>
                                   </button>
@@ -1474,9 +1267,7 @@ export default function CartModal({
                         </div>
                         
                         {selectedCustomer && (
-                          <div className={`text-xs mt-1 ${
-                            isDark ? "text-green-400" : "text-green-600"
-                          }`}>
+                          <div className={`text-xs mt-1 text-green-600 dark:text-green-400`}>
                             ✓ {selectedCustomer.name}
                           </div>
                         )}
@@ -1484,9 +1275,7 @@ export default function CartModal({
                     )}
                     <div className="space-y-1">
                       <label
-                        className={`text-xs ${
-                          isDark ? "text-gray-300" : "text-gray-700"
-                        }`}
+                        className={`text-xs text-foreground`}
                       >
                         Purpose/Remarks
                       </label>
@@ -1495,11 +1284,7 @@ export default function CartModal({
                         onChange={(e) => setRemarks(e.target.value)}
                         placeholder="Enter Purpose or Remarks"
                         rows={3}
-                        className={`w-full px-3 py-2 text-sm rounded-md outline-none resize-none ${
-                          isDark
-                            ? "bg-gray-800 border border-gray-700"
-                            : "bg-gray-100 border border-gray-200"
-                        }`}
+                        className={`w-full px-3 py-2 text-sm rounded-md outline-none resize-none bg-muted border border-border`}
                       />
                     </div>
                   </div>
@@ -1508,9 +1293,7 @@ export default function CartModal({
 
               {/* Points Deduction */}
               <div
-                className={`rounded-lg border ${
-                  isDark ? "border-gray-800" : "border-gray-200"
-                }`}
+                className={`rounded-lg border border-border`}
               >
                 <div className="p-3">
                   <h3 className="text-sm font-semibold">Points Deduction</h3>
@@ -1524,7 +1307,7 @@ export default function CartModal({
                         onChange={() => setPointsDeductedFrom('SELF')}
                         className="w-4 h-4"
                       />
-                      <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                      <span className={`text-xs text-foreground`}>
                         Deduct from my points
                       </span>
                     </label>
@@ -1537,7 +1320,7 @@ export default function CartModal({
                         onChange={() => setPointsDeductedFrom(entityType)}
                         className="w-4 h-4"
                       />
-                      <span className={`text-xs ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                      <span className={`text-xs text-foreground`}>
                         Deduct from {entityType === 'DISTRIBUTOR' ? "distributor's" : "customer's"} points
                       </span>
                     </label>
@@ -1548,9 +1331,7 @@ export default function CartModal({
               {/* Service Vehicle Use - Only show if items need driver */}
               {hasItemsNeedingDriver && (
                 <div
-                  className={`rounded-lg border ${
-                    isDark ? "border-gray-800" : "border-gray-200"
-                  }`}
+                  className={`rounded-lg border border-border`}
                 >
                   <div className="p-3">
                     <div className="flex items-baseline gap-1">
@@ -1558,19 +1339,15 @@ export default function CartModal({
                         Service Vehicle Use
                       </h3>
                       <span
-                        className={`text-xs ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className={`text-xs text-muted-foreground`}
                       >
                         (Required)
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label
-                          className={`text-xs ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-xs text-foreground`}
                         >
                           Date
                         </label>
@@ -1578,18 +1355,12 @@ export default function CartModal({
                           type="date"
                           value={svcDate}
                           onChange={(e) => setSvcDate(e.target.value)}
-                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
                       <div className="space-y-1">
                         <label
-                          className={`text-xs ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-xs text-foreground`}
                         >
                           Time
                         </label>
@@ -1597,20 +1368,14 @@ export default function CartModal({
                           type="time"
                           value={svcTime}
                           onChange={(e) => setSvcTime(e.target.value)}
-                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label
-                          className={`text-xs ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-xs text-foreground`}
                         >
                           Plate Number
                         </label>
@@ -1619,29 +1384,19 @@ export default function CartModal({
                           value={plateNumber}
                           onChange={(e) => setPlateNumber(e.target.value)}
                           placeholder="e.g., ABC 1234"
-                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
                       <div className="space-y-1">
                         <label
-                          className={`text-xs ${
-                            isDark ? "text-gray-300" : "text-gray-700"
-                          }`}
+                          className={`text-xs text-foreground`}
                         >
                           Driver
                         </label>
                         <select
                           value={svcDriver}
                           onChange={(e) => setSvcDriver(e.target.value)}
-                          className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                            isDark
-                              ? "bg-gray-800 border border-gray-700"
-                              : "bg-gray-100 border border-gray-200"
-                          }`}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
                         >
                           <option value="without">Without Driver</option>
                           <option value="with">With Driver</option>
@@ -1652,9 +1407,7 @@ export default function CartModal({
                       <div className="mt-3">
                         <div className="space-y-1">
                           <label
-                            className={`text-xs ${
-                              isDark ? "text-gray-300" : "text-gray-700"
-                            }`}
+                            className={`text-xs text-foreground`}
                           >
                             Driver Name
                           </label>
@@ -1663,11 +1416,7 @@ export default function CartModal({
                             value={driverName}
                             onChange={(e) => setDriverName(e.target.value)}
                             placeholder="Enter driver name"
-                            className={`w-full px-3 py-2 text-sm rounded-md outline-none ${
-                              isDark
-                                ? "bg-gray-800 border border-gray-700"
-                                : "bg-gray-100 border border-gray-200"
-                            }`}
+                            className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
                           />
                         </div>
                       </div>
@@ -1681,44 +1430,36 @@ export default function CartModal({
 
         {/* Actions */}
         {step === "cart" ? (
-          <div className="flex flex-col gap-2 p-4 border-t border-gray-200 md:border-gray-800">
+          <div className="flex flex-col gap-2 p-4 border-t border-border">
             <button
               onClick={() => setStep("details")}
               disabled={items.length === 0 || remainingPoints < 0}
-              className={`w-full px-4 py-3 rounded-lg font-semibold text-white ${
+              className={`w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground ${
                 items.length === 0 || remainingPoints < 0
                   ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  : "bg-primary hover:bg-primary/90"
               }`}
             >
               Next
             </button>
             <button
               onClick={onClose}
-              className={`w-full px-4 py-3 rounded-lg font-semibold ${
-                isDark
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-              }`}
+              className={`w-full px-4 py-3 rounded-lg font-semibold bg-muted text-foreground hover:bg-accent`}
             >
               Back to Redeem
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-2 p-4 border-t border-gray-200 md:border-gray-800">
+          <div className="flex flex-col gap-2 p-4 border-t border-border">
             <button
               onClick={() => setStep("cart")}
-              className={`w-full px-4 py-3 rounded-lg font-semibold ${
-                isDark
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-200 text-gray-900 hover:bg-gray-300"
-              }`}
+              className={`w-full px-4 py-3 rounded-lg font-semibold bg-muted text-foreground hover:bg-accent`}
             >
               Back
             </button>
             <button 
               onClick={handleSubmit}
-              className="w-full px-4 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground bg-primary hover:bg-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
               Submit Details
             </button>

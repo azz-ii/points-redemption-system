@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Ban, Pencil, Trash2, ArrowUpDown, Check, X, User } from "lucide-react"
+import { Eye, Ban, Pencil, Trash2, ArrowUpDown, Check, X, User, Clock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
@@ -17,6 +17,7 @@ interface ColumnContext {
   onEditAccount: (account: Account) => void
   onBanAccount: (account: Account) => void
   onDeleteAccount: (account: Account) => void
+  onViewPointsHistory?: (account: Account) => void
   onToggleInlineEdit?: (account: Account) => void
   onSaveInlineEdit?: (accountId: number) => void
   onCancelInlineEdit?: () => void
@@ -343,6 +344,16 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
             disabled={isAnyRowEditing}
           >
             <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => context.onViewPointsHistory?.(account)}
+            className="bg-purple-500 hover:bg-purple-600 text-white"
+            title="Points History"
+            disabled={isAnyRowEditing}
+          >
+            <Clock className="h-4 w-4" />
           </Button>
         </div>
       )

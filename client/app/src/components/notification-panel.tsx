@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { X, Clock, CheckCircle, AlertCircle, Info } from "lucide-react";
 
 interface Notification {
@@ -16,8 +15,6 @@ interface NotificationPanelProps {
 }
 
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
-  const { resolvedTheme } = useTheme();
-
   // Dummy notification data
   const notifications: Notification[] = [
     {
@@ -73,13 +70,13 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const getIcon = (type: Notification["type"]) => {
     switch (type) {
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+        return <AlertCircle className="h-5 w-5 text-warning" />;
       case "error":
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
+        return <AlertCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-info" />;
     }
   };
 
@@ -97,26 +94,14 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       <div
         className={`fixed top-0 right-0 h-full w-full md:w-96 z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        } ${
-          resolvedTheme === "dark"
-            ? "bg-gray-900 text-white"
-            : "bg-white text-gray-900"
-        } shadow-2xl`}
+        } bg-card text-card-foreground shadow-2xl`}
       >
         {/* Header */}
-        <div
-          className={`flex items-center justify-between p-4 border-b ${
-            resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-          }`}
-        >
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-xl font-semibold">Notifications</h2>
           <button
             onClick={onClose}
-            className={`p-2 rounded-lg transition-colors ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            }`}
+            className="p-2 rounded-lg transition-colors hover:bg-accent"
           >
             <X className="h-5 w-5" />
           </button>
@@ -126,34 +111,18 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
         <div className="overflow-y-auto h-[calc(100%-73px)]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-              <Info
-                className={`h-12 w-12 mb-4 ${
-                  resolvedTheme === "dark" ? "text-gray-600" : "text-gray-400"
-                }`}
-              />
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
+              <Info className="h-12 w-12 mb-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
                 No notifications yet
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-700">
+            <div className="divide-y divide-border">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 transition-colors ${
-                    resolvedTheme === "dark"
-                      ? "hover:bg-gray-800"
-                      : "hover:bg-gray-50"
-                  } ${
-                    !notification.read
-                      ? resolvedTheme === "dark"
-                        ? "bg-gray-800/50"
-                        : "bg-blue-50/50"
-                      : ""
+                  className={`p-4 transition-colors hover:bg-accent ${
+                    !notification.read ? "bg-accent/50" : ""
                   }`}
                 >
                   <div className="flex gap-3">
@@ -166,19 +135,13 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                           {notification.title}
                         </h3>
                         {!notification.read && (
-                          <span className="shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-1" />
+                          <span className="shrink-0 w-2 h-2 bg-foreground rounded-full mt-1" />
                         )}
                       </div>
-                      <p
-                        className={`text-sm mb-2 ${
-                          resolvedTheme === "dark"
-                            ? "text-gray-400"
-                            : "text-gray-600"
-                        }`}
-                      >
+                      <p className="text-sm mb-2 text-muted-foreground">
                         {notification.message}
                       </p>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         <span>{notification.time}</span>
                       </div>

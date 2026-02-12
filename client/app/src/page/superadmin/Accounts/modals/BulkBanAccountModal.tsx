@@ -1,5 +1,4 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
 
@@ -32,8 +31,6 @@ export function BulkBanAccountModal({
   setError,
   onSubmit,
 }: BulkBanAccountModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || accounts.length === 0) return null;
 
   const handleClose = () => {
@@ -44,20 +41,14 @@ export function BulkBanAccountModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="bulk-ban-account-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="bulk-ban-account-title" className="text-xl font-semibold">
+            <h2 id="bulk-ban-account-title" className="text-lg font-semibold">
               Ban Multiple Users
             </h2>
             <p className="text-xs text-gray-500 mt-1">
@@ -74,18 +65,14 @@ export function BulkBanAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="mb-4">
             <p className="text-sm text-gray-500 mb-2">Users to ban:</p>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {accounts.map((account) => (
                 <div
                   key={account.id}
-                  className={`text-xs px-2 py-1 rounded ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 text-gray-300"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
+                  className="text-xs px-2 py-1 rounded bg-muted text-foreground"
                 >
                   {account.full_name} ({account.username})
                 </div>
@@ -104,11 +91,7 @@ export function BulkBanAccountModal({
               id="bulk-ban-reason"
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
-              className={`w-full px-3 py-2 rounded border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:outline-none focus:border-blue-500`}
+              className="w-full px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
               placeholder="Reason for ban (applies to all)"
             />
           </div>
@@ -124,11 +107,7 @@ export function BulkBanAccountModal({
               id="bulk-ban-message"
               value={banMessage}
               onChange={(e) => setBanMessage(e.target.value)}
-              className={`w-full px-3 py-2 rounded border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:outline-none focus:border-blue-500`}
+              className="w-full px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
               placeholder="Optional message shown to users"
             />
           </div>
@@ -146,11 +125,7 @@ export function BulkBanAccountModal({
               onChange={(e) =>
                 setBanDuration(e.target.value as "1" | "7" | "30" | "permanent")
               }
-              className={`w-full px-3 py-2 rounded border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:outline-none focus:border-blue-500`}
+              className="w-full px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
             >
               <option value="1">1 day</option>
               <option value="7">7 days</option>
@@ -161,20 +136,16 @@ export function BulkBanAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           {error && (
             <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-2">
             <button
               onClick={handleClose}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-              }`}
+              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
             >
               Cancel
             </button>

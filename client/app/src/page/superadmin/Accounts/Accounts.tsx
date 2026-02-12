@@ -1,15 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
-import { useLogout, useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import { Bell, UserPlus, LogOut, Warehouse, X, RotateCw } from "lucide-react";
+import { UserPlus, X, RotateCw } from "lucide-react";
 import {
   ViewAccountModal,
   CreateAccountModal,
@@ -23,16 +17,13 @@ import {
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
+import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Accounts() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
   const { updateProfilePicture, username: loggedInUsername } = useAuth();
-  const { resolvedTheme } = useTheme();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -89,6 +80,8 @@ function Accounts() {
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
+  const [showPointsHistory, setShowPointsHistory] = useState(false);
+  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Account | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -136,11 +129,13 @@ function Accounts() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/users/`);
+      const response = await fetch(`${API_URL}/users/`, {
+        credentials: 'include',
+      });
       const data = await response.json();
 
       if (response.ok) {
-        setAccounts(data.accounts || []);
+        setAccounts(data.results || []);
       } else {
         setError("Failed to load accounts");
       }
@@ -708,12 +703,12 @@ function Accounts() {
   );
 
   // Handle set points submission - batch updates (only changed accounts)
-  const handleSetPoints = async (updates: { id: number; points: number }[]) => {
+  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
       setLoading(true);
 
       // Use batch API for efficiency
-      const result = await usersApi.batchUpdatePoints(updates);
+      const result = await usersApi.batchUpdatePoints(updates, reason);
 
       setShowSetPointsModal(false);
 
@@ -859,214 +854,105 @@ function Accounts() {
   const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 border-b flex justify-between items-center ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">I</span>
-            </div>
-            <span className="font-medium text-sm">Welcome, Izza!</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => fetchAccounts()}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Refresh Accounts"
-            >
-              <RotateCw className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Warehouse className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Accounts</h1>
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                View and manage user accounts.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
-            </div>
-          </div>
-
-          {/* Table */}
-          <AccountsTable
-            accounts={accounts}
-            loading={loading}
-            onViewAccount={(account) => {
-              setViewTarget(account);
-              setShowViewModal(true);
-              setError("");
-            }}
-            onEditAccount={handleEditClick}
-            onBanAccount={(account) => {
-              setBanTarget(account);
-              setBanReason("");
-              setBanMessage("");
-              setBanDuration("1");
-              setShowBanModal(true);
-              setError("");
-            }}
-            onDeleteAccount={(account) => {
-              setDeleteTarget(account);
-              setShowDeleteModal(true);
-              setError("");
-            }}
-            onDeleteSelected={handleDeleteSelected}
-            onBanSelected={handleBanSelected}
-            onCreateNew={() => setShowCreateModal(true)}
-            onSetPoints={() => setShowSetPointsModal(true)}
-            onRefresh={fetchAccounts}
-            refreshing={loading}
-            onExport={() => setShowExportModal(true)}
-            editingRowId={editingRowId}
-            editedData={editedData}
-            onToggleInlineEdit={handleToggleInlineEdit}
-            onSaveInlineEdit={handleSaveInlineEdit}
-            onCancelInlineEdit={handleCancelInlineEdit}
-            onFieldChange={handleFieldChange}
-            fieldErrors={fieldErrors}
-          />
-        </div>
-
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
-          <div className="p-4 space-y-4">
-            <h2 className="text-2xl font-semibold mb-2">Accounts</h2>
-            <p
-              className={`text-xs mb-4 ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              Manage user accounts
-            </p>
-
-            {/* Add Account Button */}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className={`w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              } transition-colors font-semibold text-sm`}
-            >
-              <UserPlus className="h-5 w-5" />
-              <span>Add Account</span>
-            </button>
-
-            {/* Mobile Cards */}
-            <AccountsMobileCards
-              accounts={accounts}
-              paginatedAccounts={paginatedAccounts}
-              filteredAccounts={filteredAccounts}
-              loading={loading}
-              resolvedTheme={resolvedTheme}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              onViewAccount={(account) => {
-                setViewTarget(account);
-                setShowViewModal(true);
-              }}
-              onEditAccount={handleEditClick}
-              onBanAccount={(account) => {
-                setBanTarget(account);
-                setBanReason("");
-                setBanMessage("");
-                setBanDuration("1");
-                setShowBanModal(true);
-                setError("");
-              }}
-              onDeleteAccount={(account) => {
-                setDeleteTarget(account);
-                setShowDeleteModal(true);
-                setError("");
-              }}
-            />
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-semibold">Accounts</h1>
+          <p className="text-sm text-muted-foreground">
+            View and manage user accounts.
+          </p>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNavSuperAdmin />
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <AccountsTable
+          accounts={accounts}
+          loading={loading}
+          onViewAccount={(account) => {
+            setViewTarget(account);
+            setShowViewModal(true);
+            setError("");
+          }}
+          onEditAccount={handleEditClick}
+          onBanAccount={(account) => {
+            setBanTarget(account);
+            setBanReason("");
+            setBanMessage("");
+            setBanDuration("1");
+            setShowBanModal(true);
+            setError("");
+          }}
+          onDeleteAccount={(account) => {
+            setDeleteTarget(account);
+            setShowDeleteModal(true);
+            setError("");
+          }}
+          onDeleteSelected={handleDeleteSelected}
+          onBanSelected={handleBanSelected}
+          onCreateNew={() => setShowCreateModal(true)}
+          onSetPoints={() => setShowSetPointsModal(true)}
+          onRefresh={fetchAccounts}
+          refreshing={loading}
+          onExport={() => setShowExportModal(true)}
+          onViewPointsHistory={(account) => {
+            setPointsHistoryTarget(account);
+            setShowPointsHistory(true);
+          }}
+          editingRowId={editingRowId}
+          editedData={editedData}
+          onToggleInlineEdit={handleToggleInlineEdit}
+          onSaveInlineEdit={handleSaveInlineEdit}
+          onCancelInlineEdit={handleCancelInlineEdit}
+          onFieldChange={handleFieldChange}
+          fieldErrors={fieldErrors}
+        />
+      </div>
 
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
+      {/* Mobile Layout */}
+      <div className="md:hidden space-y-4">
+        <p className="text-xs text-muted-foreground">
+          Manage user accounts
+        </p>
+
+        {/* Add Account Button */}
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold text-sm"
+        >
+          <UserPlus className="h-5 w-5" />
+          <span>Add Account</span>
+        </button>
+
+        {/* Mobile Cards */}
+        <AccountsMobileCards
+          accounts={accounts}
+          paginatedAccounts={paginatedAccounts}
+          filteredAccounts={filteredAccounts}
+          loading={loading}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          onViewAccount={(account) => {
+            setViewTarget(account);
+            setShowViewModal(true);
+          }}
+          onEditAccount={handleEditClick}
+          onBanAccount={(account) => {
+            setBanTarget(account);
+            setBanReason("");
+            setBanMessage("");
+            setBanDuration("1");
+            setShowBanModal(true);
+            setError("");
+          }}
+          onDeleteAccount={(account) => {
+            setDeleteTarget(account);
+            setShowDeleteModal(true);
+            setError("");
+          }}
+        />
+      </div>
 
       <CreateAccountModal
         isOpen={showCreateModal}
@@ -1187,6 +1073,19 @@ function Accounts() {
         onBulkSubmit={handleBulkSetPoints}
         onResetAll={handleResetAllPoints}
       />
+
+      {pointsHistoryTarget && (
+        <PointsHistoryModal
+          isOpen={showPointsHistory}
+          onClose={() => {
+            setShowPointsHistory(false);
+            setPointsHistoryTarget(null);
+          }}
+          entityType="USER"
+          entityId={pointsHistoryTarget.id}
+          entityName={pointsHistoryTarget.full_name || pointsHistoryTarget.username}
+        />
+      )}
 
       {/* Toast Notification */}
       {toast && (

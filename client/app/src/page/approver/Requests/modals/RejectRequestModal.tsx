@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import type { ModalBaseProps, RequestItem } from "./types";
 
 interface RejectRequestModalProps extends ModalBaseProps {
@@ -15,7 +14,6 @@ export function RejectRequestModal({
   request,
   onConfirm,
 }: RejectRequestModalProps) {
-  const { resolvedTheme } = useTheme();
   const [reason, setReason] = useState("");
   const [remarks, setRemarks] = useState("");
 
@@ -40,24 +38,18 @@ export function RejectRequestModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-md w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="reject-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="reject-request-title" className="text-xl font-semibold">
+            <h2 id="reject-request-title" className="text-lg font-semibold">
               Reject Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Request for {request.requested_for_name}
             </p>
           </div>
@@ -71,7 +63,7 @@ export function RejectRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p className="text-sm">
             Are you sure you want to reject this request for{" "}
             <span className="font-semibold">{request.requested_for_name}</span>?
@@ -89,11 +81,7 @@ export function RejectRequestModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Please provide a reason for rejection..."
-              className={`w-full px-4 py-3 rounded border resize-none ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              } focus:outline-none focus:border-blue-500`}
+              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500"
               rows={3}
               aria-required="true"
             />
@@ -101,14 +89,10 @@ export function RejectRequestModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex gap-3">
+        <div className="p-4 flex gap-2">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900"
-                : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground"
           >
             Cancel
           </button>

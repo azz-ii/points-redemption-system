@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown } from "lucide-react"
+import { Eye, Pencil, Trash2, ArrowUpDown, Clock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Distributor } from "../modals/types"
@@ -10,6 +10,7 @@ interface ColumnContext {
   onView: (distributor: Distributor) => void
   onEdit: (distributor: Distributor) => void
   onDelete: (distributor: Distributor) => void
+  onViewPointsHistory?: (distributor: Distributor) => void
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] => [
@@ -153,6 +154,15 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
             title="Delete"
           >
             <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => context.onViewPointsHistory?.(distributor)}
+            className="bg-purple-500 hover:bg-purple-600 text-white"
+            title="Points History"
+          >
+            <Clock className="h-4 w-4" />
           </Button>
         </div>
       )

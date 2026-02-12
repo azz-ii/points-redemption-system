@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
 
 interface ResponsiveTableProps {
   children: ReactNode;
@@ -16,16 +15,8 @@ export function ResponsiveTable({
   className = "",
   maxHeight,
 }: ResponsiveTableProps) {
-  const { resolvedTheme } = useTheme();
-
   return (
-    <div
-      className={`w-full overflow-x-auto ${
-        resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
-      } rounded-lg border ${
-        resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-      }`}
-    >
+    <div className="w-full overflow-x-auto bg-card rounded-lg border border-border">
       <div
         className={`inline-block min-w-full align-middle ${className}`}
         style={maxHeight ? { maxHeight, overflowY: "auto" } : undefined}

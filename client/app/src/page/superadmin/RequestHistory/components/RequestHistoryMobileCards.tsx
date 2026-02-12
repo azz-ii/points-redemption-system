@@ -1,5 +1,4 @@
 import { Eye } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { RequestHistoryItem } from "../modals/types";
 
 interface RequestHistoryMobileCardsProps {
@@ -18,8 +17,6 @@ export function RequestHistoryMobileCards({
   loading,
   onView,
 }: RequestHistoryMobileCardsProps) {
-  const { resolvedTheme } = useTheme();
-
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -35,11 +32,7 @@ export function RequestHistoryMobileCards({
 
   return (
     <div
-      className={`border rounded-lg overflow-hidden ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-700"
-          : "bg-white border-gray-200"
-      } transition-colors`}
+      className="border rounded-lg overflow-hidden bg-card border-border transition-colors"
     >
       <div className="space-y-3 p-4">
         {loading ? (
@@ -54,11 +47,7 @@ export function RequestHistoryMobileCards({
           paginatedItems.map((item) => (
             <div
               key={item.id}
-              className={`p-4 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-200"
-              }`}
+              className="p-4 rounded-lg border bg-card border-border"
             >
               <div className="flex justify-between items-start mb-3">
                 <div>

@@ -81,7 +81,6 @@ export interface WithdrawConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (reason: string) => Promise<void>;
-  isDark: boolean;
   requestId: number;
   isSubmitting: boolean;
 }

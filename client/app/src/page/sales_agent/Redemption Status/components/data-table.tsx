@@ -41,7 +41,6 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   loading?: boolean
   error?: string | null
-  isDark: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -49,7 +48,6 @@ export function DataTable<TData, TValue>({
   data,
   loading = false,
   error = null,
-  isDark,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -102,22 +100,14 @@ export function DataTable<TData, TValue>({
             placeholder="Search by request ID, item code, name, variant, or status..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            className={`max-w-sm ${
-              isDark
-                ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-            }`}
+            className="max-w-sm bg-card border-border text-foreground placeholder:text-muted-foreground"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-9 flex gap-2 ${
-                  isDark
-                    ? "bg-gray-900 border-gray-700 text-white hover:bg-gray-800"
-                    : "bg-white border-gray-300 text-gray-900 hover:bg-gray-100"
-                }`}
+                className="h-9 flex gap-2 bg-card border-border text-foreground hover:bg-accent"
               >
                 <Settings2 className="h-4 w-4" />
                 Columns
@@ -150,23 +140,19 @@ export function DataTable<TData, TValue>({
       </div>
 
       <div
-        className={`border rounded-lg overflow-hidden ${
-          isDark ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="border rounded-lg overflow-hidden border-border"
         style={{ height: "70vh", display: "flex", flexDirection: "column" }}
       >
         <div style={{ flex: 1, overflow: "auto" }}>
           <Table>
-            <TableHeader className={isDark ? "bg-gray-900" : "bg-gray-50"}>
+            <TableHeader className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
                       <TableHead
                         key={header.id}
-                        className={`font-medium ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}
+                        className="font-medium text-muted-foreground"
                       >
                         {header.isPlaceholder
                           ? null
@@ -189,7 +175,7 @@ export function DataTable<TData, TValue>({
                   >
                     <div className="flex flex-col items-center gap-3">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                      <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+                      <p className="text-muted-foreground">
                         Loading requests...
                       </p>
                     </div>
@@ -208,9 +194,7 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={`border-t ${
-                      isDark ? "border-gray-800" : "border-gray-200"
-                    }`}
+                    className="border-t border-border"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
@@ -228,7 +212,7 @@ export function DataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+                    <p className="text-muted-foreground">
                       No redemption requests found
                     </p>
                   </TableCell>
@@ -239,9 +223,7 @@ export function DataTable<TData, TValue>({
         </div>
 
         <div
-          className={`flex items-center justify-between p-4 border-t ${
-            isDark ? "border-gray-800" : "border-gray-200"
-          }`}
+          className="flex items-center justify-between p-4 border-t border-border"
         >
           <div className="flex-1 text-sm text-muted-foreground">
             <span>
@@ -254,11 +236,7 @@ export function DataTable<TData, TValue>({
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className={`inline-flex items-center gap-2 ${
-                isDark
-                  ? "bg-gray-900 border-gray-700 hover:bg-gray-800"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-              }`}
+              className="inline-flex items-center gap-2 bg-card border-border hover:bg-accent"
             >
               <ChevronLeft className="h-4 w-4" /> Previous
             </Button>
@@ -270,11 +248,7 @@ export function DataTable<TData, TValue>({
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className={`inline-flex items-center gap-2 ${
-                isDark
-                  ? "bg-gray-900 border-gray-700 hover:bg-gray-800"
-                  : "bg-white border-gray-300 hover:bg-gray-100"
-              }`}
+              className="inline-flex items-center gap-2 bg-card border-border hover:bg-accent"
             >
               Next <ChevronRight className="h-4 w-4" />
             </Button>

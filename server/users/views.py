@@ -5,13 +5,16 @@ from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
 import logging
 import io
 from datetime import datetime
 from utils.email_service import send_account_created_email
+from points_audit.utils import log_points_change, bulk_log_points_changes, generate_batch_id
+from points_audit.models import PointsAuditLog
 
 # Configure logger for user operations
 logger = logging.getLogger('email')
@@ -24,17 +27,55 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 from .models import UserProfile
 from .serializers import UserSerializer, UserListSerializer
 
-@method_decorator(csrf_exempt, name='dispatch')
-class UserListCreateView(APIView):
-    """List all users or create a new user"""
+
+class UserPagination(PageNumberPagination):
+    """
+    Pagination class for users list.
+    """
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users.
+    Provides CRUD operations for user management.
+    """
+    queryset = User.objects.filter(is_superuser=False).select_related('profile')
+    serializer_class = UserListSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    pagination_class = UserPagination
     
-    def get(self, request):
-        """Get list of all users with their profiles, excluding superusers"""
-        users = User.objects.filter(is_superuser=False).select_related('profile')
-        serializer = UserListSerializer(users, many=True)
-        return Response({"accounts": serializer.data}, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        """
+        All authenticated users can access all users.
+        Optionally filter based on query parameters.
+        """
+        queryset = User.objects.filter(is_superuser=False).select_related('profile')
+        
+        # Apply search filter if provided
+        search = self.request.query_params.get('search', None)
+        
+        if search:
+            queryset = queryset.filter(
+                username__icontains=search
+            ) | queryset.filter(
+                profile__full_name__icontains=search
+            ) | queryset.filter(
+                profile__email__icontains=search
+            )
+        
+        return queryset.order_by('username')
     
-    def post(self, request):
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'create':
+            return UserSerializer
+        return UserListSerializer
+    
+    def create(self, request, *args, **kwargs):
         """Create a new user with profile"""
         # Handle both JSON and multipart form data
         data = request.data.copy()
@@ -70,70 +111,43 @@ class UserListCreateView(APIView):
             
             return Response({
                 "message": "User created successfully",
-                "user": serializer.data,
+                "user": UserListSerializer(user).data,
                 "email_sent": email_sent
             }, status=status.HTTP_201_CREATED)
         return Response({
             "error": "Failed to create user",
             "details": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UserDetailView(APIView):
-    """Retrieve, update or delete a user"""
     
-    def get(self, request, user_id):
-        """Get a specific user's details"""
-        try:
-            user = User.objects.select_related('profile').get(id=user_id)
-            serializer = UserListSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-    
-    def put(self, request, user_id):
+    def update(self, request, *args, **kwargs):
         """Update a user's details"""
-        try:
-            user = User.objects.select_related('profile').get(id=user_id)
-            
-            # Handle both JSON and multipart form data
-            data = request.data.copy()
-            if 'profile_picture' in request.FILES:
-                data['profile_picture'] = request.FILES['profile_picture']
-            
-            serializer = UserSerializer(user, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                # Return updated user data with flattened format
-                updated_user = User.objects.select_related('profile').get(id=user_id)
-                response_serializer = UserListSerializer(updated_user)
-                return Response({
-                    "message": "User updated successfully",
-                    "user": response_serializer.data
-                }, status=status.HTTP_200_OK)
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Handle both JSON and multipart form data
+        data = request.data.copy()
+        if 'profile_picture' in request.FILES:
+            data['profile_picture'] = request.FILES['profile_picture']
+        
+        serializer = UserSerializer(instance, data=data, partial=partial)
+        if serializer.is_valid():
+            serializer.save()
             return Response({
-                "error": "Failed to update user",
-                "details": serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-    
-    def delete(self, request, user_id):
-        """Delete a user"""
-        try:
-            user = User.objects.get(id=user_id)
-            user.delete()
-            return Response({
-                "message": "User deleted successfully"
+                "message": "User updated successfully",
+                "user": UserListSerializer(instance).data
             }, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "error": "Failed to update user",
+            "details": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete a user"""
+        instance = self.get_object()
+        instance.delete()
+        return Response({
+            "message": "User deleted successfully"
+        }, status=status.HTTP_200_OK)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurrentUserView(APIView):
@@ -480,10 +494,9 @@ class BulkUpdatePointsView(APIView):
             operation = "update"
         
         try:
-            # Get all active, non-banned users (excluding superusers)
+            # Get all non-banned users (excluding superusers)
             active_users = User.objects.filter(
                 is_superuser=False,
-                profile__is_activated=True,
                 profile__is_banned=False
             ).select_related('profile')
             
@@ -491,16 +504,34 @@ class BulkUpdatePointsView(APIView):
             failed_count = 0
             failed_users = []
             
+            # Generate batch_id for audit grouping
+            batch_id = generate_batch_id()
+            audit_entries = []
+            
             # Update each user's points
             for user in active_users:
                 try:
                     if hasattr(user, 'profile'):
+                        old_points = user.profile.points or 0
                         if reset_to_zero:
                             user.profile.points = 0
                         else:
-                            user.profile.points = (user.profile.points or 0) + points_delta
+                            user.profile.points = old_points + points_delta
                         user.profile.save()
                         updated_count += 1
+                        
+                        # Collect audit entry
+                        audit_entries.append({
+                            'entity_type': PointsAuditLog.EntityType.USER,
+                            'entity_id': user.id,
+                            'entity_name': user.profile.full_name or user.username,
+                            'previous_points': old_points,
+                            'new_points': user.profile.points,
+                            'action_type': PointsAuditLog.ActionType.BULK_RESET if reset_to_zero else PointsAuditLog.ActionType.BULK_DELTA,
+                            'changed_by': request.user,
+                            'reason': f'Bulk reset to 0' if reset_to_zero else f'Bulk delta {points_delta:+d}',
+                            'batch_id': batch_id,
+                        })
                     else:
                         failed_count += 1
                         failed_users.append(user.username)
@@ -508,6 +539,13 @@ class BulkUpdatePointsView(APIView):
                     logger.error(f"Failed to update points for user {user.username}: {str(e)}")
                     failed_count += 1
                     failed_users.append(user.username)
+            
+            # Bulk create audit log entries
+            if audit_entries:
+                try:
+                    bulk_log_points_changes(audit_entries)
+                except Exception as e:
+                    logger.error(f"Failed to create audit log entries: {str(e)}")
             
             if reset_to_zero:
                 message = f"Successfully reset points to 0 for {updated_count} account(s)"
@@ -558,6 +596,7 @@ class BatchUpdatePointsView(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
         
         updates = request.data.get('updates', [])
+        reason = request.data.get('reason', '')
         
         if not updates:
             return Response({
@@ -566,6 +605,8 @@ class BatchUpdatePointsView(APIView):
         
         updated_ids = []
         failed = []
+        batch_id = generate_batch_id()
+        audit_entries = []
         
         for update in updates:
             try:
@@ -578,9 +619,24 @@ class BatchUpdatePointsView(APIView):
                 
                 user = User.objects.select_related('profile').get(id=user_id, is_superuser=False)
                 if hasattr(user, 'profile'):
-                    user.profile.points = int(new_points)  # Allow negative points
+                    old_points = user.profile.points or 0
+                    new_points_int = int(new_points)  # Allow negative points
+                    user.profile.points = new_points_int
                     user.profile.save(update_fields=['points'])
                     updated_ids.append(user_id)
+                    
+                    # Collect audit entry
+                    audit_entries.append({
+                        'entity_type': PointsAuditLog.EntityType.USER,
+                        'entity_id': user_id,
+                        'entity_name': user.profile.full_name or user.username,
+                        'previous_points': old_points,
+                        'new_points': new_points_int,
+                        'action_type': PointsAuditLog.ActionType.INDIVIDUAL_SET,
+                        'changed_by': request.user,
+                        'reason': reason,
+                        'batch_id': batch_id,
+                    })
                 else:
                     failed.append({'id': user_id, 'error': 'User has no profile'})
             except User.DoesNotExist:
@@ -590,6 +646,13 @@ class BatchUpdatePointsView(APIView):
             except Exception as e:
                 logger.error(f"Failed to update points for user {user_id}: {str(e)}")
                 failed.append({'id': user_id, 'error': str(e)})
+        
+        # Bulk create audit log entries
+        if audit_entries:
+            try:
+                bulk_log_points_changes(audit_entries)
+            except Exception as e:
+                logger.error(f"Failed to create audit log entries: {str(e)}")
         
         return Response({
             "message": f"Updated {len(updated_ids)} account(s)",

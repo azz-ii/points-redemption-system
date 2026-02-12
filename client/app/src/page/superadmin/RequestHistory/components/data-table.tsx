@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useTheme } from "next-themes";
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -67,8 +66,6 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [globalFilter, setGlobalFilter] = React.useState("");
-  const { resolvedTheme } = useTheme();
-
   const table = useReactTable({
     data,
     columns,

@@ -1,12 +1,7 @@
-import { useTheme } from "next-themes";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "@/context/AuthContext";
-import { Search, Bell, RefreshCw } from "lucide-react";
-import { SidebarMarketing } from "@/components/sidebar";
-import { NotificationPanel } from "@/components/notification-panel";
-import { MobileBottomNavMarketing } from "@/components/mobile-bottom-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { marketingRequestsApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -18,11 +13,9 @@ import { ViewRequestModal } from "@/page/marketing/ProcessRequests/modals/ViewRe
 export default function MarketingHistory() {
   const _navigate = useNavigate();
   const _handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 7;
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -85,28 +78,15 @@ export default function MarketingHistory() {
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <SidebarMarketing />
-
-      {/* Main */}
-      <div className="flex-1 overflow-y-auto pb-20">
+    <>
+    <div className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 z-30 px-4 py-4 md:px-8 md:py-5 mt-2 md:mt-3 flex items-center justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">
               Marketing History
             </h1>
-            <p
-              className={`text-sm ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-sm text-muted-foreground">
               View your processed requests
             </p>
           </div>
@@ -114,60 +94,15 @@ export default function MarketingHistory() {
             <button
               onClick={() => fetchHistory(true)}
               disabled={refreshing}
-              className={`p-2 rounded-lg transition-colors border border-transparent ${
-                resolvedTheme === "dark"
-                  ? "hover:bg-gray-800 hover:border-gray-700"
-                  : "hover:bg-gray-100 hover:border-gray-300"
-              } ${refreshing ? "opacity-50" : ""}`}
+              className={`p-2 rounded-lg transition-colors border border-transparent hover:bg-accent hover:border-border ${refreshing ? "opacity-50" : ""}`}
               aria-label="Refresh"
             >
               <RefreshCw className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
             </button>
-            <button
-              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-              className={`p-2 rounded-lg transition-colors border border-transparent ${
-                resolvedTheme === "dark"
-                  ? "hover:bg-gray-800 hover:border-gray-700"
-                  : "hover:bg-gray-100 hover:border-gray-300"
-              }`}
-              aria-label="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
           </div>
         </div>
 
-        <NotificationPanel
-          isOpen={isNotificationOpen}
-          onClose={() => setIsNotificationOpen(false)}
-        />
-
-        {/* Search */}
-        <div className="p-4 md:p-8">
-          <div
-            className={`relative flex items-center ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border border-gray-700"
-                : "bg-white border border-gray-300"
-            }`}
-          >
-            <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-            <Input
-              placeholder="Search by ID, Requested By, Requested For, or Status..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className={`pl-10 w-full h-12 ${
-                resolvedTheme === "dark"
-                  ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              }`}
-            />
-          </div>
-        </div>
+        
 
         {/* Mobile Cards */}
         <div className="md:hidden px-4">
@@ -204,40 +139,22 @@ export default function MarketingHistory() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className={`px-3 py-2 rounded-md font-medium ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-white hover:bg-gray-700"
-                : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="px-3 py-2 rounded-md font-medium bg-muted text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
-          <span
-            className={`text-sm ${
-              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
+          <span className="text-sm text-muted-foreground">
             Page {safePage} of {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className={`px-3 py-2 rounded-md font-medium ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-white hover:bg-gray-700"
-                : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="px-3 py-2 rounded-md font-medium bg-muted text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>
         </div>
       </div>
-
-      {/* Notification Panel */}
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
 
       {/* View Request Modal */}
       <ViewRequestModal
@@ -250,9 +167,6 @@ export default function MarketingHistory() {
         request={selectedRequest}
         myItems={myProcessedItems}
       />
-
-      {/* Mobile nav */}
-      <MobileBottomNavMarketing />
-    </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown } from "lucide-react"
+import { Eye, Pencil, Trash2, ArrowUpDown, Package } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Product } from "../modals/types"
@@ -53,6 +53,26 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
       )
     },
     cell: ({ row }) => <div className="font-mono font-medium">{row.getValue("item_code") || "N/A"}</div>,
+  },
+  {
+    id: "image",
+    header: "Image",
+    cell: ({ row }) => {
+      const product = row.original
+      return product.image ? (
+        <img
+          src={product.image}
+          alt={product.item_name}
+          className="w-10 h-10 rounded object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+        />
+      ) : (
+        <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <Package className="w-5 h-5 text-gray-400" />
+        </div>
+      )
+    },
+    enableSorting: false,
   },
   {
     accessorKey: "item_name",

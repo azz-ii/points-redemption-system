@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { X, AlertTriangle } from "lucide-react";
 import type { Team, ModalBaseProps } from "./types";
 
@@ -15,8 +14,6 @@ export function DeleteTeamModal({
   loading,
   onConfirm,
 }: DeleteTeamModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !team) return null;
 
   const handleClose = () => {
@@ -47,20 +44,14 @@ export function DeleteTeamModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-team-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-team-title" className="text-xl font-semibold">
+            <h2 id="delete-team-title" className="text-lg font-semibold">
               Delete Team
             </h2>
             <p className="text-xs text-gray-500 mt-1">
@@ -76,7 +67,7 @@ export function DeleteTeamModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 space-y-4">
           <p>
             Are you sure you want to delete <strong>{team.name}</strong>?
           </p>
@@ -84,11 +75,7 @@ export function DeleteTeamModal({
           {/* Warning if team has members */}
           {hasMembers && (
             <div
-              className={`flex items-start gap-3 p-3 rounded border ${
-                resolvedTheme === "dark"
-                  ? "bg-yellow-500 bg-opacity-10 border-yellow-500"
-                  : "bg-yellow-50 border-yellow-400"
-              }`}
+              className="flex items-start gap-2 p-3 rounded border bg-warning bg-opacity-10 border-yellow-500"
             >
               <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -111,14 +98,10 @@ export function DeleteTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-2">
           <button
             onClick={handleClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Cancel
           </button>

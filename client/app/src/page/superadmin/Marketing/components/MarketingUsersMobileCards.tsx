@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { Eye, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import type { MarketingUser } from "./types";
 
@@ -36,17 +35,13 @@ export function MarketingUsersMobileCards({
   onViewAccount,
   onEditAccount,
 }: MarketingUsersMobileCardsProps) {
-  const { resolvedTheme } = useTheme();
-
   if (loading) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className={`p-4 rounded-lg animate-pulse ${
-              resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
-            }`}
+            className="p-4 rounded-lg animate-pulse bg-card"
           >
             <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
             <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
@@ -59,9 +54,7 @@ export function MarketingUsersMobileCards({
   if (paginatedUsers.length === 0) {
     return (
       <div
-        className={`text-center py-8 rounded-lg ${
-          resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-100"
-        }`}
+        className="text-center py-8 rounded-lg bg-card"
       >
         <p className="text-gray-500">No marketing users found</p>
       </div>
@@ -73,11 +66,7 @@ export function MarketingUsersMobileCards({
       {paginatedUsers.map((user) => (
         <div
           key={user.id}
-          className={`p-4 rounded-lg border ${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 border-gray-700"
-              : "bg-white border-gray-200"
-          }`}
+          className="p-4 rounded-lg border bg-card border-border"
         >
           <div className="flex justify-between items-start mb-3">
             <div>
@@ -139,11 +128,7 @@ export function MarketingUsersMobileCards({
           <button
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className={`flex items-center gap-1 px-3 py-2 rounded text-sm font-medium disabled:opacity-50 ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-gray-100 text-gray-900"
-            }`}
+            className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium disabled:opacity-50 bg-card text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
             Prev
@@ -154,11 +139,7 @@ export function MarketingUsersMobileCards({
           <button
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className={`flex items-center gap-1 px-3 py-2 rounded text-sm font-medium disabled:opacity-50 ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 text-white"
-                : "bg-gray-100 text-gray-900"
-            }`}
+            className="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium disabled:opacity-50 bg-card text-foreground"
           >
             Next
             <ChevronRight className="h-4 w-4" />

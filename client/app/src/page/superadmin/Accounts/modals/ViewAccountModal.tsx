@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTheme } from "next-themes";
 import { X, User, Edit2, Save, XCircle } from "lucide-react";
 import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 import { fetchWithCsrf } from "@/lib/csrf";
@@ -16,7 +15,6 @@ export function ViewAccountModal({
   account,
   onAccountUpdate,
 }: ViewAccountModalProps) {
-  const { resolvedTheme } = useTheme();
   const [isEditingPicture, setIsEditingPicture] = useState(false);
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -105,16 +103,12 @@ export function ViewAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-account-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark" ? "border-gray-700 divide-gray-700" : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-account-title" className="text-xl font-semibold">View Account</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="view-account-title" className="text-lg font-semibold">View Account</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
               Details for {account.full_name}
             </p>
           </div>
@@ -127,9 +121,9 @@ export function ViewAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Profile Picture Section */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                 Profile Picture
@@ -137,11 +131,7 @@ export function ViewAccountModal({
               {!isEditingPicture ? (
                 <button
                   onClick={() => setIsEditingPicture(true)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                  }`}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-muted hover:bg-accent text-foreground"
                 >
                   <Edit2 className="h-4 w-4" />
                   Edit
@@ -164,11 +154,7 @@ export function ViewAccountModal({
                   <button
                     onClick={handleSaveProfilePicture}
                     disabled={isSaving || !newImage}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-white text-black hover:bg-gray-200 disabled:bg-gray-700 disabled:text-gray-500"
-                        : "bg-gray-900 text-white hover:bg-gray-700 disabled:bg-gray-300 disabled:text-gray-500"
-                    } disabled:cursor-not-allowed`}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                   >
                     <Save className="h-4 w-4" />
                     {isSaving ? "Saving..." : "Save"}
@@ -176,11 +162,7 @@ export function ViewAccountModal({
                   <button
                     onClick={handleCancelEdit}
                     disabled={isSaving}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <XCircle className="h-4 w-4" />
                     Cancel
@@ -189,9 +171,7 @@ export function ViewAccountModal({
               </div>
             ) : (
               <div className="flex justify-center">
-                <div className={`w-32 h-32 rounded-full flex items-center justify-center overflow-hidden ${
-                  resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                }`}>
+                <div className="w-32 h-32 rounded-full flex items-center justify-center overflow-hidden bg-muted">
                   {account.profile_picture ? (
                     <img
                       src={account.profile_picture}
@@ -203,7 +183,7 @@ export function ViewAccountModal({
                       }}
                     />
                   ) : null}
-                  <User className={`w-16 h-16 ${resolvedTheme === "dark" ? "text-gray-500" : "text-gray-400"} ${account.profile_picture ? 'hidden' : ''}`} />
+                  <User className={`w-16 h-16 text-muted-foreground ${account.profile_picture ? 'hidden' : ''}`} />
                 </div>
               </div>
             )}
@@ -219,11 +199,7 @@ export function ViewAccountModal({
                   type="text"
                   value={account.username || ""}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -232,11 +208,7 @@ export function ViewAccountModal({
                   type="email"
                   value={account.email || ""}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
             </div>
@@ -252,11 +224,7 @@ export function ViewAccountModal({
                   type="text"
                   value={account.full_name || ""}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -265,11 +233,7 @@ export function ViewAccountModal({
                   type="text"
                   value={account.position || ""}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
             </div>
@@ -285,11 +249,7 @@ export function ViewAccountModal({
                   type="text"
                   value={account.points?.toLocaleString() ?? "0"}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -298,24 +258,16 @@ export function ViewAccountModal({
                   type="text"
                   value={`${account.is_activated ? "Active" : "Inactive"}${account.is_banned ? " • Banned" : ""}`}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-300"
-                      : "bg-gray-100 border-gray-300 text-gray-600"
-                  } focus:outline-none`}
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
             </div>
           </div>
         </div>
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
           >
             Close
           </button>

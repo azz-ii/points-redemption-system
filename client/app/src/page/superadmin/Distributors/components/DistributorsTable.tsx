@@ -14,6 +14,7 @@ interface DistributorsTableProps {
   refreshing?: boolean;
   onExport?: () => void;
   onSetPoints?: () => void;
+  onViewPointsHistory?: (distributor: Distributor) => void;
 }
 
 export function DistributorsTable({
@@ -28,11 +29,13 @@ export function DistributorsTable({
   refreshing,
   onExport,
   onSetPoints,
+  onViewPointsHistory,
 }: DistributorsTableProps) {
   const columns = createColumns({
     onView,
     onEdit,
     onDelete,
+    onViewPointsHistory,
   });
 
   return (

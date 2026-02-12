@@ -1,5 +1,4 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
@@ -44,8 +43,6 @@ export function EditAccountModal({
   onImageSelect,
   onImageRemove,
 }: EditAccountModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !account) return null;
 
   const handleClose = () => {
@@ -59,21 +56,15 @@ export function EditAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-account-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-account-title" className="text-xl font-semibold">
+            <h2 id="edit-account-title" className="text-lg font-semibold">
               Edit Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Update account details for {account.full_name}
             </p>
           </div>
@@ -87,7 +78,7 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -107,11 +98,7 @@ export function EditAccountModal({
                 onChange={(e) =>
                   setEditAccount({ ...editAccount, username: e.target.value })
                 }
-                className={`w-full px-4 py-3 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                 placeholder="Enter username"
                 aria-required="true"
               />
@@ -141,11 +128,7 @@ export function EditAccountModal({
                       full_name: e.target.value,
                     })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter full name"
                   aria-required="true"
                 />
@@ -165,11 +148,7 @@ export function EditAccountModal({
                   onChange={(e) =>
                     setEditAccount({ ...editAccount, email: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   placeholder="Enter email address"
                   aria-required="true"
                 />
@@ -209,11 +188,7 @@ export function EditAccountModal({
                   onChange={(e) =>
                     setEditAccount({ ...editAccount, position: e.target.value })
                   }
-                  className={`w-full px-4 py-3 rounded border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                   aria-required="true"
                 >
                   {POSITION_OPTIONS.map((option) => (
@@ -243,11 +218,7 @@ export function EditAccountModal({
                         points: parseInt(e.target.value) || 0,
                       })
                     }
-                    className={`flex-1 px-4 py-3 rounded border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:border-blue-500`}
+                    className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                     placeholder="Enter points"
                     aria-required="true"
                   />
@@ -260,11 +231,7 @@ export function EditAccountModal({
                       })
                     }
                     aria-label="Add 10 points"
-                    className={`px-4 py-3 rounded border font-semibold text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 hover:bg-gray-700 text-white"
-                        : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
-                    }`}
+                    className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
                   >
                     +10
                   </button>
@@ -277,11 +244,7 @@ export function EditAccountModal({
                       })
                     }
                     aria-label="Add 100 points"
-                    className={`px-4 py-3 rounded border font-semibold text-sm transition-colors ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 hover:bg-gray-700 text-white"
-                        : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
-                    }`}
+                    className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
                   >
                     +100
                   </button>
@@ -292,7 +255,7 @@ export function EditAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t">
+        <div className="p-4 border-t">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
@@ -301,11 +264,7 @@ export function EditAccountModal({
           <button
             onClick={onSubmit}
             disabled={loading}
-            className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-            }`}
+            className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
           >
             {loading ? "Updating..." : "Update Account"}
           </button>
