@@ -42,12 +42,12 @@ export function EditVariantModal({
         aria-modal="true"
         aria-labelledby="edit-variant-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-variant-title" className="text-xl font-semibold">
+            <h2 id="edit-variant-title" className="text-lg font-semibold">
               Edit Variant
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Update variant details
             </p>
           </div>
@@ -60,7 +60,7 @@ export function EditVariantModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
@@ -245,7 +245,7 @@ export function EditVariantModal({
           </div>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={updating}

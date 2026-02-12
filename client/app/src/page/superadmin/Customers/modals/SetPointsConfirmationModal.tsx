@@ -38,7 +38,7 @@ export function SetPointsConfirmationModal({
       >
         {/* Header */}
         <div
-          className="flex items-center gap-3 p-6 border-b border-border"
+          className="flex items-center gap-2 p-6 border-b border-border"
         >
           <div
             className={`p-2 rounded-full ${
@@ -141,7 +141,7 @@ export function SetPointsConfirmationModal({
 
         {/* Footer */}
         <div
-          className="flex gap-3 p-6 border-t border-border"
+          className="flex gap-2 p-6 border-t border-border"
         >
           <button
             onClick={onClose}

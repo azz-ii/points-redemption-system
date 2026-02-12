@@ -95,10 +95,10 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
         {/* Header */}
         <div className="flex justify-between items-center p-6">
           <div>
-            <h2 id="export-modal-title" className="text-xl font-semibold">
+            <h2 id="export-modal-title" className="text-lg font-semibold">
               Export Customers
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               {customers.length} customer{customers.length !== 1 ? "s" : ""} will be exported
             </p>
           </div>
@@ -112,17 +112,17 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Export Format
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setFormat("excel")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   format === "excel"
                     ? "border-green-500 bg-green-500/10"
                     : "border-border hover:border-gray-600"
@@ -144,7 +144,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
               <button
                 type="button"
                 onClick={() => setFormat("pdf")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   format === "pdf"
                     ? "border-red-500 bg-red-500/10"
                     : "border-border hover:border-gray-600"
@@ -166,7 +166,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
           </div>
 
           {/* Column Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                 Columns to Export
@@ -193,7 +193,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
               {columns.map((col) => (
                 <label
                   key={String(col.key)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
                     col.enabled
                       ? "bg-card"
                       : "bg-card"
@@ -223,11 +223,11 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
           </div>
 
           {/* Sort Options */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Sort Options
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label
                   htmlFor="sortField"
@@ -291,7 +291,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClose}
               className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-card hover:bg-accent text-foreground"

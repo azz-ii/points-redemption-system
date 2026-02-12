@@ -36,12 +36,12 @@ export function ApproveRequestModal({
         aria-labelledby="approve-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="approve-request-title" className="text-xl font-semibold">
+            <h2 id="approve-request-title" className="text-lg font-semibold">
               Approve Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Request for {request.requested_for_name}
             </p>
           </div>
@@ -55,7 +55,7 @@ export function ApproveRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p className="text-sm">
             Are you sure you want to approve this request for{" "}
             <span className="font-semibold">{request.requested_for_name}</span>?
@@ -80,7 +80,7 @@ export function ApproveRequestModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex gap-3">
+        <div className="p-4 flex gap-2">
           <button
             onClick={handleClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground"

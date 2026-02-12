@@ -22,10 +22,10 @@ export function ViewInventoryModal({
         aria-labelledby="view-inventory-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 id="view-inventory-title" className="text-xl font-semibold">
+            <div className="flex items-center gap-2">
+              <h2 id="view-inventory-title" className="text-lg font-semibold">
                 Inventory Details
               </h2>
               <span
@@ -36,7 +36,7 @@ export function ViewInventoryModal({
                 {item.stock_status}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               View stock information for {item.item_name}
             </p>
           </div>
@@ -50,7 +50,7 @@ export function ViewInventoryModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Item Info Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -187,7 +187,7 @@ export function ViewInventoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"

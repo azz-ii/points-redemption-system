@@ -343,7 +343,7 @@ export default function CartModal({
                         className={`border-b border-border`}
                       >
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <img
                               src={item.image}
                               alt={item.name}
@@ -548,7 +548,7 @@ export default function CartModal({
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 p-6 border-t border-border">
+            <div className="flex gap-2 p-6 border-t border-border">
               <button
                 onClick={onClose}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold bg-muted text-foreground hover:bg-accent`}
@@ -590,7 +590,7 @@ export default function CartModal({
             </div>
 
             {/* Content - Forms */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {/* Customer/Distributor Details */}
               <div
                 className={`rounded-lg border border-border`}
@@ -771,7 +771,7 @@ export default function CartModal({
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">Points Deduction</h3>
                   <div className="mt-4 space-y-2">
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         name="points_deduction"
@@ -784,7 +784,7 @@ export default function CartModal({
                         Deduct from my points
                       </span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         name="points_deduction"
@@ -901,7 +901,7 @@ export default function CartModal({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 p-6 border-t border-border">
+            <div className="flex gap-2 p-6 border-t border-border">
               <button
                 onClick={() => setStep("cart")}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold bg-muted text-foreground hover:bg-accent`}
@@ -944,14 +944,14 @@ export default function CartModal({
             </div>
 
             {/* Items List */}
-            <div className="p-4 space-y-3 overflow-y-auto max-h-80">
+            <div className="p-4 space-y-2 overflow-y-auto max-h-80">
               {items.length > 0 ? (
                 items.map((item) => (
                   <div
                     key={item.id}
                     className={`rounded-lg p-3 border bg-muted border-border`}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       <img
                         src={item.image}
                         alt={item.name}
@@ -1137,7 +1137,7 @@ export default function CartModal({
                     </button>
                   </div>
                   
-                  <div className="mt-3 space-y-3">
+                  <div className="mt-3 space-y-2">
                     {entityType === 'DISTRIBUTOR' ? (
                       /* Distributor Searchable Combobox */
                       <div className="space-y-1">
@@ -1344,7 +1344,7 @@ export default function CartModal({
                         (Required)
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label
                           className={`text-xs text-foreground`}
@@ -1372,7 +1372,7 @@ export default function CartModal({
                         />
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label
                           className={`text-xs text-foreground`}

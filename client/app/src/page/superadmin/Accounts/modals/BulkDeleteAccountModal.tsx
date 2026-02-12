@@ -28,11 +28,11 @@ export function BulkDeleteAccountModal({
         aria-modal="true"
         aria-labelledby="bulk-delete-account-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
             <h2
               id="bulk-delete-account-title"
-              className="text-xl font-semibold"
+              className="text-lg font-semibold"
             >
               Delete Multiple Users
             </h2>
@@ -49,7 +49,7 @@ export function BulkDeleteAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 space-y-4">
           <p>
             Are you sure you want to delete <strong>{accounts.length}</strong>{" "}
             user{accounts.length > 1 ? "s" : ""}?
@@ -68,7 +68,7 @@ export function BulkDeleteAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-2">
           <button
             onClick={handleClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"

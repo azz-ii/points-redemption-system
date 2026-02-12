@@ -37,12 +37,12 @@ export function ViewRequestModal({
         aria-labelledby="view-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-request-title" className="text-xl font-semibold">
+            <h2 id="view-request-title" className="text-lg font-semibold">
               Processed Request Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Request #{item.id}
             </p>
           </div>
@@ -56,7 +56,7 @@ export function ViewRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -180,7 +180,7 @@ export function ViewRequestModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"

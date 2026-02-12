@@ -48,16 +48,16 @@ export function MarkItemsProcessedModal({
         aria-labelledby="mark-processed-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
-          <div className="flex items-center gap-3">
+        <div className="flex justify-between items-center p-4">
+          <div className="flex items-center gap-2">
             <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900">
               <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 id="mark-processed-title" className="text-xl font-semibold">
+              <h2 id="mark-processed-title" className="text-lg font-semibold">
                 Mark Items as Processed
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-0.5">
                 Request #{request.id}
               </p>
             </div>
@@ -73,7 +73,7 @@ export function MarkItemsProcessedModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p className="text-sm">
             You are about to mark <span className="font-semibold">{pendingCount} item(s)</span> as processed.
           </p>
@@ -105,7 +105,7 @@ export function MarkItemsProcessedModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-2">
           <button
             onClick={handleClose}
             disabled={isSubmitting}

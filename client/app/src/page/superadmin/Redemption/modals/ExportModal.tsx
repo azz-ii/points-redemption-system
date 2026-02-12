@@ -95,7 +95,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
           className="sticky top-0 z-10 flex items-center justify-between p-6 border-b bg-card border-border"
         >
           <div>
-            <h2 className="text-xl font-semibold">Export Redemption Requests</h2>
+            <h2 className="text-lg font-semibold">Export Redemption Requests</h2>
             <p
               className="text-sm mt-1 text-muted-foreground"
             >
@@ -115,7 +115,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-4">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
@@ -126,7 +126,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
           {/* Format Selection */}
           <div>
             <label className="block text-sm font-medium mb-3">Export Format</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setSelectedFormat("excel")}
                 className={`p-4 rounded-lg border-2 transition-all ${
@@ -230,7 +230,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
 
         {/* Footer */}
         <div
-          className="sticky bottom-0 flex items-center justify-end gap-3 p-6 border-t bg-card border-border"
+          className="sticky bottom-0 flex items-center justify-end gap-2 p-6 border-t bg-card border-border"
         >
           <Button variant="outline" onClick={onClose} disabled={isExporting}>
             Cancel

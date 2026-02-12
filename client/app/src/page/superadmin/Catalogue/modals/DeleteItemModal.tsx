@@ -22,12 +22,12 @@ export function DeleteItemModal({
         aria-modal="true"
         aria-labelledby="delete-item-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-item-title" className="text-xl font-semibold">
+            <h2 id="delete-item-title" className="text-lg font-semibold">
               Delete Item
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Confirm deletion
             </p>
           </div>
@@ -40,14 +40,14 @@ export function DeleteItemModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 space-y-4">
           <p>
             Are you sure you want to delete <strong>{item.item_name}</strong>?
             This action cannot be undone.
           </p>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             className="flex-1 px-6 py-3 rounded-lg font-semibold border transition-colors border-border hover:bg-accent"

@@ -24,9 +24,9 @@ export function DeleteDistributorModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-distributor-title" className="text-xl font-semibold">
+            <h2 id="delete-distributor-title" className="text-lg font-semibold">
               Delete Distributor
             </h2>
             <p
@@ -45,7 +45,7 @@ export function DeleteDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p id="delete-distributor-message" className="text-base">
             Are you sure you want to delete <strong>{distributor.name}</strong>?
             This action cannot be undone.
@@ -53,7 +53,7 @@ export function DeleteDistributorModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex gap-3 justify-end">
+        <div className="p-4 flex gap-2 justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent"

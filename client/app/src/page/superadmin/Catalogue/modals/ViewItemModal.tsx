@@ -21,12 +21,12 @@ export function ViewItemModal({
         aria-modal="true"
         aria-labelledby="view-item-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-item-title" className="text-xl font-semibold">
+            <h2 id="view-item-title" className="text-lg font-semibold">
               View Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Product details
             </p>
           </div>
@@ -39,7 +39,7 @@ export function ViewItemModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Product Details */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT DETAILS</h3>
@@ -239,7 +239,7 @@ export function ViewItemModal({
           </div>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg border transition-colors border-border hover:bg-accent"

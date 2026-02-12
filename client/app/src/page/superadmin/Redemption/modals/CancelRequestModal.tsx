@@ -44,12 +44,12 @@ export function CancelRequestModal({
         aria-labelledby="cancel-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="cancel-request-title" className="text-xl font-semibold">
+            <h2 id="cancel-request-title" className="text-lg font-semibold">
               Cancel Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               This action will refund points and restore stock.
             </p>
           </div>
@@ -63,7 +63,7 @@ export function CancelRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p className="text-sm">
             Are you sure you want to cancel this request for{" "}
             <span className="font-semibold">{item.requested_for_name}</span>?
@@ -108,7 +108,7 @@ export function CancelRequestModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-2">
           <button
             onClick={handleClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"

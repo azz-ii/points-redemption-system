@@ -69,7 +69,7 @@ function TimelineItem({
   extraInfo?: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-2">
       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${iconColor}`}>
         <Icon className="w-4 h-4" />
       </div>
@@ -125,7 +125,7 @@ export function RequestTimeline({
         Request Timeline
       </h3>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Requested */}
         <TimelineItem
           icon={User}

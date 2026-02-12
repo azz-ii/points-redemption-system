@@ -49,7 +49,7 @@ export function WithdrawConfirmationModal({
         aria-labelledby="withdraw-confirmation-title"
       >
         <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <div className="p-2 rounded-full bg-red-100 dark:bg-red-500/20">
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
@@ -88,7 +88,7 @@ export function WithdrawConfirmationModal({
             )}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClose}
               disabled={isSubmitting}
@@ -218,9 +218,9 @@ export function ViewRedemptionStatusModal({
           aria-labelledby="view-redemption-status-title"
         >
           {/* Header */}
-          <div className="flex justify-between items-center p-8">
+          <div className="flex justify-between items-center p-4">
             <div>
-              <h2 id="view-redemption-status-title" className="text-xl font-semibold">
+              <h2 id="view-redemption-status-title" className="text-lg font-semibold">
                 Redemption Item Details
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
@@ -237,8 +237,8 @@ export function ViewRedemptionStatusModal({
           </div>
 
           {/* Content */}
-          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-            <div className="md:flex md:gap-6">
+          <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="md:flex md:gap-4">
               {/* Image */}
               <div className="overflow-hidden rounded-lg md:w-1/2 relative">
                 {imageLoading && (
@@ -262,7 +262,7 @@ export function ViewRedemptionStatusModal({
               {/* Details */}
               <div className="md:w-1/2 mt-4 md:mt-0 space-y-4">
                 {/* Item Information */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Item Information
                   </h3>
@@ -280,11 +280,11 @@ export function ViewRedemptionStatusModal({
                 </div>
 
                 {/* Order Details */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Order Details
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs text-muted-foreground mb-1">Quantity</label>
                       <p className="text-sm font-medium">{item.quantity} unit{item.quantity !== 1 ? 's' : ''}</p>
@@ -297,7 +297,7 @@ export function ViewRedemptionStatusModal({
                 </div>
 
                 {/* Status */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Status
                   </h3>
@@ -369,11 +369,11 @@ export function ViewRedemptionStatusModal({
           </div>
 
           {/* Footer */}
-          <div className="p-8 flex justify-between items-center">
+          <div className="p-4 flex justify-between items-center">
             {withdrawError && (
               <p className="text-destructive text-sm">{withdrawError}</p>
             )}
-            <div className="flex gap-3 ml-auto">
+            <div className="flex gap-2 ml-auto">
               {canWithdraw && (
                 <button
                   onClick={() => setShowWithdrawModal(true)}

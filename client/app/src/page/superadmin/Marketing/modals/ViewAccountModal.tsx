@@ -72,12 +72,12 @@ export function ViewAccountModal({
         aria-labelledby="view-account-title"
         className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-account-title" className="text-xl font-semibold">
+            <h2 id="view-account-title" className="text-lg font-semibold">
               Marketing User Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">{account.full_name}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{account.full_name}</p>
           </div>
           <button
             onClick={onClose}
@@ -88,7 +88,7 @@ export function ViewAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* User Info Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -137,13 +137,13 @@ export function ViewAccountModal({
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : assignments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {assignments.map((assignment) => (
                   <div
                     key={assignment.legend}
                     className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium ${getLegendColor(
                           assignment.legend
@@ -170,7 +170,7 @@ export function ViewAccountModal({
           </div>
         </div>
 
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"

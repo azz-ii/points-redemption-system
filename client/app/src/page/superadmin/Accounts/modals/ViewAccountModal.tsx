@@ -105,10 +105,10 @@ export function ViewAccountModal({
         aria-labelledby="view-account-title"
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-account-title" className="text-xl font-semibold">View Account</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="view-account-title" className="text-lg font-semibold">View Account</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
               Details for {account.full_name}
             </p>
           </div>
@@ -121,9 +121,9 @@ export function ViewAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Profile Picture Section */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                 Profile Picture
@@ -264,7 +264,7 @@ export function ViewAccountModal({
             </div>
           </div>
         </div>
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"

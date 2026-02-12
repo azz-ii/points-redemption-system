@@ -133,7 +133,7 @@ export function PointsHistoryModal({
         <div
           className={`flex justify-between items-center p-6 border-b border-border`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div
               className={`p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30`}
             >
@@ -194,7 +194,7 @@ export function PointsHistoryModal({
             <div className="divide-y divide-gray-700/50">
               {/* Table header */}
               <div
-                className={`grid grid-cols-12 gap-3 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground bg-muted`}
+                className={`grid grid-cols-12 gap-2 px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground bg-muted`}
               >
                 <div className="col-span-3">Date</div>
                 <div className="col-span-2">Action</div>
@@ -206,7 +206,7 @@ export function PointsHistoryModal({
               {logs.map((log) => (
                 <div
                   key={log.id}
-                  className={`grid grid-cols-12 gap-3 px-6 py-3 items-center text-sm transition-colors hover:bg-accent border-border`}
+                  className={`grid grid-cols-12 gap-2 px-6 py-3 items-center text-sm transition-colors hover:bg-accent border-border`}
                 >
                   <div
                     className={`col-span-3 text-xs text-muted-foreground`}

@@ -46,12 +46,12 @@ export function ViewHistoryModal({
         aria-labelledby="view-history-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-history-title" className="text-xl font-semibold">
+            <h2 id="view-history-title" className="text-lg font-semibold">
               Request History Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Request #{item.id}
             </p>
           </div>
@@ -65,7 +65,7 @@ export function ViewHistoryModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -159,7 +159,7 @@ export function ViewHistoryModal({
                   key={requestItem.id}
                   className="p-3 rounded border bg-muted border-border"
                 >
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <div className="flex-1">
                       <p className="font-semibold">
                         {requestItem.product_name}
@@ -185,7 +185,7 @@ export function ViewHistoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"

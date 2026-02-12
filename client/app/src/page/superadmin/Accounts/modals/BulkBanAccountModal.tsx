@@ -46,9 +46,9 @@ export function BulkBanAccountModal({
         aria-modal="true"
         aria-labelledby="bulk-ban-account-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="bulk-ban-account-title" className="text-xl font-semibold">
+            <h2 id="bulk-ban-account-title" className="text-lg font-semibold">
               Ban Multiple Users
             </h2>
             <p className="text-xs text-gray-500 mt-1">
@@ -65,7 +65,7 @@ export function BulkBanAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="mb-4">
             <p className="text-sm text-gray-500 mb-2">Users to ban:</p>
             <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -136,13 +136,13 @@ export function BulkBanAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           {error && (
             <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-2">
             <button
               onClick={handleClose}
               className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"

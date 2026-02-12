@@ -144,12 +144,12 @@ export function EditAccountModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-account-title" className="text-xl font-semibold">
+            <h2 id="edit-account-title" className="text-lg font-semibold">
               Assign Item Legends
             </h2>
-            <p className="text-sm text-gray-500 mt-1">{account.full_name}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{account.full_name}</p>
           </div>
           <button
             onClick={handleClose}
@@ -161,7 +161,7 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* User Info */}
           <div
             className="p-4 rounded-lg bg-card"
@@ -194,14 +194,14 @@ export function EditAccountModal({
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {legendStates.map((state) => (
                   <div
                     key={state.legend}
                     className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
                   >
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-medium ${getLegendColor(
                             state.legend
@@ -249,7 +249,7 @@ export function EditAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />

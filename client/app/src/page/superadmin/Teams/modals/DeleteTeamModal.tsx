@@ -49,9 +49,9 @@ export function DeleteTeamModal({
         aria-modal="true"
         aria-labelledby="delete-team-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-team-title" className="text-xl font-semibold">
+            <h2 id="delete-team-title" className="text-lg font-semibold">
               Delete Team
             </h2>
             <p className="text-xs text-gray-500 mt-1">
@@ -67,7 +67,7 @@ export function DeleteTeamModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 space-y-4">
           <p>
             Are you sure you want to delete <strong>{team.name}</strong>?
           </p>
@@ -75,7 +75,7 @@ export function DeleteTeamModal({
           {/* Warning if team has members */}
           {hasMembers && (
             <div
-              className="flex items-start gap-3 p-3 rounded border bg-warning bg-opacity-10 border-yellow-500"
+              className="flex items-start gap-2 p-3 rounded border bg-warning bg-opacity-10 border-yellow-500"
             >
               <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
@@ -98,7 +98,7 @@ export function DeleteTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-4 flex justify-end gap-2">
           <button
             onClick={handleClose}
             className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"

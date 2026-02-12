@@ -275,10 +275,10 @@ export function ViewTeamModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-team-title" className="text-xl font-semibold">View Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="view-team-title" className="text-lg font-semibold">View Team</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
               {teamDetails?.name || "Loading..."}
             </p>
           </div>
@@ -292,7 +292,7 @@ export function ViewTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-500 py-8">
               Loading team details...
@@ -300,7 +300,7 @@ export function ViewTeamModal({
           ) : teamDetails ? (
             <>
               {/* Team Details Section */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-500">
                   Team Information
                 </h3>
@@ -469,7 +469,7 @@ export function ViewTeamModal({
             className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
           >
             <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div className="p-2 rounded-full bg-red-500 bg-opacity-20">
                   <AlertCircle className="h-5 w-5 text-red-500" />
                 </div>

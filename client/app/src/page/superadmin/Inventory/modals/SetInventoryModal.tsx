@@ -502,7 +502,7 @@ export function SetInventoryModal({
 
           {/* Footer */}
           <div
-            className="flex justify-end gap-3 p-6 border-t border-border"
+            className="flex justify-end gap-2 p-6 border-t border-border"
           >
             <button
               onClick={onClose}

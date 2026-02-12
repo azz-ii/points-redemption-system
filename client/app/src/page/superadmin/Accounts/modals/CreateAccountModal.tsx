@@ -58,12 +58,12 @@ export function CreateAccountModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="create-account-title" className="text-xl font-semibold">
+            <h2 id="create-account-title" className="text-lg font-semibold">
               Create New Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Please fill in the details to create a new account
             </p>
           </div>
@@ -77,7 +77,7 @@ export function CreateAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -245,7 +245,7 @@ export function CreateAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t">
+        <div className="p-4 border-t">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}

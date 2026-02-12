@@ -29,9 +29,9 @@ export function CreateCustomerModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="create-customer-title" className="text-xl font-semibold">
+            <h2 id="create-customer-title" className="text-lg font-semibold">
               Add Customer
             </h2>
             <p
@@ -50,7 +50,7 @@ export function CreateCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
@@ -131,7 +131,7 @@ export function CreateCustomerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={creating}

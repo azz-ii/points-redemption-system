@@ -23,12 +23,12 @@ export function EditRedemptionModal({
         aria-labelledby="edit-redemption-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-redemption-title" className="text-xl font-semibold">
+            <h2 id="edit-redemption-title" className="text-lg font-semibold">
               Edit Redemption
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Update request information
             </p>
           </div>
@@ -42,7 +42,7 @@ export function EditRedemptionModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Read-only Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -136,7 +136,7 @@ export function EditRedemptionModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           <button
             onClick={onClose}
             className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"

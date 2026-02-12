@@ -546,7 +546,7 @@ export function SetPointsModal({
 
           {/* Footer */}
           <div
-            className="flex justify-end gap-3 p-6 border-t border-border"
+            className="flex justify-end gap-2 p-6 border-t border-border"
           >
             <div className="flex-1">
               <input

@@ -21,9 +21,9 @@ export function ViewDistributorModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="view-distributor-title" className="text-xl font-semibold">
+            <h2 id="view-distributor-title" className="text-lg font-semibold">
               Distributor Details
             </h2>
             <p
@@ -42,7 +42,7 @@ export function ViewDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* ID */}
             <div>
@@ -115,7 +115,7 @@ export function ViewDistributorModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-4 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent"

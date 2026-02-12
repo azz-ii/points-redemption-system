@@ -46,10 +46,10 @@ export function EditStockModal({
         aria-labelledby="edit-stock-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 id="edit-stock-title" className="text-xl font-semibold">
+            <div className="flex items-center gap-2">
+              <h2 id="edit-stock-title" className="text-lg font-semibold">
                 Update Stock
               </h2>
               <span
@@ -60,7 +60,7 @@ export function EditStockModal({
                 {previewStatus}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Modify stock levels for {item.item_name}
             </p>
           </div>
@@ -74,7 +74,7 @@ export function EditStockModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Item Info (Read-only) */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -175,13 +175,13 @@ export function EditStockModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-4">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={onClose}
               disabled={updating}

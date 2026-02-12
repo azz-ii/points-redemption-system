@@ -23,12 +23,12 @@ export function DeleteProductModal({
         aria-describedby="delete-product-message"
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="delete-product-title" className="text-xl font-semibold">
+            <h2 id="delete-product-title" className="text-lg font-semibold">
               Delete Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Confirm deletion
             </p>
           </div>
@@ -41,7 +41,7 @@ export function DeleteProductModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p id="delete-product-message">
             Are you sure you want to delete product{" "}
             <strong>{product.item_code}</strong> ({product.item_name || "No name"})? This action
@@ -49,7 +49,7 @@ export function DeleteProductModal({
           </p>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             className="px-6 py-3 rounded-lg font-semibold border transition-colors border-border hover:bg-accent"

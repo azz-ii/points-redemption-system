@@ -61,12 +61,12 @@ export function EditItemModal({
         aria-labelledby="edit-item-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-4">
           <div>
-            <h2 id="edit-item-title" className="text-xl font-semibold">
+            <h2 id="edit-item-title" className="text-lg font-semibold">
               Edit Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Update product details
             </p>
           </div>
@@ -80,7 +80,7 @@ export function EditItemModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
@@ -426,7 +426,7 @@ export function EditItemModal({
 
             {/* Has Stock Toggle */}
             <div>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={editItem.has_stock}
@@ -446,7 +446,7 @@ export function EditItemModal({
 
             {/* Requires Sales Approval Toggle */}
             <div>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={editItem.requires_sales_approval ?? true}
@@ -467,7 +467,7 @@ export function EditItemModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-4 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={updating}
