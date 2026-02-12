@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,9 @@ import ForgotPassword from "./ForgotPassword";
 import ActivateAccount from "./ActivateAccount";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import buildingImage from "@/assets/building.png";
+import oracleLogo from "@/assets/oracle-logo.png";
+import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -20,7 +22,6 @@ function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showActivateAccount, setShowActivateAccount] = useState(false);
   const [activationUsername, setActivationUsername] = useState("");
-  const { resolvedTheme } = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -114,27 +115,27 @@ function Login() {
       ) : (
         <div className="flex min-h-screen">
       {/* Left side - Image section */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950 transition-colors">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-muted transition-colors">
         {/* Building backdrop with low opacity */}
         <div className="absolute inset-0">
           <img
-            src="/src/assets/building.jpg"
+            src={buildingImage}
             alt="Building exterior"
-            className="object-cover w-full h-full opacity-20 dark:opacity-30 transition-opacity"
+            className="object-cover w-full h-full opacity-15 dark:opacity-25 transition-opacity"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           />
         </div>
         {/* Overlay */}
-        <div className="absolute inset-0 bg-linear-to-br from-slate-200/50 to-slate-300/50 dark:from-slate-900/80 dark:to-slate-900/90 z-10 transition-colors" />
+        <div className="absolute inset-0 bg-background/60 dark:bg-background/80 z-10 transition-colors" />
 
         {/* Centered Oracle Logo */}
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <img
-            src="/src/assets/oracle-logo.png"
+            src={oracleLogo}
             alt="Oracle Petroleum"
-            className="w-130 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
+            className="w-130 h-auto object-contain dark:brightness-110 transition-all"
             onError={(e) => {
               e.currentTarget.src =
                 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="white" font-size="24" font-family="sans-serif">ORACLE PETROLEUM</text></svg>';
@@ -153,9 +154,9 @@ function Login() {
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <img
-              src="/src/assets/oracle-logo-mb.png"
+              src={oracleLogoMobile}
               alt="Oracle Petroleum"
-              className="w-48 h-auto object-contain filter dark:filter-none brightness-75 dark:brightness-100 transition-all"
+              className="w-48 h-auto object-contain dark:brightness-110 transition-all"
               onError={(e) => {
                 e.currentTarget.src =
                   'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="192" height="96"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23666" font-size="20" font-family="sans-serif">ORACLE PETROLEUM</text></svg>';
@@ -164,14 +165,10 @@ function Login() {
           </div>
 
           <div className="space-y-2">
-            <h1
-              className={`text-3xl font-semibold transition-colors ${
-                resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
+            <h1 className="text-3xl font-semibold text-foreground">
               Log In
             </h1>
-            <p className="text-gray-800 dark:text-gray-400 text-sm transition-colors">
+            <p className="text-muted-foreground text-sm">
               Turn points into possibilities. Log in to track, discover, and
               redeem.
             </p>
@@ -179,12 +176,7 @@ function Login() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label
-                htmlFor="username"
-                className={`transition-colors ${
-                  resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                }`}
-              >
+              <Label htmlFor="username" className="text-foreground">
                 Username
               </Label>
               <Input
@@ -193,17 +185,12 @@ function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 transition-colors"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12"
               />
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className={`transition-colors ${
-                  resolvedTheme === "dark" ? "text-gray-300" : "text-black"
-                }`}
-              >
+              <Label htmlFor="password" className="text-foreground">
                 Password
               </Label>
               <div className="relative">
@@ -213,12 +200,12 @@ function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white dark:bg-transparent border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500 dark:focus-visible:ring-gray-600 h-12 pr-10 transition-colors"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring h-12 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors cur"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -233,7 +220,7 @@ function Login() {
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Forgot Password?
               </button>
@@ -241,11 +228,7 @@ function Login() {
 
             <Button
               type="submit"
-              className={`w-full h-12 font-medium transition-colors duration-200 cursor-pointer ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-black hover:bg-gray-300"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              }`}
+              className="w-full h-12 font-medium cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Log In
             </Button>

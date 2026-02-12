@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown, Clock } from "lucide-react"
+import { Eye, Pencil, ArrowUpDown, Clock, Archive, ArchiveRestore } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Customer } from "../modals/types"
@@ -9,7 +9,8 @@ import type { Customer } from "../modals/types"
 interface ColumnContext {
   onView: (customer: Customer) => void
   onEdit: (customer: Customer) => void
-  onDelete: (customer: Customer) => void
+  onArchive: (customer: Customer) => void
+  onUnarchive: (customer: Customer) => void
   onViewPointsHistory?: (customer: Customer) => void
 }
 
@@ -121,10 +122,61 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
     },
   },
   {
+    accessorKey: "is_archived",
+    header: "Status",
+    cell: ({ row }) => {
+      const isArchived = row.original.is_archived
+
+      if (isArchived) {
+        return (
+          <div className="flex gap-1">
+            <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+              Archived
+            </span>
+          </div>
+        )
+      }
+
+      return (
+        <div className="flex gap-1">
+          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+            Active
+          </span>
+        </div>
+      )
+    },
+  },
+  {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
       const customer = row.original
+      const isArchived = customer.is_archived
+
+      if (isArchived) {
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => context.onView(customer)}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+              title="View"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => context.onUnarchive(customer)}
+              className="bg-green-500 hover:bg-green-600 text-white"
+              title="Restore"
+            >
+              <ArchiveRestore className="h-4 w-4" />
+            </Button>
+          </div>
+        )
+      }
 
       return (
         <div className="flex justify-end gap-2">
@@ -149,11 +201,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
           <Button
             variant="default"
             size="sm"
-            onClick={() => context.onDelete(customer)}
-            className="bg-red-500 hover:bg-red-600 text-white"
-            title="Delete"
+            onClick={() => context.onArchive(customer)}
+            className="bg-slate-600 hover:bg-slate-700 text-white"
+            title="Archive"
           >
-            <Trash2 className="h-4 w-4" />
+            <Archive className="h-4 w-4" />
           </Button>
           <Button
             variant="default"

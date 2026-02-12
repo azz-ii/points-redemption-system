@@ -1,49 +1,54 @@
-import { X } from "lucide-react";
-import { useTheme } from "next-themes";
+import { X, Archive } from "lucide-react";
 import type { ModalBaseProps, Distributor } from "./types";
 
-interface DeleteDistributorModalProps extends ModalBaseProps {
+interface ArchiveDistributorModalProps extends ModalBaseProps {
   distributor: Distributor | null;
-  onConfirm: () => void;
+  loading: boolean;
+  onConfirm: (id: number) => void;
 }
 
-export function DeleteDistributorModal({
+export function ArchiveDistributorModal({
   isOpen,
   onClose,
   distributor,
+  loading,
   onConfirm,
-}: DeleteDistributorModalProps) {
-  const { resolvedTheme } = useTheme();
-
+}: ArchiveDistributorModalProps) {
   if (!isOpen || !distributor) return null;
+
+  const handleClose = () => {
+    onClose();
+  };
+
+  const handleConfirm = () => {
+    onConfirm(distributor.id);
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="delete-distributor-title"
-        aria-describedby="delete-distributor-message"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        aria-labelledby="archive-distributor-title"
+        aria-describedby="archive-distributor-message"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
-        {/* Header */}
-        <div className="flex justify-between items-center p-4">
-          <div>
-            <h2 id="delete-distributor-title" className="text-lg font-semibold">
-              Delete Distributor
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Confirm deletion
-            </p>
+        <div className="flex justify-between items-center p-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+              <Archive className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h2 id="archive-distributor-title" className="text-xl font-semibold">
+                Archive Distributor
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                This action can be reversed.
+              </p>
+            </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
           >
@@ -51,31 +56,29 @@ export function DeleteDistributorModal({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-          <p id="delete-distributor-message" className="text-sm">
-            Are you sure you want to delete <strong>{distributor.name}</strong>?
-            This action cannot be undone.
+        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+          <p id="archive-distributor-message" className="text-base">
+            Are you sure you want to archive <strong>{distributor.name}</strong>?
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Archived distributors cannot be selected in redemption requests. You can restore this distributor later.
           </p>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 flex gap-2 justify-end">
+        <div className="p-8 border-t flex gap-3 justify-end">
           <button
-            onClick={onClose}
-            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-              resolvedTheme === "dark"
-                ? "border-gray-600 hover:bg-gray-800"
-                : "border-gray-300 hover:bg-gray-50"
-            }`}
+            onClick={handleClose}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground"
           >
             Cancel
           </button>
+
           <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"
+            onClick={handleConfirm}
+            disabled={loading}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
           >
-            Delete
+            {loading ? "Archiving..." : "Archive"}
           </button>
         </div>
       </div>

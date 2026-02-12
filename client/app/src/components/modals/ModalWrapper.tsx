@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import type { ModalWrapperProps } from "./types";
 
 const maxWidthClasses = {
@@ -18,8 +17,6 @@ export function ModalWrapper({
   ariaDescribedBy,
   role = "dialog",
 }: ModalWrapperProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -34,13 +31,7 @@ export function ModalWrapper({
       onClick={handleBackdropClick}
     >
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl ${maxWidthClasses[maxWidth]} w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className={`bg-card rounded-lg shadow-2xl ${maxWidthClasses[maxWidth]} w-full border divide-y border-border divide-border`}
         role={role}
         aria-modal="true"
         aria-labelledby={ariaLabelledBy}

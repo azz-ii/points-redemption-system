@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useTheme } from "next-themes";
 import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
 import type { ModalBaseProps, Account } from "./types";
 import {
@@ -15,7 +14,6 @@ interface ExportModalProps extends ModalBaseProps {
 }
 
 export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
-  const { resolvedTheme } = useTheme();
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
@@ -90,22 +88,16 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-modal-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-6">
           <div>
-            <h2 id="export-modal-title" className="text-lg font-semibold">
+            <h2 id="export-modal-title" className="text-xl font-semibold">
               Export Accounts
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+            <p className="text-sm text-gray-500 mt-1">
+              {accounts.length} account{accounts.length !== 1 ? "s" : ""} will be exported
             </p>
           </div>
           <button
@@ -118,80 +110,70 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Export Format
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setFormat("excel")}
-                className={`flex items-center justify-center gap-2 p-2 rounded-lg border-2 text-sm transition-all ${
+                className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   format === "excel"
-                    ? resolvedTheme === "dark"
-                      ? "border-green-500 bg-green-500/10"
-                      : "border-green-600 bg-green-50"
-                    : resolvedTheme === "dark"
-                    ? "border-gray-700 hover:border-gray-600"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-green-500 bg-green-500/10"
+                    : "border-border hover:border-accent"
                 }`}
               >
                 <FileSpreadsheet
-                  className={`h-4 w-4 ${
+                  className={`h-6 w-6 ${
                     format === "excel"
                       ? "text-green-500"
-                      : resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-500"
+                      : "text-muted-foreground"
                   }`}
                 />
                 <div className="text-left">
-                  <div className="font-medium text-xs">Excel</div>
+                  <div className="font-medium">Excel</div>
+                  <div className="text-xs text-gray-500">.xlsx</div>
                 </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => setFormat("pdf")}
-                className={`flex items-center justify-center gap-2 p-2 rounded-lg border-2 text-sm transition-all ${
+                className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   format === "pdf"
-                    ? resolvedTheme === "dark"
-                      ? "border-red-500 bg-red-500/10"
-                      : "border-red-600 bg-red-50"
-                    : resolvedTheme === "dark"
-                    ? "border-gray-700 hover:border-gray-600"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-red-500 bg-red-500/10"
+                    : "border-border hover:border-accent"
                 }`}
               >
                 <FileText
-                  className={`h-4 w-4 ${
+                  className={`h-6 w-6 ${
                     format === "pdf"
                       ? "text-red-500"
-                      : resolvedTheme === "dark"
-                      ? "text-gray-400"
-                      : "text-gray-500"
+                      : "text-muted-foreground"
                   }`}
                 />
                 <div className="text-left">
-                  <div className="font-medium text-xs">PDF</div>
+                  <div className="font-medium">PDF</div>
+                  <div className="text-xs text-gray-500">.pdf</div>
                 </div>
               </button>
             </div>
           </div>
 
           {/* Column Selection */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                 Columns to Export
               </h3>
-              <div className="flex gap-2 text-xs">
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-blue-500 hover:text-blue-600"
+                  className="text-xs text-blue-500 hover:text-blue-600"
                 >
                   Select All
                 </button>
@@ -199,7 +181,7 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
                 <button
                   type="button"
                   onClick={handleDeselectAll}
-                  className="text-blue-500 hover:text-blue-600"
+                  className="text-xs text-blue-500 hover:text-blue-600"
                 >
                   Deselect All
                 </button>
@@ -209,29 +191,23 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
               {columns.map((col) => (
                 <label
                   key={col.key}
-                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-xs transition-colors ${
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                     col.enabled
-                      ? resolvedTheme === "dark"
-                        ? "bg-gray-800"
-                        : "bg-gray-100"
-                      : resolvedTheme === "dark"
-                      ? "bg-gray-800/50"
-                      : "bg-gray-50"
+                      ? "bg-muted"
+                      : "bg-muted/50"
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={col.enabled}
                     onChange={() => handleColumnToggle(col.key)}
-                    className="h-3 w-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span
-                    className={`text-xs ${
+                    className={`text-sm ${
                       col.enabled
                         ? ""
-                        : resolvedTheme === "dark"
-                        ? "text-gray-500"
-                        : "text-gray-400"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {col.label}
@@ -245,15 +221,15 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
           </div>
 
           {/* Sort Options */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Sort Options
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="sortField"
-                  className="text-xs text-gray-500 mb-1 block"
+                  className="text-xs text-gray-500 mb-2 block"
                 >
                   Sort By
                 </label>
@@ -261,11 +237,7 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
                   id="sortField"
                   value={sortField}
                   onChange={(e) => setSortField(e.target.value as SortField)}
-                  className={`w-full px-2 py-1 rounded border text-sm ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-800 border-gray-600 text-white"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:outline-none focus:border-blue-500`}
+                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
                 >
                   {columns.map((col) => (
                     <option key={col.key} value={col.key}>
@@ -276,40 +248,32 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">
+                <label className="text-xs text-gray-500 mb-2 block">
                   Direction
                 </label>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setSortDirection("asc")}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded border text-xs transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded border transition-colors ${
                       sortDirection === "asc"
-                        ? resolvedTheme === "dark"
-                          ? "bg-blue-600 border-blue-600 text-white"
-                          : "bg-blue-500 border-blue-500 text-white"
-                        : resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white hover:border-gray-500"
-                        : "bg-white border-gray-300 text-gray-900 hover:border-gray-400"
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-background border-border text-foreground hover:border-accent"
                     }`}
                   >
-                    <ArrowUp className="h-3 w-3" />
+                    <ArrowUp className="h-4 w-4" />
                     Asc
                   </button>
                   <button
                     type="button"
                     onClick={() => setSortDirection("desc")}
-                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded border text-xs transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded border transition-colors ${
                       sortDirection === "desc"
-                        ? resolvedTheme === "dark"
-                          ? "bg-blue-600 border-blue-600 text-white"
-                          : "bg-blue-500 border-blue-500 text-white"
-                        : resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-600 text-white hover:border-gray-500"
-                        : "bg-white border-gray-300 text-gray-900 hover:border-gray-400"
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-background border-border text-foreground hover:border-accent"
                     }`}
                   >
-                    <ArrowDown className="h-3 w-3" />
+                    <ArrowDown className="h-4 w-4" />
                     Desc
                   </button>
                 </div>
@@ -319,31 +283,23 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4">
+        <div className="p-6">
           {error && (
-            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
+            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
             </div>
           )}
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className={`flex-1 px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700 text-white"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-900"
-              }`}
+              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground"
             >
               Cancel
             </button>
             <button
               onClick={handleExport}
               disabled={exporting || enabledCount === 0}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-white hover:bg-gray-100 text-gray-900 disabled:opacity-50"
-                  : "bg-gray-900 hover:bg-gray-800 text-white disabled:opacity-50"
-              }`}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
               {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}

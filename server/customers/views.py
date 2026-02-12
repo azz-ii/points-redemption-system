@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 import io
 import logging
 from datetime import datetime
+from django.utils import timezone
 from .models import Customer
 from .serializers import CustomerSerializer
 from points_audit.utils import bulk_log_points_changes, generate_batch_id
@@ -52,7 +53,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
         Optionally filter based on query parameters.
         """
         # All users get full access to all customers
-        queryset = Customer.objects.all()
+        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
+        queryset = Customer.objects.all() if show_archived else Customer.objects.filter(is_archived=False)
         
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
@@ -73,6 +75,19 @@ class CustomerViewSet(viewsets.ModelViewSet):
         Set the added_by field to the current user when creating.
         """
         serializer.save(added_by=self.request.user)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Archive a customer instead of deleting"""
+        instance = self.get_object()
+        instance.is_archived = True
+        instance.date_archived = timezone.now()
+        instance.archived_by = request.user if request.user.is_authenticated else None
+        instance.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+        
+        return Response({
+            "message": "Customer archived successfully",
+            "customer": CustomerSerializer(instance).data
+        }, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'])
     def search(self, request):
@@ -164,8 +179,8 @@ class CustomerExportView(APIView):
                 "error": "No valid columns specified"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Get customers
-        customers = list(Customer.objects.select_related('added_by__profile').all())
+        # Get customers (exclude archived)
+        customers = list(Customer.objects.select_related('added_by__profile').filter(is_archived=False))
         
         # Sort customers
         customers = self._sort_customers(customers, sort_field, sort_direction)
@@ -400,17 +415,17 @@ class CustomerBulkUpdatePointsView(APIView):
         try:
             # Use atomic transaction for data consistency
             with transaction.atomic():
-                # Snapshot current points for audit logging
-                all_customers = list(Customer.objects.all().values('id', 'name', 'points'))
+                # Snapshot current points for audit logging (exclude archived)
+                all_customers = list(Customer.objects.filter(is_archived=False).values('id', 'name', 'points'))
                 
                 if reset_to_zero:
-                    # Single SQL UPDATE query to reset all customers to 0
-                    updated_count = Customer.objects.all().update(points=0)
+                    # Single SQL UPDATE query to reset all customers to 0 (exclude archived)
+                    updated_count = Customer.objects.filter(is_archived=False).update(points=0)
                     message = f"Successfully reset points to 0 for {updated_count} customer(s)"
                     log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} customers to 0"
                 else:
-                    # Single SQL UPDATE query using F() expression for atomic increment
-                    updated_count = Customer.objects.all().update(points=F('points') + points_delta)
+                    # Single SQL UPDATE query using F() expression for atomic increment (exclude archived)
+                    updated_count = Customer.objects.filter(is_archived=False).update(points=F('points') + points_delta)
                     message = f"Successfully updated points for {updated_count} customer(s)"
                     log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} customers"
             
@@ -508,9 +523,9 @@ class CustomerBatchUpdatePointsView(APIView):
                 logger.error(f"Error preparing update for customer {customer_id}: {str(e)}")
                 failed.append({'id': customer_id, 'error': str(e)})
         
-        # Fetch all customers that need updating
+        # Fetch all customers that need updating (exclude archived)
         customer_ids = list(update_map.keys())
-        customers_to_update = Customer.objects.filter(id__in=customer_ids)
+        customers_to_update = Customer.objects.filter(id__in=customer_ids, is_archived=False)
         
         # Check for missing customers
         found_ids = set(customers_to_update.values_list('id', flat=True))
@@ -569,4 +584,31 @@ class CustomerBatchUpdatePointsView(APIView):
             "failed_count": len(failed),
             "updated_ids": updated_ids,
             "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UnarchiveCustomerView(APIView):
+    """Unarchive (restore) an archived customer"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]
+    
+    def post(self, request, pk=None):
+        """Restore an archived customer"""
+        try:
+            customer = Customer.objects.get(pk=pk)
+        except Customer.DoesNotExist:
+            return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not customer.is_archived:
+            return Response({"error": "Customer is not archived"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        customer.is_archived = False
+        customer.date_archived = None
+        customer.archived_by = None
+        customer.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+        
+        return Response({
+            "message": "Customer unarchived successfully",
+            "customer": CustomerSerializer(customer).data
         }, status=status.HTTP_200_OK)

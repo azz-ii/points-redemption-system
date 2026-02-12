@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTheme } from "next-themes";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { Customer } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
@@ -33,7 +32,6 @@ export function SetPointsModal({
   onResetAll,
   progress,
 }: SetPointsModalProps) {
-  const { resolvedTheme } = useTheme();
   const [pointsToAdd, setPointsToAdd] = useState<Record<number, number>>({});
   const [reason, setReason] = useState("");
 
@@ -193,39 +191,27 @@ export function SetPointsModal({
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
         <div
-          className={`rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col ${
-            resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
-          }`}
+          className="rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col bg-card"
         >
           {/* Header */}
           <div
-            className={`flex justify-between items-center p-6 border-b ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
+            className="flex justify-between items-center p-6 border-b border-border"
           >
             <div>
               <h2
-                className={`text-2xl font-semibold ${
-                  resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-                }`}
+                className="text-2xl font-semibold text-foreground"
               >
                 Set Points
               </h2>
               <p
-                className={`text-sm mt-1 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm mt-1 text-muted-foreground"
               >
                 {totalCount} customer{totalCount !== 1 ? "s" : ""}
               </p>
             </div>
             <button
               onClick={onClose}
-              className={`${
-                resolvedTheme === "dark"
-                  ? "text-gray-400 hover:text-gray-300"
-                  : "text-gray-400 hover:text-gray-600"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="text-muted-foreground hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading || !!progress}
             >
               <X className="h-6 w-6" />
@@ -235,9 +221,7 @@ export function SetPointsModal({
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
             <p
-              className={`text-sm mb-4 ${
-                resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-              }`}
+              className="text-sm mb-4 text-muted-foreground"
             >
               Add or subtract points for customers. Enter positive numbers to add points, negative numbers to deduct. Changes will be applied when you click Save.
             </p>
@@ -245,32 +229,22 @@ export function SetPointsModal({
             {/* Progress Indicator */}
             {progress && (
               <div
-                className={`mb-4 p-4 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-blue-900/20 border-blue-700"
-                    : "bg-blue-50 border-blue-200"
-                }`}
+                className="mb-4 p-4 rounded-lg border bg-blue-900/20 border-blue-700"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span
-                    className={`text-sm font-medium ${
-                      resolvedTheme === "dark" ? "text-blue-300" : "text-blue-700"
-                    }`}
+                    className="text-sm font-medium text-blue-300"
                   >
                     Processing chunk {progress.currentChunk} of {progress.totalChunks}
                   </span>
                   <span
-                    className={`text-sm ${
-                      resolvedTheme === "dark" ? "text-blue-400" : "text-blue-600"
-                    }`}
+                    className="text-sm text-blue-400"
                   >
                     {progress.successCount} / {progress.totalRecords} processed
                   </span>
                 </div>
                 <div
-                  className={`w-full rounded-full h-2 ${
-                    resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                  }`}
+                  className="w-full rounded-full h-2 bg-muted"
                 >
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all duration-300"
@@ -281,9 +255,7 @@ export function SetPointsModal({
                 </div>
                 {progress.failedCount > 0 && (
                   <p
-                    className={`text-xs mt-2 ${
-                      resolvedTheme === "dark" ? "text-orange-400" : "text-orange-600"
-                    }`}
+                    className="text-xs mt-2 text-orange-400"
                   >
                     {progress.failedCount} failed so far
                   </p>
@@ -295,20 +267,14 @@ export function SetPointsModal({
             <div className="mb-4">
               <div className="relative">
                 <Search
-                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
                 />
                 <input
                   type="text"
                   placeholder="Search by name, location, or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-                  }`}
+                  className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                   disabled={loading || isLoadingPage}
                 />
               </div>
@@ -323,17 +289,13 @@ export function SetPointsModal({
               </div>
             )}
 
-            <div className="space-y-0">
+            <div className="space-y-2">
               {/* Header Row */}
               <div
-                className={`grid grid-cols-12 gap-2 font-semibold text-xs pb-1 border-b ${
-                  resolvedTheme === "dark"
-                    ? "text-gray-300 border-gray-700"
-                    : "text-gray-700 border-gray-200"
-                }`}
+                className="grid grid-cols-12 gap-4 font-semibold text-sm pb-2 border-b text-foreground border-border"
               >
-                <div className="col-span-3">Name</div>
-                <div className="col-span-4">Location</div>
+                <div className="col-span-4">Name</div>
+                <div className="col-span-3">Location</div>
                 <div className="col-span-2">Current</div>
                 <div className="col-span-2">Add/Subtract</div>
                 <div className="col-span-1">New Total</div>
@@ -348,34 +310,20 @@ export function SetPointsModal({
                 return (
                   <div
                     key={customer.id}
-                    className={`grid grid-cols-12 gap-2 items-center py-1.5 border-b ${
-                      resolvedTheme === "dark"
-                        ? "border-gray-700 hover:bg-gray-700/50"
-                        : "border-gray-100 hover:bg-gray-50"
-                    }`}
+                    className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
                   >
                     <div
-                      className={`col-span-3 text-xs font-medium ${
-                        resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
+                      className="col-span-4 text-sm font-medium text-foreground"
                     >
                       {customer.name}
                     </div>
                     <div
-                      className={`col-span-4 text-xs ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-600"
-                      }`}
+                      className="col-span-3 text-sm text-muted-foreground"
                     >
                       {customer.location}
                     </div>
                     <div
-                      className={`col-span-2 text-xs ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-500"
-                      }`}
+                      className="col-span-2 text-sm text-muted-foreground"
                     >
                       {currentPoints.toLocaleString()}
                     </div>
@@ -387,23 +335,17 @@ export function SetPointsModal({
                           handlePointsChange(customer.id, e.target.value)
                         }
                         placeholder="0"
-                        className={`w-full px-2 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          resolvedTheme === "dark"
-                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
-                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-                        }`}
+                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                         disabled={loading}
                       />
                     </div>
                     <div
-                      className={`col-span-1 text-xs font-semibold ${
+                      className={`col-span-1 text-sm font-semibold ${
                         delta > 0
                           ? "text-green-500"
                           : delta < 0
                           ? "text-red-500"
-                          : resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-600"
+                          : "text-muted-foreground"
                       }`}
                     >
                       {newTotal.toLocaleString()}
@@ -415,9 +357,7 @@ export function SetPointsModal({
 
             {!isLoadingPage && customers.length === 0 && (
               <div
-                className={`text-center py-8 ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                className="text-center py-8 text-muted-foreground"
               >
                 {searchQuery ? "No customers match your search" : "No customers found"}
               </div>
@@ -427,14 +367,10 @@ export function SetPointsModal({
           {/* Pagination Controls */}
           {totalCount > itemsPerPage && (
             <div
-              className={`flex items-center justify-between px-6 py-4 border-t ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
+              className="flex items-center justify-between px-6 py-4 border-t border-border"
             >
               <div
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm text-muted-foreground"
               >
                 Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, totalCount)} of {totalCount} customers
                 {searchQuery && ` (search: "${searchQuery}")`}
@@ -443,29 +379,19 @@ export function SetPointsModal({
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1 || loading || isLoadingPage}
-                  className={`p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "hover:bg-gray-700 text-gray-300"
-                      : "hover:bg-gray-100 text-gray-700"
-                  }`}
+                  className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <span
-                  className={`text-sm px-3 ${
-                    resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+                  className="text-sm px-3 text-foreground"
                 >
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || loading || isLoadingPage}
-                  className={`p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    resolvedTheme === "dark"
-                      ? "hover:bg-gray-700 text-gray-300"
-                      : "hover:bg-gray-100 text-gray-700"
-                  }`}
+                  className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -476,32 +402,20 @@ export function SetPointsModal({
           {/* Advanced Section */}
           {onBulkSubmit && (
             <div
-              className={`mt-6 border rounded-lg ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
+              className="mt-6 border rounded-lg border-border"
             >
               {/* Advanced Section Header */}
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className={`w-full flex items-center justify-between p-4 transition-colors ${
-                  resolvedTheme === "dark"
-                    ? "hover:bg-gray-700/50"
-                    : "hover:bg-gray-50"
-                }`}
+                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-gray-700/50"
                 disabled={loading}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
-                    className={`h-5 w-5 ${
-                      resolvedTheme === "dark"
-                        ? "text-orange-400"
-                        : "text-orange-500"
-                    }`}
+                    className="h-5 w-5 text-orange-400"
                   />
                   <span
-                    className={`font-semibold ${
-                      resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
+                    className="font-semibold text-foreground"
                   >
                     Advanced Options
                   </span>
@@ -516,50 +430,30 @@ export function SetPointsModal({
               {/* Advanced Section Content */}
               {showAdvanced && (
                 <div
-                  className={`p-3 border-t ${
-                    resolvedTheme === "dark"
-                      ? "border-gray-700 bg-gray-700/30"
-                      : "border-gray-200 bg-gray-50"
-                  }`}
+                  className="p-4 border-t border-border bg-gray-700/30"
                 >
                   {/* Warning Alert */}
                   <div
-                    className={`mb-3 p-2 rounded-lg border-l-4 ${
-                      resolvedTheme === "dark"
-                        ? "bg-orange-900/20 border-orange-500"
-                        : "bg-orange-50 border-orange-500"
-                    }`}
+                    className="mb-4 p-3 rounded-lg border-l-4 bg-orange-900/20 border-orange-500"
                   >
                     <p
-                      className={`text-xs font-medium ${
-                        resolvedTheme === "dark"
-                          ? "text-orange-300"
-                          : "text-orange-800"
-                      }`}
+                      className="text-sm font-medium text-orange-300"
                     >
-                      ⚠️ Bulk Update
+                      ⚠️ Warning: Bulk Update
                     </p>
                     <p
-                      className={`text-xs mt-0.5 ${
-                        resolvedTheme === "dark"
-                          ? "text-orange-200"
-                          : "text-orange-700"
-                      }`}
+                      className="text-sm mt-1 text-orange-200"
                     >
-                      This will apply the same points adjustment to all {" "}
+                      This will apply the same points adjustment to all{" "}
                     {totalCount} customer(s). This action cannot
                       be undone.
                     </p>
                   </div>
 
                   {/* Bulk Points Delta Input */}
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <label
-                      className={`block text-xs font-medium mb-1 ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-300"
-                          : "text-gray-700"
-                      }`}
+                      className="block text-sm font-medium mb-2 text-foreground"
                     >
                       Points to Add/Subtract
                     </label>
@@ -578,42 +472,31 @@ export function SetPointsModal({
                         }
                       }}
                       placeholder="Enter positive or negative number"
-                      className={`w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        resolvedTheme === "dark"
-                          ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
-                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-                      }`}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                       disabled={loading}
                     />
                     <p
-                      className={`text-xs mt-0.5 ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-500"
-                      }`}
+                      className="text-xs mt-1 text-muted-foreground"
                     >
-                      Positive to add, negative to subtract
+                      Positive numbers add points, negative numbers subtract
                     </p>
                   </div>
 
                   {/* Confirmation Checkbox */}
-                  <div className="mb-3">
+                  <div className="mb-4">
                     <label className="flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={confirmBulkUpdate}
                         onChange={(e) => setConfirmBulkUpdate(e.target.checked)}
-                        className="mt-0.5"
+                        className="mt-1"
                         disabled={loading}
                       />
                       <span
-                        className={`text-xs ${
-                          resolvedTheme === "dark"
-                            ? "text-gray-300"
-                            : "text-gray-700"
-                        }`}
+                        className="text-sm text-foreground"
                       >
-                        I understand this will affect all {totalCount} customer(s) and cannot be undone
+                      I understand this will affect all {totalCount}{" "}
+                        customer(s) and cannot be undone
                       </span>
                     </label>
                   </div>
@@ -626,29 +509,21 @@ export function SetPointsModal({
                       !confirmBulkUpdate ||
                       bulkPointsDelta === 0
                     }
-                    className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                      resolvedTheme === "dark"
-                        ? "bg-orange-600 text-white hover:bg-orange-700"
-                        : "bg-orange-500 text-white hover:bg-orange-600"
-                    }`}
+                    className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-orange-600 text-foreground hover:bg-orange-700"
                   >
                     <AlertTriangle className="h-4 w-4" />
-                    {loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All`}
+                    {loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All Customers`}
                   </button>
 
                   {/* Reset All Button */}
                   {onResetAll && (
                     <>
-                      <div className="relative my-2">
+                      <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
-                          <div className={`w-full border-t ${
-                            resolvedTheme === "dark" ? "border-gray-600" : "border-gray-300"
-                          }`}></div>
+                          <div className="w-full border-t border-gray-600"></div>
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className={`px-2 ${
-                            resolvedTheme === "dark" ? "bg-gray-700/30 text-gray-400" : "bg-gray-50 text-gray-500"
-                          }`}>
+                          <span className="px-2 bg-gray-700/30 text-muted-foreground">
                             Or
                           </span>
                         </div>
@@ -657,14 +532,10 @@ export function SetPointsModal({
                       <button
                         onClick={handleResetAll}
                         disabled={loading}
-                        className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          resolvedTheme === "dark"
-                            ? "bg-red-600 text-white hover:bg-red-700"
-                            : "bg-red-500 text-white hover:bg-red-600"
-                        }`}
+                        className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-destructive text-foreground hover:bg-destructive/90"
                       >
                         <AlertTriangle className="h-4 w-4" />
-                        {loading ? "Resetting..." : `Reset All ${totalCount} Accounts to 0`}
+                        {loading ? "Resetting..." : `Reset All ${totalCount} Customers to 0 Points`}
                       </button>
                     </>
                   )}
@@ -675,9 +546,7 @@ export function SetPointsModal({
 
           {/* Footer */}
           <div
-            className={`flex justify-end gap-3 p-6 border-t ${
-              resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-            }`}
+            className="flex justify-end gap-3 p-6 border-t border-border"
           >
             <div className="flex-1">
               <input
@@ -685,21 +554,13 @@ export function SetPointsModal({
                 placeholder="Reason / Note (optional)"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-                }`}
+                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                 disabled={loading || !!progress}
               />
             </div>
             <button
               onClick={onClose}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                resolvedTheme === "dark"
-                  ? "text-gray-300 hover:bg-gray-700"
-                  : "text-gray-700 hover:bg-gray-100"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="px-4 py-2 rounded-lg transition-colors text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading || !!progress}
             >
               Cancel
@@ -707,11 +568,7 @@ export function SetPointsModal({
             <button
               onClick={handleSubmit}
               disabled={loading || !!progress}
-              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-gray-900 hover:bg-gray-200"
-                  : "bg-gray-900 text-white hover:bg-gray-700"
-              }`}
+              className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-card text-foreground hover:bg-accent"
             >
               <Save className="h-4 w-4" />
               {loading ? (progress ? "Processing..." : "Saving...") : "Save Changes"}

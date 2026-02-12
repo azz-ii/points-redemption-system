@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { ModalBaseProps, Distributor } from "./types";
 
 interface ViewDistributorModalProps extends ModalBaseProps {
@@ -11,8 +10,6 @@ export function ViewDistributorModal({
   onClose,
   distributor,
 }: ViewDistributorModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen || !distributor) return null;
 
   return (
@@ -21,21 +18,17 @@ export function ViewDistributorModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-distributor-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="view-distributor-title" className="text-lg font-semibold">
+            <h2 id="view-distributor-title" className="text-xl font-semibold">
               Distributor Details
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p
+              className="text-sm text-muted-foreground"
+            >
               View distributor information
             </p>
           </div>
@@ -49,8 +42,8 @@ export function ViewDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-          <div className="space-y-2">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* ID */}
             <div>
               <label className="block text-sm font-medium mb-2">ID</label>
@@ -58,11 +51,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.id}
                 disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />
             </div>
 
@@ -73,11 +62,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.name}
                 disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />
             </div>
 
@@ -90,11 +75,7 @@ export function ViewDistributorModal({
                 type="email"
                 value={distributor.contact_email}
                 disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />
             </div>
 
@@ -105,11 +86,7 @@ export function ViewDistributorModal({
                 type="tel"
                 value={distributor.phone}
                 disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />
             </div>
 
@@ -120,11 +97,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.location}
                 disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />
             </div>
 
@@ -135,25 +108,17 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.points?.toLocaleString() ?? 0}
                 disabled
-                className={`w-full px-3 py-2 rounded border cursor-not-allowed ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-600"
-                } focus:outline-none`}
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 flex justify-end">
+        <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-              resolvedTheme === "dark"
-                ? "border-gray-600 hover:bg-gray-800"
-                : "border-gray-300 hover:bg-gray-50"
-            }`}
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent"
           >
             Close
           </button>

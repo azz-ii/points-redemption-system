@@ -9,7 +9,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'uses_points', 'points', 'profile_picture', 'created_at', 'updated_at'
+            'uses_points', 'points', 'profile_picture',
+            'is_archived', 'date_archived', 'archived_by',
+            'created_at', 'updated_at'
         ]
 
 class UserSerializer(serializers.ModelSerializer):
@@ -186,6 +188,10 @@ class UserListSerializer(serializers.ModelSerializer):
     uses_points = serializers.BooleanField(source='profile.uses_points', read_only=True)
     points = serializers.IntegerField(source='profile.points', read_only=True)
     profile_picture = serializers.ImageField(source='profile.profile_picture', read_only=True)
+    is_archived = serializers.BooleanField(source='profile.is_archived', read_only=True)
+    date_archived = serializers.DateTimeField(source='profile.date_archived', read_only=True)
+    archived_by = serializers.IntegerField(source='profile.archived_by_id', read_only=True)
+    archived_by_username = serializers.SerializerMethodField()
     
     # Team information
     team_id = serializers.SerializerMethodField()
@@ -197,7 +203,9 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'full_name', 'email', 'position', 'is_activated', 'is_banned',
             'ban_reason', 'ban_message', 'ban_duration', 'ban_date', 'unban_date',
-            'uses_points', 'points', 'profile_picture', 'is_active', 'date_joined',
+            'uses_points', 'points', 'profile_picture',
+            'is_archived', 'date_archived', 'archived_by', 'archived_by_username',
+            'is_active', 'date_joined',
             'team_id', 'team_name', 'is_team_approver'
         ]
     
@@ -220,3 +228,9 @@ class UserListSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'profile') and obj.profile.position == 'Approver':
             return obj.managed_teams.exists()
         return False
+    
+    def get_archived_by_username(self, obj):
+        """Get username of the user who archived this account"""
+        if hasattr(obj, 'profile') and obj.profile.archived_by:
+            return obj.profile.archived_by.get_username()
+        return None

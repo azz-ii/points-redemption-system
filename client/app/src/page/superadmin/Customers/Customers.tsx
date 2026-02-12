@@ -1,21 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
-import { Bell, Search, Plus, Users, LogOut } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 
 import { customersApi, type Customer, type ChunkedUpdateProgress } from "@/lib/customers-api";
 import {
   CreateCustomerModal,
   EditCustomerModal,
   ViewCustomerModal,
-  DeleteCustomerModal,
+  ArchiveCustomerModal,
+  UnarchiveCustomerModal,
+  BulkArchiveCustomerModal,
   ExportModal,
   SetPointsModal,
 } from "./modals";
@@ -23,16 +18,12 @@ import { CustomersTable, CustomersMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Customers() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const currentPage = "customers";
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const currentPage = "customers";  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   // Pagination state for mobile only
   const [page, setPage] = useState(1);
@@ -40,7 +31,18 @@ function Customers() {
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await customersApi.getCustomers(searchQuery);
+      const url = new URL(`${API_URL}/customers/`, window.location.origin);
+      if (showArchived) {
+        url.searchParams.append('show_archived', 'true');
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
+      }
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
+      const result = await response.json();
+      const data = result.results || result;
       // Ensure data is always an array
       setCustomers(Array.isArray(data) ? data : []);
       setError(null);
@@ -51,7 +53,7 @@ function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, showArchived]);
 
   // Fetch customers on mount
   useEffect(() => {
@@ -98,15 +100,19 @@ function Customers() {
     location: "",
   });
 
-  // Modal state for edit/view/delete
+  // Modal state for edit/view/archive
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingCustomerId, setEditingCustomerId] = useState<number | null>(
     null,
   );
   const [viewTarget, setViewTarget] = useState<Customer | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Customer | null>(null);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Customer | null>(null);
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Customer[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -221,23 +227,93 @@ function Customers() {
     setShowViewModal(true);
   };
 
-  // Handle delete click
-  const handleDeleteClick = (customer: Customer) => {
-    setDeleteTarget(customer);
-    setShowDeleteModal(true);
+  // Handle archive click
+  const handleArchiveClick = (customer: Customer) => {
+    setArchiveTarget(customer);
+    setShowArchiveModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
+  // Handle unarchive click
+  const handleUnarchiveClick = (customer: Customer) => {
+    setUnarchiveTarget(customer);
+    setShowUnarchiveModal(true);
+  };
 
+  // Confirm archive customer
+  const confirmArchive = async (id: number) => {
     try {
-      await customersApi.deleteCustomer(deleteTarget.id);
-      setCustomers((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-      setShowDeleteModal(false);
-      setDeleteTarget(null);
+      setLoading(true);
+      await customersApi.deleteCustomer(id);
+      setShowArchiveModal(false);
+      setArchiveTarget(null);
+      fetchCustomers();
     } catch (err) {
-      console.error("Error deleting customer:", err);
-      alert("Failed to delete customer. Please try again.");
+      console.error("Error archiving customer:", err);
+      alert("Failed to archive customer. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm unarchive customer
+  const confirmUnarchive = async (id: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/customers/${id}/unarchive/`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to unarchive customer');
+      }
+      
+      setShowUnarchiveModal(false);
+      setUnarchiveTarget(null);
+      fetchCustomers();
+    } catch (err) {
+      console.error("Error unarchiving customer:", err);
+      alert(err instanceof Error ? err.message : "Failed to unarchive customer. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bulk archive
+  const handleArchiveSelected = async (selectedCustomers: Customer[]) => {
+    setBulkArchiveTargets(selectedCustomers);
+    setShowBulkArchiveModal(true);
+  };
+
+  // Confirm bulk archive
+  const confirmBulkArchive = async () => {
+    try {
+      setLoading(true);
+      const archiveResults = await Promise.allSettled(
+        bulkArchiveTargets.map((customer) =>
+          customersApi.deleteCustomer(customer.id)
+        )
+      );
+
+      const successCount = archiveResults.filter((r) => r.status === "fulfilled").length;
+      const failCount = archiveResults.filter((r) => r.status === "rejected").length;
+
+      setShowBulkArchiveModal(false);
+      setBulkArchiveTargets([]);
+
+      if (failCount === 0) {
+        alert(`Successfully archived ${successCount} customer(s)`);
+      } else {
+        alert(`Archived ${successCount} of ${bulkArchiveTargets.length} customer(s). ${failCount} failed.`);
+      }
+
+      fetchCustomers();
+    } catch (err) {
+      console.error("Error archiving customers:", err);
+      alert("Error archiving some customers");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -385,69 +461,8 @@ function Customers() {
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
+    <>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">I</span>
-            </div>
-            <span className="text-sm font-medium">Izza</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Users className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
@@ -455,25 +470,10 @@ function Customers() {
             <div>
               <h1 className="text-3xl font-semibold">Customers</h1>
               <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm text-muted-foreground"
               >
                 View and manage customer information.
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
             </div>
           </div>
 
@@ -498,22 +498,38 @@ function Customers() {
 
           {/* Table */}
           {!loading && !error && (
-            <CustomersTable
-              customers={customers}
-              loading={loading}
-              onView={handleViewClick}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-              onCreateNew={() => setShowCreateModal(true)}
-              onRefresh={fetchCustomers}
-              refreshing={loading}
-              onExport={() => setShowExportModal(true)}
-              onSetPoints={() => setShowSetPointsModal(true)}
-              onViewPointsHistory={(customer) => {
-                setPointsHistoryTarget(customer);
-                setShowPointsHistory(true);
-              }}
-            />
+            <>
+              <div className="mb-4 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="show-archived"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <label htmlFor="show-archived" className="text-sm text-muted-foreground">
+                  Show Archived Customers
+                </label>
+              </div>
+              <CustomersTable
+                customers={customers}
+                loading={loading}
+                onView={handleViewClick}
+                onEdit={handleEditClick}
+                onArchive={handleArchiveClick}
+                onUnarchive={handleUnarchiveClick}
+                onArchiveSelected={handleArchiveSelected}
+                onCreateNew={() => setShowCreateModal(true)}
+                onRefresh={fetchCustomers}
+                refreshing={loading}
+                onExport={() => setShowExportModal(true)}
+                onSetPoints={() => setShowSetPointsModal(true)}
+                onViewPointsHistory={(customer) => {
+                  setPointsHistoryTarget(customer);
+                  setShowPointsHistory(true);
+                }}
+              />
+            </>
           )}
         </div>
 
@@ -521,9 +537,7 @@ function Customers() {
         <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
           <h2 className="text-2xl font-semibold mb-2">Customers</h2>
           <p
-            className={`text-xs mb-4 ${
-              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className="text-xs mb-4 text-muted-foreground"
           >
             Manage customers
           </p>
@@ -531,22 +545,14 @@ function Customers() {
           {/* Mobile Search */}
           <div className="mb-4">
             <div
-              className={`relative flex items-center rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
+              className="relative flex items-center rounded-lg border bg-card border-border"
             >
               <Search className="absolute left-3 h-4 w-4 text-gray-500" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 w-full text-sm ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -554,11 +560,7 @@ function Customers() {
           <div className="mb-4">
             <button
               onClick={() => setShowCreateModal(true)}
-              className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-gray-900 border-gray-200 hover:bg-gray-200"
-                  : "bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
-              }`}
+              className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-card text-foreground border-border hover:bg-accent"
             >
               <Plus className="h-4 w-4" />
               Add Customer
@@ -595,18 +597,11 @@ function Customers() {
               onPageChange={setPage}
               onView={handleViewClick}
               onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
+              onArchive={handleArchiveClick}
+              onUnarchive={handleUnarchiveClick}
             />
           )}
         </div>
-      </div>
-
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
-
       {/* Create Customer Modal */}
       <CreateCustomerModal
         isOpen={showCreateModal}
@@ -636,12 +631,31 @@ function Customers() {
         customer={viewTarget}
       />
 
-      {/* Delete Confirmation Modal */}
-      <DeleteCustomerModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        customer={deleteTarget}
-        onConfirm={confirmDelete}
+      {/* Archive Confirmation Modal */}
+      <ArchiveCustomerModal
+        isOpen={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        customer={archiveTarget}
+        loading={loading}
+        onConfirm={confirmArchive}
+      />
+
+      {/* Unarchive Confirmation Modal */}
+      <UnarchiveCustomerModal
+        isOpen={showUnarchiveModal}
+        onClose={() => setShowUnarchiveModal(false)}
+        customer={unarchiveTarget}
+        loading={loading}
+        onConfirm={confirmUnarchive}
+      />
+
+      {/* Bulk Archive Confirmation Modal */}
+      <BulkArchiveCustomerModal
+        isOpen={showBulkArchiveModal}
+        onClose={() => setShowBulkArchiveModal(false)}
+        customers={bulkArchiveTargets}
+        loading={loading}
+        onConfirm={confirmBulkArchive}
       />
 
       {/* Export Modal */}
@@ -675,7 +689,7 @@ function Customers() {
           entityName={pointsHistoryTarget.name}
         />
       )}
-    </div>
+    </>
   );
 }
 

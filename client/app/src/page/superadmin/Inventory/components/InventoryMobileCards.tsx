@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { Eye, Edit } from "lucide-react";
 import type { InventoryItem } from "../modals/types";
 import { getStatusColor, getLegendColor } from "../modals/types";
@@ -22,8 +21,6 @@ export function InventoryMobileCards({
   onRetry,
   searchQuery,
 }: InventoryMobileCardsProps) {
-  const { resolvedTheme } = useTheme();
-
   if (loading) {
     return (
       <div className="text-center py-32">
@@ -68,28 +65,20 @@ export function InventoryMobileCards({
       {items.map((item) => (
         <div
           key={item.id}
-          className={`p-4 rounded-lg border ${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 border-gray-700"
-              : "bg-white border-gray-200"
-          } transition-colors`}
+          className="p-4 rounded-lg border bg-card border-border transition-colors"
         >
           {/* Header */}
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1">
               <p className="font-semibold">{item.item_name}</p>
               <p
-                className={`text-xs font-mono ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+                className="text-xs font-mono text-muted-foreground"
               >
                 {item.item_code}
               </p>
               {item.category && (
                 <p
-                  className={`text-xs mt-1 ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className="text-xs mt-1 text-muted-foreground"
                 >
                   {item.category}
                 </p>
@@ -107,13 +96,11 @@ export function InventoryMobileCards({
           {/* Stock Info */}
           <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
             <div
-              className={`p-2 rounded ${
-                resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
-              }`}
+              className="p-2 rounded bg-muted"
             >
               <span
                 className={
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                  "text-muted-foreground"
                 }
               >
                 Total Stock
@@ -129,13 +116,11 @@ export function InventoryMobileCards({
               </p>
             </div>
             <div
-              className={`p-2 rounded ${
-                resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
-              }`}
+              className="p-2 rounded bg-muted"
             >
               <span
                 className={
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                  "text-muted-foreground"
                 }
               >
                 Committed
@@ -143,13 +128,11 @@ export function InventoryMobileCards({
               <p className="font-bold text-lg text-orange-500">{item.committed_stock}</p>
             </div>
             <div
-              className={`p-2 rounded ${
-                resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-50"
-              }`}
+              className="p-2 rounded bg-muted"
             >
               <span
                 className={
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
+                  "text-muted-foreground"
                 }
               >
                 Available
@@ -170,7 +153,7 @@ export function InventoryMobileCards({
           <div className="mb-3">
             <span
               className={
-                resolvedTheme === "dark" ? "text-gray-400 text-xs" : "text-gray-500 text-xs"
+                "text-muted-foreground text-xs"
               }
             >
               Status
@@ -197,11 +180,7 @@ export function InventoryMobileCards({
             </button>
             <button
               onClick={() => onEditItem(item)}
-              className={`flex-1 px-3 py-2 rounded flex items-center justify-center gap-2 ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              } transition-colors font-semibold text-sm`}
+              className="flex-1 px-3 py-2 rounded flex items-center justify-center gap-2 bg-muted hover:bg-gray-600 text-foreground transition-colors font-semibold text-sm"
             >
               <Edit className="h-4 w-4" />
               Edit

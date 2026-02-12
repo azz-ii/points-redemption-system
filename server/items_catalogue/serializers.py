@@ -28,6 +28,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'min_order_qty', 'max_order_qty',
             'has_stock', 'stock', 'committed_stock', 'available_stock',
             'mktg_admin', 'requires_sales_approval',
+            'image',
             'date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by'
         ]
         extra_kwargs = {

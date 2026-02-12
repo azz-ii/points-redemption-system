@@ -1,14 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { SidebarMarketing } from "@/components/sidebar";
-import { MobileBottomNavMarketing } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import {
-  Bell,
   Search,
   Check,
   X,
@@ -27,8 +21,6 @@ interface CampaignItem {
 function MarketingDashboard() {
   const _navigate = useNavigate();
   const _handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"incoming" | "handled">("incoming");
@@ -98,57 +90,13 @@ function MarketingDashboard() {
   const paginatedCampaigns = filteredCampaigns.slice(startIndex, endIndex);
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <SidebarMarketing />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-0 border-gray-0"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-purple-600" : "bg-purple-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">M</span>
-            </div>
-            <span className="font-medium text-sm">Marketing Dashboard</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-              title="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-          </div>
-        </div>
-
+    <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
+        <div className="md:hidden flex-1 overflow-y-auto">
           <div className="p-4">
             {/* Search */}
             <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}
@@ -156,11 +104,7 @@ function MarketingDashboard() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`pl-10 h-12 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 h-12"
               />
             </div>
 
@@ -168,11 +112,7 @@ function MarketingDashboard() {
             <div className="relative mb-6">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700"
-                    : "bg-white border-gray-300"
-                } transition-colors`}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-lg border bg-card border-border transition-colors"
               >
                 <span className="font-semibold text-sm">
                   {viewMode === "incoming"
@@ -187,11 +127,7 @@ function MarketingDashboard() {
               </button>
               {isDropdownOpen && (
                 <div
-                  className={`absolute top-full mt-2 left-0 w-full rounded-lg border shadow-lg z-50 ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-900 border-gray-700"
-                      : "bg-white border-gray-300"
-                  }`}
+                  className="absolute top-full mt-2 left-0 w-full rounded-lg border shadow-lg z-50 bg-card border-border"
                 >
                   <button
                     onClick={() => {
@@ -199,9 +135,7 @@ function MarketingDashboard() {
                       setIsDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    className={`w-full text-left px-4 py-3 hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors first:rounded-t-lg`}
+                    className="w-full text-left px-4 py-3 hover:bg-accent transition-colors first:rounded-t-lg"
                   >
                     All Incoming Submission Request
                   </button>
@@ -211,9 +145,7 @@ function MarketingDashboard() {
                       setIsDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    className={`w-full text-left px-4 py-3 hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors last:rounded-b-lg`}
+                    className="w-full text-left px-4 py-3 hover:bg-accent transition-colors last:rounded-b-lg"
                   >
                     Handled Items
                   </button>
@@ -226,11 +158,7 @@ function MarketingDashboard() {
               {paginatedCampaigns.map((campaign) => (
                 <div
                   key={campaign.id}
-                  className={`p-4 rounded-lg border ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-900 border-gray-700"
-                      : "bg-white border-gray-200"
-                  }`}
+                  className="p-4 rounded-lg border bg-card border-border"
                 >
                   {viewMode === "incoming" ? (
                     // Incoming Request Card
@@ -313,11 +241,7 @@ function MarketingDashboard() {
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -330,11 +254,7 @@ function MarketingDashboard() {
                   setCurrentPage(Math.min(totalPages, safePage + 1))
                 }
                 disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent`}
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -348,70 +268,37 @@ function MarketingDashboard() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Welcome, Marketing</h1>
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
+              <p className="text-sm text-muted-foreground">
                 Manage points, track redemptions and redeem items
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-5 w-5" />
-              </button>
-              <ThemeToggle />
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-6 mb-8">
             <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
+              className="p-6 rounded-lg border bg-card border-border transition-colors"
             >
               <div className="flex items-center gap-2 mb-4">
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-yellow-400" : "bg-yellow-500"
-                  }`}
+                  className="w-2 h-2 rounded-full bg-yellow-500"
                 />
                 <p className="font-semibold">Pending Request</p>
               </div>
               <p className="text-4xl font-bold">
                 {pendingCount}{" "}
-                <span
-                  className={`text-lg ${
-                    resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
+                <span className="text-lg text-muted-foreground">
                   / {pendingCount + approvedCount}
                 </span>
               </p>
             </div>
 
             <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
+              className="p-6 rounded-lg border bg-card border-border transition-colors"
             >
               <div className="flex items-center gap-2 mb-4">
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-green-400" : "bg-green-500"
-                  }`}
+                  className="w-2 h-2 rounded-full bg-green-500"
                 />
                 <p className="font-semibold">Approved Requests</p>
               </div>
@@ -419,17 +306,11 @@ function MarketingDashboard() {
             </div>
 
             <div
-              className={`p-6 rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 border-gray-700"
-                  : "bg-white border-gray-200"
-              } transition-colors`}
+              className="p-6 rounded-lg border bg-card border-border transition-colors"
             >
               <div className="flex items-center gap-2 mb-4">
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    resolvedTheme === "dark" ? "bg-blue-400" : "bg-blue-500"
-                  }`}
+                  className="w-2 h-2 rounded-full bg-blue-500"
                 />
                 <p className="font-semibold">On-board</p>
               </div>
@@ -442,11 +323,7 @@ function MarketingDashboard() {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 hover:bg-gray-800"
-                    : "bg-white border-gray-300 hover:bg-gray-50"
-                } transition-colors`}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border bg-card border-border hover:bg-accent transition-colors"
               >
                 {viewMode === "incoming"
                   ? "All Incoming Submission Request"
@@ -459,11 +336,7 @@ function MarketingDashboard() {
               </button>
               {isDropdownOpen && (
                 <div
-                  className={`absolute top-full mt-2 left-0 min-w-[250px] rounded-lg border shadow-lg z-50 ${
-                    resolvedTheme === "dark"
-                      ? "bg-gray-900 border-gray-700"
-                      : "bg-white border-gray-300"
-                  }`}
+                  className="absolute top-full mt-2 left-0 min-w-[250px] rounded-lg border shadow-lg z-50 bg-card border-border"
                 >
                   <button
                     onClick={() => {
@@ -471,9 +344,7 @@ function MarketingDashboard() {
                       setIsDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    className={`w-full text-left px-4 py-2 hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors first:rounded-t-lg`}
+                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors first:rounded-t-lg"
                   >
                     All Incoming Submission Request
                   </button>
@@ -483,9 +354,7 @@ function MarketingDashboard() {
                       setIsDropdownOpen(false);
                       setCurrentPage(1);
                     }}
-                    className={`w-full text-left px-4 py-2 hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors last:rounded-b-lg`}
+                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors last:rounded-b-lg"
                   >
                     Handled Items
                   </button>
@@ -493,7 +362,7 @@ function MarketingDashboard() {
               )}
             </div>
             <div className="relative max-w-md flex-1 ml-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}
@@ -501,31 +370,17 @@ function MarketingDashboard() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`pl-10 h-10 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 h-10"
               />
             </div>
           </div>
 
           {/* Table */}
           <div
-            className={`border rounded-lg overflow-hidden ${
-              resolvedTheme === "dark"
-                ? "bg-gray-900 border-gray-700"
-                : "bg-white border-gray-200"
-            } transition-colors`}
+            className="border rounded-lg overflow-hidden bg-card border-border transition-colors"
           >
             <table className="w-full">
-              <thead
-                className={`${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-50 text-gray-700"
-                }`}
-              >
+              <thead className="bg-muted text-muted-foreground">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
                     ID
@@ -549,19 +404,11 @@ function MarketingDashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody
-                className={`divide-y ${
-                  resolvedTheme === "dark"
-                    ? "divide-gray-700"
-                    : "divide-gray-200"
-                }`}
-              >
+              <tbody className="divide-y divide-border">
                 {paginatedCampaigns.map((campaign) => (
                   <tr
                     key={campaign.id}
-                    className={`hover:${
-                      resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-                    } transition-colors`}
+                    className="hover:bg-accent transition-colors"
                   >
                     <td className="px-6 py-4 text-sm">{campaign.id}</td>
                     {viewMode === "handled" && (
@@ -618,18 +465,12 @@ function MarketingDashboard() {
 
             {/* Desktop Pagination */}
             <div
-              className={`flex justify-between items-center px-6 py-4 border-t ${
-                resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-              }`}
+              className="flex justify-between items-center px-6 py-4 border-t border-border"
             >
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border border-gray-700 hover:bg-gray-700"
-                    : "bg-white border border-gray-300 hover:bg-gray-50"
-                }`}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -642,11 +483,7 @@ function MarketingDashboard() {
                   setCurrentPage(Math.min(totalPages, safePage + 1))
                 }
                 disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border border-gray-700 hover:bg-gray-700"
-                    : "bg-white border border-gray-300 hover:bg-gray-50"
-                }`}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -659,24 +496,20 @@ function MarketingDashboard() {
         {editItem && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div
-              className={`relative w-full max-w-md rounded-lg shadow-xl ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 text-white"
-                  : "bg-gray-50 text-gray-900"
-              }`}
+              className="relative w-full max-w-md rounded-lg shadow-xl bg-card text-foreground"
             >
               {/* Header */}
-              <div className="p-6 border-b border-gray-700">
+              <div className="p-6 border-b border-border">
                 <div className="flex justify-between items-start">
                   <div>
                     <h2 className="text-xl font-bold">Edit Item</h2>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Update item quantity for {editItem.details}
                     </p>
                   </div>
                   <button
                     onClick={() => setEditItem(null)}
-                    className="p-1 hover:bg-gray-800 rounded transition-colors"
+                    className="p-1 hover:bg-accent rounded transition-colors"
                   >
                     <svg
                       className="w-5 h-5"
@@ -698,62 +531,46 @@ function MarketingDashboard() {
               {/* Form Content */}
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">ID</label>
+                  <label className="text-sm text-muted-foreground mb-2 block">ID</label>
                   <input
                     type="text"
                     value={editItem.id}
                     disabled
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-500"
-                        : "bg-gray-100 border-gray-300 text-gray-500"
-                    } cursor-not-allowed`}
+                    className="w-full px-4 py-3 rounded-lg border bg-muted border-border text-muted-foreground cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
+                  <label className="text-sm text-muted-foreground mb-2 block">
                     Item Name
                   </label>
                   <input
                     type="text"
                     value={editItem.details}
                     disabled
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-500"
-                        : "bg-gray-100 border-gray-300 text-gray-500"
-                    } cursor-not-allowed`}
+                    className="w-full px-4 py-3 rounded-lg border bg-muted border-border text-muted-foreground cursor-not-allowed"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
+                  <label className="text-sm text-muted-foreground mb-2 block">
                     Item Type
                   </label>
                   <input
                     type="text"
                     value="T-shirt"
                     disabled
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-500"
-                        : "bg-gray-100 border-gray-300 text-gray-500"
-                    } cursor-not-allowed`}
+                    className="w-full px-4 py-3 rounded-lg border bg-muted border-border text-muted-foreground cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
-                    Quantity <span className="text-red-500">*</span>
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    Quantity <span className="text-destructive">*</span>
                   </label>
                   <input
                     type="number"
                     defaultValue={editItem.quantity}
                     min="1"
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700 text-white"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    className="w-full px-4 py-3 rounded-lg border bg-card border-border text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -765,7 +582,7 @@ function MarketingDashboard() {
                     // Handle update logic here
                     setEditItem(null);
                   }}
-                  className="w-full py-3 rounded-lg bg-white text-gray-900 hover:bg-gray-100 font-semibold transition-colors"
+                  className="w-full py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-semibold transition-colors"
                 >
                   Update Item
                 </button>
@@ -773,14 +590,6 @@ function MarketingDashboard() {
             </div>
           </div>
         )}
-
-        <NotificationPanel
-          isOpen={isNotificationOpen}
-          onClose={() => setIsNotificationOpen(false)}
-        />
-      </div>
-
-      <MobileBottomNavMarketing />
     </div>
   );
 }

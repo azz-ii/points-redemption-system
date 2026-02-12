@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Account } from "../modals";
-import { DataTable } from "./data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { createColumns } from "./columns";
 
 interface AccountsTableProps {
@@ -9,8 +9,9 @@ interface AccountsTableProps {
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
   onBanAccount: (account: Account) => void;
-  onDeleteAccount: (account: Account) => void;
-  onDeleteSelected?: (accounts: Account[]) => void;
+  onArchiveAccount: (account: Account) => void;
+  onUnarchiveAccount: (account: Account) => void;
+  onArchiveSelected?: (accounts: Account[]) => void;
   onBanSelected?: (accounts: Account[]) => void;
   onCreateNew?: () => void;
   onSetPoints?: () => void;
@@ -33,8 +34,9 @@ export function AccountsTable({
   onViewAccount,
   onEditAccount,
   onBanAccount,
-  onDeleteAccount,
-  onDeleteSelected,
+  onArchiveAccount,
+  onUnarchiveAccount,
+  onArchiveSelected,
   onBanSelected,
   onCreateNew,
   onSetPoints,
@@ -56,7 +58,8 @@ export function AccountsTable({
         onViewAccount,
         onEditAccount,
         onBanAccount,
-        onDeleteAccount,
+        onArchiveAccount,
+        onUnarchiveAccount,
         onViewPointsHistory,
         onToggleInlineEdit,
         onSaveInlineEdit,
@@ -66,7 +69,8 @@ export function AccountsTable({
       onViewAccount,
       onEditAccount,
       onBanAccount,
-      onDeleteAccount,
+      onArchiveAccount,
+      onUnarchiveAccount,
       onViewPointsHistory,
       onToggleInlineEdit,
       onSaveInlineEdit,
@@ -79,14 +83,27 @@ export function AccountsTable({
       columns={columns}
       data={accounts}
       loading={loading}
-      onDeleteSelected={onDeleteSelected}
+      onDeleteSelected={onArchiveSelected}
       onBanSelected={onBanSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add User"
+      createButtonIcon="user"
       onSetPoints={onSetPoints}
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
+      searchPlaceholder="Filter by username, email, or full name..."
+      globalFilterFn={(row, _columnId, filterValue) => {
+        const s = String(filterValue).toLowerCase()
+        return (
+          String(row.getValue("username") || "").toLowerCase().includes(s) ||
+          String(row.getValue("email") || "").toLowerCase().includes(s) ||
+          String(row.getValue("full_name") || "").toLowerCase().includes(s)
+        )
+      }}
+      initialSorting={[{ id: "id", desc: false }]}
+      loadingMessage="Loading accounts..."
+      emptyMessage="No accounts found"
       editingRowId={editingRowId}
       editedData={editedData}
       onFieldChange={onFieldChange}

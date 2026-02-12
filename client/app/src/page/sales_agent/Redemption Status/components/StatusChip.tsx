@@ -3,10 +3,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 interface StatusChipProps {
   status: string;
   processingStatus?: string;
-  isDark: boolean;
 }
 
-export function StatusChip({ status, processingStatus, isDark }: StatusChipProps) {
+export function StatusChip({ status, processingStatus }: StatusChipProps) {
   const base = "px-3 py-1 rounded-full text-xs font-semibold inline-block";
   const normalizedStatus = status.toUpperCase();
   
@@ -16,9 +15,7 @@ export function StatusChip({ status, processingStatus, isDark }: StatusChipProps
     if (processingStatus === "PROCESSED") {
       return (
         <span
-          className={`${base} ${
-            isDark ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-700"
-          }`}
+          className={`${base} bg-blue-100 text-blue-700 dark:bg-blue-500 dark:text-white`}
         >
           Processed
         </span>
@@ -31,9 +28,7 @@ export function StatusChip({ status, processingStatus, isDark }: StatusChipProps
         <Tooltip>
           <TooltipTrigger asChild>
             <span
-              className={`${base} cursor-help ${
-                isDark ? "bg-red-500 text-white" : "bg-red-100 text-red-700"
-              }`}
+              className={`${base} cursor-help bg-red-100 text-red-700 dark:bg-red-500 dark:text-white`}
             >
               Cancelled
             </span>
@@ -46,9 +41,7 @@ export function StatusChip({ status, processingStatus, isDark }: StatusChipProps
     // If APPROVED but not processed/cancelled, show "Approved" status
     return (
       <span
-        className={`${base} ${
-          isDark ? "bg-green-500 text-black" : "bg-green-100 text-green-700"
-        }`}
+        className={`${base} bg-green-100 text-green-700 dark:bg-green-500 dark:text-black`}
       >
         Approved
       </span>
@@ -59,9 +52,7 @@ export function StatusChip({ status, processingStatus, isDark }: StatusChipProps
   if (normalizedStatus === "PENDING") {
     return (
       <span
-        className={`${base} ${
-          isDark ? "bg-yellow-400 text-black" : "bg-yellow-100 text-yellow-700"
-        }`}
+        className={`${base} bg-yellow-100 text-yellow-700 dark:bg-yellow-400 dark:text-black`}
       >
         Pending
       </span>
@@ -70,9 +61,7 @@ export function StatusChip({ status, processingStatus, isDark }: StatusChipProps
   
   return (
     <span
-      className={`${base} ${
-        isDark ? "bg-red-500 text-white" : "bg-red-100 text-red-700"
-      }`}
+      className={`${base} bg-red-100 text-red-700 dark:bg-red-500 dark:text-white`}
     >
       Rejected
     </span>

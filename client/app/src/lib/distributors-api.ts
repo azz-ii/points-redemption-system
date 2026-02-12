@@ -106,7 +106,9 @@ export const distributorsApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors');
     const data = await response.json();
     // Ensure we return paginated format
@@ -232,7 +234,9 @@ export const distributorsApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors');
     const data = await response.json();
     // Handle both array and paginated response formats
@@ -249,7 +253,9 @@ export const distributorsApi = {
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch distributors');
       
       const data = await response.json();
@@ -265,12 +271,16 @@ export const distributorsApi = {
     return allDistributors;
   },
   getAll: async (): Promise<Distributor[]> => {
-    const response = await fetch(`${API_BASE_URL}/distributors/`);
+    const response = await fetch(`${API_BASE_URL}/distributors/`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors');
     return response.json();
   },
   getListAll: async (): Promise<{id: number; name: string; location: string}[]> => {
-    const response = await fetch(`${API_BASE_URL}/distributors/list_all/`);
+    const response = await fetch(`${API_BASE_URL}/distributors/list_all/`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch distributors list');
     return response.json();
   },
@@ -384,6 +394,7 @@ export const dashboardApi = {
 export interface AgentDashboardStats {
   pending_count: number;
   approved_count: number;
+  rejected_count: number;
   processed_count: number;
   agent_points: number;
   active_distributors_count: number;

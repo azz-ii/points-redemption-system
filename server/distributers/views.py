@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -50,9 +51,15 @@ class DistributorViewSet(viewsets.ModelViewSet):
         """
         All authenticated users can access all distributors.
         Optionally filter based on query parameters.
+        By default, archived distributors are excluded unless show_archived=true.
         """
-        # All users get full access to all distributors
+        # Start with all distributors
         queryset = Distributor.objects.all()
+        
+        # Filter archived distributors by default
+        show_archived = self.request.query_params.get('show_archived', '').lower() == 'true'
+        if not show_archived:
+            queryset = queryset.filter(is_archived=False)
         
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
@@ -81,6 +88,19 @@ class DistributorViewSet(viewsets.ModelViewSet):
         """
         return self.list(request)
 
+    def destroy(self, request, *args, **kwargs):
+        """Archive a distributor instead of deleting"""
+        instance = self.get_object()
+        instance.is_archived = True
+        instance.date_archived = timezone.now()
+        instance.archived_by = request.user if request.user.is_authenticated else None
+        instance.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+        
+        return Response({
+            "message": "Distributor archived successfully",
+            "distributor": DistributorSerializer(instance).data
+        }, status=status.HTTP_200_OK)
+    
     @action(detail=False, methods=['get'])
     def list_all(self, request):
         """
@@ -104,9 +124,9 @@ class DistributorExportView(APIView):
         'contact_email': 'Contact Email',
         'phone': 'Phone',
         'location': 'Location',
-        'region': 'Region',
         'points': 'Points',
         'date_added': 'Date Added',
+        'status': 'Status',
     }
     
     def _get_cell_value(self, distributor, column):
@@ -121,12 +141,12 @@ class DistributorExportView(APIView):
             return distributor.phone or ''
         elif column == 'location':
             return distributor.location or ''
-        elif column == 'region':
-            return distributor.region or ''
         elif column == 'points':
             return distributor.points or 0
         elif column == 'date_added':
             return distributor.date_added.strftime('%Y-%m-%d') if distributor.date_added else ''
+        elif column == 'status':
+            return 'Archived' if distributor.is_archived else 'Active'
         return ''
     
     def _sort_distributors(self, distributors, sort_field, sort_direction):
@@ -137,7 +157,7 @@ class DistributorExportView(APIView):
             return sorted(distributors, key=lambda d: d.date_added or datetime.min.date(), reverse=reverse)
         elif sort_field in ['id', 'points']:
             return sorted(distributors, key=lambda d: getattr(d, sort_field, 0), reverse=reverse)
-        elif sort_field in ['name', 'contact_email', 'phone', 'location', 'region']:
+        elif sort_field in ['name', 'contact_email', 'phone', 'location']:
             return sorted(distributors, key=lambda d: getattr(d, sort_field, '').lower(), reverse=reverse)
         return distributors
     
@@ -156,8 +176,8 @@ class DistributorExportView(APIView):
                 "error": "No valid columns specified"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Get distributors
-        distributors = list(Distributor.objects.all())
+        # Get distributors (exclude archived)
+        distributors = list(Distributor.objects.filter(is_archived=False))
         
         # Sort distributors
         distributors = self._sort_distributors(distributors, sort_field, sort_direction)
@@ -212,9 +232,9 @@ class DistributorExportView(APIView):
                 'contact_email': 30,
                 'phone': 15,
                 'location': 25,
-                'region': 15,
                 'points': 10,
                 'date_added': 15,
+                'status': 12,
             }
             for col_idx, column in enumerate(columns, 1):
                 ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = column_widths.get(column, 15)
@@ -392,17 +412,17 @@ class DistributorBulkUpdatePointsView(APIView):
         try:
             # Use atomic transaction for data consistency
             with transaction.atomic():
-                # Snapshot current points for audit logging
-                all_distributors = list(Distributor.objects.all().values('id', 'name', 'points'))
+                # Snapshot current points for audit logging (exclude archived)
+                all_distributors = list(Distributor.objects.filter(is_archived=False).values('id', 'name', 'points'))
                 
                 if reset_to_zero:
-                    # Single SQL UPDATE query to reset all distributors to 0
-                    updated_count = Distributor.objects.all().update(points=0)
+                    # Single SQL UPDATE query to reset all non-archived distributors to 0
+                    updated_count = Distributor.objects.filter(is_archived=False).update(points=0)
                     message = f"Successfully reset points to 0 for {updated_count} distributor(s)"
                     log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} distributors to 0"
                 else:
-                    # Single SQL UPDATE query using F() expression for atomic increment
-                    updated_count = Distributor.objects.all().update(points=F('points') + points_delta)
+                    # Single SQL UPDATE query using F() expression for atomic increment (exclude archived)
+                    updated_count = Distributor.objects.filter(is_archived=False).update(points=F('points') + points_delta)
                     message = f"Successfully updated points for {updated_count} distributor(s)"
                     log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} distributors"
             
@@ -500,15 +520,15 @@ class DistributorBatchUpdatePointsView(APIView):
                 logger.error(f"Error preparing update for distributor {distributor_id}: {str(e)}")
                 failed.append({'id': distributor_id, 'error': str(e)})
         
-        # Fetch all distributors that need updating
+        # Fetch all distributors that need updating (exclude archived)
         distributor_ids = list(update_map.keys())
-        distributors_to_update = Distributor.objects.filter(id__in=distributor_ids)
+        distributors_to_update = Distributor.objects.filter(id__in=distributor_ids, is_archived=False)
         
-        # Check for missing distributors
+        # Check for missing distributors (not found or archived)
         found_ids = set(distributors_to_update.values_list('id', flat=True))
         missing_ids = set(distributor_ids) - found_ids
         for missing_id in missing_ids:
-            failed.append({'id': missing_id, 'error': 'Distributor not found'})
+            failed.append({'id': missing_id, 'error': 'Distributor not found or archived'})
         
         # Snapshot old points and apply updates to distributor objects
         old_points_map = {}
@@ -561,4 +581,31 @@ class DistributorBatchUpdatePointsView(APIView):
             "failed_count": len(failed),
             "updated_ids": updated_ids,
             "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UnarchiveDistributorView(APIView):
+    """Unarchive (restore) an archived distributor"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [AllowAny]
+    
+    def post(self, request, pk=None):
+        """Restore an archived distributor"""
+        try:
+            distributor = Distributor.objects.get(pk=pk)
+        except Distributor.DoesNotExist:
+            return Response({"error": "Distributor not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not distributor.is_archived:
+            return Response({"error": "Distributor is not archived"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        distributor.is_archived = False
+        distributor.date_archived = None
+        distributor.archived_by = None
+        distributor.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+        
+        return Response({
+            "message": "Distributor unarchived successfully",
+            "distributor": DistributorSerializer(distributor).data
         }, status=status.HTTP_200_OK)

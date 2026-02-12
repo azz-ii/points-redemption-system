@@ -205,9 +205,9 @@ class TeamViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def members(self, request, pk=None):
-        """Get all members of this team."""
+        """Get all members of this team (excluding archived users)."""
         team = self.get_object()
-        memberships = team.memberships.all()
+        memberships = team.memberships.filter(user__profile__is_archived=False)
         serializer = TeamMembershipSerializer(memberships, many=True)
         return Response(serializer.data)
     

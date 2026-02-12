@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { AlertTriangle } from "lucide-react";
 
 interface SetPointsConfirmationModalProps {
@@ -24,8 +23,6 @@ export function SetPointsConfirmationModal({
   password,
   onPasswordChange,
 }: SetPointsConfirmationModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -37,29 +34,21 @@ export function SetPointsConfirmationModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
-        className={`rounded-lg shadow-2xl w-full max-w-md mx-4 ${
-          resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
+        className="rounded-lg shadow-2xl w-full max-w-md mx-4 bg-card"
       >
         {/* Header */}
         <div
-          className={`flex items-center gap-2 p-4 border-b ${
-            resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
+          className="flex items-center gap-3 p-6 border-b border-border"
         >
           <div
-            className={`p-1 rounded-full ${
+            className={`p-2 rounded-full ${
               confirmationType === "reset"
-                ? resolvedTheme === "dark"
-                  ? "bg-red-900/30"
-                  : "bg-red-100"
-                : resolvedTheme === "dark"
-                ? "bg-orange-900/30"
-                : "bg-orange-100"
+                ? "bg-red-500/10"
+                : "bg-orange-500/10"
             }`}
           >
             <AlertTriangle
-              className={`h-4 w-4 ${
+              className={`h-6 w-6 ${
                 confirmationType === "reset"
                   ? "text-red-500"
                   : "text-orange-500"
@@ -67,9 +56,7 @@ export function SetPointsConfirmationModal({
             />
           </div>
           <h3
-            className={`text-sm font-semibold ${
-              resolvedTheme === "dark" ? "text-white" : "text-gray-900"
-            }`}
+            className="text-lg font-semibold text-foreground"
           >
             {confirmationType === "reset"
               ? "Confirm Reset All Points"
@@ -78,28 +65,28 @@ export function SetPointsConfirmationModal({
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-6">
           <div
-            className={`mb-3 ${
-              resolvedTheme === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
+            className="mb-4 text-foreground"
           >
             {confirmationType === "reset" ? (
               <>
-                <p className="font-medium text-xs mb-1">
+                <p className="font-medium mb-2">
                   You are about to reset ALL points to 0 for{" "}
                   <span className="font-bold text-red-500">
                     {activeAccountsCount}
                   </span>{" "}
                   account(s).
                 </p>
-                <p className="text-xs">
+                <p className="text-sm">
                   This action is <strong>permanent</strong> and cannot be undone.
+                  All affected accounts will have their points balance set to
+                  zero.
                 </p>
               </>
             ) : (
               <>
-                <p className="font-medium text-xs mb-1">
+                <p className="font-medium mb-2">
                   You are about to apply{" "}
                   <span
                     className={`font-bold ${
@@ -115,7 +102,7 @@ export function SetPointsConfirmationModal({
                   </span>{" "}
                   account(s).
                 </p>
-                <p className="text-xs">
+                <p className="text-sm">
                   This action is <strong>permanent</strong> and cannot be undone.
                 </p>
               </>
@@ -123,13 +110,9 @@ export function SetPointsConfirmationModal({
           </div>
 
           {/* Password Input */}
-          <div className="mb-3">
+          <div className="mb-4">
             <label
-              className={`block text-xs font-medium mb-1 ${
-                resolvedTheme === "dark"
-                  ? "text-gray-300"
-                  : "text-gray-700"
-              }`}
+              className="block text-sm font-medium mb-2 text-foreground"
             >
               Enter Your Password to Confirm
             </label>
@@ -144,19 +127,13 @@ export function SetPointsConfirmationModal({
                   handleConfirm();
                 }
               }}
-              className={`w-full px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-500"
-                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
-              }`}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background border-border text-foreground placeholder-muted-foreground"
               disabled={loading}
             />
           </div>
 
           <p
-            className={`text-xs mt-2 ${
-              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-500"
-            }`}
+            className="text-xs mt-3 text-muted-foreground"
           >
             Click "Confirm" to proceed or "Cancel" to go back.
           </p>
@@ -164,25 +141,19 @@ export function SetPointsConfirmationModal({
 
         {/* Footer */}
         <div
-          className={`flex gap-3 p-4 border-t ${
-            resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-          }`}
+          className="flex gap-3 p-6 border-t border-border"
         >
           <button
             onClick={onClose}
             disabled={loading}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
+            className="flex-1 px-4 py-2 rounded-lg transition-colors bg-muted text-foreground hover:bg-accent"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={loading || !password.trim()}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-sm transition-colors text-white ${
+            className={`flex-1 px-4 py-2 rounded-lg transition-colors text-white ${
               confirmationType === "reset"
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-orange-600 hover:bg-orange-700"

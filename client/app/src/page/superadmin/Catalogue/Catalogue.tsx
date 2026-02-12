@@ -1,29 +1,19 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import { API_URL } from "@/lib/config";
+import { fetchWithCsrf } from "@/lib/csrf";
 import {
-  Bell,
   Search,
-  Sliders,
   Plus,
-  Warehouse,
-  LogOut,
-  RotateCw,
-  Download,
 } from "lucide-react";
 import type { Product, User } from "./modals";
 import {
   CreateItemModal,
   EditItemModal,
   ViewItemModal,
-  DeleteItemModal,
+  ArchiveItemModal,
+  UnarchiveItemModal,
+  BulkArchiveItemModal,
   ExportModal,
 } from "./modals";
 import {
@@ -33,11 +23,6 @@ import {
 } from "./components";
 
 function Catalogue() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const currentPage = "catalogue";
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<Product[]>([
@@ -63,6 +48,7 @@ function Catalogue() {
       stock: 100,
       committed_stock: 10,
       available_stock: 90,
+      image: null,
       is_archived: false,
       date_added: new Date().toISOString().split("T")[0],
       added_by: null,
@@ -72,6 +58,7 @@ function Catalogue() {
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [_users, setUsers] = useState<User[]>([]);
 
   // Pagination state
@@ -82,7 +69,7 @@ function Catalogue() {
   // Fetch catalogue items from API
   useEffect(() => {
     fetchCatalogueItems();
-  }, [page, rowsPerPage, searchQuery]);
+  }, [page, rowsPerPage, searchQuery, showArchived]);
 
   // Fetch users for dropdowns
   useEffect(() => {
@@ -117,6 +104,9 @@ function Catalogue() {
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
       }
+      if (showArchived) {
+        params.append("show_archived", "true");
+      }
 
       const url = `/api/catalogue/?${params.toString()}`;
       console.log("[Catalogue] Fetching products (GET) -> url=", url);
@@ -150,6 +140,7 @@ function Catalogue() {
         stock: product.stock || 0,
         committed_stock: product.committed_stock || 0,
         available_stock: product.available_stock || 0,
+        image: product.image || null,
         is_archived: product.is_archived || false,
         date_added: product.date_added,
         added_by: product.added_by,
@@ -183,6 +174,8 @@ function Catalogue() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({
     item_code: "",
     item_name: "",
@@ -247,15 +240,24 @@ function Catalogue() {
     price_multiplier: "",
   });
 
-  // Modal state for edit/view/delete
+  // Modal state for edit/view/archive
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [viewTarget, setViewTarget] = useState<Product | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Product | null>(null);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Product | null>(null);
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Product[]>([]);
+  const [archiving, setArchiving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editCurrentImage, setEditCurrentImage] = useState<string | null>(null);
+  const [editImageRemoved, setEditImageRemoved] = useState(false);
 
   // Additional modal state for product/variant operations
   const [viewProductTarget, setViewProductTarget] = useState<Product | null>(
@@ -281,9 +283,9 @@ function Catalogue() {
   });
   const [showEditVariantModal, setShowEditVariantModal] = useState(false);
   const [editVariantError, setEditVariantError] = useState<string | null>(null);
-  const [deleteProductTarget, setDeleteProductTarget] =
+  const [deleteProductTarget, _setDeleteProductTarget] =
     useState<Product | null>(null);
-  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [showDeleteProductModal, _setShowDeleteProductModal] = useState(false);
   const [updatingVariant, setUpdatingVariant] = useState(false);
 
   // Handle create item submission
@@ -352,14 +354,22 @@ function Catalogue() {
         requires_sales_approval: newItem.requires_sales_approval,
       };
 
+      // Build FormData for multipart upload (supports image)
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
+      });
+      if (createImageFile) {
+        formData.append('image', createImageFile);
+      }
+
       console.log("[Catalogue] Creating product (POST) payload:", payload);
       const response = await fetch(`${API_URL}/catalogue/`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
       });
       console.log("[Catalogue] POST response status:", response.status);
 
@@ -395,6 +405,8 @@ function Catalogue() {
       });
       setShowCreateModal(false);
       setCreateError(null);
+      setCreateImageFile(null);
+      setCreateImagePreview(null);
 
       // Refresh items list
       fetchCatalogueItems();
@@ -416,6 +428,10 @@ function Catalogue() {
 
     // Populate edit form with selected product's data
     const isFixed = item.pricing_type === "FIXED";
+    setEditImageFile(null);
+    setEditImagePreview(null);
+    setEditCurrentImage(item.image || null);
+    setEditImageRemoved(false);
     setEditItem({
       item_code: item.item_code,
       item_name: item.item_name,
@@ -505,6 +521,19 @@ function Catalogue() {
         requires_sales_approval: editItem.requires_sales_approval ?? true,
       };
 
+      // Build FormData for multipart upload (supports image)
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value));
+        }
+      });
+      if (editImageFile) {
+        formData.append('image', editImageFile);
+      } else if (editImageRemoved) {
+        formData.append('remove_image', 'true');
+      }
+
       console.log(
         "[Catalogue] Updating product (PATCH) id=",
         editingProductId,
@@ -512,13 +541,9 @@ function Catalogue() {
         payload,
       );
 
-      const response = await fetch(`/api/catalogue/${editingProductId}/`, {
+      const response = await fetchWithCsrf(`/api/catalogue/${editingProductId}/`, {
         method: "PATCH",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       console.log("[Catalogue] PATCH response status:", response.status);
@@ -553,33 +578,98 @@ function Catalogue() {
     setShowViewModal(true);
   };
 
-  // Handle delete with modal
-  const handleDeleteClick = (item: Product) => {
-    setDeleteTarget(item);
-    setShowDeleteModal(true);
+  // Handle archive with modal
+  const handleArchiveClick = (item: Product) => {
+    setArchiveTarget(item);
+    setShowArchiveModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
+  // Handle unarchive with modal
+  const handleUnarchiveClick = (item: Product) => {
+    setUnarchiveTarget(item);
+    setShowUnarchiveModal(true);
+  };
 
+  // Handle bulk archive
+  const handleBulkArchiveClick = (items: Product[]) => {
+    const activeItems = items.filter((item) => !item.is_archived);
+    if (activeItems.length === 0) return;
+    setBulkArchiveTargets(activeItems);
+    setShowBulkArchiveModal(true);
+  };
+
+  const confirmArchive = async (id: number) => {
     try {
-      console.log("[Catalogue] Deleting product (DELETE) id=", deleteTarget.id);
-      const response = await fetch(`/api/catalogue/${deleteTarget.id}/`, {
+      setArchiving(true);
+      console.log("[Catalogue] Archiving product (DELETE) id=", id);
+      const response = await fetchWithCsrf(`/api/catalogue/${id}/`, {
         method: "DELETE",
-        credentials: "include",
       });
       console.log("[Catalogue] DELETE response status:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to delete product");
+        throw new Error("Failed to archive product");
       }
 
-      setShowDeleteModal(false);
-      setDeleteTarget(null);
+      const data = await response.json();
+      if (data.warning) {
+        alert(data.warning);
+      }
+
+      setShowArchiveModal(false);
+      setArchiveTarget(null);
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error deleting product:", err);
-      alert("Failed to delete product. Please try again.");
+      console.error("Error archiving product:", err);
+      alert("Failed to archive product. Please try again.");
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const confirmUnarchive = async (id: number) => {
+    try {
+      setArchiving(true);
+      console.log("[Catalogue] Unarchiving product (POST) id=", id);
+      const response = await fetchWithCsrf(`/api/catalogue/${id}/unarchive/`, {
+        method: "POST",
+      });
+      console.log("[Catalogue] Unarchive response status:", response.status);
+
+      if (!response.ok) {
+        throw new Error("Failed to restore product");
+      }
+
+      setShowUnarchiveModal(false);
+      setUnarchiveTarget(null);
+      fetchCatalogueItems();
+    } catch (err) {
+      console.error("Error restoring product:", err);
+      alert("Failed to restore product. Please try again.");
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const confirmBulkArchive = async () => {
+    try {
+      setArchiving(true);
+      for (const item of bulkArchiveTargets) {
+        const response = await fetchWithCsrf(`/api/catalogue/${item.id}/`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to archive product ${item.item_name}`);
+        }
+      }
+      setShowBulkArchiveModal(false);
+      setBulkArchiveTargets([]);
+      fetchCatalogueItems();
+    } catch (err) {
+      console.error("Error bulk archiving products:", err);
+      alert("Failed to archive some products. Please try again.");
+    } finally {
+      setArchiving(false);
     }
   };
 
@@ -603,9 +693,8 @@ function Catalogue() {
     setEditVariantError(null);
   };
 
-  const handleDeleteProductClick = (product: Product) => {
-    setDeleteProductTarget(product);
-    setShowDeleteProductModal(true);
+  const handleDeleteProductClick = (_product: Product) => {
+    // Dead code — kept for backward compatibility but not rendered
   };
 
   const handleUpdateVariant = async () => {
@@ -663,9 +752,8 @@ function Catalogue() {
         payload.price_multiplier = editVariantData.price_multiplier;
       }
 
-      const response = await fetch(`/api/catalogue/${editVariantTarget.id}/`, {
+      const response = await fetchWithCsrf(`/api/catalogue/${editVariantTarget.id}/`, {
         method: "PUT",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -689,212 +777,115 @@ function Catalogue() {
   };
 
   const confirmDeleteProduct = async () => {
-    if (!deleteProductTarget) return;
-    try {
-      const response = await fetch(
-        `/api/catalogue/${deleteProductTarget.id}/`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
-      }
-      setShowDeleteProductModal(false);
-      setDeleteProductTarget(null);
-      fetchCatalogueItems();
-    } catch (err) {
-      console.error("Error deleting product:", err);
-      alert("Failed to delete product. Please try again.");
-    }
+    // Dead code — kept for backward compatibility but not called
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">I</span>
-            </div>
-            <span className="text-sm font-medium">Izza</span>
+    <>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-semibold">Catalogue</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage the catalogue of redeemable items.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/inventory")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Warehouse className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Catalogue</h1>
-              <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                View and manage the catalogue of redeemable items.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
-            </div>
-          </div>
-
-          {/* Table */}
-          <CatalogueTable
-            products={items}
-            loading={loading}
-            onView={handleViewClick}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onCreateNew={() => setShowCreateModal(true)}
-            onRefresh={fetchCatalogueItems}
-            refreshing={loading}
-            onExport={() => setShowExportModal(true)}
-          />
-        </div>
-
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-          <h2 className="text-2xl font-semibold mb-2">Catalogue</h2>
-          <p
-            className={`text-xs mb-4 ${
-              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Manage catalogue items
-          </p>
-
-          {/* Mobile Search */}
-          <div className="mb-4">
-            <div
-              className={`relative flex items-center rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              <Search className="absolute left-3 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 w-full text-sm ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="rounded border-gray-300"
               />
-            </div>
+              Show Archived
+            </label>
           </div>
-
-          <div className="mb-4">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
-                resolvedTheme === "dark"
-                  ? "bg-white text-gray-900 border-gray-200 hover:bg-gray-200"
-                  : "bg-gray-900 text-white border-gray-900 hover:bg-gray-800"
-              }`}
-            >
-              <Plus className="h-4 w-4" />
-              Add Item
-            </button>
-          </div>
-
-          {/* Mobile Cards and Pagination */}
-          <CatalogueMobileCards
-            products={items}
-            loading={loading}
-            error={error}
-            onView={handleViewClick}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onRetry={fetchCatalogueItems}
-            searchQuery={searchQuery}
-          />
-
-          {items.length > 0 && (
-            <CataloguePagination
-              page={safePage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              onPageChange={setPage}
-              onRowsPerPageChange={setRowsPerPage}
-              isMobile={true}
-            />
-          )}
         </div>
+
+        {/* Table */}
+        <CatalogueTable
+          products={items}
+          loading={loading}
+          onView={handleViewClick}
+          onEdit={handleEditClick}
+          onArchive={handleArchiveClick}
+          onUnarchive={handleUnarchiveClick}
+          onArchiveSelected={handleBulkArchiveClick}
+          onCreateNew={() => setShowCreateModal(true)}
+          onRefresh={fetchCatalogueItems}
+          refreshing={loading}
+          onExport={() => setShowExportModal(true)}
+        />
       </div>
 
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
+        <h2 className="text-2xl font-semibold mb-2">Catalogue</h2>
+        <p className="text-xs mb-4 text-muted-foreground">
+          Manage catalogue items
+        </p>
+
+        {/* Mobile Search */}
+        <div className="mb-4">
+          <div className="relative flex items-center rounded-lg border bg-card border-border">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search....."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex-1 px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Add Item
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            Show Archived
+          </label>
+        </div>
+
+        {/* Mobile Cards and Pagination */}
+        <CatalogueMobileCards
+          products={items}
+          loading={loading}
+          error={error}
+          onView={handleViewClick}
+          onEdit={handleEditClick}
+          onArchive={handleArchiveClick}
+          onUnarchive={handleUnarchiveClick}
+          onRetry={fetchCatalogueItems}
+          searchQuery={searchQuery}
+        />
+
+        {items.length > 0 && (
+          <CataloguePagination
+            page={safePage}
+            totalPages={totalPages}
+            rowsPerPage={rowsPerPage}
+            onPageChange={setPage}
+            onRowsPerPageChange={setRowsPerPage}
+            isMobile={true}
+          />
+        )}
+      </div>
 
       <CreateItemModal
         isOpen={showCreateModal}
@@ -904,6 +895,20 @@ function Catalogue() {
         creating={creating}
         error={createError}
         onConfirm={handleCreateItem}
+        imageFile={createImageFile}
+        imagePreview={createImagePreview}
+        onImageSelect={(file) => {
+          setCreateImageFile(file);
+          if (file) {
+            setCreateImagePreview(URL.createObjectURL(file));
+          } else {
+            setCreateImagePreview(null);
+          }
+        }}
+        onImageRemove={() => {
+          setCreateImageFile(null);
+          setCreateImagePreview(null);
+        }}
       />
 
       <EditItemModal
@@ -914,6 +919,24 @@ function Catalogue() {
         updating={updating}
         error={editError}
         onConfirm={handleUpdateItem}
+        currentImage={editCurrentImage}
+        imageFile={editImageFile}
+        imagePreview={editImagePreview}
+        onImageSelect={(file) => {
+          setEditImageFile(file);
+          setEditImageRemoved(false);
+          if (file) {
+            setEditImagePreview(URL.createObjectURL(file));
+          } else {
+            setEditImagePreview(null);
+          }
+        }}
+        onImageRemove={() => {
+          setEditImageFile(null);
+          setEditImagePreview(null);
+          setEditCurrentImage(null);
+          setEditImageRemoved(true);
+        }}
       />
 
       <ViewItemModal
@@ -925,11 +948,37 @@ function Catalogue() {
         product={viewTarget}
       />
 
-      <DeleteItemModal
-        isOpen={showDeleteModal && !!deleteTarget}
-        onClose={() => setShowDeleteModal(false)}
-        item={deleteTarget}
-        onConfirm={confirmDelete}
+      <ArchiveItemModal
+        isOpen={showArchiveModal && !!archiveTarget}
+        onClose={() => {
+          setShowArchiveModal(false);
+          setArchiveTarget(null);
+        }}
+        item={archiveTarget}
+        loading={archiving}
+        onConfirm={confirmArchive}
+      />
+
+      <UnarchiveItemModal
+        isOpen={showUnarchiveModal && !!unarchiveTarget}
+        onClose={() => {
+          setShowUnarchiveModal(false);
+          setUnarchiveTarget(null);
+        }}
+        item={unarchiveTarget}
+        loading={archiving}
+        onConfirm={confirmUnarchive}
+      />
+
+      <BulkArchiveItemModal
+        isOpen={showBulkArchiveModal && bulkArchiveTargets.length > 0}
+        onClose={() => {
+          setShowBulkArchiveModal(false);
+          setBulkArchiveTargets([]);
+        }}
+        items={bulkArchiveTargets}
+        loading={archiving}
+        onConfirm={confirmBulkArchive}
       />
 
       <ExportModal
@@ -937,7 +986,7 @@ function Catalogue() {
         onClose={() => setShowExportModal(false)}
         items={items}
       />
-    </div>
+    </>
   );
 }
 

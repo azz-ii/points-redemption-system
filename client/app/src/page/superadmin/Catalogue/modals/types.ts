@@ -26,11 +26,13 @@ export interface Product {
   stock: number;
   committed_stock: number;
   available_stock: number;
+  image: string | null;
   is_archived: boolean;
   date_added: string;
   added_by: number | null;
   date_archived: string | null;
   archived_by: number | null;
+  requires_sales_approval?: boolean;
 }
 
 export const LEGEND_OPTIONS = [

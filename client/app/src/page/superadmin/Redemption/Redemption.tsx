@@ -1,20 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
-import { Sidebar } from "@/components/sidebar";
 import { marketingRequestsApi } from "@/lib/api";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Input } from "@/components/ui/input";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import {
-  Bell,
   Search,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  LogOut,
-  Download,
 } from "lucide-react";
 import {
   ViewRedemptionModal,
@@ -26,11 +17,7 @@ import {
 import { RedemptionTable, RedemptionMobileCards } from "./components";
 import { toast } from "sonner";
 
-function Redemption() {
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<RedemptionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,73 +143,8 @@ function Redemption() {
   }, []);
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
+    <>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">A</span>
-            </div>
-            <span className="text-sm font-medium">Process Requests</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => fetchRequests(true)}
-              disabled={refreshing}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors ${refreshing ? "opacity-50" : ""}`}
-              title="Refresh"
-            >
-              <RefreshCw
-                className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
-              />
-            </button>
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
@@ -230,9 +152,7 @@ function Redemption() {
             <div>
               <h1 className="text-3xl font-semibold">Process Requests</h1>
               <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm text-muted-foreground"
               >
                 View and process approved redemption requests for your assigned
                 items
@@ -242,28 +162,13 @@ function Redemption() {
               <button
                 onClick={() => fetchRequests(true)}
                 disabled={refreshing}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors ${refreshing ? "opacity-50" : ""}`}
+                className={`p-2 rounded-lg bg-card hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
                 title="Refresh"
               >
                 <RefreshCw
                   className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
                 />
               </button>
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
             </div>
           </div>
 
@@ -290,11 +195,7 @@ function Redemption() {
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 <ChevronLeft className="h-4 w-4" /> Previous
               </button>
@@ -306,11 +207,7 @@ function Redemption() {
                   setCurrentPage(Math.min(totalPages, safePage + 1))
                 }
                 disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </button>
@@ -331,11 +228,7 @@ function Redemption() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className={`pl-10 h-12 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
@@ -356,11 +249,7 @@ function Redemption() {
               <button
                 onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 disabled={safePage === 1}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
@@ -373,11 +262,7 @@ function Redemption() {
                   setCurrentPage(Math.min(totalPages, safePage + 1))
                 }
                 disabled={safePage === totalPages}
-                className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 border border-gray-700 hover:bg-gray-800"
-                    : "bg-white border border-gray-300 hover:bg-gray-100"
-                }`}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -385,14 +270,6 @@ function Redemption() {
             </div>
           </div>
         </div>
-      </div>
-
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
-
       <ViewRedemptionModal
         isOpen={showViewModal}
         onClose={() => {
@@ -422,7 +299,7 @@ function Redemption() {
         onClose={() => setShowExportModal(false)}
         redemptions={requests}
       />
-    </div>
+    </>
   );
 }
 

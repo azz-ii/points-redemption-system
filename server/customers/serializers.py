@@ -9,9 +9,10 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'contact_email', 'phone', 'location', 
             'points', 'date_added', 
-            'added_by', 'added_by_name'
+            'added_by', 'added_by_name',
+            'is_archived', 'date_archived', 'archived_by'
         ]
-        read_only_fields = ['id', 'date_added', 'added_by', 'added_by_name']
+        read_only_fields = ['id', 'date_added', 'added_by', 'added_by_name', 'is_archived', 'date_archived', 'archived_by']
     
     def get_added_by_name(self, obj):
         """

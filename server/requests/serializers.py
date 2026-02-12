@@ -167,12 +167,12 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
 
 class CreateRedemptionRequestSerializer(serializers.Serializer):
     requested_for = serializers.PrimaryKeyRelatedField(
-        queryset=Distributor.objects.all(),
+        queryset=Distributor.objects.filter(is_archived=False),
         required=False,
         allow_null=True
     )
     requested_for_customer = serializers.PrimaryKeyRelatedField(
-        queryset=Customer.objects.all(),
+        queryset=Customer.objects.filter(is_archived=False),
         required=False,
         allow_null=True
     )
@@ -209,12 +209,22 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                 raise serializers.ValidationError({
                     'requested_for': 'Distributor is required when requested_for_type is DISTRIBUTOR'
                 })
+            # Validate distributor is not archived
+            if requested_for.is_archived:
+                raise serializers.ValidationError({
+                    'requested_for': 'Cannot create request for archived distributor'
+                })
             # Clear customer field if type is DISTRIBUTOR
             data['requested_for_customer'] = None
         elif requested_for_type == 'CUSTOMER':
             if not requested_for_customer:
                 raise serializers.ValidationError({
                     'requested_for_customer': 'Customer is required when requested_for_type is CUSTOMER'
+                })
+            # Validate customer is not archived
+            if requested_for_customer.is_archived:
+                raise serializers.ValidationError({
+                    'requested_for_customer': 'Cannot create request for archived customer'
                 })
             # Clear distributor field if type is CUSTOMER
             data['requested_for'] = None
@@ -240,11 +250,14 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             if 'product_id' not in item:
                 raise serializers.ValidationError("Each item must have a product_id")
             
-            # Validate product exists and get pricing type
+            # Validate product exists, is not archived, and get pricing type
             try:
                 product = Product.objects.get(id=item['product_id'])
             except Product.DoesNotExist:
                 raise serializers.ValidationError(f"Product with id {item['product_id']} does not exist")
+            
+            if product.is_archived:
+                raise serializers.ValidationError(f"Product '{product.item_name}' is archived and cannot be redeemed")
             
             # Check requirements based on pricing type
             pricing_type = product.pricing_type or 'FIXED'

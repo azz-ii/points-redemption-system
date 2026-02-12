@@ -1,5 +1,5 @@
 import type { Customer } from "../modals/types";
-import { DataTable } from "./data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { createColumns } from "./columns";
 
 interface CustomersTableProps {
@@ -7,8 +7,9 @@ interface CustomersTableProps {
   loading: boolean;
   onView: (customer: Customer) => void;
   onEdit: (customer: Customer) => void;
-  onDelete: (customer: Customer) => void;
-  onDeleteSelected?: (customers: Customer[]) => void;
+  onArchive: (customer: Customer) => void;
+  onUnarchive: (customer: Customer) => void;
+  onArchiveSelected?: (customers: Customer[]) => void;
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -22,8 +23,9 @@ export function CustomersTable({
   loading,
   onView,
   onEdit,
-  onDelete,
-  onDeleteSelected,
+  onArchive,
+  onUnarchive,
+  onArchiveSelected,
   onCreateNew,
   onRefresh,
   refreshing,
@@ -34,7 +36,8 @@ export function CustomersTable({
   const columns = createColumns({
     onView,
     onEdit,
-    onDelete,
+    onArchive,
+    onUnarchive,
     onViewPointsHistory,
   });
 
@@ -43,13 +46,25 @@ export function CustomersTable({
       columns={columns}
       data={customers}
       loading={loading}
-      onDeleteSelected={onDeleteSelected}
+      onDeleteSelected={onArchiveSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Customer"
+      createButtonIcon="user"
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
       onSetPoints={onSetPoints}
+      searchPlaceholder="Filter by name, email, or location..."
+      globalFilterFn={(row, _columnId, filterValue) => {
+        const s = String(filterValue).toLowerCase()
+        return (
+          String(row.getValue("name") || "").toLowerCase().includes(s) ||
+          String(row.getValue("contact_email") || "").toLowerCase().includes(s) ||
+          String(row.getValue("location") || "").toLowerCase().includes(s)
+        )
+      }}
+      loadingMessage="Loading customers..."
+      emptyMessage="No customers found"
     />
   );
 }

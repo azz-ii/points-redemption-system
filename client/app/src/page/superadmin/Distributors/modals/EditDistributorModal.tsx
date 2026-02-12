@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { useTheme } from "next-themes";
 import type { ModalBaseProps, DistributorFormData } from "./types";
 
 interface EditDistributorModalProps extends ModalBaseProps {
@@ -19,8 +18,6 @@ export function EditDistributorModal({
   error,
   onSubmit,
 }: EditDistributorModalProps) {
-  const { resolvedTheme } = useTheme();
-
   if (!isOpen) return null;
 
   return (
@@ -29,21 +26,17 @@ export function EditDistributorModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-distributor-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="edit-distributor-title" className="text-lg font-semibold">
+            <h2 id="edit-distributor-title" className="text-xl font-semibold">
               Edit Distributor
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p
+              className="text-sm text-muted-foreground"
+            >
               Update distributor information
             </p>
           </div>
@@ -57,7 +50,7 @@ export function EditDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
@@ -65,7 +58,7 @@ export function EditDistributorModal({
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name */}
             <div>
               <label className="block text-sm font-medium mb-2">Name *</label>
@@ -78,11 +71,7 @@ export function EditDistributorModal({
                     name: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="Enter distributor name"
               />
             </div>
@@ -101,11 +90,7 @@ export function EditDistributorModal({
                     contact_email: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="email@example.com"
               />
             </div>
@@ -122,11 +107,7 @@ export function EditDistributorModal({
                     phone: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="+63 XXX XXX XXXX"
               />
             </div>
@@ -145,11 +126,7 @@ export function EditDistributorModal({
                     location: e.target.value,
                   })
                 }
-                className={`w-full px-3 py-2 rounded border ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:outline-none focus:border-blue-500`}
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="City, Province"
               />
             </div>
@@ -157,24 +134,20 @@ export function EditDistributorModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t flex gap-2 justify-end">
+        <div className="p-8 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
             disabled={updating}
-            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-              resolvedTheme === "dark"
-                ? "border-gray-600 hover:bg-gray-800 disabled:opacity-50"
-                : "border-gray-300 hover:bg-gray-50 disabled:opacity-50"
-            }`}
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
             disabled={updating}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {updating ? "Updating..." : "Update"}
+            {updating ? "Updating..." : "Update Distributor"}
           </button>
         </div>
       </div>

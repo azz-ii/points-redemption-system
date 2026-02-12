@@ -1,20 +1,19 @@
-import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { X, Archive } from "lucide-react";
 import type { ModalBaseProps, Product } from "./types";
 
-interface DeleteProductModalProps extends ModalBaseProps {
+interface ArchiveProductModalProps extends ModalBaseProps {
   product: Product | null;
-  onConfirm: () => void;
+  loading?: boolean;
+  onConfirm: (id: number) => void;
 }
 
-export function DeleteProductModal({
+export function ArchiveProductModal({
   isOpen,
   onClose,
   product,
+  loading,
   onConfirm,
-}: DeleteProductModalProps) {
-  const { resolvedTheme } = useTheme();
-
+}: ArchiveProductModalProps) {
   if (!isOpen || !product) return null;
 
   return (
@@ -22,24 +21,23 @@ export function DeleteProductModal({
       <div
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="delete-product-title"
-        aria-describedby="delete-product-message"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        aria-labelledby="archive-product-title"
+        aria-describedby="archive-product-message"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
-        <div className="flex justify-between items-center p-4">
-          <div>
-            <h2 id="delete-product-title" className="text-lg font-semibold">
-              Delete Product
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Confirm deletion
-            </p>
+        <div className="flex justify-between items-center p-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+              <Archive className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <h2 id="archive-product-title" className="text-xl font-semibold">
+                Archive Product
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                This action can be reversed.
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -50,31 +48,31 @@ export function DeleteProductModal({
           </button>
         </div>
 
-        <div className="p-4 space-y-2 max-h-[70vh] overflow-y-auto">
-          <p id="delete-product-message" className="text-sm">
-            Are you sure you want to delete product{" "}
-            <strong>{product.item_code}</strong> ({product.item_name || "No name"})? This action
-            cannot be undone.
+        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+          <p id="archive-product-message">
+            Are you sure you want to archive product{" "}
+            <strong>{product.item_code}</strong> ({product.item_name || "No name"})?
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Archived products will no longer appear in the catalogue or be available for redemption requests. You can restore them later.
           </p>
         </div>
 
-        <div className="p-4 border-t flex gap-3 justify-end">
+        <div className="p-8 border-t flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className={`px-3 py-2 rounded-lg font-semibold border font-semibold transition-colors text-sm ${
-              resolvedTheme === "dark"
-                ? "border-gray-600 hover:bg-gray-800"
-                : "border-gray-300 hover:bg-gray-50"
-            }`}
+            disabled={loading}
+            className="px-6 py-3 rounded-lg font-semibold border transition-colors border-border bg-muted hover:bg-accent"
           >
             Cancel
           </button>
 
           <button
-            onClick={onConfirm}
-            className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors text-sm"
+            onClick={() => onConfirm(product.id)}
+            disabled={loading}
+            className="px-6 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold transition-colors disabled:opacity-50"
           >
-            Delete
+            {loading ? "Archiving..." : "Archive"}
           </button>
         </div>
       </div>

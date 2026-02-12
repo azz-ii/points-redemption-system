@@ -1,22 +1,19 @@
-import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { X, Archive } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
 
-interface BulkDeleteAccountModalProps extends ModalBaseProps {
+interface BulkArchiveAccountModalProps extends ModalBaseProps {
   accounts: Account[];
   loading: boolean;
   onConfirm: () => void;
 }
 
-export function BulkDeleteAccountModal({
+export function BulkArchiveAccountModal({
   isOpen,
   onClose,
   accounts,
   loading,
   onConfirm,
-}: BulkDeleteAccountModalProps) {
-  const { resolvedTheme } = useTheme();
-
+}: BulkArchiveAccountModalProps) {
   if (!isOpen || accounts.length === 0) return null;
 
   const handleClose = () => {
@@ -26,28 +23,27 @@ export function BulkDeleteAccountModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="bulk-delete-account-title"
+        aria-labelledby="bulk-archive-account-title"
       >
-        <div className="flex justify-between items-center p-4">
-          <div>
-            <h2
-              id="bulk-delete-account-title"
-              className="text-lg font-semibold"
-            >
-              Delete Multiple Users
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              This action cannot be undone.
-            </p>
+        <div className="flex justify-between items-center p-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+              <Archive className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h2
+                id="bulk-archive-account-title"
+                className="text-xl font-semibold"
+              >
+                Archive Multiple Users
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                This action can be reversed.
+              </p>
+            </div>
           </div>
           <button
             onClick={handleClose}
@@ -58,21 +54,17 @@ export function BulkDeleteAccountModal({
           </button>
         </div>
 
-        <div className="p-4 space-y-3">
-          <p className="text-sm">
-            Are you sure you want to delete <strong>{accounts.length}</strong>{" "}
-            user{accounts.length > 1 ? "s" : ""}?
+        <div className="p-8 space-y-6">
+          <p>
+            Are you sure you want to archive <strong>{accounts.length}</strong>{" "}
+            user{accounts.length > 1 ? "s" : ""}? Archived accounts cannot log in to the system.
           </p>
 
-          <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-1 max-h-[70vh] overflow-y-auto">
             {accounts.map((account) => (
               <div
                 key={account.id}
-                className={`text-xs px-2 py-1 rounded ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-gray-100 text-gray-700"
-                }`}
+                className="text-sm px-3 py-2 rounded bg-muted text-foreground"
               >
                 <strong>{account.full_name}</strong> ({account.username})
               </div>
@@ -81,25 +73,21 @@ export function BulkDeleteAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 flex justify-end gap-3">
+        <div className="p-8 flex justify-end gap-3">
           <button
             onClick={handleClose}
-            className={`px-3 py-2 rounded-lg font-semibold text-sm transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="px-3 py-2 rounded-lg font-semibold text-sm transition-colors bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
           >
             {loading
-              ? "Deleting..."
-              : `Delete ${accounts.length} User${
+              ? "Archiving..."
+              : `Archive ${accounts.length} User${
                   accounts.length > 1 ? "s" : ""
                 }`}
           </button>

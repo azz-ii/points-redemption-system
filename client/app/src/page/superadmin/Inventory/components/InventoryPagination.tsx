@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import {
   ChevronLeft,
   ChevronRight,
@@ -23,7 +22,6 @@ export function InventoryPagination({
   onRowsPerPageChange,
   isMobile = false,
 }: InventoryPaginationProps) {
-  const { resolvedTheme } = useTheme();
   const safePage = Math.min(page, totalPages);
 
   if (isMobile) {
@@ -42,11 +40,7 @@ export function InventoryPagination({
               onRowsPerPageChange(value);
               onPageChange(1);
             }}
-            className={`px-2 py-1 rounded border text-xs ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 border-gray-600 text-white"
-                : "bg-white border-gray-300 text-gray-900"
-            } focus:outline-none focus:border-blue-500`}
+            className="px-2 py-1 rounded border text-xs bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
           >
             <option value="15">15</option>
             <option value="50">50</option>
@@ -60,22 +54,14 @@ export function InventoryPagination({
           <button
             onClick={() => onPageChange(1)}
             disabled={safePage === 1 || rowsPerPage === "ALL"}
-            className={`p-1.5 rounded transition-colors ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-700 disabled:opacity-30"
-                : "hover:bg-gray-200 disabled:opacity-30"
-            } disabled:cursor-not-allowed`}
+            className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronsLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
             disabled={safePage === 1 || rowsPerPage === "ALL"}
-            className={`p-1.5 rounded transition-colors ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-700 disabled:opacity-30"
-                : "hover:bg-gray-200 disabled:opacity-30"
-            } disabled:cursor-not-allowed`}
+            className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -85,22 +71,14 @@ export function InventoryPagination({
           <button
             onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
             disabled={safePage === totalPages || rowsPerPage === "ALL"}
-            className={`p-1.5 rounded transition-colors ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-700 disabled:opacity-30"
-                : "hover:bg-gray-200 disabled:opacity-30"
-            } disabled:cursor-not-allowed`}
+            className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
           <button
             onClick={() => onPageChange(totalPages)}
             disabled={safePage === totalPages || rowsPerPage === "ALL"}
-            className={`p-1.5 rounded transition-colors ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-700 disabled:opacity-30"
-                : "hover:bg-gray-200 disabled:opacity-30"
-            } disabled:cursor-not-allowed`}
+            className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronsRight className="h-4 w-4" />
           </button>
@@ -111,9 +89,7 @@ export function InventoryPagination({
 
   return (
     <div
-      className={`flex items-center justify-between p-4 border-t ${
-        resolvedTheme === "dark" ? "border-gray-700" : "border-gray-200"
-      }`}
+      className="flex items-center justify-between p-4 border-t border-border"
     >
       {/* Left: Rows per page */}
       <div className="flex items-center gap-2">
@@ -126,11 +102,7 @@ export function InventoryPagination({
             onRowsPerPageChange(value);
             onPageChange(1);
           }}
-          className={`px-3 py-1.5 rounded border text-sm ${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 border-gray-600 text-white"
-              : "bg-white border-gray-300 text-gray-900"
-          } focus:outline-none focus:border-blue-500`}
+          className="px-3 py-1.5 rounded border text-sm bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
         >
           <option value="15">15</option>
           <option value="50">50</option>
@@ -144,11 +116,7 @@ export function InventoryPagination({
         <button
           onClick={() => onPageChange(1)}
           disabled={safePage === 1 || rowsPerPage === "ALL"}
-          className={`p-1.5 rounded transition-colors ${
-            resolvedTheme === "dark"
-              ? "hover:bg-gray-800 disabled:opacity-30"
-              : "hover:bg-gray-100 disabled:opacity-30"
-          } disabled:cursor-not-allowed`}
+          className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           title="First page"
         >
           <ChevronsLeft className="h-4 w-4" />
@@ -156,11 +124,7 @@ export function InventoryPagination({
         <button
           onClick={() => onPageChange(Math.max(1, safePage - 1))}
           disabled={safePage === 1 || rowsPerPage === "ALL"}
-          className={`p-1.5 rounded transition-colors ${
-            resolvedTheme === "dark"
-              ? "hover:bg-gray-800 disabled:opacity-30"
-              : "hover:bg-gray-100 disabled:opacity-30"
-          } disabled:cursor-not-allowed`}
+          className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           title="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -171,11 +135,7 @@ export function InventoryPagination({
         <button
           onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
           disabled={safePage === totalPages || rowsPerPage === "ALL"}
-          className={`p-1.5 rounded transition-colors ${
-            resolvedTheme === "dark"
-              ? "hover:bg-gray-800 disabled:opacity-30"
-              : "hover:bg-gray-100 disabled:opacity-30"
-          } disabled:cursor-not-allowed`}
+          className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           title="Next page"
         >
           <ChevronRight className="h-4 w-4" />
@@ -183,11 +143,7 @@ export function InventoryPagination({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={safePage === totalPages || rowsPerPage === "ALL"}
-          className={`p-1.5 rounded transition-colors ${
-            resolvedTheme === "dark"
-              ? "hover:bg-gray-800 disabled:opacity-30"
-              : "hover:bg-gray-100 disabled:opacity-30"
-          } disabled:cursor-not-allowed`}
+          className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
           title="Last page"
         >
           <ChevronsRight className="h-4 w-4" />

@@ -430,7 +430,7 @@ class RedemptionRequestItem(models.Model):
     )
     product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='redemption_items',
         help_text='The product being redeemed'
     )

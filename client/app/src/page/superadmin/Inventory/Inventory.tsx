@@ -1,18 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
-import { useLogout } from "@/context/AuthContext";
+import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { MobileBottomNavSuperAdmin } from "@/components/mobile-bottom-nav";
-import { NotificationPanel } from "@/components/notification-panel";
 import {
-  Bell,
   Search,
   Sliders,
-  LogOut,
   RotateCw,
   BookOpen,
   Download,
@@ -54,10 +46,6 @@ interface ApiInventoryItem {
 }
 
 function Inventory() {
-  const navigate = useNavigate();
-  const handleLogout = useLogout();
-  const { resolvedTheme } = useTheme();
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -186,9 +174,9 @@ function Inventory() {
       setShowSetInventoryModal(false);
 
       if (result.failed_count === 0) {
-        alert(`Successfully updated stock for ${result.updated_count} item(s)`);
+        toast.success(`Successfully updated stock for ${result.updated_count} item(s)`);
       } else {
-        alert(
+        toast.warning(
           `Updated ${result.updated_count} of ${updates.length} item(s). ${result.failed_count} failed.`,
         );
       }
@@ -196,7 +184,7 @@ function Inventory() {
       fetchInventoryItems();
     } catch (err) {
       console.error("Error updating stock:", err);
-      alert(err instanceof Error ? err.message : "Failed to update stock");
+      toast.error(err instanceof Error ? err.message : "Failed to update stock");
     } finally {
       setLoading(false);
     }
@@ -210,14 +198,14 @@ function Inventory() {
 
       // Success
       setShowSetInventoryModal(false);
-      alert(
+      toast.success(
         result.message ||
           `Successfully updated ${result.updated_count} item(s)`,
       );
       fetchInventoryItems();
     } catch (err) {
       console.error("Error bulk updating stock:", err);
-      alert(err instanceof Error ? err.message : "Failed to bulk update stock");
+      toast.error(err instanceof Error ? err.message : "Failed to bulk update stock");
     } finally {
       setLoading(false);
     }
@@ -231,13 +219,13 @@ function Inventory() {
 
       // Success
       setShowSetInventoryModal(false);
-      alert(
+      toast.success(
         result.message || `Successfully reset ${result.updated_count} item(s)`,
       );
       fetchInventoryItems();
     } catch (err) {
       console.error("Error resetting stock:", err);
-      alert(err instanceof Error ? err.message : "Failed to reset stock");
+      toast.error(err instanceof Error ? err.message : "Failed to reset stock");
     } finally {
       setLoading(false);
     }
@@ -298,69 +286,8 @@ function Inventory() {
   };
 
   return (
-    <div
-      className={`flex flex-col min-h-screen md:flex-row ${
-        resolvedTheme === "dark"
-          ? "bg-black text-white"
-          : "bg-gray-50 text-gray-900"
-      } transition-colors`}
-    >
-      <Sidebar />
+    <>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div
-          className={`md:hidden sticky top-0 z-40 p-4 flex justify-between items-center border-b ${
-            resolvedTheme === "dark"
-              ? "bg-gray-900 border-gray-800"
-              : "bg-white border-gray-200"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-8 h-8 rounded-full ${
-                resolvedTheme === "dark" ? "bg-green-600" : "bg-green-500"
-              } flex items-center justify-center`}
-            >
-              <span className="text-white font-semibold text-xs">I</span>
-            </div>
-            <span className="text-sm font-medium">Izza</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsNotificationOpen(true)}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <Bell className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => navigate("/admin/catalogue")}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-900 hover:bg-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <BookOpen className="h-5 w-5" />
-            </button>
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className={`p-2 rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 hover:bg-gray-700"
-                  : "bg-gray-100 hover:bg-gray-200"
-              } transition-colors`}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
 
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
@@ -368,47 +295,24 @@ function Inventory() {
             <div>
               <h1 className="text-3xl font-semibold">Inventory</h1>
               <p
-                className={`text-sm ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-sm text-muted-foreground"
               >
                 View and manage stock levels and reorder points.
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsNotificationOpen(true)}
-                className={`p-2 rounded-lg ${
-                  resolvedTheme === "dark"
-                    ? "bg-gray-900 hover:bg-gray-800"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
-              >
-                <Bell className="h-6 w-6" />
-              </button>
-              <ThemeToggle />
             </div>
           </div>
 
           {/* Search and Actions */}
           <div className="flex justify-between items-center mb-6">
             <div
-              className={`relative flex items-center border rounded-lg ${
-                resolvedTheme === "dark"
-                  ? "border-gray-700"
-                  : "border-gray-300"
-              }`}
+              className="relative flex items-center bg-card border-border"
             >
               <Search className="absolute left-3 h-5 w-5 text-gray-500" />
               <Input
                 placeholder="Search by name, code, category......"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 w-80 ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-gray-700 text-white placeholder:text-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 w-80 bg-transparent border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <div className="flex gap-2">
@@ -416,11 +320,7 @@ function Inventory() {
                 onClick={() => fetchInventoryItems()}
                 title={loading ? "Refreshing..." : "Refresh"}
                 disabled={loading}
-                className={`p-2 rounded-lg border ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors disabled:opacity-50`}
+                className="p-2 rounded-lg border border-border hover:bg-gray-900 transition-colors disabled:opacity-50"
               >
                 <RotateCw
                   className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
@@ -429,11 +329,7 @@ function Inventory() {
               <div className="relative">
                 <button
                   onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
-                    resolvedTheme === "dark"
-                      ? "border-gray-700 hover:bg-gray-900"
-                      : "border-gray-300 hover:bg-gray-100"
-                  } transition-colors ${statusFilter ? "ring-2 ring-blue-500" : ""}`}
+                  className={`px-4 py-2 rounded-lg border flex items-center gap-2 border-border hover:bg-gray-900 transition-colors ${statusFilter ? "ring-2 ring-blue-500" : ""}`}
                 >
                   <Sliders className="h-5 w-5" />
                   <span>Filter</span>
@@ -445,19 +341,11 @@ function Inventory() {
                 </button>
                 {showFilterDropdown && (
                   <div
-                    className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 ${
-                      resolvedTheme === "dark"
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-white border-gray-200"
-                    }`}
+                    className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 bg-card border-border"
                   >
                     <div className="p-2">
                       <p
-                        className={`text-xs font-medium mb-2 px-2 ${
-                          resolvedTheme === "dark"
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                        }`}
+                        className="text-xs font-medium mb-2 px-2 text-muted-foreground"
                       >
                         Stock Status
                       </p>
@@ -471,9 +359,7 @@ function Inventory() {
                           className={`w-full text-left px-3 py-2 rounded text-sm ${
                             statusFilter === option.value
                               ? "bg-blue-500 text-white"
-                              : resolvedTheme === "dark"
-                                ? "hover:bg-gray-700"
-                                : "hover:bg-gray-100"
+                              : "hover:bg-accent"
                           }`}
                         >
                           {option.label}
@@ -485,22 +371,14 @@ function Inventory() {
               </div>
               <button
                 onClick={() => setShowSetInventoryModal(true)}
-                className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
-                  resolvedTheme === "dark"
-                    ? "border-blue-700 hover:bg-blue-900 text-blue-400"
-                    : "border-blue-300 hover:bg-blue-50 text-blue-600"
-                } transition-colors`}
+                className="px-4 py-2 rounded-lg border flex items-center gap-2 border-blue-700 hover:bg-blue-900 text-blue-400 transition-colors"
               >
                 <BookOpen className="h-5 w-5" />
                 <span>Set Inventory</span>
               </button>
               <button
                 onClick={() => setShowExportModal(true)}
-                className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${
-                  resolvedTheme === "dark"
-                    ? "border-gray-700 hover:bg-gray-900"
-                    : "border-gray-300 hover:bg-gray-100"
-                } transition-colors`}
+                className="px-4 py-2 rounded-lg border flex items-center gap-2 border-border hover:bg-gray-900 transition-colors"
               >
                 <Download className="h-5 w-5" />
                 <span>Export</span>
@@ -509,7 +387,9 @@ function Inventory() {
           </div>
 
           {/* Table */}
-          <div className="border rounded-lg flex flex-col">
+          <div
+            className="border rounded-lg flex flex-col bg-card border-border transition-colors"
+          >
             <InventoryTable
               items={items}
               loading={loading}
@@ -518,9 +398,14 @@ function Inventory() {
               onEditItem={handleEditClick}
               onRetry={fetchInventoryItems}
               searchQuery={searchQuery}
-              onRefresh={fetchInventoryItems}
-              onExport={() => setShowExportModal(true)}
-              onSetInventory={() => setShowSetInventoryModal(true)}
+            />
+
+            <InventoryPagination
+              page={safePage}
+              totalPages={totalPages}
+              rowsPerPage={rowsPerPage}
+              onPageChange={setPage}
+              onRowsPerPageChange={setRowsPerPage}
             />
           </div>
         </div>
@@ -529,9 +414,7 @@ function Inventory() {
         <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
           <h2 className="text-2xl font-semibold mb-2">Inventory</h2>
           <p
-            className={`text-xs mb-4 ${
-              resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
+            className="text-xs mb-4 text-muted-foreground"
           >
             Manage stock levels
           </p>
@@ -539,22 +422,14 @@ function Inventory() {
           {/* Mobile Search */}
           <div className="mb-4">
             <div
-              className={`relative flex items-center rounded-lg border ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700"
-                  : "bg-white border-gray-300"
-              }`}
+              className="relative flex items-center rounded-lg border bg-card border-border"
             >
               <Search className="absolute left-3 h-4 w-4 text-gray-500" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`pl-10 w-full text-sm ${
-                  resolvedTheme === "dark"
-                    ? "bg-transparent border-0 text-white placeholder:text-gray-500"
-                    : "bg-white border-0 text-gray-900 placeholder:text-gray-400"
-                }`}
+                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -564,11 +439,7 @@ function Inventory() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className={`w-full px-4 py-3 rounded-lg border text-sm font-medium ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-800 border-gray-700 text-white"
-                  : "bg-white border-gray-300 text-gray-900"
-              }`}
+              className="w-full px-4 py-3 rounded-lg border text-sm font-medium bg-card border-border text-foreground"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -600,14 +471,6 @@ function Inventory() {
             />
           )}
         </div>
-      </div>
-
-      <MobileBottomNavSuperAdmin />
-      <NotificationPanel
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
-
       {/* Close filter dropdown when clicking outside */}
       {showFilterDropdown && (
         <div
@@ -655,7 +518,7 @@ function Inventory() {
         onBulkSubmit={handleBulkSetStock}
         onResetAll={handleResetAllStock}
       />
-    </div>
+    </>
   );
 }
 

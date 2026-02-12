@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Ban, Pencil, Trash2, ArrowUpDown, Check, X, User, Clock } from "lucide-react"
+import { Eye, Ban, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, User, Clock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
@@ -16,7 +16,8 @@ interface ColumnContext {
   onViewAccount: (account: Account) => void
   onEditAccount: (account: Account) => void
   onBanAccount: (account: Account) => void
-  onDeleteAccount: (account: Account) => void
+  onArchiveAccount: (account: Account) => void
+  onUnarchiveAccount: (account: Account) => void
   onViewPointsHistory?: (account: Account) => void
   onToggleInlineEdit?: (account: Account) => void
   onSaveInlineEdit?: (accountId: number) => void
@@ -238,6 +239,17 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     cell: ({ row }) => {
       const isActivated = row.getValue("is_activated") as boolean
       const isBanned = row.original.is_banned
+      const isArchived = row.original.is_archived
+      
+      if (isArchived) {
+        return (
+          <div className="flex gap-1">
+            <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+              Archived
+            </span>
+          </div>
+        )
+      }
       
       return (
         <div className="flex gap-1">
@@ -259,13 +271,15 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
       )
     },
     filterFn: (row, id, value) => {
-      // Custom filter for status - can filter by "active", "inactive", or "banned"
+      // Custom filter for status - can filter by "active", "inactive", "banned", or "archived"
       const isActivated = row.getValue(id) as boolean
       const isBanned = row.original.is_banned
+      const isArchived = row.original.is_archived
       
-      if (value === "active") return isActivated && !isBanned
-      if (value === "inactive") return !isActivated
-      if (value === "banned") return isBanned
+      if (value === "active") return isActivated && !isBanned && !isArchived
+      if (value === "inactive") return !isActivated && !isArchived
+      if (value === "banned") return isBanned && !isArchived
+      if (value === "archived") return isArchived
       return true
     },
   },
@@ -277,6 +291,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
       const meta = table.options.meta as any
       const isEditing = meta?.editingRowId === account.id
       const isAnyRowEditing = !!meta?.editingRowId
+      const isArchived = account.is_archived
 
       if (isEditing) {
         return (
@@ -298,6 +313,33 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
               title="Cancel"
             >
               <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )
+      }
+
+      if (isArchived) {
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => context.onViewAccount(account)}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+              title="View"
+              disabled={isAnyRowEditing}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => context.onUnarchiveAccount(account)}
+              className="bg-green-500 hover:bg-green-600 text-white"
+              title="Restore"
+              disabled={isAnyRowEditing}
+            >
+              <ArchiveRestore className="h-4 w-4" />
             </Button>
           </div>
         )
@@ -338,12 +380,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
           <Button
             variant="default"
             size="sm"
-            onClick={() => context.onDeleteAccount(account)}
-            className="bg-red-500 hover:bg-red-600 text-white"
-            title="Delete"
+            onClick={() => context.onArchiveAccount(account)}
+            className="bg-slate-600 hover:bg-slate-700 text-white"
+            title="Archive"
             disabled={isAnyRowEditing}
           >
-            <Trash2 className="h-4 w-4" />
+            <Archive className="h-4 w-4" />
           </Button>
           <Button
             variant="default"

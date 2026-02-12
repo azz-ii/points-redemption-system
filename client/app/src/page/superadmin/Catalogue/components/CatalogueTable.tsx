@@ -1,5 +1,5 @@
 ﻿import type { Product } from "../modals/types";
-import { DataTable } from "./data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { createColumns } from "./columns";
 
 interface CatalogueTableProps {
@@ -7,8 +7,9 @@ interface CatalogueTableProps {
   loading: boolean;
   onView: (product: Product) => void;
   onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
-  onDeleteSelected?: (products: Product[]) => void;
+  onArchive: (product: Product) => void;
+  onUnarchive: (product: Product) => void;
+  onArchiveSelected?: (products: Product[]) => void;
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -20,8 +21,9 @@ export function CatalogueTable({
   loading,
   onView,
   onEdit,
-  onDelete,
-  onDeleteSelected,
+  onArchive,
+  onUnarchive,
+  onArchiveSelected,
   onCreateNew,
   onRefresh,
   refreshing,
@@ -30,7 +32,8 @@ export function CatalogueTable({
   const columns = createColumns({
     onView,
     onEdit,
-    onDelete,
+    onArchive,
+    onUnarchive,
   });
 
   return (
@@ -38,12 +41,23 @@ export function CatalogueTable({
       columns={columns}
       data={products}
       loading={loading}
-      onDeleteSelected={onDeleteSelected}
+      onDeleteSelected={onArchiveSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Product"
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
+      searchPlaceholder="Filter by item code, name, or category..."
+      globalFilterFn={(row, _columnId, filterValue) => {
+        const s = String(filterValue).toLowerCase()
+        return (
+          String(row.getValue("item_code") || "").toLowerCase().includes(s) ||
+          String(row.getValue("item_name") || "").toLowerCase().includes(s) ||
+          String(row.getValue("category") || "").toLowerCase().includes(s)
+        )
+      }}
+      loadingMessage="Loading catalogue items..."
+      emptyMessage="No catalogue items found"
     />
   );
 }

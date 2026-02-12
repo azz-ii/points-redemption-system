@@ -34,6 +34,7 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
  * Get the display status of an account
  */
 function getAccountStatus(account: Account): string {
+  if (account.is_archived) return "Archived";
   if (account.is_banned) return "Banned";
   if (account.is_activated) return "Active";
   return "Inactive";
@@ -49,7 +50,11 @@ function getCellValue(account: Account, key: ExportColumn["key"]): string | numb
   if (key === "is_activated" || key === "is_banned") {
     return account[key] ? "Yes" : "No";
   }
-  return account[key] ?? "";
+  const value = account[key];
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  return value ?? "";
 }
 
 /**

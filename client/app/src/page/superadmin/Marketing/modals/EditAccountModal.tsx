@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { X, Package, Loader2, Check, AlertCircle } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
@@ -25,7 +24,6 @@ export function EditAccountModal({
   account,
   onSuccess,
 }: EditAccountModalProps) {
-  const { resolvedTheme } = useTheme();
   const [legendStates, setLegendStates] = useState<LegendState[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -143,21 +141,15 @@ export function EditAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-account-title"
-        className={`${
-          resolvedTheme === "dark" ? "bg-gray-900" : "bg-white"
-        } rounded-lg shadow-2xl max-w-lg w-full border divide-y ${
-          resolvedTheme === "dark"
-            ? "border-gray-700 divide-gray-700"
-            : "border-gray-200 divide-gray-200"
-        }`}
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="edit-account-title" className="text-lg font-semibold">
+            <h2 id="edit-account-title" className="text-xl font-semibold">
               Assign Item Legends
             </h2>
-            <p className="text-xs text-gray-500 mt-1">{account.full_name}</p>
+            <p className="text-sm text-gray-500 mt-1">{account.full_name}</p>
           </div>
           <button
             onClick={handleClose}
@@ -169,14 +161,12 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* User Info */}
           <div
-            className={`p-3 rounded-lg ${
-              resolvedTheme === "dark" ? "bg-gray-800" : "bg-gray-50"
-            }`}
+            className="p-4 rounded-lg bg-card"
           >
-            <div className="space-y-1 text-xs">
+            <div className="space-y-2 text-sm">
               <div>
                 <span className="text-gray-500">Username:</span>
                 <span className="ml-2 font-medium">{account.username}</span>
@@ -189,8 +179,8 @@ export function EditAccountModal({
           </div>
 
           {/* Legend Assignment Section */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-2">
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-2">
               <Package className="h-4 w-4" />
               Item Legend Assignments
             </h3>
@@ -204,20 +194,16 @@ export function EditAccountModal({
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {legendStates.map((state) => (
                   <div
                     key={state.legend}
-                    className={`flex items-center justify-between p-4 rounded-lg border ${
-                      resolvedTheme === "dark"
-                        ? "border-gray-700 bg-gray-800"
-                        : "border-gray-200 bg-gray-50"
-                    }`}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getLegendColor(
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${getLegendColor(
                             state.legend
                           )}`}
                         >
@@ -228,7 +214,7 @@ export function EditAccountModal({
                         </span>
                       </div>
                       {state.currentOwner && !state.isAssigned && (
-                        <p className="text-xs text-amber-500 mt-1">
+                        <p className="text-xs text-amber-500 mt-2">
                           Currently assigned to: {state.currentOwner}
                         </p>
                       )}
@@ -239,12 +225,10 @@ export function EditAccountModal({
                         handleToggleLegend(state.legend, !state.isAssigned)
                       }
                       disabled={saving}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         state.isAssigned
                           ? "bg-green-600 hover:bg-green-700 text-white"
-                          : resolvedTheme === "dark"
-                          ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                          : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                          : "bg-muted hover:bg-gray-600 text-foreground"
                       } disabled:opacity-50`}
                     >
                       {saving ? (
@@ -265,26 +249,22 @@ export function EditAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4">
+        <div className="p-8">
           {error && (
-            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs flex items-center gap-2">
+            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
               {error}
             </div>
           )}
           {successMessage && (
-            <div className="w-full mb-3 p-2 bg-green-500 bg-opacity-20 border border-green-500 rounded text-green-500 text-xs flex items-center gap-2">
+            <div className="w-full mb-4 p-3 bg-green-500 bg-opacity-20 border border-green-500 rounded text-green-500 text-sm flex items-center gap-2">
               <Check className="h-4 w-4" />
               {successMessage}
             </div>
           )}
           <button
             onClick={handleClose}
-            className={`w-full px-4 py-2 rounded-lg font-semibold transition-colors ${
-              resolvedTheme === "dark"
-                ? "bg-gray-800 hover:bg-gray-700 text-white border border-gray-600"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300"
-            }`}
+            className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Done
           </button>

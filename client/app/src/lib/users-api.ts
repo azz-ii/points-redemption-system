@@ -12,6 +12,10 @@ export interface Account {
   is_activated: boolean;
   is_active?: boolean;
   is_banned: boolean;
+  is_archived: boolean;
+  date_archived?: string | null;
+  archived_by?: number | null;
+  archived_by_username?: string | null;
   profile_picture?: string | null;
 }
 
@@ -38,42 +42,17 @@ export const usersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
     
-    // Handle { accounts: [...] } format from backend
-    let allResults: Account[] = [];
+    // Ensure we return paginated format (backend now returns standard DRF pagination)
     if (Array.isArray(data)) {
-      allResults = data;
-    } else if (data.accounts && Array.isArray(data.accounts)) {
-      allResults = data.accounts;
-    } else if (data.results && Array.isArray(data.results)) {
-      // It's already paginated by server
-      return data;
+      return { count: data.length, next: null, previous: null, results: data };
     }
-
-    // Server returned all items, so we emulate pagination here
-    // 1. Filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      allResults = allResults.filter(acc => 
-        (acc.username || '').toLowerCase().includes(q) ||
-        (acc.full_name || '').toLowerCase().includes(q) ||
-        (acc.email || '').toLowerCase().includes(q)
-      );
-    }
-
-    // 2. Paginate
-    const startIndex = (page - 1) * pageSize;
-    const sliced = allResults.slice(startIndex, startIndex + pageSize);
-
-    return { 
-      count: allResults.length, 
-      next: startIndex + pageSize < allResults.length ? 'has_more' : null, 
-      previous: startIndex > 0 ? 'has_prev' : null, 
-      results: sliced 
-    };
+    return data;
   },
 
   batchUpdatePoints: async (updates: { id: number; points: number }[], reason?: string): Promise<BatchUpdateResponse> => {
@@ -100,7 +79,9 @@ export const usersApi = {
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Failed to fetch accounts');
     const data = await response.json();
     // Handle both array and paginated response formats
@@ -117,7 +98,9 @@ export const usersApi = {
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch accounts');
       
       const data = await response.json();

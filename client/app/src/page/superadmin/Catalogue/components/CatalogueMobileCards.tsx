@@ -1,5 +1,4 @@
-import { useTheme } from "next-themes";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Edit, Archive, ArchiveRestore, Package } from "lucide-react";
 import type { Product } from "../modals/types";
 import { getLegendColor } from "../modals/types";
 
@@ -9,7 +8,8 @@ interface CatalogueMobileCardsProps {
   error: string | null;
   onView: (product: Product) => void;
   onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  onArchive: (product: Product) => void;
+  onUnarchive: (product: Product) => void;
   onRetry: () => void;
   searchQuery: string;
 }
@@ -20,12 +20,11 @@ export function CatalogueMobileCards({
   error,
   onView,
   onEdit,
-  onDelete,
+  onArchive,
+  onUnarchive,
   onRetry,
   searchQuery,
 }: CatalogueMobileCardsProps) {
-  const { resolvedTheme } = useTheme();
-
   if (loading) {
     return (
       <div className="text-center py-32">
@@ -70,27 +69,34 @@ export function CatalogueMobileCards({
       {products.map((product) => (
         <div
           key={product.id}
-          className={`p-4 rounded-lg border ${
-            resolvedTheme === "dark"
-              ? "bg-gray-800 border-gray-700"
-              : "bg-white border-gray-200"
-          } transition-colors`}
+          className="p-4 rounded-lg border bg-card border-border transition-colors"
         >
           {/* Product Info Header */}
           <div className="flex justify-between items-start mb-3">
-            <div className="flex-1">
-              <p className="font-semibold text-sm">
-                {product.item_name}
-              </p>
-              <p
-                className={`text-xs font-mono ${
-                  resolvedTheme === "dark"
-                    ? "text-gray-400"
-                    : "text-gray-600"
-                }`}
-              >
-                {product.item_code}
-              </p>
+            <div className="flex items-center gap-3 flex-1">
+              {/* Product Thumbnail */}
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.item_name}
+                  className="w-12 h-12 rounded-lg object-cover shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-muted">
+                  <Package className="w-6 h-6 text-gray-400" />
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="font-semibold text-sm">
+                  {product.item_name}
+                </p>
+                <p
+                  className="text-xs font-mono text-muted-foreground"
+                >
+                  {product.item_code}
+                </p>
+              </div>
             </div>
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${getLegendColor(
@@ -128,7 +134,7 @@ export function CatalogueMobileCards({
               <span
                 className={`ml-2 px-1 py-0.5 rounded-full text-xs font-semibold ${
                   product.is_archived
-                    ? "bg-red-500 text-white"
+                    ? "bg-slate-600 text-white"
                     : "bg-green-500 text-white"
                 }`}
               >
@@ -146,23 +152,32 @@ export function CatalogueMobileCards({
             >
               <Eye className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => onEdit(product)}
-              className={`flex-1 px-3 py-2 rounded flex items-center justify-center ${
-                resolvedTheme === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-              } transition-colors font-semibold text-sm`}
-              title="Edit"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => onDelete(product)}
-              className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold text-sm"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {product.is_archived ? (
+              <button
+                onClick={() => onUnarchive(product)}
+                className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-green-500 hover:bg-green-600 text-white transition-colors font-semibold text-sm"
+                title="Restore"
+              >
+                <ArchiveRestore className="h-4 w-4" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onEdit(product)}
+                  className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors font-semibold text-sm"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onArchive(product)}
+                  className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-slate-600 hover:bg-slate-700 text-white transition-colors font-semibold text-sm"
+                  title="Archive"
+                >
+                  <Archive className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       ))}

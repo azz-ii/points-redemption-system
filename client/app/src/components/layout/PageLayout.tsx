@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -16,8 +15,6 @@ export function PageLayout({
   maxWidth = "full",
   className = "",
 }: PageLayoutProps) {
-  const { resolvedTheme } = useTheme();
-
   const maxWidthClasses = {
     sm: "max-w-screen-sm",
     md: "max-w-screen-md",
@@ -28,11 +25,7 @@ export function PageLayout({
   };
 
   return (
-    <div
-      className={`flex-1 overflow-auto ${
-        resolvedTheme === "dark" ? "bg-gray-900" : "bg-gray-50"
-      }`}
-    >
+    <div className="flex-1 overflow-auto bg-background">
       <div
         className={`${maxWidthClasses[maxWidth]} mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 ${className}`}
       >

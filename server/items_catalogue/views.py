@@ -1,7 +1,9 @@
 from django.shortcuts import render
 import logging
+import os
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.db.models import Q, Case, When, Value, CharField, F, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,8 +11,12 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Product
 from .serializers import ProductSerializer, ProductInventorySerializer
+
+ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +38,14 @@ class ProductListCreateView(APIView):
     """List all products or create a new product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request):
         """Get paginated list of products"""
         search = request.query_params.get('search', '').strip()
+        show_archived = request.query_params.get('show_archived', 'false').lower() == 'true'
 
-        products = Product.objects.all()
+        products = Product.objects.all() if show_archived else Product.objects.filter(is_archived=False)
 
         if search:
             products = products.filter(
@@ -58,13 +66,32 @@ class ProductListCreateView(APIView):
     
     def post(self, request):
         """Create a new product"""
-        serializer = ProductSerializer(data=request.data)
+        data = request.data.copy()
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            image = request.FILES['image']
+            if image.content_type not in ALLOWED_IMAGE_TYPES:
+                return Response({
+                    "error": "Invalid image type. Allowed: JPG, PNG, WebP"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if image.size > MAX_IMAGE_SIZE:
+                return Response({
+                    "error": "Image size must be less than 5MB"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            data['image'] = image
+        
+        # Handle explicit image removal
+        if data.get('image') == '' or data.get('image') == 'null':
+            data['image'] = None
+
+        serializer = ProductSerializer(data=data)
         if serializer.is_valid():
             user = request.user if request.user.is_authenticated else None
             product = serializer.save(added_by=user)
             return Response({
                 "message": "Product created successfully",
-                "product": ProductSerializer(product).data
+                "product": ProductSerializer(product, context={'request': request}).data
             }, status=status.HTTP_201_CREATED)
         return Response({
             "error": "Failed to create product",
@@ -76,6 +103,7 @@ class ProductDetailView(APIView):
     """Retrieve, update or delete a product"""
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request, product_id):
         """Get a specific product's details"""
@@ -88,16 +116,48 @@ class ProductDetailView(APIView):
                 "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
     
+    def _handle_image(self, request, data, product=None):
+        """Handle image upload/removal for product updates"""
+        if 'image' in request.FILES:
+            image = request.FILES['image']
+            if image.content_type not in ALLOWED_IMAGE_TYPES:
+                return Response({
+                    "error": "Invalid image type. Allowed: JPG, PNG, WebP"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if image.size > MAX_IMAGE_SIZE:
+                return Response({
+                    "error": "Image size must be less than 5MB"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            # Delete old image if replacing
+            if product and product.image:
+                old_path = product.image.path
+                if os.path.isfile(old_path):
+                    os.remove(old_path)
+            data['image'] = image
+        elif data.get('remove_image') == 'true' or data.get('image') == '':
+            # Explicit removal
+            if product and product.image:
+                old_path = product.image.path
+                if os.path.isfile(old_path):
+                    os.remove(old_path)
+            data['image'] = None
+            data.pop('remove_image', None)
+        return None  # No error
+
     def put(self, request, product_id):
         """Update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            serializer = ProductSerializer(product, data=request.data, partial=True)
+            data = request.data.copy()
+            error_response = self._handle_image(request, data, product)
+            if error_response:
+                return error_response
+            serializer = ProductSerializer(product, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({
                     "message": "Product updated successfully",
-                    "product": serializer.data
+                    "product": ProductSerializer(product, context={'request': request}).data
                 }, status=status.HTTP_200_OK)
             return Response({
                 "error": "Failed to update product",
@@ -112,12 +172,16 @@ class ProductDetailView(APIView):
         """Partially update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            serializer = ProductSerializer(product, data=request.data, partial=True)
+            data = request.data.copy()
+            error_response = self._handle_image(request, data, product)
+            if error_response:
+                return error_response
+            serializer = ProductSerializer(product, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({
                     "message": "Product updated successfully",
-                    "product": serializer.data
+                    "product": ProductSerializer(product, context={'request': request}).data
                 }, status=status.HTTP_200_OK)
             return Response({
                 "error": "Failed to update product",
@@ -129,17 +193,56 @@ class ProductDetailView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
     
     def delete(self, request, product_id):
-        """Delete a product"""
+        """Archive a product instead of deleting"""
         try:
             product = Product.objects.get(id=product_id)
-            product.delete()
-            return Response({
-                "message": "Product deleted successfully"
-            }, status=status.HTTP_200_OK)
+            product.is_archived = True
+            product.date_archived = timezone.now()
+            product.archived_by = request.user if request.user.is_authenticated else None
+            product.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+            
+            # Check for active requests referencing this product
+            from requests.models import RedemptionRequestItem, RedemptionRequest
+            active_request_count = RedemptionRequestItem.objects.filter(
+                product=product,
+                request__status__in=['PENDING', 'APPROVED'],
+            ).exclude(
+                request__processing_status='PROCESSED'
+            ).values('request').distinct().count()
+            
+            response_data = {
+                "message": "Product archived successfully",
+                "product": ProductSerializer(product, context={'request': request}).data
+            }
+            if active_request_count > 0:
+                response_data["warning"] = f"This product is referenced in {active_request_count} active request(s). Those requests will continue processing normally."
+            
+            return Response(response_data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response({
                 "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class UnarchiveProductView(APIView):
+    """Unarchive a single product"""
+    parser_classes = [JSONParser]
+
+    def post(self, request, product_id):
+        try:
+            product = Product.objects.get(id=product_id)
+            if not product.is_archived:
+                return Response({"error": "Product is not archived"}, status=status.HTTP_400_BAD_REQUEST)
+            product.is_archived = False
+            product.date_archived = None
+            product.archived_by = None
+            product.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+            return Response({
+                "message": "Product unarchived successfully",
+                "product": ProductSerializer(product, context={'request': request}).data
+            }, status=status.HTTP_200_OK)
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class InventoryPagination(PageNumberPagination):
@@ -159,8 +262,8 @@ class InventoryListView(APIView):
         search = request.query_params.get('search', '').strip()
         status_filter = request.query_params.get('status', '').strip()
         
-        # Only show items that track inventory (has_stock=True)
-        products = Product.objects.filter(has_stock=True)
+        # Only show items that track inventory (has_stock=True), exclude archived
+        products = Product.objects.filter(has_stock=True, is_archived=False)
         
         if search:
             products = products.filter(
@@ -281,8 +384,8 @@ class BulkAssignMarketingView(APIView):
                     "error": "User not found"
                 }, status=status.HTTP_404_NOT_FOUND)
         
-        # Update all products with the specified legend
-        queryset = Product.objects.filter(legend=legend)
+        # Update all active products with the specified legend
+        queryset = Product.objects.filter(legend=legend, is_archived=False)
         updated_count = queryset.update(mktg_admin=mktg_admin)
         
         action = "assigned" if mktg_admin else "unassigned"
@@ -380,8 +483,8 @@ class BulkUpdateStockView(APIView):
             operation = "update"
         
         try:
-            # Get all products with inventory tracking enabled
-            tracked_items = Product.objects.filter(has_stock=True)
+            # Get all active products with inventory tracking enabled (exclude archived)
+            tracked_items = Product.objects.filter(has_stock=True, is_archived=False)
             
             updated_count = 0
             failed_count = 0
@@ -468,7 +571,7 @@ class BatchUpdateStockView(APIView):
                     failed.append({'id': item_id, 'error': 'Missing id or stock'})
                     continue
                 
-                product = Product.objects.get(id=item_id, has_stock=True)
+                product = Product.objects.get(id=item_id, has_stock=True, is_archived=False)
                 product.stock = max(0, int(new_stock))
                 product.save(update_fields=['stock'])
                 updated_ids.append(item_id)
