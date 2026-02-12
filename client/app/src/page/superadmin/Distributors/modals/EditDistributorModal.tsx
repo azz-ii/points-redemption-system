@@ -29,13 +29,13 @@ export function EditDistributorModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="edit-distributor-title" className="text-xl font-semibold">
+            <h2 id="edit-distributor-title" className="text-lg font-semibold">
               Edit Distributor
             </h2>
             <p
-              className="text-sm text-muted-foreground"
+              className="text-xs text-muted-foreground mt-0"
             >
               Update distributor information
             </p>
@@ -50,7 +50,7 @@ export function EditDistributorModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">

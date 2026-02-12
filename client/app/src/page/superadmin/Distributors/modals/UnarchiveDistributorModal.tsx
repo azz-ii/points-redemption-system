@@ -33,16 +33,16 @@ export function UnarchiveDistributorModal({
         aria-describedby="unarchive-distributor-message"
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
-        <div className="flex justify-between items-center p-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-              <ArchiveRestore className="h-5 w-5 text-green-600 dark:text-green-400" />
+        <div className="flex justify-between items-center p-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
+              <ArchiveRestore className="h-4 w-4 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h2 id="unarchive-distributor-title" className="text-xl font-semibold">
+              <h2 id="unarchive-distributor-title" className="text-lg font-semibold">
                 Restore Distributor
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-0">
                 Restore this archived distributor.
               </p>
             </div>
@@ -56,7 +56,7 @@ export function UnarchiveDistributorModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-2 max-h-[70vh] overflow-y-auto">
           <p id="unarchive-distributor-message" className="text-base">
             Are you sure you want to restore <strong>{distributor.name}</strong>?
           </p>
@@ -65,10 +65,10 @@ export function UnarchiveDistributorModal({
           </p>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-3 border-t flex gap-2 justify-end">
           <button
             onClick={handleClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground"
           >
             Cancel
           </button>
@@ -76,7 +76,7 @@ export function UnarchiveDistributorModal({
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
           >
             {loading ? "Restoring..." : "Restore"}
           </button>

@@ -195,16 +195,16 @@ export function SetPointsModal({
         >
           {/* Header */}
           <div
-            className="flex justify-between items-center p-6 border-b border-border"
+            className="flex justify-between items-center p-3 border-b border-border"
           >
             <div>
               <h2
-                className="text-2xl font-semibold text-foreground"
+                className="text-xl font-semibold text-foreground"
               >
                 Set Points
               </h2>
               <p
-                className="text-sm mt-1 text-muted-foreground"
+                className="text-xs mt-0 text-muted-foreground"
               >
                 {totalCount} customer{totalCount !== 1 ? "s" : ""}
               </p>
@@ -219,7 +219,7 @@ export function SetPointsModal({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3">
             <p
               className="text-sm mb-4 text-muted-foreground"
             >
@@ -367,7 +367,7 @@ export function SetPointsModal({
           {/* Pagination Controls */}
           {totalCount > itemsPerPage && (
             <div
-              className="flex items-center justify-between px-6 py-4 border-t border-border"
+              className="flex items-center justify-between px-3 py-3 border-t border-border"
             >
               <div
                 className="text-sm text-muted-foreground"
@@ -402,15 +402,15 @@ export function SetPointsModal({
           {/* Advanced Section */}
           {onBulkSubmit && (
             <div
-              className="mt-6 border rounded-lg border-border"
+              className="mt-4 border rounded-lg border-border"
             >
               {/* Advanced Section Header */}
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-gray-700/50"
+                className="w-full flex items-center justify-between p-3 transition-colors hover:bg-gray-700/50"
                 disabled={loading}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <AlertTriangle
                     className="h-5 w-5 text-orange-400"
                   />
@@ -430,7 +430,7 @@ export function SetPointsModal({
               {/* Advanced Section Content */}
               {showAdvanced && (
                 <div
-                  className="p-4 border-t border-border bg-gray-700/30"
+                  className="p-3 border-t border-border bg-gray-700/30"
                 >
                   {/* Warning Alert */}
                   <div

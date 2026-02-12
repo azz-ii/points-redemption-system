@@ -48,16 +48,16 @@ export function MarkAsProcessedModal({
         aria-labelledby="mark-processed-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900">
-              <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="flex justify-between items-center p-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900">
+              <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 id="mark-processed-title" className="text-xl font-semibold">
+              <h2 id="mark-processed-title" className="text-lg font-semibold">
                 Mark Items as Processed
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-0">
                 Request #{item.id}
               </p>
             </div>
@@ -73,7 +73,7 @@ export function MarkAsProcessedModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           <p className="text-sm">
             You are about to mark <span className="font-semibold">{pendingCount} item(s)</span> as processed.
           </p>
@@ -105,18 +105,18 @@ export function MarkAsProcessedModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-3 flex justify-end gap-2">
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
           >
             {isSubmitting ? (
               <>

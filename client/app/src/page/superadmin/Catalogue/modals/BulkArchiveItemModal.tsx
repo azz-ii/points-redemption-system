@@ -24,16 +24,16 @@ export function BulkArchiveItemModal({
         aria-modal="true"
         aria-labelledby="bulk-archive-title"
       >
-        <div className="flex justify-between items-center p-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <Archive className="h-5 w-5 text-orange-600" />
+        <div className="flex justify-between items-center p-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+              <Archive className="h-4 w-4 text-orange-600" />
             </div>
             <div>
-              <h2 id="bulk-archive-title" className="text-xl font-semibold">
+              <h2 id="bulk-archive-title" className="text-base font-semibold">
                 Archive Multiple Items
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-0">
                 This action can be reversed.
               </p>
             </div>
@@ -47,7 +47,7 @@ export function BulkArchiveItemModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-2 max-h-[70vh] overflow-y-auto">
           <p>
             Are you sure you want to archive <strong>{items.length}</strong> item(s)?
           </p>
@@ -58,11 +58,11 @@ export function BulkArchiveItemModal({
           </ul>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-3 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-6 py-3 rounded-lg font-semibold border transition-colors border-border bg-muted hover:bg-accent"
+            className="flex-1 px-3 py-2 rounded-lg font-semibold border transition-colors border-border bg-muted hover:bg-accent text-sm"
           >
             Cancel
           </button>
@@ -70,7 +70,7 @@ export function BulkArchiveItemModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 px-6 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold transition-colors disabled:opacity-50"
+            className="flex-1 px-3 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold transition-colors disabled:opacity-50 text-sm"
           >
             {loading ? "Archiving..." : `Archive ${items.length} Item(s)`}
           </button>

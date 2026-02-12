@@ -184,10 +184,10 @@ export function CreateTeamModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="create-team-title" className="text-xl font-semibold">Create Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="create-team-title" className="text-lg font-semibold">Create Team</h2>
+            <p className="text-xs text-gray-500 mt-0">
               Add a new team to your organization
             </p>
           </div>
@@ -201,7 +201,7 @@ export function CreateTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           <div>
             <label className="text-xs text-gray-500 mb-2 block">
               Team Name *
@@ -272,7 +272,7 @@ export function CreateTeamModal({
 
             {/* Add Member Form */}
             {showAddMember && (
-              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+              <div className="mb-3 p-3 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
                 <label className="text-xs text-gray-500 mb-2 block">
                   Select Sales Agent
                 </label>
@@ -359,16 +359,16 @@ export function CreateTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-3 flex justify-end">
           {error && (
-            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-2 p-1.5 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
           >
             {loading ? "Creating..." : "Create Team"}
           </button>
@@ -382,7 +382,7 @@ export function CreateTeamModal({
             className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
           >
             {/* Header */}
-            <div className="flex items-start gap-3 p-6 border-b border-gray-700">
+            <div className="flex items-start gap-2 p-3 border-b border-gray-700">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
               </div>
@@ -396,7 +396,7 @@ export function CreateTeamModal({
             </div>
 
             {/* Body */}
-            <div className="p-6">
+            <div className="p-3">
               <p className={"text-foreground"}>
                 {(() => {
                   const approver = approvers.find(a => a.id === pendingApproverId);
@@ -421,7 +421,7 @@ export function CreateTeamModal({
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+            <div className="p-3 border-t border-gray-700 flex justify-end gap-2">
               <button
                 onClick={() => {
                   console.log("DEBUG CreateTeamModal: Confirmation cancelled, clearing approver selection");

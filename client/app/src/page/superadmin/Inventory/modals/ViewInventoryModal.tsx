@@ -22,21 +22,21 @@ export function ViewInventoryModal({
         aria-labelledby="view-inventory-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 id="view-inventory-title" className="text-xl font-semibold">
+            <div className="flex items-center gap-2">
+              <h2 id="view-inventory-title" className="text-lg font-semibold">
                 Inventory Details
               </h2>
               <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
+                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(
                   item.stock_status
                 )}`}
               >
                 {item.stock_status}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               View stock information for {item.item_name}
             </p>
           </div>
@@ -50,9 +50,9 @@ export function ViewInventoryModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Item Info Section */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Item Information
             </h3>
@@ -108,7 +108,7 @@ export function ViewInventoryModal({
           </div>
 
           {/* Pricing Section */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Pricing
             </h3>
@@ -135,7 +135,7 @@ export function ViewInventoryModal({
           </div>
 
           {/* Stock Section */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Stock Information
             </h3>
@@ -187,10 +187,10 @@ export function ViewInventoryModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-3 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Close
           </button>

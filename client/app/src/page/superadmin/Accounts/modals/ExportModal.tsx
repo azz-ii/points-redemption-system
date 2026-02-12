@@ -91,12 +91,12 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="export-modal-title" className="text-xl font-semibold">
+            <h2 id="export-modal-title" className="text-lg font-semibold">
               Export Accounts
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               {accounts.length} account{accounts.length !== 1 ? "s" : ""} will be exported
             </p>
           </div>
@@ -110,7 +110,7 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">

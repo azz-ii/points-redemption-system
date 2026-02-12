@@ -44,12 +44,12 @@ export function CancelRequestModal({
         aria-labelledby="cancel-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="cancel-request-title" className="text-xl font-semibold">
+            <h2 id="cancel-request-title" className="text-lg font-semibold">
               Cancel Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               This action will refund points and restore stock.
             </p>
           </div>
@@ -63,13 +63,13 @@ export function CancelRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           <p className="text-sm">
             Are you sure you want to cancel this request for{" "}
             <span className="font-semibold">{item.requested_for_name}</span>?
           </p>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div>
               <label
                 className="block text-sm font-medium mb-2"
@@ -108,16 +108,16 @@ export function CancelRequestModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end gap-3">
+        <div className="p-3 flex justify-end gap-2">
           <button
             onClick={handleClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-red-600 hover:bg-red-700 text-white"
           >
             Cancel Request
           </button>

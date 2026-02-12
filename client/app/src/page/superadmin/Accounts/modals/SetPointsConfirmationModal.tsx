@@ -38,17 +38,17 @@ export function SetPointsConfirmationModal({
       >
         {/* Header */}
         <div
-          className="flex items-center gap-3 p-6 border-b border-border"
+          className="flex items-center gap-2 p-3 border-b border-border"
         >
           <div
-            className={`p-2 rounded-full ${
+            className={`p-1.5 rounded-full ${
               confirmationType === "reset"
                 ? "bg-red-500/10"
                 : "bg-orange-500/10"
             }`}
           >
             <AlertTriangle
-              className={`h-6 w-6 ${
+              className={`h-5 w-5 ${
                 confirmationType === "reset"
                   ? "text-red-500"
                   : "text-orange-500"
@@ -56,7 +56,7 @@ export function SetPointsConfirmationModal({
             />
           </div>
           <h3
-            className="text-lg font-semibold text-foreground"
+            className="text-base font-semibold text-foreground"
           >
             {confirmationType === "reset"
               ? "Confirm Reset All Points"
@@ -65,7 +65,7 @@ export function SetPointsConfirmationModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3">
           <div
             className="mb-4 text-foreground"
           >
@@ -141,7 +141,7 @@ export function SetPointsConfirmationModal({
 
         {/* Footer */}
         <div
-          className="flex gap-3 p-6 border-t border-border"
+          className="flex gap-2 p-3 border-t border-border"
         >
           <button
             onClick={onClose}

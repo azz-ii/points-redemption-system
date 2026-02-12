@@ -65,7 +65,7 @@ export function SetPointsConfirmationModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3">
           <div
             className="mb-4 text-foreground"
           >

@@ -324,10 +324,10 @@ export function EditTeamModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="edit-team-title" className="text-xl font-semibold">Edit Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="edit-team-title" className="text-lg font-semibold">Edit Team</h2>
+            <p className="text-xs text-gray-500 mt-0">
               Update team information and members
             </p>
           </div>
@@ -341,7 +341,7 @@ export function EditTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           <div>
             <label className="text-xs text-gray-500 mb-2 block">
               Team Name *
@@ -422,7 +422,7 @@ export function EditTeamModal({
 
             {/* Add Member Form */}
             {showAddMember && (
-              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+              <div className="mb-3 p-3 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
                 <label className="text-xs text-gray-500 mb-2 block">
                   Select Sales Agent
                 </label>
@@ -532,7 +532,7 @@ export function EditTeamModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-3 flex justify-end">
           {error && (
             <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}
@@ -555,7 +555,7 @@ export function EditTeamModal({
             className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
           >
             {/* Header */}
-            <div className="flex items-start gap-3 p-6 border-b border-gray-700">
+            <div className="flex items-start gap-2 p-3 border-b border-gray-700">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
               </div>
@@ -614,7 +614,7 @@ export function EditTeamModal({
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+            <div className="p-3 border-t border-gray-700 flex justify-end gap-2">
               <button
                 onClick={() => {
                   console.log(

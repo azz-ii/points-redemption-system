@@ -53,12 +53,12 @@ export function ViewRedemptionModal({
         aria-labelledby="view-redemption-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="view-redemption-title" className="text-xl font-semibold">
+            <h2 id="view-redemption-title" className="text-lg font-semibold">
               Request Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               Request #{item.id}
             </p>
           </div>
@@ -72,9 +72,9 @@ export function ViewRedemptionModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Request Information
             </h3>
@@ -91,7 +91,7 @@ export function ViewRedemptionModal({
           </div>
 
           {/* Status */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Status
             </h3>
@@ -150,7 +150,7 @@ export function ViewRedemptionModal({
           />
 
           {/* Items */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               <Package className="inline h-4 w-4 mr-1" />
               {myItems ? "My Assigned Items" : "Items"} ({displayItems.length})
@@ -187,10 +187,10 @@ export function ViewRedemptionModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
+        <div className="p-3 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-4 py-2 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
           >
             Close
           </button>

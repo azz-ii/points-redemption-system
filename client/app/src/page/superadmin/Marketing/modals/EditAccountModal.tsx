@@ -144,9 +144,9 @@ export function EditAccountModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="edit-account-title" className="text-xl font-semibold">
+            <h2 id="edit-account-title" className="text-lg font-semibold">
               Assign Item Legends
             </h2>
             <p className="text-sm text-gray-500 mt-1">{account.full_name}</p>
@@ -161,7 +161,7 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* User Info */}
           <div
             className="p-4 rounded-lg bg-card"
@@ -249,7 +249,7 @@ export function EditAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-3">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />

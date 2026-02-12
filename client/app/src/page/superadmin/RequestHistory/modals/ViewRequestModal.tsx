@@ -37,12 +37,12 @@ export function ViewRequestModal({
         aria-labelledby="view-request-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="view-request-title" className="text-xl font-semibold">
+            <h2 id="view-request-title" className="text-lg font-semibold">
               Processed Request Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               Request #{item.id}
             </p>
           </div>
@@ -56,9 +56,9 @@ export function ViewRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Request Information
             </h3>
@@ -75,7 +75,7 @@ export function ViewRequestModal({
           </div>
 
           {/* Status */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Status
             </h3>

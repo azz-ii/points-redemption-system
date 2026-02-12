@@ -46,9 +46,9 @@ export function BanAccountModal({
         aria-modal="true"
         aria-labelledby="ban-account-title"
       >
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="ban-account-title" className="text-lg font-semibold">
+            <h2 id="ban-account-title" className="text-base font-semibold">
               Ban User
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -64,7 +64,7 @@ export function BanAccountModal({
           </button>
         </div>
 
-        <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-2 max-h-[70vh] overflow-y-auto">
           <div>
             <label
               htmlFor="ban-reason"
@@ -121,16 +121,16 @@ export function BanAccountModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4">
+        <div className="p-3">
           {error && (
-            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
+            <div className="w-full mb-2 p-1.5 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-2">
             <button
               onClick={handleClose}
-              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
+              className="px-4 py-2 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
             >
               Cancel
             </button>

@@ -195,7 +195,7 @@ export function SetPointsModal({
         >
           {/* Header */}
           <div
-            className="flex justify-between items-center p-6 border-b border-border"
+            className="flex justify-between items-center p-3 border-b border-border"
           >
             <div>
               <h2
@@ -219,9 +219,9 @@ export function SetPointsModal({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3">
             <p
-              className="text-sm mb-4 text-muted-foreground"
+              className="text-sm mb-2 text-muted-foreground"
             >
               Add or subtract points for distributors. Enter positive numbers to add points, negative numbers to deduct. Changes will be applied when you click Save.
             </p>
@@ -229,25 +229,25 @@ export function SetPointsModal({
             {/* Progress Indicator */}
             {progress && (
               <div
-                className="mb-4 p-4 rounded-lg border bg-blue-900/20 border-blue-700"
+                className="mb-2 p-2 rounded-lg border bg-blue-900/20 border-blue-700"
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1">
                   <span
-                    className="text-sm font-medium text-blue-300"
+                    className="text-xs font-medium text-blue-300"
                   >
                     Processing chunk {progress.currentChunk} of {progress.totalChunks}
                   </span>
                   <span
-                    className="text-sm text-blue-400"
+                    className="text-xs text-blue-400"
                   >
                     {progress.successCount} / {progress.totalRecords} processed
                   </span>
                 </div>
                 <div
-                  className="w-full rounded-full h-2 bg-muted"
+                  className="w-full rounded-full h-1 bg-muted"
                 >
                   <div
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-blue-500 h-1 rounded-full transition-all duration-300"
                     style={{
                       width: `${(progress.currentChunk / progress.totalChunks) * 100}%`,
                     }}
@@ -255,7 +255,7 @@ export function SetPointsModal({
                 </div>
                 {progress.failedCount > 0 && (
                   <p
-                    className="text-xs mt-2 text-orange-400"
+                    className="text-xs mt-1 text-orange-400"
                   >
                     {progress.failedCount} failed so far
                   </p>
@@ -264,17 +264,17 @@ export function SetPointsModal({
             )}
 
             {/* Search Bar */}
-            <div className="mb-4">
+            <div className="mb-2">
               <div className="relative">
                 <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground"
                 />
                 <input
                   type="text"
                   placeholder="Search by name, location, or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                  className="w-full pl-8 pr-3 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                   disabled={loading || isLoadingPage}
                 />
               </div>
@@ -289,10 +289,10 @@ export function SetPointsModal({
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               {/* Header Row */}
               <div
-                className="grid grid-cols-12 gap-4 font-semibold text-sm pb-2 border-b text-foreground border-border"
+                className="grid grid-cols-12 gap-3 font-semibold text-xs pb-1 border-b text-foreground border-border"
               >
                 <div className="col-span-4">Name</div>
                 <div className="col-span-3">Location</div>
@@ -310,20 +310,20 @@ export function SetPointsModal({
                 return (
                   <div
                     key={distributor.id}
-                    className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
+                    className="grid grid-cols-12 gap-3 items-center py-1 border-b border-border hover:bg-gray-700/50"
                   >
                     <div
-                      className="col-span-4 text-sm font-medium text-foreground"
+                      className="col-span-4 text-xs font-medium text-foreground"
                     >
                       {distributor.name}
                     </div>
                     <div
-                      className="col-span-3 text-sm text-muted-foreground"
+                      className="col-span-3 text-xs text-muted-foreground"
                     >
                       {distributor.location}
                     </div>
                     <div
-                      className="col-span-2 text-sm text-muted-foreground"
+                      className="col-span-2 text-xs text-muted-foreground"
                     >
                       {currentPoints.toLocaleString()}
                     </div>
@@ -335,12 +335,12 @@ export function SetPointsModal({
                           handlePointsChange(distributor.id, e.target.value)
                         }
                         placeholder="0"
-                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                        className="w-full px-2 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                         disabled={loading}
                       />
                     </div>
                     <div
-                      className={`col-span-1 text-sm font-semibold ${
+                      className={`col-span-1 text-xs font-semibold ${
                         delta > 0
                           ? "text-green-500"
                           : delta < 0
@@ -369,33 +369,33 @@ export function SetPointsModal({
           {/* Pagination Controls */}
           {totalCount > itemsPerPage && (
             <div
-              className="flex items-center justify-between px-6 py-4 border-t border-border"
+              className="flex items-center justify-between px-3 py-2 border-t border-border"
             >
               <div
-                className="text-sm text-muted-foreground"
+                className="text-xs text-muted-foreground"
               >
                 Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, totalCount)} of {totalCount} distributors
                 {searchQuery && ` (search: "${searchQuery}")`}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   disabled={currentPage === 1 || loading || isLoadingPage}
-                  className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
                 <span
-                  className="text-sm px-3 text-foreground"
+                  className="text-xs px-2 text-foreground"
                 >
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages || loading || isLoadingPage}
-                  className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
                 >
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -409,7 +409,7 @@ export function SetPointsModal({
               {/* Advanced Section Header */}
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-gray-700/50"
+                className="w-full flex items-center justify-between p-3 transition-colors hover:bg-gray-700/50"
                 disabled={loading}
               >
                 <div className="flex items-center gap-2">
@@ -432,19 +432,19 @@ export function SetPointsModal({
               {/* Advanced Section Content */}
               {showAdvanced && (
                 <div
-                  className="p-4 border-t border-border bg-gray-700/30"
+                  className="p-3 border-t border-border bg-gray-700/30"
                 >
                   {/* Warning Alert */}
                   <div
-                    className="mb-4 p-3 rounded-lg border-l-4 bg-orange-900/20 border-orange-500"
+                    className="mb-2 p-2 rounded-lg border-l-4 bg-orange-900/20 border-orange-500"
                   >
                     <p
-                      className="text-sm font-medium text-orange-300"
+                      className="text-xs font-medium text-orange-300"
                     >
                       ⚠️ Warning: Bulk Update
                     </p>
                     <p
-                      className="text-sm mt-1 text-orange-200"
+                      className="text-xs mt-0.5 text-orange-200"
                     >
                       This will apply the same points adjustment to all{" "}
                     {totalCount} distributor(s). This action cannot
@@ -453,9 +453,9 @@ export function SetPointsModal({
                   </div>
 
                   {/* Bulk Points Delta Input */}
-                  <div className="mb-4">
+                  <div className="mb-2">
                     <label
-                      className="block text-sm font-medium mb-2 text-foreground"
+                      className="block text-xs font-medium mb-1 text-foreground"
                     >
                       Points to Add/Subtract
                     </label>
@@ -474,28 +474,28 @@ export function SetPointsModal({
                         }
                       }}
                       placeholder="Enter positive or negative number"
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                      className="w-full px-2 py-1 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                       disabled={loading}
                     />
                     <p
-                      className="text-xs mt-1 text-muted-foreground"
+                      className="text-xs mt-0.5 text-muted-foreground"
                     >
                       Positive numbers add points, negative numbers subtract
                     </p>
                   </div>
 
                   {/* Confirmation Checkbox */}
-                  <div className="mb-4">
-                    <label className="flex items-start gap-2 cursor-pointer">
+                  <div className="mb-2">
+                    <label className="flex items-start gap-1 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={confirmBulkUpdate}
                         onChange={(e) => setConfirmBulkUpdate(e.target.checked)}
-                        className="mt-1"
+                        className="mt-0.5"
                         disabled={loading}
                       />
                       <span
-                        className="text-sm text-foreground"
+                        className="text-xs text-foreground"
                       >
                       I understand this will affect all {totalCount}{" "}
                         distributor(s) and cannot be undone
@@ -511,21 +511,21 @@ export function SetPointsModal({
                       !confirmBulkUpdate ||
                       bulkPointsDelta === 0
                     }
-                    className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-orange-600 text-foreground hover:bg-orange-700"
+                    className="w-full px-3 py-1 rounded-lg flex items-center justify-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-orange-600 text-foreground hover:bg-orange-700"
                   >
-                    <AlertTriangle className="h-4 w-4" />
-                    {loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All Distributors`}
+                    <AlertTriangle className="h-3 w-3" />
+                    <span className="text-sm">{loading ? "Applying..." : `Apply ${bulkPointsDelta > 0 ? "+" : ""}${bulkPointsDelta} Points to All Distributors`}</span>
                   </button>
 
                   {/* Reset All Button */}
                   {onResetAll && (
                     <>
-                      <div className="relative my-4">
+                      <div className="relative my-2">
                         <div className="absolute inset-0 flex items-center">
                           <div className="w-full border-t border-gray-600"></div>
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="px-2 bg-gray-700/30 text-muted-foreground">
+                          <span className="px-1 bg-gray-700/30 text-muted-foreground text-xs">
                             Or
                           </span>
                         </div>
@@ -534,10 +534,10 @@ export function SetPointsModal({
                       <button
                         onClick={handleResetAll}
                         disabled={loading}
-                        className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-destructive text-foreground hover:bg-destructive/90"
+                        className="w-full px-3 py-1 rounded-lg flex items-center justify-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-destructive text-foreground hover:bg-destructive/90"
                       >
-                        <AlertTriangle className="h-4 w-4" />
-                        {loading ? "Resetting..." : `Reset All ${totalCount} Distributors to 0 Points`}
+                        <AlertTriangle className="h-3 w-3" />
+                        <span className="text-sm">{loading ? "Resetting..." : `Reset All ${totalCount} Distributors to 0 Points`}</span>
                       </button>
                     </>
                   )}
@@ -548,7 +548,7 @@ export function SetPointsModal({
 
           {/* Footer */}
           <div
-            className="flex justify-end gap-3 p-6 border-t border-border"
+            className="flex justify-end gap-2 p-3 border-t border-border"
           >
             <div className="flex-1">
               <input
@@ -556,13 +556,13 @@ export function SetPointsModal({
                 placeholder="Reason / Note (optional)"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                className="w-full px-2 py-1 border rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
                 disabled={loading || !!progress}
               />
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg transition-colors text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 rounded-lg transition-colors text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               disabled={loading || !!progress}
             >
               Cancel
@@ -570,9 +570,9 @@ export function SetPointsModal({
             <button
               onClick={handleSubmit}
               disabled={loading || !!progress}
-              className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-card text-foreground hover:bg-accent"
+              className="px-3 py-1 rounded-lg flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-card text-foreground hover:bg-accent text-sm"
             >
-              <Save className="h-4 w-4" />
+              <Save className="h-3 w-3" />
               {loading ? (progress ? "Processing..." : "Saving...") : "Save Changes"}
             </button>
           </div>

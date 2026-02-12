@@ -23,12 +23,12 @@ export function EditRedemptionModal({
         aria-labelledby="edit-redemption-title"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="edit-redemption-title" className="text-xl font-semibold">
+            <h2 id="edit-redemption-title" className="text-lg font-semibold">
               Edit Redemption
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               Update request information
             </p>
           </div>
@@ -42,9 +42,9 @@ export function EditRedemptionModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Read-only Info */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Request Information
             </h3>
@@ -96,7 +96,7 @@ export function EditRedemptionModal({
           </div>
 
           {/* Editable Fields */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Status
             </h3>
@@ -136,10 +136,10 @@ export function EditRedemptionModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8">
+        <div className="p-3">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
+            className="w-full px-4 py-2 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
           >
             Save Changes
           </button>

@@ -18,17 +18,17 @@ export function ViewProductModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-border"
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-product-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-2">
           <div>
-            <h2 id="view-product-title" className="text-xl font-semibold">
+            <h2 id="view-product-title" className="text-lg font-semibold">
               View Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               Product details
             </p>
           </div>
@@ -41,7 +41,7 @@ export function ViewProductModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-2 space-y-2 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Product ID */}
             <div>
@@ -87,16 +87,15 @@ export function ViewProductModal({
               />
             </div>
 
-            {/* Legend */}
+            {/* Price */}
             <div>
-              <p className="text-xs text-gray-500 mb-2">Legend</p>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
-                  product.legend
-                )}`}
-              >
-                {product.legend.replace(/_/g, " ")}
-              </span>
+              <label className="block text-sm font-medium mb-2">Price</label>
+              <input
+                type="text"
+                value={product.price}
+                disabled
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
+              />
             </div>
 
             {/* Points */}
@@ -110,15 +109,16 @@ export function ViewProductModal({
               />
             </div>
 
-            {/* Price */}
+            {/* Legend */}
             <div>
-              <label className="block text-sm font-medium mb-2">Price</label>
-              <input
-                type="text"
-                value={product.price}
-                disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
-              />
+              <p className="text-xs text-gray-500 mb-2">Legend</p>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
+                  product.legend
+                )}`}
+              >
+                {product.legend.replace(/_/g, " ")}
+              </span>
             </div>
 
             {/* Pricing Type */}

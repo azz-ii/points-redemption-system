@@ -93,12 +93,12 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center p-2">
           <div>
-            <h2 id="export-modal-title" className="text-xl font-semibold">
+            <h2 id="export-modal-title" className="text-lg font-semibold">
               Export Products
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               {items.length} product{items.length !== 1 ? "s" : ""} will be exported
             </p>
           </div>
@@ -112,31 +112,31 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-2 space-y-2 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Export Format
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setFormat("excel")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                className={`flex items-center justify-center gap-2 p-2 rounded-lg border-2 transition-all text-sm ${
                   format === "excel"
                     ? "border-green-500 bg-green-500/10"
                     : "border-border hover:border-muted-foreground"
                 }`}
               >
                 <FileSpreadsheet
-                  className={`h-6 w-6 ${
+                  className={`h-4 w-4 ${
                     format === "excel"
                       ? "text-green-500"
                       : "text-muted-foreground"
                   }`}
                 />
                 <div className="text-left">
-                  <div className="font-medium">Excel</div>
+                  <div className="font-medium text-xs">Excel</div>
                   <div className="text-xs text-gray-500">.xlsx</div>
                 </div>
               </button>
@@ -144,21 +144,21 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
               <button
                 type="button"
                 onClick={() => setFormat("pdf")}
-                className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                className={`flex items-center justify-center gap-2 p-2 rounded-lg border-2 transition-all text-sm ${
                   format === "pdf"
                     ? "border-red-500 bg-red-500/10"
                     : "border-border hover:border-muted-foreground"
                 }`}
               >
                 <FileText
-                  className={`h-6 w-6 ${
+                  className={`h-4 w-4 ${
                     format === "pdf"
                       ? "text-red-500"
                       : "text-muted-foreground"
                   }`}
                 />
                 <div className="text-left">
-                  <div className="font-medium">PDF</div>
+                  <div className="font-medium text-xs">PDF</div>
                   <div className="text-xs text-gray-500">.pdf</div>
                 </div>
               </button>
@@ -166,16 +166,16 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
           </div>
 
           {/* Column Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                 Columns to Export
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-1 text-xs">
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-xs text-blue-500 hover:text-blue-600"
+                  className="text-blue-500 hover:text-blue-600"
                 >
                   Select All
                 </button>
@@ -183,17 +183,17 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
                 <button
                   type="button"
                   onClick={handleDeselectAll}
-                  className="text-xs text-blue-500 hover:text-blue-600"
+                  className="text-blue-500 hover:text-blue-600"
                 >
                   Deselect All
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1">
               {columns.map((col) => (
                 <label
                   key={String(col.key)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-center gap-2 p-1.5 rounded-lg cursor-pointer transition-colors text-sm ${
                     col.enabled
                       ? "bg-muted"
                       : "bg-muted/50"
@@ -203,10 +203,10 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
                     type="checkbox"
                     checked={col.enabled}
                     onChange={() => handleColumnToggle(col.key)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-3 w-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span
-                    className={`text-sm ${
+                    className={`text-xs ${
                       col.enabled
                         ? ""
                         : "text-muted-foreground"
@@ -223,15 +223,15 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
           </div>
 
           {/* Sort Options */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Sort Options
             </h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label
                   htmlFor="sortField"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-gray-500 mb-1 block"
                 >
                   Sort By
                 </label>
@@ -239,7 +239,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
                   id="sortField"
                   value={sortField}
                   onChange={(e) => setSortField(e.target.value as SortField)}
-                  className={`w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500`}
+                  className={`w-full px-2 py-1 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm`}
                 >
                   {columns.map((col) => (
                     <option key={String(col.key)} value={col.key}>
@@ -250,32 +250,32 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 mb-2 block">
+                <label className="text-xs text-gray-500 mb-1 block">
                   Direction
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <button
                     type="button"
                     onClick={() => setSortDirection("asc")}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded border transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded border transition-colors text-xs ${
                       sortDirection === "asc"
                         ? "bg-primary border-primary text-primary-foreground"
                         : "bg-card border-border text-foreground hover:border-muted-foreground"
                     }`}
                   >
-                    <ArrowUp className="h-4 w-4" />
+                    <ArrowUp className="h-3 w-3" />
                     Asc
                   </button>
                   <button
                     type="button"
                     onClick={() => setSortDirection("desc")}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded border transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded border transition-colors text-xs ${
                       sortDirection === "desc"
                         ? "bg-primary border-primary text-primary-foreground"
                         : "bg-card border-border text-foreground hover:border-muted-foreground"
                     }`}
                   >
-                    <ArrowDown className="h-4 w-4" />
+                    <ArrowDown className="h-3 w-3" />
                     Desc
                   </button>
                 </div>
@@ -285,25 +285,25 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-6">
+        <div className="p-2">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-2 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-xs">
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               onClick={handleClose}
-              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground"
+              className="flex-1 px-3 py-2 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground text-sm"
             >
               Cancel
             </button>
             <button
               onClick={handleExport}
               disabled={exporting || enabledCount === 0}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 text-sm"
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-3 w-3" />
               {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
             </button>
           </div>

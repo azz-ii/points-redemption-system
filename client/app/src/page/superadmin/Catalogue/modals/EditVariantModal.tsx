@@ -42,12 +42,12 @@ export function EditVariantModal({
         aria-modal="true"
         aria-labelledby="edit-variant-title"
       >
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-2">
           <div>
-            <h2 id="edit-variant-title" className="text-xl font-semibold">
+            <h2 id="edit-variant-title" className="text-lg font-semibold">
               Edit Variant
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               Update variant details
             </p>
           </div>
@@ -60,7 +60,7 @@ export function EditVariantModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-2 space-y-2 max-h-[70vh] overflow-y-auto">
           {/* Error Message */}
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
@@ -68,12 +68,12 @@ export function EditVariantModal({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Item Code */}
             <div>
               <label
                 htmlFor="edit-item-code"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Item Code *
               </label>
@@ -87,7 +87,7 @@ export function EditVariantModal({
                     item_code: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm"
                 placeholder="e.g., MC0001"
               />
             </div>
@@ -96,7 +96,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-variant-desc"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Variant Description (Optional)
               </label>
@@ -110,7 +110,7 @@ export function EditVariantModal({
                     option_description: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm"
                 placeholder="e.g., Size S, Color Blue"
               />
             </div>
@@ -119,7 +119,7 @@ export function EditVariantModal({
             <div className="md:col-span-2">
               <label
                 htmlFor="edit-variant-pricing-type"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Pricing Type *
               </label>
@@ -132,7 +132,7 @@ export function EditVariantModal({
                     pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm"
               >
                 {PRICING_TYPE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -146,7 +146,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-variant-points"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 {data.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -162,7 +162,7 @@ export function EditVariantModal({
                     [data.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm"
                 placeholder={
                   data.pricing_type === "FIXED"
                     ? "e.g., 500"
@@ -171,7 +171,7 @@ export function EditVariantModal({
               />
               {data.pricing_type !== "FIXED" && (
                 <p
-                  className="text-xs mt-1 text-muted-foreground"
+                  className="text-xs mt-0.5 text-muted-foreground"
                 >
                   Points: {data.pricing_type === "PER_SQFT" ? "sq ft" : data.pricing_type === "PER_INVOICE" ? "invoice amount" : data.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
                 </p>
@@ -182,7 +182,7 @@ export function EditVariantModal({
             <div>
               <label
                 htmlFor="edit-variant-price"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 {data.pricing_type === "FIXED"
                   ? "Price *"
@@ -198,7 +198,7 @@ export function EditVariantModal({
                     [data.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm"
                 placeholder={
                   data.pricing_type === "FIXED"
                     ? "e.g., ₱130.00"
@@ -211,7 +211,7 @@ export function EditVariantModal({
             <div className="md:col-span-2">
               <label
                 htmlFor="edit-variant-image"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-gray-500 mb-1 block"
               >
                 Image URL (Optional)
               </label>
@@ -225,12 +225,12 @@ export function EditVariantModal({
                     image_url: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-sm"
                 placeholder="https://example.com/image.jpg"
               />
               {/* Image Preview */}
               {data.image_url && (
-                <div className="mt-2 bg-gray-300 aspect-video overflow-hidden rounded">
+                <div className="mt-1 bg-gray-300 h-20 overflow-hidden rounded">
                   <img
                     src={data.image_url || "/images/tshirt.png"}
                     alt="Preview"
@@ -245,18 +245,18 @@ export function EditVariantModal({
           </div>
         </div>
 
-        <div className="p-8 border-t flex gap-3 justify-end">
+        <div className="p-3 border-t flex gap-2 justify-end">
           <button
             onClick={onClose}
             disabled={updating}
-            className="px-6 py-3 rounded-lg font-semibold border transition-colors border-border hover:bg-accent disabled:opacity-50"
+            className="px-4 py-2 rounded-lg font-semibold border transition-colors border-border hover:bg-accent disabled:opacity-50 text-sm"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={updating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {updating ? "Updating..." : "Update Variant"}
           </button>

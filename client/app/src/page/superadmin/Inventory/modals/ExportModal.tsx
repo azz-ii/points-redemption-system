@@ -98,12 +98,12 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="export-modal-title" className="text-xl font-semibold">
-              Export Inventory
+            <h2 id="export-modal-title" className="text-lg font-semibold">
+              Export Items
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0">
               {items.length} item{items.length !== 1 ? "s" : ""} will be exported
             </p>
             <div className="flex gap-3 mt-2 text-xs">
@@ -122,7 +122,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -295,7 +295,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-6">
+        <div className="p-3">
           {error && (
             <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
               {error}

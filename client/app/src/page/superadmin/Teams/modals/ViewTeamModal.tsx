@@ -275,10 +275,10 @@ export function ViewTeamModal({
         className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
-        <div className="flex justify-between items-center p-8">
+        <div className="flex justify-between items-center p-3">
           <div>
-            <h2 id="view-team-title" className="text-xl font-semibold">View Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <h2 id="view-team-title" className="text-lg font-semibold">View Team</h2>
+            <p className="text-xs text-gray-500 mt-0">
               {teamDetails?.name || "Loading..."}
             </p>
           </div>
@@ -292,7 +292,7 @@ export function ViewTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-3 space-y-3 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="text-center text-gray-500 py-8">
               Loading team details...
@@ -344,7 +344,7 @@ export function ViewTeamModal({
 
                 {/* Add Member Form */}
                 {showAddMember && (
-                  <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
+                  <div className="mb-3 p-3 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
                     <label className="text-xs text-gray-500 mb-2 block">
                       Select Sales Agent
                     </label>
@@ -468,7 +468,7 @@ export function ViewTeamModal({
           <div
             className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
           >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+            <div className="flex justify-between items-center p-3 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-red-500 bg-opacity-20">
                   <AlertCircle className="h-5 w-5 text-red-500" />
@@ -491,11 +491,11 @@ export function ViewTeamModal({
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-3">
               <p className="text-sm">{errorDialog.message}</p>
             </div>
 
-            <div className="p-6 border-t border-gray-700 flex justify-end">
+            <div className="p-3 border-t border-gray-700 flex justify-end">
               <button
                 onClick={() => {
                   console.log("DEBUG ViewTeamModal: Closing error dialog");
