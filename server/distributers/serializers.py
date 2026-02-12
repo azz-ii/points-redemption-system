@@ -3,15 +3,18 @@ from .models import Distributor
 
 class DistributorSerializer(serializers.ModelSerializer):
     added_by_name = serializers.SerializerMethodField()
+    archived_by_username = serializers.SerializerMethodField()
     
     class Meta:
         model = Distributor
         fields = [
-            'id', 'name', 'contact_email', 'phone', 'location', 
+            'id', 'name', 'contact_email', 'phone', 'location',
             'points', 'date_added', 
-            'added_by', 'added_by_name'
+            'added_by', 'added_by_name',
+            'is_archived', 'date_archived', 'archived_by', 'archived_by_username'
         ]
-        read_only_fields = ['id', 'date_added', 'added_by', 'added_by_name']
+        read_only_fields = ['id', 'date_added', 'added_by', 'added_by_name', 
+                            'is_archived', 'date_archived', 'archived_by', 'archived_by_username']
     
     def get_added_by_name(self, obj):
         """
@@ -26,6 +29,14 @@ class DistributorSerializer(serializers.ModelSerializer):
         
         # Fallback to username if profile doesn't exist
         return obj.added_by.username
+    
+    def get_archived_by_username(self, obj):
+        """
+        Get username of the user who archived this distributor.
+        """
+        if obj.archived_by:
+            return obj.archived_by.username
+        return None
     
     def create(self, validated_data):
         # Set the added_by field to the current user

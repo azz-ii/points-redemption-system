@@ -106,6 +106,7 @@ export interface UserProfile {
   position: string;
   is_activated: boolean;
   is_banned: boolean;
+  is_archived: boolean;
   uses_points: boolean;
   points: number;
   profile: {

@@ -38,7 +38,7 @@ from views import (
     ChangePasswordView,
     ActivateAccountView,
 )
-from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView
+from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView, UnarchiveProductView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -55,6 +55,7 @@ urlpatterns = [
     # Catalogue/Product Management API
     path('api/catalogue/', ProductListCreateView.as_view(), name='catalogue_list_create'),
     path('api/catalogue/<int:product_id>/', ProductDetailView.as_view(), name='catalogue_detail'),
+    path('api/catalogue/<int:product_id>/unarchive/', UnarchiveProductView.as_view(), name='catalogue_unarchive'),
     path('api/catalogue/bulk-assign-marketing/', BulkAssignMarketingView.as_view(), name='bulk_assign_marketing'),
     # Inventory Management API
     path('api/inventory/', InventoryListView.as_view(), name='inventory_list'),

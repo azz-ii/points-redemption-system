@@ -8,7 +8,9 @@ import {
   CreateCustomerModal,
   EditCustomerModal,
   ViewCustomerModal,
-  DeleteCustomerModal,
+  ArchiveCustomerModal,
+  UnarchiveCustomerModal,
+  BulkArchiveCustomerModal,
   ExportModal,
   SetPointsModal,
 } from "./modals";
@@ -21,6 +23,7 @@ function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   // Pagination state for mobile only
   const [page, setPage] = useState(1);
@@ -28,7 +31,18 @@ function Customers() {
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await customersApi.getCustomers(searchQuery);
+      const url = new URL(`${API_URL}/customers/`, window.location.origin);
+      if (showArchived) {
+        url.searchParams.append('show_archived', 'true');
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
+      }
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
+      const result = await response.json();
+      const data = result.results || result;
       // Ensure data is always an array
       setCustomers(Array.isArray(data) ? data : []);
       setError(null);
@@ -39,7 +53,7 @@ function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, showArchived]);
 
   // Fetch customers on mount
   useEffect(() => {
@@ -86,15 +100,19 @@ function Customers() {
     location: "",
   });
 
-  // Modal state for edit/view/delete
+  // Modal state for edit/view/archive
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingCustomerId, setEditingCustomerId] = useState<number | null>(
     null,
   );
   const [viewTarget, setViewTarget] = useState<Customer | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Customer | null>(null);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Customer | null>(null);
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Customer[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -209,23 +227,93 @@ function Customers() {
     setShowViewModal(true);
   };
 
-  // Handle delete click
-  const handleDeleteClick = (customer: Customer) => {
-    setDeleteTarget(customer);
-    setShowDeleteModal(true);
+  // Handle archive click
+  const handleArchiveClick = (customer: Customer) => {
+    setArchiveTarget(customer);
+    setShowArchiveModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
+  // Handle unarchive click
+  const handleUnarchiveClick = (customer: Customer) => {
+    setUnarchiveTarget(customer);
+    setShowUnarchiveModal(true);
+  };
 
+  // Confirm archive customer
+  const confirmArchive = async (id: number) => {
     try {
-      await customersApi.deleteCustomer(deleteTarget.id);
-      setCustomers((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-      setShowDeleteModal(false);
-      setDeleteTarget(null);
+      setLoading(true);
+      await customersApi.deleteCustomer(id);
+      setShowArchiveModal(false);
+      setArchiveTarget(null);
+      fetchCustomers();
     } catch (err) {
-      console.error("Error deleting customer:", err);
-      alert("Failed to delete customer. Please try again.");
+      console.error("Error archiving customer:", err);
+      alert("Failed to archive customer. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm unarchive customer
+  const confirmUnarchive = async (id: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/customers/${id}/unarchive/`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to unarchive customer');
+      }
+      
+      setShowUnarchiveModal(false);
+      setUnarchiveTarget(null);
+      fetchCustomers();
+    } catch (err) {
+      console.error("Error unarchiving customer:", err);
+      alert(err instanceof Error ? err.message : "Failed to unarchive customer. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bulk archive
+  const handleArchiveSelected = async (selectedCustomers: Customer[]) => {
+    setBulkArchiveTargets(selectedCustomers);
+    setShowBulkArchiveModal(true);
+  };
+
+  // Confirm bulk archive
+  const confirmBulkArchive = async () => {
+    try {
+      setLoading(true);
+      const archiveResults = await Promise.allSettled(
+        bulkArchiveTargets.map((customer) =>
+          customersApi.deleteCustomer(customer.id)
+        )
+      );
+
+      const successCount = archiveResults.filter((r) => r.status === "fulfilled").length;
+      const failCount = archiveResults.filter((r) => r.status === "rejected").length;
+
+      setShowBulkArchiveModal(false);
+      setBulkArchiveTargets([]);
+
+      if (failCount === 0) {
+        alert(`Successfully archived ${successCount} customer(s)`);
+      } else {
+        alert(`Archived ${successCount} of ${bulkArchiveTargets.length} customer(s). ${failCount} failed.`);
+      }
+
+      fetchCustomers();
+    } catch (err) {
+      console.error("Error archiving customers:", err);
+      alert("Error archiving some customers");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -410,22 +498,38 @@ function Customers() {
 
           {/* Table */}
           {!loading && !error && (
-            <CustomersTable
-              customers={customers}
-              loading={loading}
-              onView={handleViewClick}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-              onCreateNew={() => setShowCreateModal(true)}
-              onRefresh={fetchCustomers}
-              refreshing={loading}
-              onExport={() => setShowExportModal(true)}
-              onSetPoints={() => setShowSetPointsModal(true)}
-              onViewPointsHistory={(customer) => {
-                setPointsHistoryTarget(customer);
-                setShowPointsHistory(true);
-              }}
-            />
+            <>
+              <div className="mb-4 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="show-archived"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <label htmlFor="show-archived" className="text-sm text-muted-foreground">
+                  Show Archived Customers
+                </label>
+              </div>
+              <CustomersTable
+                customers={customers}
+                loading={loading}
+                onView={handleViewClick}
+                onEdit={handleEditClick}
+                onArchive={handleArchiveClick}
+                onUnarchive={handleUnarchiveClick}
+                onArchiveSelected={handleArchiveSelected}
+                onCreateNew={() => setShowCreateModal(true)}
+                onRefresh={fetchCustomers}
+                refreshing={loading}
+                onExport={() => setShowExportModal(true)}
+                onSetPoints={() => setShowSetPointsModal(true)}
+                onViewPointsHistory={(customer) => {
+                  setPointsHistoryTarget(customer);
+                  setShowPointsHistory(true);
+                }}
+              />
+            </>
           )}
         </div>
 
@@ -493,7 +597,8 @@ function Customers() {
               onPageChange={setPage}
               onView={handleViewClick}
               onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
+              onArchive={handleArchiveClick}
+              onUnarchive={handleUnarchiveClick}
             />
           )}
         </div>
@@ -526,12 +631,31 @@ function Customers() {
         customer={viewTarget}
       />
 
-      {/* Delete Confirmation Modal */}
-      <DeleteCustomerModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        customer={deleteTarget}
-        onConfirm={confirmDelete}
+      {/* Archive Confirmation Modal */}
+      <ArchiveCustomerModal
+        isOpen={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        customer={archiveTarget}
+        loading={loading}
+        onConfirm={confirmArchive}
+      />
+
+      {/* Unarchive Confirmation Modal */}
+      <UnarchiveCustomerModal
+        isOpen={showUnarchiveModal}
+        onClose={() => setShowUnarchiveModal(false)}
+        customer={unarchiveTarget}
+        loading={loading}
+        onConfirm={confirmUnarchive}
+      />
+
+      {/* Bulk Archive Confirmation Modal */}
+      <BulkArchiveCustomerModal
+        isOpen={showBulkArchiveModal}
+        onClose={() => setShowBulkArchiveModal(false)}
+        customers={bulkArchiveTargets}
+        loading={loading}
+        onConfirm={confirmBulkArchive}
       />
 
       {/* Export Modal */}

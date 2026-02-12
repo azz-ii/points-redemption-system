@@ -1,27 +1,27 @@
-import { X, Archive } from "lucide-react";
-import type { ModalBaseProps, Distributor } from "./types";
+import { X, ArchiveRestore } from "lucide-react";
+import type { ModalBaseProps, Customer } from "./types";
 
-interface ArchiveDistributorModalProps extends ModalBaseProps {
-  distributor: Distributor | null;
+interface UnarchiveCustomerModalProps extends ModalBaseProps {
+  customer: Customer | null;
   loading: boolean;
   onConfirm: (id: number) => void;
 }
 
-export function ArchiveDistributorModal({
+export function UnarchiveCustomerModal({
   isOpen,
   onClose,
-  distributor,
+  customer,
   loading,
   onConfirm,
-}: ArchiveDistributorModalProps) {
-  if (!isOpen || !distributor) return null;
+}: UnarchiveCustomerModalProps) {
+  if (!isOpen || !customer) return null;
 
   const handleClose = () => {
     onClose();
   };
 
   const handleConfirm = () => {
-    onConfirm(distributor.id);
+    onConfirm(customer.id);
   };
 
   return (
@@ -29,21 +29,21 @@ export function ArchiveDistributorModal({
       <div
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="archive-distributor-title"
-        aria-describedby="archive-distributor-message"
+        aria-labelledby="unarchive-customer-title"
+        aria-describedby="unarchive-customer-message"
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
       >
         <div className="flex justify-between items-center p-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-              <Archive className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+              <ArchiveRestore className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h2 id="archive-distributor-title" className="text-xl font-semibold">
-                Archive Distributor
+              <h2 id="unarchive-customer-title" className="text-xl font-semibold">
+                Restore Customer
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                This action can be reversed.
+                Restore this archived customer.
               </p>
             </div>
           </div>
@@ -57,11 +57,11 @@ export function ArchiveDistributorModal({
         </div>
 
         <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
-          <p id="archive-distributor-message" className="text-base">
-            Are you sure you want to archive <strong>{distributor.name}</strong>?
+          <p id="unarchive-customer-message" className="text-base">
+            Are you sure you want to restore <strong>{customer.name}</strong>?
           </p>
           <p className="text-sm text-muted-foreground">
-            Archived distributors cannot be selected in redemption requests. You can restore this distributor later.
+            This customer will be available for redemption requests again.
           </p>
         </div>
 
@@ -76,9 +76,9 @@ export function ArchiveDistributorModal({
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
           >
-            {loading ? "Archiving..." : "Archive"}
+            {loading ? "Restoring..." : "Restore"}
           </button>
         </div>
       </div>

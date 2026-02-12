@@ -1,20 +1,20 @@
 import { X, Archive } from "lucide-react";
-import type { ModalBaseProps, CatalogueVariant } from "./types";
+import type { ModalBaseProps, Product } from "./types";
 
-interface ArchiveItemModalProps extends ModalBaseProps {
-  item: CatalogueVariant | null;
+interface BulkArchiveItemModalProps extends ModalBaseProps {
+  items: Product[];
   loading?: boolean;
-  onConfirm: (id: number) => void;
+  onConfirm: () => void;
 }
 
-export function ArchiveItemModal({
+export function BulkArchiveItemModal({
   isOpen,
   onClose,
-  item,
+  items,
   loading,
   onConfirm,
-}: ArchiveItemModalProps) {
-  if (!isOpen || !item) return null;
+}: BulkArchiveItemModalProps) {
+  if (!isOpen || items.length === 0) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -22,7 +22,7 @@ export function ArchiveItemModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="archive-item-title"
+        aria-labelledby="bulk-archive-title"
       >
         <div className="flex justify-between items-center p-8">
           <div className="flex items-center gap-3">
@@ -30,8 +30,8 @@ export function ArchiveItemModal({
               <Archive className="h-5 w-5 text-orange-600" />
             </div>
             <div>
-              <h2 id="archive-item-title" className="text-xl font-semibold">
-                Archive Item
+              <h2 id="bulk-archive-title" className="text-xl font-semibold">
+                Archive Multiple Items
               </h2>
               <p className="text-sm text-gray-500 mt-1">
                 This action can be reversed.
@@ -47,13 +47,15 @@ export function ArchiveItemModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
           <p>
-            Are you sure you want to archive <strong>{item.item_name}</strong>?
+            Are you sure you want to archive <strong>{items.length}</strong> item(s)?
           </p>
-          <p className="text-sm text-muted-foreground">
-            Archived items will no longer appear in the catalogue or be available for redemption requests. You can restore them later.
-          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            {items.map((item) => (
+              <li key={item.id}>{item.item_name} ({item.item_code})</li>
+            ))}
+          </ul>
         </div>
 
         <div className="p-8 border-t flex gap-3 justify-end">
@@ -66,11 +68,11 @@ export function ArchiveItemModal({
           </button>
 
           <button
-            onClick={() => onConfirm(item.id)}
+            onClick={onConfirm}
             disabled={loading}
             className="flex-1 px-6 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold transition-colors disabled:opacity-50"
           >
-            {loading ? "Archiving..." : "Archive"}
+            {loading ? "Archiving..." : `Archive ${items.length} Item(s)`}
           </button>
         </div>
       </div>

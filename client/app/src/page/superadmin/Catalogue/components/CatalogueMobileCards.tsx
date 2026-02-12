@@ -1,4 +1,4 @@
-import { Eye, Edit, Trash2, Package } from "lucide-react";
+import { Eye, Edit, Archive, ArchiveRestore, Package } from "lucide-react";
 import type { Product } from "../modals/types";
 import { getLegendColor } from "../modals/types";
 
@@ -8,7 +8,8 @@ interface CatalogueMobileCardsProps {
   error: string | null;
   onView: (product: Product) => void;
   onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  onArchive: (product: Product) => void;
+  onUnarchive: (product: Product) => void;
   onRetry: () => void;
   searchQuery: string;
 }
@@ -19,7 +20,8 @@ export function CatalogueMobileCards({
   error,
   onView,
   onEdit,
-  onDelete,
+  onArchive,
+  onUnarchive,
   onRetry,
   searchQuery,
 }: CatalogueMobileCardsProps) {
@@ -132,7 +134,7 @@ export function CatalogueMobileCards({
               <span
                 className={`ml-2 px-1 py-0.5 rounded-full text-xs font-semibold ${
                   product.is_archived
-                    ? "bg-red-500 text-white"
+                    ? "bg-slate-600 text-white"
                     : "bg-green-500 text-white"
                 }`}
               >
@@ -150,19 +152,32 @@ export function CatalogueMobileCards({
             >
               <Eye className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => onEdit(product)}
-              className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors font-semibold text-sm"
-              title="Edit"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => onDelete(product)}
-              className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold text-sm"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {product.is_archived ? (
+              <button
+                onClick={() => onUnarchive(product)}
+                className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-green-500 hover:bg-green-600 text-white transition-colors font-semibold text-sm"
+                title="Restore"
+              >
+                <ArchiveRestore className="h-4 w-4" />
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onEdit(product)}
+                  className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors font-semibold text-sm"
+                  title="Edit"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => onArchive(product)}
+                  className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-slate-600 hover:bg-slate-700 text-white transition-colors font-semibold text-sm"
+                  title="Archive"
+                >
+                  <Archive className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       ))}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import {
@@ -173,9 +174,9 @@ function Inventory() {
       setShowSetInventoryModal(false);
 
       if (result.failed_count === 0) {
-        alert(`Successfully updated stock for ${result.updated_count} item(s)`);
+        toast.success(`Successfully updated stock for ${result.updated_count} item(s)`);
       } else {
-        alert(
+        toast.warning(
           `Updated ${result.updated_count} of ${updates.length} item(s). ${result.failed_count} failed.`,
         );
       }
@@ -183,7 +184,7 @@ function Inventory() {
       fetchInventoryItems();
     } catch (err) {
       console.error("Error updating stock:", err);
-      alert(err instanceof Error ? err.message : "Failed to update stock");
+      toast.error(err instanceof Error ? err.message : "Failed to update stock");
     } finally {
       setLoading(false);
     }
@@ -197,14 +198,14 @@ function Inventory() {
 
       // Success
       setShowSetInventoryModal(false);
-      alert(
+      toast.success(
         result.message ||
           `Successfully updated ${result.updated_count} item(s)`,
       );
       fetchInventoryItems();
     } catch (err) {
       console.error("Error bulk updating stock:", err);
-      alert(err instanceof Error ? err.message : "Failed to bulk update stock");
+      toast.error(err instanceof Error ? err.message : "Failed to bulk update stock");
     } finally {
       setLoading(false);
     }
@@ -218,13 +219,13 @@ function Inventory() {
 
       // Success
       setShowSetInventoryModal(false);
-      alert(
+      toast.success(
         result.message || `Successfully reset ${result.updated_count} item(s)`,
       );
       fetchInventoryItems();
     } catch (err) {
       console.error("Error resetting stock:", err);
-      alert(err instanceof Error ? err.message : "Failed to reset stock");
+      toast.error(err instanceof Error ? err.message : "Failed to reset stock");
     } finally {
       setLoading(false);
     }

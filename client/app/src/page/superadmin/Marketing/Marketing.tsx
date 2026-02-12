@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { API_URL } from "@/lib/config";
 import { X, RotateCw, Download } from "lucide-react";
@@ -24,11 +25,6 @@ function Marketing() {
   const [viewTarget, setViewTarget] = useState<Account | null>(null);
 
   const [showExportModal, setShowExportModal] = useState(false);
-
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
 
   // Fetch accounts and assignments
   const fetchData = useCallback(async () => {
@@ -94,13 +90,6 @@ function Marketing() {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   const handleEditClick = (user: MarketingUser) => {
     // Convert MarketingUser to Account for the modal
     setEditingAccount({
@@ -131,10 +120,7 @@ function Marketing() {
   };
 
   const handleEditSuccess = () => {
-    setToast({
-      message: "Item legend assignment updated successfully!",
-      type: "success",
-    });
+    toast.success("Item legend assignment updated successfully!");
     fetchData();
   };
 
@@ -233,18 +219,6 @@ function Marketing() {
             onEditAccount={handleEditClick}
           />
         </div>
-      {toast && (
-        <div
-          className={`fixed bottom-4 right-4 z-50 p-4 rounded-lg ${
-            toast.type === "success"
-              ? "bg-green-500 text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
-
       {/* Modals */}
       <ViewAccountModal
         isOpen={showViewModal}

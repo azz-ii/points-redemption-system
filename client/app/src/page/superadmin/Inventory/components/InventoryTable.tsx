@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { InventoryItem } from "../modals/types";
-import { DataTable } from "./data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { createColumns } from "./columns";
 
 interface InventoryTableProps {
@@ -38,10 +38,11 @@ export function InventoryTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
-      searchQuery={searchQuery}
       showSearch={false}
       showPagination={false}
       showColumnVisibility={false}
+      loadingMessage="Loading inventory items..."
+      emptyMessage={searchQuery ? "No items match your search" : "No inventory items found"}
     />
   );
 }

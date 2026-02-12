@@ -3,15 +3,17 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
 import { API_URL } from "@/lib/config";
-import { UserPlus, X, RotateCw } from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { toast } from "sonner";
 import {
   ViewAccountModal,
   CreateAccountModal,
   EditAccountModal,
   BanAccountModal,
-  DeleteAccountModal,
+  ArchiveAccountModal,
   BulkBanAccountModal,
-  BulkDeleteAccountModal,
+  BulkArchiveAccountModal,
+  UnarchiveAccountModal,
   ExportModal,
   SetPointsModal,
   type Account,
@@ -67,8 +69,10 @@ function Accounts() {
   >("1");
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTarget, setViewTarget] = useState<Account | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState<Account | null>(null);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Account | null>(null);
   const [showBulkBanModal, setShowBulkBanModal] = useState(false);
   const [bulkBanTargets, setBulkBanTargets] = useState<Account[]>([]);
   const [bulkBanReason, setBulkBanReason] = useState("");
@@ -76,16 +80,13 @@ function Accounts() {
   const [bulkBanDuration, setBulkBanDuration] = useState<
     "1" | "7" | "30" | "permanent"
   >("1");
-  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
-  const [bulkDeleteTargets, setBulkDeleteTargets] = useState<Account[]>([]);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
   const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Account | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Inline edit state
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
@@ -129,7 +130,11 @@ function Accounts() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/users/`, {
+      const url = new URL(`${API_URL}/users/`, window.location.origin);
+      if (showArchived) {
+        url.searchParams.append('show_archived', 'true');
+      }
+      const response = await fetch(url.toString(), {
         credentials: 'include',
       });
       const data = await response.json();
@@ -147,18 +152,10 @@ function Accounts() {
     }
   };
 
-  // Load accounts on mount
+  // Load accounts on mount and when showArchived changes
   useEffect(() => {
     fetchAccounts();
-  }, []);
-
-  // Auto-dismiss toast after 3 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
+  }, [showArchived]);
 
   // Create new account (non-blocking)
   const handleCreateAccount = async () => {
@@ -192,10 +189,7 @@ function Accounts() {
     setError("");
 
     // Show optimistic success message
-    setToast({
-      message: `Account for ${fullName} created successfully!`,
-      type: "success",
-    });
+    toast.success(`Account for ${fullName} created successfully!`);
 
     // Prepare form data for file upload
     const formData = new FormData();
@@ -218,22 +212,17 @@ function Accounts() {
           fetchAccounts();
         } else {
           // Show error toast if creation failed
-          setToast({
-            message:
-              data.details?.username?.[0] ||
+          toast.error(
+            data.details?.username?.[0] ||
               data.details?.email?.[0] ||
               data.error ||
               "Failed to create account",
-            type: "error",
-          });
+          );
         }
       })
       .catch((err) => {
         console.error("Error creating account:", err);
-        setToast({
-          message: "Error connecting to server",
-          type: "error",
-        });
+        toast.error("Error connecting to server");
       });
   };
 
@@ -255,10 +244,7 @@ function Accounts() {
     setViewTarget(updatedAccount);
 
     // Show success toast
-    setToast({
-      message: "Profile picture updated successfully",
-      type: "success",
-    });
+    toast.success("Profile picture updated successfully");
   };
 
   // Open edit modal
@@ -340,12 +326,8 @@ function Accounts() {
     }
   };
 
-  // Delete account
-  const handleDeleteAccount = async (id: number, skipPrompt = false) => {
-    if (!skipPrompt && !confirm("Are you sure you want to delete this user?")) {
-      return;
-    }
-
+  // Archive account
+  const handleArchiveAccount = async (id: number) => {
     try {
       setLoading(true);
       const response = await fetchWithCsrf(`/api/users/${id}/`, {
@@ -353,72 +335,86 @@ function Accounts() {
       });
 
       if (response.ok) {
-        setShowDeleteModal(false);
-        setDeleteTarget(null);
-        // Refresh accounts list
+        setShowArchiveModal(false);
+        setArchiveTarget(null);
+        toast.success("Account archived successfully");
         fetchAccounts();
       } else {
-        setError("Failed to delete account");
+        setError("Failed to archive account");
       }
     } catch (err) {
       setError("Error connecting to server");
-      console.error("Error deleting account:", err);
+      console.error("Error archiving account:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete selected accounts (bulk delete)
-  const handleDeleteSelected = async (selectedAccounts: Account[]) => {
-    setBulkDeleteTargets(selectedAccounts);
-    setShowBulkDeleteModal(true);
+  // Unarchive account
+  const handleUnarchiveAccount = async (id: number) => {
+    try {
+      setLoading(true);
+      const response = await fetchWithCsrf(`/api/users/${id}/unarchive/`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        setShowUnarchiveModal(false);
+        setUnarchiveTarget(null);
+        toast.success("Account restored successfully");
+        fetchAccounts();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || "Failed to restore account");
+      }
+    } catch (err) {
+      console.error("Error restoring account:", err);
+      toast.error("Error connecting to server");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Confirm bulk delete
-  const handleBulkDeleteConfirm = async () => {
+  // Archive selected accounts (bulk archive)
+  const handleArchiveSelected = async (selectedAccounts: Account[]) => {
+    setBulkArchiveTargets(selectedAccounts);
+    setShowBulkArchiveModal(true);
+  };
+
+  // Confirm bulk archive
+  const handleBulkArchiveConfirm = async () => {
     try {
       setLoading(true);
 
-      // Delete all selected accounts
-      const deleteResults = await Promise.allSettled(
-        bulkDeleteTargets.map((account) =>
+      const archiveResults = await Promise.allSettled(
+        bulkArchiveTargets.map((account) =>
           fetchWithCsrf(`/api/users/${account.id}/`, {
             method: "DELETE",
           }),
         ),
       );
 
-      const successCount = deleteResults.filter(
+      const successCount = archiveResults.filter(
         (r) => r.status === "fulfilled",
       ).length;
-      const failCount = deleteResults.filter(
+      const failCount = archiveResults.filter(
         (r) => r.status === "rejected",
       ).length;
 
-      setShowBulkDeleteModal(false);
-      setBulkDeleteTargets([]);
+      setShowBulkArchiveModal(false);
+      setBulkArchiveTargets([]);
 
       if (failCount === 0) {
-        setToast({
-          message: `Successfully deleted ${successCount} account(s)`,
-          type: "success",
-        });
+        toast.success(`Successfully archived ${successCount} account(s)`);
       } else {
-        setToast({
-          message: `Deleted ${successCount} of ${bulkDeleteTargets.length} account(s). ${failCount} failed.`,
-          type: "error",
-        });
+        toast.error(`Archived ${successCount} of ${bulkArchiveTargets.length} account(s). ${failCount} failed.`);
       }
 
-      // Refresh accounts list
       fetchAccounts();
     } catch (err) {
-      setError("Error deleting accounts");
-      console.error("Error deleting accounts:", err);
-      setToast({
-        message: "Error deleting some accounts",
-        type: "error",
-      });
+      setError("Error archiving accounts");
+      console.error("Error archiving accounts:", err);
+      toast.error("Error archiving some accounts");
     } finally {
       setLoading(false);
     }
@@ -492,25 +488,16 @@ function Accounts() {
       setError("");
 
       if (failCount === 0) {
-        setToast({
-          message: `Successfully banned ${successCount} account(s)`,
-          type: "success",
-        });
+        toast.success(`Successfully banned ${successCount} account(s)`);
       } else {
-        setToast({
-          message: `Banned ${successCount} of ${bulkBanTargets.length} account(s). ${failCount} failed.`,
-          type: "error",
-        });
+        toast.error(`Banned ${successCount} of ${bulkBanTargets.length} account(s). ${failCount} failed.`);
       }
 
       fetchAccounts();
     } catch (err) {
       setError("Error banning accounts");
       console.error("Error banning accounts:", err);
-      setToast({
-        message: "Error banning some accounts",
-        type: "error",
-      });
+      toast.error("Error banning some accounts");
     } finally {
       setLoading(false);
     }
@@ -666,10 +653,7 @@ function Accounts() {
         const data = await response.json();
 
         if (response.ok) {
-          setToast({
-            message: "Account updated successfully",
-            type: "success",
-          });
+          toast.success("Account updated successfully");
           setEditingRowId(null);
           setEditedData({});
           setFieldErrors({});
@@ -684,17 +668,11 @@ function Accounts() {
             });
           }
           setFieldErrors(serverErrors);
-          setToast({
-            message: data.error || "Failed to update account",
-            type: "error",
-          });
+          toast.error(data.error || "Failed to update account");
         }
       } catch (err) {
         console.error("Error updating account:", err);
-        setToast({
-          message: "Error connecting to server",
-          type: "error",
-        });
+        toast.error("Error connecting to server");
       } finally {
         setLoading(false);
       }
@@ -713,25 +691,16 @@ function Accounts() {
       setShowSetPointsModal(false);
 
       if (result.failed_count === 0) {
-        setToast({
-          message: `Successfully updated points for ${result.updated_count} account(s)`,
-          type: "success",
-        });
+        toast.success(`Successfully updated points for ${result.updated_count} account(s)`);
       } else {
-        setToast({
-          message: `Updated ${result.updated_count} of ${updates.length} account(s). ${result.failed_count} failed.`,
-          type: "error",
-        });
+        toast.error(`Updated ${result.updated_count} of ${updates.length} account(s). ${result.failed_count} failed.`);
       }
 
       // Refresh accounts list
       fetchAccounts();
     } catch (err) {
       console.error("Error updating points:", err);
-      setToast({
-        message: "Error updating points",
-        type: "error",
-      });
+      toast.error("Error updating points");
     } finally {
       setLoading(false);
     }
@@ -760,27 +729,19 @@ function Accounts() {
       setShowSetPointsModal(false);
 
       if (response.ok) {
-        setToast({
-          message:
-            data.message ||
+        toast.success(
+          data.message ||
             `Successfully updated points for ${data.updated_count} account(s)`,
-          type: "success",
-        });
+        );
         // Refresh accounts list
         fetchAccounts();
       } else {
-        setToast({
-          message: data.error || "Failed to update points",
-          type: "error",
-        });
+        toast.error(data.error || "Failed to update points");
       }
     } catch (err) {
       console.error("Error in bulk points update:", err);
       setShowSetPointsModal(false);
-      setToast({
-        message: "Error updating points. Please try again.",
-        type: "error",
-      });
+      toast.error("Error updating points. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -809,27 +770,19 @@ function Accounts() {
       setShowSetPointsModal(false);
 
       if (response.ok) {
-        setToast({
-          message:
-            data.message ||
+        toast.success(
+          data.message ||
             `Successfully reset points for ${data.updated_count} account(s)`,
-          type: "success",
-        });
+        );
         // Refresh accounts list
         fetchAccounts();
       } else {
-        setToast({
-          message: data.error || "Failed to reset points",
-          type: "error",
-        });
+        toast.error(data.error || "Failed to reset points");
       }
     } catch (err) {
       console.error("Error resetting points:", err);
       setShowSetPointsModal(false);
-      setToast({
-        message: "Error resetting points. Please try again.",
-        type: "error",
-      });
+      toast.error("Error resetting points. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -854,19 +807,28 @@ function Accounts() {
   const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-semibold">Accounts</h1>
-          <p className="text-sm text-muted-foreground">
-            View and manage user accounts.
-          </p>
+    <>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-semibold">Accounts</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage user accounts.
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            Show Archived
+          </label>
         </div>
-      </div>
 
-      {/* Desktop Table */}
-      <div className="hidden md:block">
+        {/* Desktop Table */}
         <AccountsTable
           accounts={accounts}
           loading={loading}
@@ -884,12 +846,16 @@ function Accounts() {
             setShowBanModal(true);
             setError("");
           }}
-          onDeleteAccount={(account) => {
-            setDeleteTarget(account);
-            setShowDeleteModal(true);
+          onArchiveAccount={(account) => {
+            setArchiveTarget(account);
+            setShowArchiveModal(true);
             setError("");
           }}
-          onDeleteSelected={handleDeleteSelected}
+          onUnarchiveAccount={(account) => {
+            setUnarchiveTarget(account);
+            setShowUnarchiveModal(true);
+          }}
+          onArchiveSelected={handleArchiveSelected}
           onBanSelected={handleBanSelected}
           onCreateNew={() => setShowCreateModal(true)}
           onSetPoints={() => setShowSetPointsModal(true)}
@@ -911,8 +877,9 @@ function Accounts() {
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden space-y-4">
-        <p className="text-xs text-muted-foreground">
+      <div className="md:hidden flex flex-col flex-1 p-4 mb-16">
+        <h1 className="text-2xl font-semibold mb-2">Accounts</h1>
+        <p className="text-xs text-muted-foreground mb-4">
           Manage user accounts
         </p>
 
@@ -946,9 +913,9 @@ function Accounts() {
             setShowBanModal(true);
             setError("");
           }}
-          onDeleteAccount={(account) => {
-            setDeleteTarget(account);
-            setShowDeleteModal(true);
+          onArchiveAccount={(account) => {
+            setArchiveTarget(account);
+            setShowArchiveModal(true);
             setError("");
           }}
         />
@@ -1017,15 +984,26 @@ function Accounts() {
         onAccountUpdate={handleViewAccountUpdate}
       />
 
-      <DeleteAccountModal
-        isOpen={showDeleteModal}
+      <ArchiveAccountModal
+        isOpen={showArchiveModal}
         onClose={() => {
-          setShowDeleteModal(false);
-          setDeleteTarget(null);
+          setShowArchiveModal(false);
+          setArchiveTarget(null);
         }}
-        account={deleteTarget}
+        account={archiveTarget}
         loading={loading}
-        onConfirm={(id) => handleDeleteAccount(id, true)}
+        onConfirm={(id) => handleArchiveAccount(id)}
+      />
+
+      <UnarchiveAccountModal
+        isOpen={showUnarchiveModal}
+        onClose={() => {
+          setShowUnarchiveModal(false);
+          setUnarchiveTarget(null);
+        }}
+        account={unarchiveTarget}
+        loading={loading}
+        onConfirm={(id) => handleUnarchiveAccount(id)}
       />
 
       <BulkBanAccountModal
@@ -1047,15 +1025,15 @@ function Accounts() {
         onSubmit={handleBulkBanConfirm}
       />
 
-      <BulkDeleteAccountModal
-        isOpen={showBulkDeleteModal}
+      <BulkArchiveAccountModal
+        isOpen={showBulkArchiveModal}
         onClose={() => {
-          setShowBulkDeleteModal(false);
-          setBulkDeleteTargets([]);
+          setShowBulkArchiveModal(false);
+          setBulkArchiveTargets([]);
         }}
-        accounts={bulkDeleteTargets}
+        accounts={bulkArchiveTargets}
         loading={loading}
-        onConfirm={handleBulkDeleteConfirm}
+        onConfirm={handleBulkArchiveConfirm}
       />
 
       <ExportModal
@@ -1087,25 +1065,7 @@ function Accounts() {
         />
       )}
 
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg animation-fade-in ${
-            toast.type === "success"
-              ? "bg-green-500 text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          <div className="flex-1">{toast.message}</div>
-          <button
-            onClick={() => setToast(null)}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 

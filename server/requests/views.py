@@ -1048,11 +1048,11 @@ class DashboardStatsView(APIView):
             not_processed_count = RedemptionRequest.objects.filter(processing_status='NOT_PROCESSED').count()
             cancelled_count = RedemptionRequest.objects.filter(processing_status='CANCELLED').count()
             
-            # Get on-board distributors and customers count
+            # Get on-board distributors and customers count (exclude archived)
             from distributers.models import Distributor
             from customers.models import Customer
-            on_board_count = Distributor.objects.count()
-            customers_count = Customer.objects.count()
+            on_board_count = Distributor.objects.filter(is_archived=False).count()
+            customers_count = Customer.objects.filter(is_archived=False).count()
             
             return Response({
                 'total_requests': total_requests,
@@ -1228,9 +1228,8 @@ class AgentDashboardStatsView(APIView):
             
             # Get count of active distributors in agent's team (if applicable)
             if membership:
-                # Get distributors associated with this team (if there's a relationship)
-                # For now, count all distributors as potentially managed by the team
-                active_distributors_count = Distributor.objects.count()
+                # Get distributors associated with this team (exclude archived)
+                active_distributors_count = Distributor.objects.filter(is_archived=False).count()
             else:
                 active_distributors_count = 0
             

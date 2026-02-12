@@ -40,6 +40,13 @@ class LoginView(APIView):
                     from datetime import datetime, timezone
                     profile = UserProfile.objects.get(user=user)
                     
+                    # Check if account is archived (overrides all other statuses)
+                    if profile.is_archived:
+                        return Response({
+                            "error": "Account archived",
+                            "detail": "This account has been archived and cannot access the system."
+                        }, status=status.HTTP_403_FORBIDDEN)
+                    
                     # Check if account is activated
                     if not profile.is_activated:
                         return Response({

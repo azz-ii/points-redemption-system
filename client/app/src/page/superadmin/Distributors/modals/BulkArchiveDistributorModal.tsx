@@ -1,20 +1,20 @@
 import { X, Archive } from "lucide-react";
-import type { Account, ModalBaseProps } from "./types";
+import type { Distributor, ModalBaseProps } from "./types";
 
-interface BulkArchiveAccountModalProps extends ModalBaseProps {
-  accounts: Account[];
+interface BulkArchiveDistributorModalProps extends ModalBaseProps {
+  distributors: Distributor[];
   loading: boolean;
   onConfirm: () => void;
 }
 
-export function BulkArchiveAccountModal({
+export function BulkArchiveDistributorModal({
   isOpen,
   onClose,
-  accounts,
+  distributors,
   loading,
   onConfirm,
-}: BulkArchiveAccountModalProps) {
-  if (!isOpen || accounts.length === 0) return null;
+}: BulkArchiveDistributorModalProps) {
+  if (!isOpen || distributors.length === 0) return null;
 
   const handleClose = () => {
     onClose();
@@ -26,7 +26,7 @@ export function BulkArchiveAccountModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="bulk-archive-account-title"
+        aria-labelledby="bulk-archive-distributor-title"
       >
         <div className="flex justify-between items-center p-8">
           <div className="flex items-center gap-3">
@@ -35,10 +35,10 @@ export function BulkArchiveAccountModal({
             </div>
             <div>
               <h2
-                id="bulk-archive-account-title"
+                id="bulk-archive-distributor-title"
                 className="text-xl font-semibold"
               >
-                Archive Multiple Users
+                Archive Multiple Distributors
               </h2>
               <p className="text-xs text-gray-500 mt-1">
                 This action can be reversed.
@@ -56,17 +56,17 @@ export function BulkArchiveAccountModal({
 
         <div className="p-8 space-y-6">
           <p>
-            Are you sure you want to archive <strong>{accounts.length}</strong>{" "}
-            user{accounts.length > 1 ? "s" : ""}? Archived accounts cannot log in to the system.
+            Are you sure you want to archive <strong>{distributors.length}</strong>{" "}
+            distributor{distributors.length > 1 ? "s" : ""}? Archived distributors cannot be selected in redemption requests.
           </p>
 
           <div className="space-y-1 max-h-[70vh] overflow-y-auto">
-            {accounts.map((account) => (
+            {distributors.map((distributor) => (
               <div
-                key={account.id}
+                key={distributor.id}
                 className="text-sm px-3 py-2 rounded bg-muted text-foreground"
               >
-                <strong>{account.full_name}</strong> ({account.username})
+                <strong>{distributor.name}</strong>
               </div>
             ))}
           </div>
@@ -87,8 +87,8 @@ export function BulkArchiveAccountModal({
           >
             {loading
               ? "Archiving..."
-              : `Archive ${accounts.length} User${
-                  accounts.length > 1 ? "s" : ""
+              : `Archive ${distributors.length} Distributor${
+                  distributors.length > 1 ? "s" : ""
                 }`}
           </button>
         </div>

@@ -1,4 +1,4 @@
-import { Eye, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Edit, ChevronLeft, ChevronRight, Archive, ArchiveRestore } from "lucide-react";
 import type { Customer } from "../modals/types";
 
 interface CustomersMobileCardsProps {
@@ -10,7 +10,8 @@ interface CustomersMobileCardsProps {
   onPageChange: (page: number) => void;
   onView: (customer: Customer) => void;
   onEdit: (customer: Customer) => void;
-  onDelete: (customer: Customer) => void;
+  onArchive: (customer: Customer) => void;
+  onUnarchive: (customer: Customer) => void;
 }
 
 export function CustomersMobileCards({
@@ -22,7 +23,8 @@ export function CustomersMobileCards({
   onPageChange,
   onView,
   onEdit,
-  onDelete,
+  onArchive,
+  onUnarchive,
 }: CustomersMobileCardsProps) {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
@@ -55,6 +57,11 @@ export function CustomersMobileCards({
                 <div>
                   <h3 className="font-semibold text-sm">{customer.name}</h3>
                   <p className="text-xs text-gray-500">ID: {customer.id}</p>
+                  {customer.is_archived && (
+                    <span className="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+                      Archived
+                    </span>
+                  )}
                 </div>
                 <span className="text-sm font-medium">
                   {customer.points} pts
@@ -90,20 +97,32 @@ export function CustomersMobileCards({
                   <Eye className="h-4 w-4 inline mr-1" />
                   View
                 </button>
-                <button
-                  onClick={() => onEdit(customer)}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors bg-card hover:bg-accent"
-                >
-                  <Edit className="h-4 w-4 inline mr-1" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(customer)}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors"
-                >
-                  <Trash2 className="h-4 w-4 inline mr-1" />
-                  Delete
-                </button>
+                {customer.is_archived ? (
+                  <button
+                    onClick={() => onUnarchive(customer)}
+                    className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
+                  >
+                    <ArchiveRestore className="h-4 w-4 inline mr-1" />
+                    Restore
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => onEdit(customer)}
+                      className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors bg-card hover:bg-accent"
+                    >
+                      <Edit className="h-4 w-4 inline mr-1" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onArchive(customer)}
+                      className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-600 hover:bg-slate-700 text-white transition-colors"
+                    >
+                      <Archive className="h-4 w-4 inline mr-1" />
+                      Archive
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))

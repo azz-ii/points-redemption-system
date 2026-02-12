@@ -1,19 +1,19 @@
-import { X, Archive } from "lucide-react";
-import type { ModalBaseProps, CatalogueVariant } from "./types";
+import { X, ArchiveRestore } from "lucide-react";
+import type { ModalBaseProps, Product } from "./types";
 
-interface ArchiveItemModalProps extends ModalBaseProps {
-  item: CatalogueVariant | null;
+interface UnarchiveItemModalProps extends ModalBaseProps {
+  item: Product | null;
   loading?: boolean;
   onConfirm: (id: number) => void;
 }
 
-export function ArchiveItemModal({
+export function UnarchiveItemModal({
   isOpen,
   onClose,
   item,
   loading,
   onConfirm,
-}: ArchiveItemModalProps) {
+}: UnarchiveItemModalProps) {
   if (!isOpen || !item) return null;
 
   return (
@@ -22,19 +22,19 @@ export function ArchiveItemModal({
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="archive-item-title"
+        aria-labelledby="unarchive-item-title"
       >
         <div className="flex justify-between items-center p-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <Archive className="h-5 w-5 text-orange-600" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <ArchiveRestore className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <h2 id="archive-item-title" className="text-xl font-semibold">
-                Archive Item
+              <h2 id="unarchive-item-title" className="text-xl font-semibold">
+                Restore Item
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                This action can be reversed.
+                Restore this archived item.
               </p>
             </div>
           </div>
@@ -49,10 +49,10 @@ export function ArchiveItemModal({
 
         <div className="p-8 space-y-6">
           <p>
-            Are you sure you want to archive <strong>{item.item_name}</strong>?
+            Are you sure you want to restore <strong>{item.item_name}</strong>?
           </p>
           <p className="text-sm text-muted-foreground">
-            Archived items will no longer appear in the catalogue or be available for redemption requests. You can restore them later.
+            This item will be made available again in the catalogue and for redemption requests.
           </p>
         </div>
 
@@ -68,9 +68,9 @@ export function ArchiveItemModal({
           <button
             onClick={() => onConfirm(item.id)}
             disabled={loading}
-            className="flex-1 px-6 py-3 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-semibold transition-colors disabled:opacity-50"
+            className="flex-1 px-6 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition-colors disabled:opacity-50"
           >
-            {loading ? "Archiving..." : "Archive"}
+            {loading ? "Restoring..." : "Restore"}
           </button>
         </div>
       </div>

@@ -34,6 +34,7 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
  * Get the display status of an account
  */
 function getAccountStatus(account: Account): string {
+  if (account.is_archived) return "Archived";
   if (account.is_banned) return "Banned";
   if (account.is_activated) return "Active";
   return "Inactive";

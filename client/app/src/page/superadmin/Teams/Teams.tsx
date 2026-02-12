@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { API_URL } from "@/lib/config";
+import { toast } from "sonner";
 import {
   Search,
-  X,
   Users,
   Eye,
   Pencil,
@@ -35,10 +35,6 @@ function Teams() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -180,14 +176,6 @@ function Teams() {
     fetchMarketingAdmins();
   }, []);
 
-  // Auto-dismiss toast after 3 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   // Filter teams based on search query
   const filteredTeams = teams.filter(
     (team) =>
@@ -288,10 +276,7 @@ function Teams() {
           }
         }
 
-        setToast({
-          message: `Team "${newTeam.name}" created successfully!`,
-          type: "success",
-        });
+        toast.success(`Team "${newTeam.name}" created successfully!`);
         setIsCreateModalOpen(false);
         setNewTeam({ name: "", approver: null });
         fetchTeams(); // Refresh teams list
@@ -371,10 +356,7 @@ function Teams() {
       });
 
       if (response.ok) {
-        setToast({
-          message: `Team "${editTeam.name}" updated successfully!`,
-          type: "success",
-        });
+        toast.success(`Team "${editTeam.name}" updated successfully!`);
         setIsEditModalOpen(false);
         setTeamToEdit(null);
         setEditTeam({ name: "", approver: null });
@@ -427,10 +409,7 @@ function Teams() {
       });
 
       if (response.ok) {
-        setToast({
-          message: `Team deleted successfully!`,
-          type: "success",
-        });
+        toast.success(`Team deleted successfully!`);
         setIsDeleteModalOpen(false);
         setTeamToDelete(null);
         fetchTeams(); // Refresh teams list
@@ -445,25 +424,16 @@ function Teams() {
         if (response.status === 400) {
           const errorMessage =
             data.detail || data.error || "Failed to delete team";
-          setToast({
-            message: errorMessage,
-            type: "error",
-          });
+          toast.error(errorMessage);
         } else {
-          setToast({
-            message: "Failed to delete team",
-            type: "error",
-          });
+          toast.error("Failed to delete team");
         }
         setIsDeleteModalOpen(false);
         setTeamToDelete(null);
       }
     } catch (err) {
       console.error("DEBUG Teams: Error deleting team", err);
-      setToast({
-        message: "Error connecting to server",
-        type: "error",
-      });
+      toast.error("Error connecting to server");
       setIsDeleteModalOpen(false);
       setTeamToDelete(null);
     } finally {
@@ -538,7 +508,7 @@ function Teams() {
                 console.log("DEBUG Teams: Opening create modal (mobile)");
                 setIsCreateModalOpen(true);
               }}
-              className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 bg-card text-black hover:bg-accent transition-colors font-semibold text-sm"
+              className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold text-sm"
             >
               <Users className="h-5 w-5" />
               <span>Create Team</span>
@@ -668,25 +638,6 @@ function Teams() {
             </div>
           </div>
         </div>
-
-      {/* Toast Notification */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg animation-fade-in ${
-            toast.type === "success"
-              ? "bg-green-500 text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          <div className="flex-1">{toast.message}</div>
-          <button
-            onClick={() => setToast(null)}
-            className="hover:opacity-70 transition-opacity"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-      )}
 
       {/* Modals */}
       <CreateTeamModal

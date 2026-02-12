@@ -11,7 +11,9 @@ import {
   CreateItemModal,
   EditItemModal,
   ViewItemModal,
-  DeleteItemModal,
+  ArchiveItemModal,
+  UnarchiveItemModal,
+  BulkArchiveItemModal,
   ExportModal,
 } from "./modals";
 import {
@@ -56,6 +58,7 @@ function Catalogue() {
   ]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [_users, setUsers] = useState<User[]>([]);
 
   // Pagination state
@@ -66,7 +69,7 @@ function Catalogue() {
   // Fetch catalogue items from API
   useEffect(() => {
     fetchCatalogueItems();
-  }, [page, rowsPerPage, searchQuery]);
+  }, [page, rowsPerPage, searchQuery, showArchived]);
 
   // Fetch users for dropdowns
   useEffect(() => {
@@ -100,6 +103,9 @@ function Catalogue() {
       }
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
+      }
+      if (showArchived) {
+        params.append("show_archived", "true");
       }
 
       const url = `/api/catalogue/?${params.toString()}`;
@@ -234,13 +240,18 @@ function Catalogue() {
     price_multiplier: "",
   });
 
-  // Modal state for edit/view/delete
+  // Modal state for edit/view/archive
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [viewTarget, setViewTarget] = useState<Product | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Product | null>(null);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Product | null>(null);
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Product[]>([]);
+  const [archiving, setArchiving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
@@ -272,9 +283,9 @@ function Catalogue() {
   });
   const [showEditVariantModal, setShowEditVariantModal] = useState(false);
   const [editVariantError, setEditVariantError] = useState<string | null>(null);
-  const [deleteProductTarget, setDeleteProductTarget] =
+  const [deleteProductTarget, _setDeleteProductTarget] =
     useState<Product | null>(null);
-  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [showDeleteProductModal, _setShowDeleteProductModal] = useState(false);
   const [updatingVariant, setUpdatingVariant] = useState(false);
 
   // Handle create item submission
@@ -567,32 +578,98 @@ function Catalogue() {
     setShowViewModal(true);
   };
 
-  // Handle delete with modal
-  const handleDeleteClick = (item: Product) => {
-    setDeleteTarget(item);
-    setShowDeleteModal(true);
+  // Handle archive with modal
+  const handleArchiveClick = (item: Product) => {
+    setArchiveTarget(item);
+    setShowArchiveModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
+  // Handle unarchive with modal
+  const handleUnarchiveClick = (item: Product) => {
+    setUnarchiveTarget(item);
+    setShowUnarchiveModal(true);
+  };
 
+  // Handle bulk archive
+  const handleBulkArchiveClick = (items: Product[]) => {
+    const activeItems = items.filter((item) => !item.is_archived);
+    if (activeItems.length === 0) return;
+    setBulkArchiveTargets(activeItems);
+    setShowBulkArchiveModal(true);
+  };
+
+  const confirmArchive = async (id: number) => {
     try {
-      console.log("[Catalogue] Deleting product (DELETE) id=", deleteTarget.id);
-      const response = await fetchWithCsrf(`/api/catalogue/${deleteTarget.id}/`, {
+      setArchiving(true);
+      console.log("[Catalogue] Archiving product (DELETE) id=", id);
+      const response = await fetchWithCsrf(`/api/catalogue/${id}/`, {
         method: "DELETE",
       });
       console.log("[Catalogue] DELETE response status:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to delete product");
+        throw new Error("Failed to archive product");
       }
 
-      setShowDeleteModal(false);
-      setDeleteTarget(null);
+      const data = await response.json();
+      if (data.warning) {
+        alert(data.warning);
+      }
+
+      setShowArchiveModal(false);
+      setArchiveTarget(null);
       fetchCatalogueItems();
     } catch (err) {
-      console.error("Error deleting product:", err);
-      alert("Failed to delete product. Please try again.");
+      console.error("Error archiving product:", err);
+      alert("Failed to archive product. Please try again.");
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const confirmUnarchive = async (id: number) => {
+    try {
+      setArchiving(true);
+      console.log("[Catalogue] Unarchiving product (POST) id=", id);
+      const response = await fetchWithCsrf(`/api/catalogue/${id}/unarchive/`, {
+        method: "POST",
+      });
+      console.log("[Catalogue] Unarchive response status:", response.status);
+
+      if (!response.ok) {
+        throw new Error("Failed to restore product");
+      }
+
+      setShowUnarchiveModal(false);
+      setUnarchiveTarget(null);
+      fetchCatalogueItems();
+    } catch (err) {
+      console.error("Error restoring product:", err);
+      alert("Failed to restore product. Please try again.");
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const confirmBulkArchive = async () => {
+    try {
+      setArchiving(true);
+      for (const item of bulkArchiveTargets) {
+        const response = await fetchWithCsrf(`/api/catalogue/${item.id}/`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to archive product ${item.item_name}`);
+        }
+      }
+      setShowBulkArchiveModal(false);
+      setBulkArchiveTargets([]);
+      fetchCatalogueItems();
+    } catch (err) {
+      console.error("Error bulk archiving products:", err);
+      alert("Failed to archive some products. Please try again.");
+    } finally {
+      setArchiving(false);
     }
   };
 
@@ -616,9 +693,8 @@ function Catalogue() {
     setEditVariantError(null);
   };
 
-  const handleDeleteProductClick = (product: Product) => {
-    setDeleteProductTarget(product);
-    setShowDeleteProductModal(true);
+  const handleDeleteProductClick = (_product: Product) => {
+    // Dead code — kept for backward compatibility but not rendered
   };
 
   const handleUpdateVariant = async () => {
@@ -701,25 +777,7 @@ function Catalogue() {
   };
 
   const confirmDeleteProduct = async () => {
-    if (!deleteProductTarget) return;
-    try {
-      const response = await fetch(
-        `/api/catalogue/${deleteProductTarget.id}/`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
-      if (!response.ok) {
-        throw new Error("Failed to delete product");
-      }
-      setShowDeleteProductModal(false);
-      setDeleteProductTarget(null);
-      fetchCatalogueItems();
-    } catch (err) {
-      console.error("Error deleting product:", err);
-      alert("Failed to delete product. Please try again.");
-    }
+    // Dead code — kept for backward compatibility but not called
   };
 
   return (
@@ -733,6 +791,17 @@ function Catalogue() {
               View and manage the catalogue of redeemable items.
             </p>
           </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              Show Archived
+            </label>
+          </div>
         </div>
 
         {/* Table */}
@@ -741,7 +810,9 @@ function Catalogue() {
           loading={loading}
           onView={handleViewClick}
           onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
+          onArchive={handleArchiveClick}
+          onUnarchive={handleUnarchiveClick}
+          onArchiveSelected={handleBulkArchiveClick}
           onCreateNew={() => setShowCreateModal(true)}
           onRefresh={fetchCatalogueItems}
           refreshing={loading}
@@ -769,14 +840,26 @@ function Catalogue() {
           </div>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+            className="flex-1 px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" />
             Add Item
           </button>
+        </div>
+
+        <div className="mb-4">
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            Show Archived
+          </label>
         </div>
 
         {/* Mobile Cards and Pagination */}
@@ -786,7 +869,8 @@ function Catalogue() {
           error={error}
           onView={handleViewClick}
           onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
+          onArchive={handleArchiveClick}
+          onUnarchive={handleUnarchiveClick}
           onRetry={fetchCatalogueItems}
           searchQuery={searchQuery}
         />
@@ -864,11 +948,37 @@ function Catalogue() {
         product={viewTarget}
       />
 
-      <DeleteItemModal
-        isOpen={showDeleteModal && !!deleteTarget}
-        onClose={() => setShowDeleteModal(false)}
-        item={deleteTarget}
-        onConfirm={confirmDelete}
+      <ArchiveItemModal
+        isOpen={showArchiveModal && !!archiveTarget}
+        onClose={() => {
+          setShowArchiveModal(false);
+          setArchiveTarget(null);
+        }}
+        item={archiveTarget}
+        loading={archiving}
+        onConfirm={confirmArchive}
+      />
+
+      <UnarchiveItemModal
+        isOpen={showUnarchiveModal && !!unarchiveTarget}
+        onClose={() => {
+          setShowUnarchiveModal(false);
+          setUnarchiveTarget(null);
+        }}
+        item={unarchiveTarget}
+        loading={archiving}
+        onConfirm={confirmUnarchive}
+      />
+
+      <BulkArchiveItemModal
+        isOpen={showBulkArchiveModal && bulkArchiveTargets.length > 0}
+        onClose={() => {
+          setShowBulkArchiveModal(false);
+          setBulkArchiveTargets([]);
+        }}
+        items={bulkArchiveTargets}
+        loading={archiving}
+        onConfirm={confirmBulkArchive}
       />
 
       <ExportModal

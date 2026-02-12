@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
-import { Eye, Ban, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Ban, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Account } from "../modals";
 
 interface AccountsMobileCardsProps {
@@ -13,7 +13,7 @@ interface AccountsMobileCardsProps {
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
   onBanAccount: (account: Account) => void;
-  onDeleteAccount: (account: Account) => void;
+  onArchiveAccount: (account: Account) => void;
 }
 
 export function AccountsMobileCards({
@@ -26,7 +26,7 @@ export function AccountsMobileCards({
   onViewAccount,
   onEditAccount,
   onBanAccount,
-  onDeleteAccount,
+  onArchiveAccount,
 }: AccountsMobileCardsProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const itemsPerPage = 7;
@@ -78,19 +78,27 @@ export function AccountsMobileCards({
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex gap-1">
-                  {account.is_activated ? (
-                    <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
-                      Active
+                  {account.is_archived ? (
+                    <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+                      Archived
                     </span>
                   ) : (
-                    <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
-                      Inactive
-                    </span>
-                  )}
-                  {account.is_banned && (
-                    <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
-                      Banned
-                    </span>
+                    <>
+                      {account.is_activated ? (
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
+                          Inactive
+                        </span>
+                      )}
+                      {account.is_banned && (
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
+                          Banned
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="relative">
@@ -150,14 +158,14 @@ export function AccountsMobileCards({
                         </button>
                         <button
                           onClick={() => {
-                            onDeleteAccount(account);
+                            onArchiveAccount(account);
                             setOpenMenuId(null);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-500 hover:bg-accent"
+                          className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-slate-600 hover:bg-accent"
                           disabled={loading}
                         >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
+                          <Archive className="h-4 w-4" />
+                          Archive
                         </button>
                       </div>
                     </>

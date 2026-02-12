@@ -1,4 +1,4 @@
-import { Eye, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Edit, Trash2, ChevronLeft, ChevronRight, Archive, ArchiveRestore } from "lucide-react";
 import type { Distributor } from "../modals/types";
 
 interface DistributorsMobileCardsProps {
@@ -10,7 +10,8 @@ interface DistributorsMobileCardsProps {
   onPageChange: (page: number) => void;
   onView: (distributor: Distributor) => void;
   onEdit: (distributor: Distributor) => void;
-  onDelete: (distributor: Distributor) => void;
+  onArchive: (distributor: Distributor) => void;
+  onUnarchive: (distributor: Distributor) => void;
 }
 
 export function DistributorsMobileCards({
@@ -22,7 +23,8 @@ export function DistributorsMobileCards({
   onPageChange,
   onView,
   onEdit,
-  onDelete,
+  onArchive,
+  onUnarchive,
 }: DistributorsMobileCardsProps) {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
@@ -55,6 +57,11 @@ export function DistributorsMobileCards({
                 <div>
                   <h3 className="font-semibold text-sm">{distributor.name}</h3>
                   <p className="text-xs text-gray-500">ID: {distributor.id}</p>
+                  {distributor.is_archived && (
+                    <span className="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+                      Archived
+                    </span>
+                  )}
                 </div>
                 <span className="text-sm font-medium">
                   {distributor.points} pts
@@ -94,20 +101,32 @@ export function DistributorsMobileCards({
                   <Eye className="h-4 w-4 inline mr-1" />
                   View
                 </button>
-                <button
-                  onClick={() => onEdit(distributor)}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors bg-card hover:bg-accent"
-                >
-                  <Edit className="h-4 w-4 inline mr-1" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(distributor)}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold bg-red-500 hover:bg-red-600 text-white transition-colors"
-                >
-                  <Trash2 className="h-4 w-4 inline mr-1" />
-                  Delete
-                </button>
+                {distributor.is_archived ? (
+                  <button
+                    onClick={() => onUnarchive(distributor)}
+                    className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors"
+                  >
+                    <ArchiveRestore className="h-4 w-4 inline mr-1" />
+                    Restore
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => onEdit(distributor)}
+                      className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors bg-card hover:bg-accent"
+                    >
+                      <Edit className="h-4 w-4 inline mr-1" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onArchive(distributor)}
+                      className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-600 hover:bg-slate-700 text-white transition-colors"
+                    >
+                      <Archive className="h-4 w-4 inline mr-1" />
+                      Archive
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))

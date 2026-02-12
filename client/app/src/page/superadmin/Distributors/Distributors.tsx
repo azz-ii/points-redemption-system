@@ -8,7 +8,9 @@ import {
   CreateDistributorModal,
   EditDistributorModal,
   ViewDistributorModal,
-  DeleteDistributorModal,
+  ArchiveDistributorModal,
+  UnarchiveDistributorModal,
+  BulkArchiveDistributorModal,
   ExportModal,
   SetPointsModal,
 } from "./modals";
@@ -16,11 +18,13 @@ import { DistributorsTable, DistributorsMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Distributors() {
-  const currentPage = "distributors";  const [loading, setLoading] = useState(false);
+  const currentPage = "distributors";
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [distributors, setDistributors] = useState<Distributor[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   // Pagination state for mobile only
   const [page, setPage] = useState(1);
@@ -28,7 +32,18 @@ function Distributors() {
   const fetchDistributors = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await distributorsApi.getDistributors(searchQuery);
+      const url = new URL(`${API_URL}/distributors/`, window.location.origin);
+      if (showArchived) {
+        url.searchParams.append('show_archived', 'true');
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
+      }
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
+      const result = await response.json();
+      const data = result.results || result;
       // Ensure data is always an array
       setDistributors(Array.isArray(data) ? data : []);
       setError(null);
@@ -39,7 +54,7 @@ function Distributors() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, showArchived]);
 
   // Fetch distributors on mount
   useEffect(() => {
@@ -95,12 +110,16 @@ function Distributors() {
   // Modal state for edit/view/delete
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
+  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingDistributorId, setEditingDistributorId] = useState<
     number | null
   >(null);
   const [viewTarget, setViewTarget] = useState<Distributor | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Distributor | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Distributor | null>(null);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Distributor | null>(null);
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Distributor[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -228,23 +247,93 @@ function Distributors() {
     setShowViewModal(true);
   };
 
-  // Handle delete click
-  const handleDeleteClick = (distributor: Distributor) => {
-    setDeleteTarget(distributor);
-    setShowDeleteModal(true);
+  // Handle archive click
+  const handleArchiveClick = (distributor: Distributor) => {
+    setArchiveTarget(distributor);
+    setShowArchiveModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget) return;
+  // Handle unarchive click
+  const handleUnarchiveClick = (distributor: Distributor) => {
+    setUnarchiveTarget(distributor);
+    setShowUnarchiveModal(true);
+  };
 
+  // Confirm archive distributor
+  const confirmArchive = async (id: number) => {
     try {
-      await distributorsApi.deleteDistributor(deleteTarget.id);
-      setDistributors((prev) => prev.filter((d) => d.id !== deleteTarget.id));
-      setShowDeleteModal(false);
-      setDeleteTarget(null);
+      setLoading(true);
+      await distributorsApi.deleteDistributor(id);
+      setShowArchiveModal(false);
+      setArchiveTarget(null);
+      fetchDistributors();
     } catch (err) {
-      console.error("Error deleting distributor:", err);
-      alert("Failed to delete distributor. Please try again.");
+      console.error("Error archiving distributor:", err);
+      alert("Failed to archive distributor. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm unarchive distributor
+  const confirmUnarchive = async (id: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/distributors/${id}/unarchive/`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to unarchive distributor');
+      }
+      
+      setShowUnarchiveModal(false);
+      setUnarchiveTarget(null);
+      fetchDistributors();
+    } catch (err) {
+      console.error("Error unarchiving distributor:", err);
+      alert(err instanceof Error ? err.message : "Failed to unarchive distributor. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bulk archive
+  const handleArchiveSelected = async (selectedDistributors: Distributor[]) => {
+    setBulkArchiveTargets(selectedDistributors);
+    setShowBulkArchiveModal(true);
+  };
+
+  // Confirm bulk archive
+  const confirmBulkArchive = async () => {
+    try {
+      setLoading(true);
+      const archiveResults = await Promise.allSettled(
+        bulkArchiveTargets.map((distributor) =>
+          distributorsApi.deleteDistributor(distributor.id)
+        )
+      );
+
+      const successCount = archiveResults.filter((r) => r.status === "fulfilled").length;
+      const failCount = archiveResults.filter((r) => r.status === "rejected").length;
+
+      setShowBulkArchiveModal(false);
+      setBulkArchiveTargets([]);
+
+      if (failCount === 0) {
+        alert(`Successfully archived ${successCount} distributor(s)`);
+      } else {
+        alert(`Archived ${successCount} of ${bulkArchiveTargets.length} distributor(s). ${failCount} failed.`);
+      }
+
+      fetchDistributors();
+    } catch (err) {
+      console.error("Error archiving distributors:", err);
+      alert("Error archiving some distributors");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -410,11 +499,20 @@ function Distributors() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Distributors</h1>
-              <p
-                className="text-sm text-muted-foreground"
-              >
+              <p className="text-sm text-muted-foreground">
                 View and manage distributor information.
               </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Show Archived
+              </label>
             </div>
           </div>
 
@@ -444,7 +542,9 @@ function Distributors() {
               loading={loading}
               onView={handleViewClick}
               onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
+              onArchive={handleArchiveClick}
+              onUnarchive={handleUnarchiveClick}
+              onArchiveSelected={handleArchiveSelected}
               onCreateNew={() => setShowCreateModal(true)}
               onRefresh={fetchDistributors}
               refreshing={loading}
@@ -522,7 +622,8 @@ function Distributors() {
               onPageChange={setPage}
               onView={handleViewClick}
               onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
+              onArchive={handleArchiveClick}
+              onUnarchive={handleUnarchiveClick}
             />
           )}
         </div>
@@ -555,12 +656,31 @@ function Distributors() {
         distributor={viewTarget}
       />
 
-      {/* Delete Confirmation Modal */}
-      <DeleteDistributorModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        distributor={deleteTarget}
-        onConfirm={confirmDelete}
+      {/* Archive Confirmation Modal */}
+      <ArchiveDistributorModal
+        isOpen={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        distributor={archiveTarget}
+        loading={loading}
+        onConfirm={confirmArchive}
+      />
+
+      {/* Unarchive Confirmation Modal */}
+      <UnarchiveDistributorModal
+        isOpen={showUnarchiveModal}
+        onClose={() => setShowUnarchiveModal(false)}
+        distributor={unarchiveTarget}
+        loading={loading}
+        onConfirm={confirmUnarchive}
+      />
+
+      {/* Bulk Archive Confirmation Modal */}
+      <BulkArchiveDistributorModal
+        isOpen={showBulkArchiveModal}
+        onClose={() => setShowBulkArchiveModal(false)}
+        distributors={bulkArchiveTargets}
+        loading={loading}
+        onConfirm={confirmBulkArchive}
       />
 
       {/* Export Modal */}
