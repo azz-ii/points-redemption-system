@@ -169,7 +169,7 @@ export function EditAccountModal({
             <div className="space-y-2 text-sm">
               <div>
                 <span className="text-gray-500">Username:</span>
-                <span className="ml-2 font-medium">{account.username}</span>
+                <span className="ml-2 font-medium">{account.username || "N/A"}</span>
               </div>
               <div>
                 <span className="text-gray-500">Email:</span>

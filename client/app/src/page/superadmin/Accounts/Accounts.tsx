@@ -27,6 +27,13 @@ function Accounts() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Server-side pagination state
+  const [tablePage, setTablePage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const PAGE_SIZE = 15;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -127,35 +134,54 @@ function Accounts() {
   };
 
   // Fetch accounts on component mount
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true);
       const url = new URL(`${API_URL}/users/`, window.location.origin);
+      url.searchParams.append('page', String(tablePage + 1));
+      url.searchParams.append('page_size', String(PAGE_SIZE));
       if (showArchived) {
         url.searchParams.append('show_archived', 'true');
+      }
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
       }
       const response = await fetch(url.toString(), {
         credentials: 'include',
       });
-      const data = await response.json();
-
-      if (response.ok) {
-        setAccounts(data.results || []);
-      } else {
+      if (!response.ok) {
         setError("Failed to load accounts");
+        return;
       }
+      const data = await response.json();
+      setAccounts(data.results || []);
+      setTotalCount(data.count || 0);
     } catch (err) {
       setError("Error connecting to server");
       console.error("Error fetching accounts:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [tablePage, searchQuery, showArchived]);
 
-  // Load accounts on mount and when showArchived changes
+  // Load accounts on mount and when dependencies change
   useEffect(() => {
     fetchAccounts();
+  }, [fetchAccounts]);
+
+  // Reset to first page when showArchived changes
+  useEffect(() => {
+    setTablePage(0);
   }, [showArchived]);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setTablePage(0);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setTablePage(page);
+  }, []);
 
   // Create new account (non-blocking)
   const handleCreateAccount = async () => {
@@ -570,11 +596,6 @@ function Accounts() {
     }
   };
 
-  // Mobile pagination
-  const [searchQuery, _setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
-
   // Inline edit handlers
   const handleToggleInlineEdit = useCallback((account: Account) => {
     setEditingRowId(account.id);
@@ -788,24 +809,6 @@ function Accounts() {
     }
   };
 
-  const filteredAccounts = accounts.filter(
-    (account) =>
-      account.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      account.id.toString().includes(searchQuery) ||
-      account.position.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredAccounts.length / itemsPerPage),
-  );
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
-
   return (
     <>
       {/* Desktop Layout */}
@@ -832,6 +835,8 @@ function Accounts() {
         <AccountsTable
           accounts={accounts}
           loading={loading}
+          error={error}
+          onRetry={fetchAccounts}
           onViewAccount={(account) => {
             setViewTarget(account);
             setShowViewModal(true);
@@ -873,6 +878,12 @@ function Accounts() {
           onCancelInlineEdit={handleCancelInlineEdit}
           onFieldChange={handleFieldChange}
           fieldErrors={fieldErrors}
+          manualPagination
+          pageCount={pageCount}
+          totalResults={totalCount}
+          currentPage={tablePage}
+          onPageChange={handlePageChange}
+          onSearch={handleSearch}
         />
       </div>
 
@@ -895,11 +906,13 @@ function Accounts() {
         {/* Mobile Cards */}
         <AccountsMobileCards
           accounts={accounts}
-          paginatedAccounts={paginatedAccounts}
-          filteredAccounts={filteredAccounts}
+          paginatedAccounts={accounts}
+          filteredAccounts={accounts}
           loading={loading}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
+          error={error}
+          onRetry={fetchAccounts}
+          currentPage={tablePage + 1}
+          setCurrentPage={(p) => setTablePage(p - 1)}
           onViewAccount={(account) => {
             setViewTarget(account);
             setShowViewModal(true);

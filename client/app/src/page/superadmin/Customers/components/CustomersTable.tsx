@@ -5,6 +5,8 @@ import { createColumns } from "./columns";
 interface CustomersTableProps {
   customers: Customer[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   onView: (customer: Customer) => void;
   onEdit: (customer: Customer) => void;
   onArchive: (customer: Customer) => void;
@@ -16,11 +18,19 @@ interface CustomersTableProps {
   onExport?: () => void;
   onSetPoints?: () => void;
   onViewPointsHistory?: (customer: Customer) => void;
+  manualPagination?: boolean;
+  pageCount?: number;
+  totalResults?: number;
+  currentPage?: number;
+  onPageChange?: (pageIndex: number) => void;
+  onSearch?: (query: string) => void;
 }
 
 export function CustomersTable({
   customers,
   loading,
+  error,
+  onRetry,
   onView,
   onEdit,
   onArchive,
@@ -32,6 +42,12 @@ export function CustomersTable({
   onExport,
   onSetPoints,
   onViewPointsHistory,
+  manualPagination,
+  pageCount,
+  totalResults,
+  currentPage,
+  onPageChange,
+  onSearch,
 }: CustomersTableProps) {
   const columns = createColumns({
     onView,
@@ -46,6 +62,8 @@ export function CustomersTable({
       columns={columns}
       data={customers}
       loading={loading}
+      error={error}
+      onRetry={onRetry}
       onDeleteSelected={onArchiveSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Customer"
@@ -65,6 +83,12 @@ export function CustomersTable({
       }}
       loadingMessage="Loading customers..."
       emptyMessage="No customers found"
+      manualPagination={manualPagination}
+      pageCount={pageCount}
+      totalResults={totalResults}
+      currentPage={currentPage}
+      onPageChange={onPageChange}
+      onSearch={onSearch}
     />
   );
 }

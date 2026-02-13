@@ -25,13 +25,18 @@ function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
-  // Pagination state for mobile only
-  const [page, setPage] = useState(1);
+  // Server-side pagination state
+  const [tablePage, setTablePage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 15;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
       const url = new URL(`${API_URL}/customers/`, window.location.origin);
+      url.searchParams.append('page', String(tablePage + 1));
+      url.searchParams.append('page_size', String(PAGE_SIZE));
       if (showArchived) {
         url.searchParams.append('show_archived', 'true');
       }
@@ -41,10 +46,12 @@ function Customers() {
       const response = await fetch(url.toString(), {
         credentials: 'include',
       });
-      const result = await response.json();
-      const data = result.results || result;
-      // Ensure data is always an array
-      setCustomers(Array.isArray(data) ? data : []);
+      if (!response.ok) {
+        throw new Error('Failed to fetch customers');
+      }
+      const data = await response.json();
+      setCustomers(data.results || []);
+      setTotalCount(data.count || 0);
       setError(null);
     } catch (err) {
       console.error("Error fetching customers:", err);
@@ -53,34 +60,26 @@ function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, showArchived]);
+  }, [tablePage, searchQuery, showArchived]);
 
-  // Fetch customers on mount
+  // Fetch customers on mount and when dependencies change
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  // Filter and paginate for mobile view
-  const filteredCustomers = customers.filter((customer) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      customer.name.toLowerCase().includes(query) ||
-      (customer.contact_email?.toLowerCase().includes(query) ?? false) ||
-      (customer.location?.toLowerCase().includes(query) ?? false)
-    );
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / 15));
-  const safePage = Math.min(page, totalPages);
-  const startIndex = (safePage - 1) * 15;
-  const endIndex = startIndex + 15;
-  const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
-
-  // Reset to page 1 when search query changes
+  // Reset to first page when showArchived changes
   useEffect(() => {
-    setPage(1);
-    fetchCustomers();
-  }, [searchQuery, fetchCustomers]);
+    setTablePage(0);
+  }, [showArchived]);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setTablePage(0);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setTablePage(page);
+  }, []);
 
   // Modal and form state for creating new customer
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -477,60 +476,44 @@ function Customers() {
             </div>
           </div>
 
-          {/* Loading/Error States */}
-          {loading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading customers...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-red-500">{error}</p>
-              <button
-                onClick={fetchCustomers}
-                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* Table */}
-          {!loading && !error && (
-            <>
-              <div className="mb-4 flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="show-archived"
-                  checked={showArchived}
-                  onChange={(e) => setShowArchived(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                <label htmlFor="show-archived" className="text-sm text-muted-foreground">
-                  Show Archived Customers
-                </label>
-              </div>
-              <CustomersTable
-                customers={customers}
-                loading={loading}
-                onView={handleViewClick}
-                onEdit={handleEditClick}
-                onArchive={handleArchiveClick}
-                onUnarchive={handleUnarchiveClick}
-                onArchiveSelected={handleArchiveSelected}
-                onCreateNew={() => setShowCreateModal(true)}
-                onRefresh={fetchCustomers}
-                refreshing={loading}
-                onExport={() => setShowExportModal(true)}
-                onSetPoints={() => setShowSetPointsModal(true)}
-                onViewPointsHistory={(customer) => {
-                  setPointsHistoryTarget(customer);
-                  setShowPointsHistory(true);
-                }}
-              />
-            </>
-          )}
+          <div className="mb-4 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="show-archived"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <label htmlFor="show-archived" className="text-sm text-muted-foreground">
+              Show Archived Customers
+            </label>
+          </div>
+          <CustomersTable
+            customers={customers}
+            loading={loading}
+            error={error}
+            onRetry={fetchCustomers}
+            onView={handleViewClick}
+            onEdit={handleEditClick}
+            onArchive={handleArchiveClick}
+            onUnarchive={handleUnarchiveClick}
+            onArchiveSelected={handleArchiveSelected}
+            onCreateNew={() => setShowCreateModal(true)}
+            onRefresh={fetchCustomers}
+            refreshing={loading}
+            onExport={() => setShowExportModal(true)}
+            onSetPoints={() => setShowSetPointsModal(true)}
+            onViewPointsHistory={(customer) => {
+              setPointsHistoryTarget(customer);
+              setShowPointsHistory(true);
+            }}
+            manualPagination
+            pageCount={pageCount}
+            totalResults={totalCount}
+            currentPage={tablePage}
+            onPageChange={handlePageChange}
+            onSearch={handleSearch}
+          />
         </div>
 
         {/* Mobile Layout */}
@@ -551,7 +534,10 @@ function Customers() {
               <Input
                 placeholder="Search....."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setTablePage(0);
+                }}
                 className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -567,40 +553,22 @@ function Customers() {
             </button>
           </div>
 
-          {/* Loading/Error States Mobile */}
-          {loading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-sm">Loading...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-red-500 text-sm">{error}</p>
-              <button
-                onClick={fetchCustomers}
-                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
           {/* Mobile Cards */}
-          {!loading && !error && (
-            <CustomersMobileCards
-              paginatedCustomers={paginatedCustomers}
-              filteredCustomers={filteredCustomers}
-              loading={loading}
-              page={safePage}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              onView={handleViewClick}
-              onEdit={handleEditClick}
-              onArchive={handleArchiveClick}
-              onUnarchive={handleUnarchiveClick}
-            />
-          )}
+          <CustomersMobileCards
+            customers={customers}
+            paginatedCustomers={customers}
+            filteredCustomers={customers}
+            loading={loading}
+            error={error}
+            onRetry={fetchCustomers}
+            page={tablePage + 1}
+            totalPages={pageCount}
+            onPageChange={(p) => setTablePage(p - 1)}
+            onView={handleViewClick}
+            onEdit={handleEditClick}
+            onArchive={handleArchiveClick}
+            onUnarchive={handleUnarchiveClick}
+          />
         </div>
       {/* Create Customer Modal */}
       <CreateCustomerModal

@@ -99,7 +99,7 @@ export function ViewAccountModal({
                 <label className="block text-xs text-gray-500 mb-1">
                   Username
                 </label>
-                <p className="font-medium">{account.username}</p>
+                <p className="font-medium">{account.username || "N/A"}</p>
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">

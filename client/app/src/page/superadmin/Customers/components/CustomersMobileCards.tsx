@@ -2,9 +2,12 @@ import { Eye, Edit, ChevronLeft, ChevronRight, Archive, ArchiveRestore } from "l
 import type { Customer } from "../modals/types";
 
 interface CustomersMobileCardsProps {
+  customers: Customer[];
   paginatedCustomers: Customer[];
   filteredCustomers: Customer[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -15,9 +18,12 @@ interface CustomersMobileCardsProps {
 }
 
 export function CustomersMobileCards({
+  customers,
   paginatedCustomers,
   filteredCustomers,
   loading,
+  error,
+  onRetry,
   page,
   totalPages,
   onPageChange,
@@ -39,9 +45,21 @@ export function CustomersMobileCards({
     <>
       {/* Cards */}
       <div className="space-y-3">
-        {loading ? (
+        {loading && customers.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             Loading customers...
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-500 text-sm">{error}</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
+              >
+                Retry
+              </button>
+            )}
           </div>
         ) : filteredCustomers.length === 0 ? (
           <div className="text-center text-gray-500 py-8">

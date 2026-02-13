@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { API_URL } from "@/lib/config";
 import { fetchWithCsrf } from "@/lib/csrf";
 import {
   Search,
   Plus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { Product, User } from "./modals";
 import {
@@ -19,57 +21,22 @@ import {
 import {
   CatalogueTable,
   CatalogueMobileCards,
-  CataloguePagination,
 } from "./components";
 
 function Catalogue() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [items, setItems] = useState<Product[]>([
-    {
-      id: 1,
-      item_name: "Platinum Polo",
-      item_code: "MC3001",
-      description:
-        "A high-quality polo shirt made from premium platinum fabric with lasting charm and style.",
-      purpose:
-        "Ideal for casual wear, company events, or as a stylish uniform piece.",
-      specifications:
-        "Material: 100% Platinum Cotton, Fit: Modern Fit, Color: Ribbed Polo Collar, Sleeves: Short sleeves with ribbed armbands",
-      category:
-        "Available in sizes S, M, L, XL and colors Black, White, and Navy Blue.",
-      points: "500",
-      price: "1200",
-      legend: "MERCH",
-      pricing_type: "FIXED",
-      min_order_qty: 1,
-      max_order_qty: null,
-      has_stock: true,
-      stock: 100,
-      committed_stock: 10,
-      available_stock: 90,
-      image: null,
-      is_archived: false,
-      date_added: new Date().toISOString().split("T")[0],
-      added_by: null,
-      date_archived: null,
-      archived_by: null,
-    },
-  ]);
+  const [items, setItems] = useState<Product[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [_users, setUsers] = useState<User[]>([]);
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState<number | "ALL">(15);
+  // Pagination state (0-indexed for DataTable compatibility)
+  const [tablePage, setTablePage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-
-  // Fetch catalogue items from API
-  useEffect(() => {
-    fetchCatalogueItems();
-  }, [page, rowsPerPage, searchQuery, showArchived]);
+  const PAGE_SIZE = 15;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // Fetch users for dropdowns
   useEffect(() => {
@@ -89,18 +56,13 @@ function Catalogue() {
     fetchUsers();
   }, []);
 
-  const fetchCatalogueItems = async () => {
+  const fetchCatalogueItems = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Build query params
       const params = new URLSearchParams();
-      params.append("page", page.toString());
-      if (rowsPerPage !== "ALL") {
-        params.append("page_size", rowsPerPage.toString());
-      } else {
-        params.append("page_size", "1000"); // Large number for "ALL"
-      }
+      params.append("page", String(tablePage + 1));
+      params.append("page_size", String(PAGE_SIZE));
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
       }
@@ -108,23 +70,18 @@ function Catalogue() {
         params.append("show_archived", "true");
       }
 
-      const url = `/api/catalogue/?${params.toString()}`;
-      console.log("[Catalogue] Fetching products (GET) -> url=", url);
-      const response = await fetch(url, {
+      const response = await fetch(`/api/catalogue/?${params.toString()}`, {
         credentials: "include",
       });
-      console.log("[Catalogue] GET response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to fetch products");
       }
 
       const data = await response.json();
-      // Handle paginated response format: { count, next, previous, results }
       const products = data.results || [];
       setTotalCount(data.count || 0);
 
-      // Map API response to Product model
       const mappedItems: Product[] = products.map((product: Product) => ({
         id: product.id,
         item_code: product.item_code,
@@ -155,19 +112,20 @@ function Catalogue() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tablePage, searchQuery, showArchived]);
 
-  // Pagination logic using server-side count
-  const totalPages =
-    rowsPerPage === "ALL"
-      ? 1
-      : Math.max(1, Math.ceil(totalCount / (rowsPerPage as number)));
-  const safePage = Math.min(page, totalPages);
-
-  // Reset to page 1 when search query changes
   useEffect(() => {
-    setPage(1);
-  }, [searchQuery]);
+    fetchCatalogueItems();
+  }, [fetchCatalogueItems]);
+
+  const handlePageChange = useCallback((pageIndex: number) => {
+    setTablePage(pageIndex);
+  }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setTablePage(0);
+  }, []);
 
   // Modal and form state for creating new item
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -808,6 +766,8 @@ function Catalogue() {
         <CatalogueTable
           products={items}
           loading={loading}
+          error={error}
+          onRetry={fetchCatalogueItems}
           onView={handleViewClick}
           onEdit={handleEditClick}
           onArchive={handleArchiveClick}
@@ -817,6 +777,12 @@ function Catalogue() {
           onRefresh={fetchCatalogueItems}
           refreshing={loading}
           onExport={() => setShowExportModal(true)}
+          manualPagination
+          pageCount={pageCount}
+          totalResults={totalCount}
+          currentPage={tablePage}
+          onPageChange={handlePageChange}
+          onSearch={handleSearch}
         />
       </div>
 
@@ -875,15 +841,26 @@ function Catalogue() {
           searchQuery={searchQuery}
         />
 
-        {items.length > 0 && (
-          <CataloguePagination
-            page={safePage}
-            totalPages={totalPages}
-            rowsPerPage={rowsPerPage}
-            onPageChange={setPage}
-            onRowsPerPageChange={setRowsPerPage}
-            isMobile={true}
-          />
+        {items.length > 0 && !loading && !error && (
+          <div className="flex items-center justify-center gap-2 mt-4 pb-2">
+            <button
+              onClick={() => setTablePage((p) => Math.max(0, p - 1))}
+              disabled={tablePage === 0}
+              className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-xs font-medium px-2">
+              Page {tablePage + 1} of {pageCount}
+            </span>
+            <button
+              onClick={() => setTablePage((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={tablePage >= pageCount - 1}
+              className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         )}
       </div>
 

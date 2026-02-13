@@ -2,7 +2,7 @@ export type { ModalBaseProps } from "@/components/modals";
 
 export interface Account {
   id: number;
-  username: string;
+  username?: string | null;
   full_name: string;
   email: string;
   position: string;

@@ -8,6 +8,8 @@ interface AccountsMobileCardsProps {
   paginatedAccounts: Account[];
   filteredAccounts: Account[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   currentPage: number;
   setCurrentPage: Dispatch<SetStateAction<number>>;
   onViewAccount: (account: Account) => void;
@@ -21,6 +23,8 @@ export function AccountsMobileCards({
   paginatedAccounts,
   filteredAccounts,
   loading,
+  error,
+  onRetry,
   currentPage,
   setCurrentPage,
   onViewAccount,
@@ -39,6 +43,18 @@ export function AccountsMobileCards({
         {loading && accounts.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             Loading accounts...
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-500 mb-4">{error}</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+              >
+                Retry
+              </button>
+            )}
           </div>
         ) : filteredAccounts.length === 0 ? (
           <div className="text-center text-gray-500 py-8">

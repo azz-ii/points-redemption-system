@@ -62,6 +62,12 @@ class UserViewSet(viewsets.ModelViewSet):
         if not show_archived:
             queryset = queryset.filter(profile__is_archived=False)
         
+        # Filter by position if provided (supports comma-separated values)
+        position = self.request.query_params.get('position', None)
+        if position:
+            positions = [p.strip() for p in position.split(',')]
+            queryset = queryset.filter(profile__position__in=positions)
+        
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
         

@@ -85,6 +85,14 @@ interface DataTableProps<TData, TValue> {
   loadingMessage?: string
   emptyMessage?: string
 
+  // Server-side pagination
+  manualPagination?: boolean
+  pageCount?: number
+  totalResults?: number
+  currentPage?: number
+  onPageChange?: (pageIndex: number) => void
+  onSearch?: (query: string) => void
+
   // Inline editing (Accounts-specific)
   editingRowId?: number | null
   editedData?: Record<string, any>
@@ -122,12 +130,28 @@ export function DataTable<TData, TValue>({
   editedData = {},
   onFieldChange,
   fieldErrors = {},
+  manualPagination = false,
+  pageCount,
+  totalResults,
+  currentPage,
+  onPageChange,
+  onSearch,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const [searchValue, setSearchValue] = React.useState("")
+
+  // Debounce server-side search
+  React.useEffect(() => {
+    if (!onSearch) return
+    const timer = setTimeout(() => {
+      onSearch(searchValue)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchValue, onSearch])
 
   const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected || onBanSelected)
   const CreateIcon = createButtonIcon === "user" ? UserPlus : Plus
@@ -140,7 +164,9 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       ...(enableRowSelection ? { rowSelection } : {}),
-      globalFilter,
+      ...(manualPagination
+        ? { pagination: { pageIndex: currentPage ?? 0, pageSize } }
+        : { globalFilter }),
     },
     meta: {
       editingRowId,
@@ -153,12 +179,22 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onGlobalFilterChange: setGlobalFilter,
+    ...(manualPagination
+      ? {
+          manualPagination: true,
+          pageCount: pageCount ?? -1,
+          onPaginationChange: (updater: any) => {
+            const old = { pageIndex: currentPage ?? 0, pageSize }
+            const newState = typeof updater === 'function' ? updater(old) : updater
+            onPageChange?.(newState.pageIndex)
+          },
+        }
+      : { onGlobalFilterChange: setGlobalFilter }),
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    ...(!manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    ...(globalFilterFn ? { globalFilterFn } : {}),
+    ...(!manualPagination && globalFilterFn ? { globalFilterFn } : {}),
     initialState: {
       pagination: {
         pageSize,
@@ -181,8 +217,14 @@ export function DataTable<TData, TValue>({
             {showSearch && (
               <Input
                 placeholder={searchPlaceholder}
-                value={globalFilter ?? ""}
-                onChange={(event) => setGlobalFilter(event.target.value)}
+                value={manualPagination ? searchValue : (globalFilter ?? "")}
+                onChange={(event) => {
+                  if (manualPagination) {
+                    setSearchValue(event.target.value)
+                  } else {
+                    setGlobalFilter(event.target.value)
+                  }
+                }}
                 className="max-w-sm"
               />
             )}
@@ -385,11 +427,11 @@ export function DataTable<TData, TValue>({
             <div className="flex-1 text-sm text-muted-foreground">
               {hasSelection ? (
                 <span>
-                  {selectedRows.length} of {table.getFilteredRowModel().rows.length} row(s) selected
+                  {selectedRows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} row(s) selected
                 </span>
               ) : (
                 <span>
-                  Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} results
+                  Showing {table.getRowModel().rows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} results
                 </span>
               )}
             </div>

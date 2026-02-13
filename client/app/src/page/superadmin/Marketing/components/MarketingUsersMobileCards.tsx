@@ -4,6 +4,8 @@ import type { MarketingUser } from "./types";
 interface MarketingUsersMobileCardsProps {
   paginatedUsers: MarketingUser[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -29,13 +31,15 @@ const getLegendColor = (legend: string) => {
 export function MarketingUsersMobileCards({
   paginatedUsers,
   loading,
+  error,
+  onRetry,
   currentPage,
   totalPages,
   onPageChange,
   onViewAccount,
   onEditAccount,
 }: MarketingUsersMobileCardsProps) {
-  if (loading) {
+  if (loading && paginatedUsers.length === 0) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
@@ -47,6 +51,22 @@ export function MarketingUsersMobileCards({
             <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500 mb-4">{error}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }
@@ -71,7 +91,7 @@ export function MarketingUsersMobileCards({
           <div className="flex justify-between items-start mb-3">
             <div>
               <h3 className="font-semibold">{user.full_name}</h3>
-              <p className="text-sm text-gray-500">@{user.username}</p>
+              <p className="text-sm text-gray-500">@{user.username || "No Username"}</p>
             </div>
             <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
               {user.position}

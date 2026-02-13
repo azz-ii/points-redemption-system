@@ -18,7 +18,16 @@ import {
 function Marketing() {
   const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");  const [showEditModal, setShowEditModal] = useState(false);
+  const [error, setError] = useState("");
+
+  // Server-side pagination state
+  const [tablePage, setTablePage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const PAGE_SIZE = 15;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
   const [showViewModal, setShowViewModal] = useState(false);
@@ -31,64 +40,75 @@ function Marketing() {
     try {
       setLoading(true);
 
-      // Fetch users and assignments in parallel
+      // Fetch one page of Marketing/Admin users using server-side position filter
+      const url = new URL(`${API_URL}/users/`, window.location.origin);
+      url.searchParams.append('page', String(tablePage + 1));
+      url.searchParams.append('page_size', String(PAGE_SIZE));
+      url.searchParams.append('position', 'Marketing,Admin');
+      if (searchQuery) {
+        url.searchParams.append('search', searchQuery);
+      }
+
       const [usersResponse, assignmentsResponse] = await Promise.all([
-        fetch(`${API_URL}/users/`, {
-          credentials: 'include',
-        }),
-        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, {
-          credentials: 'include',
-        }),
+        fetch(url.toString(), { credentials: 'include' }),
+        fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, { credentials: 'include' }),
       ]);
 
+      if (!usersResponse.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
       const usersData = await usersResponse.json();
+      const accounts: Account[] = usersData.results || [];
+      setTotalCount(usersData.count || 0);
+
       const assignmentsData = await assignmentsResponse.json();
 
-      if (usersResponse.ok) {
-        const accounts = (usersData.results || []).filter(
-          (account: Account) =>
-            account.position === "Marketing" || account.position === "Admin",
-        );
-
-        // Build assignments map by user ID
-        const assignmentsByUser: Record<number, LegendAssignment[]> = {};
-        if (assignmentsResponse.ok && assignmentsData.assignments) {
-          for (const assignment of assignmentsData.assignments) {
-            if (assignment.mktg_admin_id) {
-              if (!assignmentsByUser[assignment.mktg_admin_id]) {
-                assignmentsByUser[assignment.mktg_admin_id] = [];
-              }
-              assignmentsByUser[assignment.mktg_admin_id].push({
-                legend: assignment.legend,
-                item_count: assignment.item_count,
-              });
+      // Build assignments map by user ID
+      const assignmentsByUser: Record<number, LegendAssignment[]> = {};
+      if (assignmentsResponse.ok && assignmentsData.assignments) {
+        for (const assignment of assignmentsData.assignments) {
+          if (assignment.mktg_admin_id) {
+            if (!assignmentsByUser[assignment.mktg_admin_id]) {
+              assignmentsByUser[assignment.mktg_admin_id] = [];
             }
+            assignmentsByUser[assignment.mktg_admin_id].push({
+              legend: assignment.legend,
+              item_count: assignment.item_count,
+            });
           }
         }
-
-        // Merge users with their assignments
-        const usersWithAssignments: MarketingUser[] = accounts.map(
-          (account: Account) => ({
-            ...account,
-            assigned_legends: assignmentsByUser[account.id] || [],
-          }),
-        );
-
-        setMarketingUsers(usersWithAssignments);
-      } else {
-        setError("Failed to load marketing users");
       }
+
+      // Merge users with their assignments
+      const usersWithAssignments: MarketingUser[] = accounts.map(
+        (account: Account) => ({
+          ...account,
+          assigned_legends: assignmentsByUser[account.id] || [],
+        }),
+      );
+
+      setMarketingUsers(usersWithAssignments);
     } catch (err) {
       setError("Error connecting to server");
       console.error("Error fetching marketing users:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tablePage, searchQuery]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setTablePage(0);
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setTablePage(page);
+  }, []);
 
   const handleEditClick = (user: MarketingUser) => {
     // Convert MarketingUser to Account for the modal
@@ -124,27 +144,6 @@ function Marketing() {
     fetchData();
   };
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
-
-  const filteredUsers = marketingUsers.filter(
-    (user) =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.id.toString().includes(searchQuery),
-  );
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredUsers.length / itemsPerPage),
-  );
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
   return (
     <>
 
@@ -154,23 +153,22 @@ function Marketing() {
             <h1 className="text-3xl font-bold">Marketing Users</h1>
           </div>
 
-          {error && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg flex items-center justify-between">
-              <p className="text-red-500">{error}</p>
-              <button onClick={() => setError("")}>
-                <X className="h-4 w-4 text-red-500" />
-              </button>
-            </div>
-          )}
-
           <MarketingUsersTable
             users={marketingUsers}
             loading={loading}
+            error={error}
+            onRetry={fetchData}
             onViewAccount={handleViewClick}
             onEditAccount={handleEditClick}
             onRefresh={fetchData}
             refreshing={loading}
             onExport={() => setShowExportModal(true)}
+            manualPagination
+            pageCount={pageCount}
+            totalResults={totalCount}
+            currentPage={tablePage}
+            onPageChange={handlePageChange}
+            onSearch={handleSearch}
           />
         </div>
 
@@ -189,32 +187,25 @@ function Marketing() {
             </button>
           </div>
 
-          {error && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500 rounded-lg flex items-center justify-between">
-              <p className="text-sm text-red-500">{error}</p>
-              <button onClick={() => setError("")}>
-                <X className="h-4 w-4 text-red-500" />
-              </button>
-            </div>
-          )}
-
           <Input
             type="text"
             placeholder="Search marketing users..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setCurrentPage(1);
+              setTablePage(0);
             }}
             className="mb-4"
           />
 
           <MarketingUsersMobileCards
-            paginatedUsers={paginatedUsers}
+            paginatedUsers={marketingUsers}
             loading={loading}
-            currentPage={safePage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            error={error}
+            onRetry={fetchData}
+            currentPage={tablePage + 1}
+            totalPages={pageCount}
+            onPageChange={(p) => setTablePage(p - 1)}
             onViewAccount={handleViewClick}
             onEditAccount={handleEditClick}
           />

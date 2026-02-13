@@ -6,6 +6,8 @@ import { createColumns } from "./columns";
 interface AccountsTableProps {
   accounts: Account[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
   onBanAccount: (account: Account) => void;
@@ -26,11 +28,19 @@ interface AccountsTableProps {
   onCancelInlineEdit?: () => void;
   onFieldChange?: (field: string, value: any) => void;
   fieldErrors?: Record<string, string>;
+  manualPagination?: boolean;
+  pageCount?: number;
+  totalResults?: number;
+  currentPage?: number;
+  onPageChange?: (pageIndex: number) => void;
+  onSearch?: (query: string) => void;
 }
 
 export function AccountsTable({
   accounts,
   loading,
+  error,
+  onRetry,
   onViewAccount,
   onEditAccount,
   onBanAccount,
@@ -51,6 +61,12 @@ export function AccountsTable({
   onCancelInlineEdit,
   onFieldChange,
   fieldErrors,
+  manualPagination,
+  pageCount,
+  totalResults,
+  currentPage,
+  onPageChange,
+  onSearch,
 }: AccountsTableProps) {
   const columns = useMemo(
     () =>
@@ -83,6 +99,8 @@ export function AccountsTable({
       columns={columns}
       data={accounts}
       loading={loading}
+      error={error}
+      onRetry={onRetry}
       onDeleteSelected={onArchiveSelected}
       onBanSelected={onBanSelected}
       onCreateNew={onCreateNew}
@@ -108,6 +126,12 @@ export function AccountsTable({
       editedData={editedData}
       onFieldChange={onFieldChange}
       fieldErrors={fieldErrors}
+      manualPagination={manualPagination}
+      pageCount={pageCount}
+      totalResults={totalResults}
+      currentPage={currentPage}
+      onPageChange={onPageChange}
+      onSearch={onSearch}
     />
   );
 }

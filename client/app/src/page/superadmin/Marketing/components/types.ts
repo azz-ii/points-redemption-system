@@ -5,7 +5,7 @@ export interface LegendAssignment {
 
 export interface MarketingUser {
   id: number;
-  username: string;
+  username?: string | null;
   full_name: string;
   email: string;
   position: string;
