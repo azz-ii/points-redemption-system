@@ -912,7 +912,7 @@ function Accounts() {
           error={error}
           onRetry={fetchAccounts}
           currentPage={tablePage + 1}
-          setCurrentPage={(p) => setTablePage(p - 1)}
+          setCurrentPage={((p: number) => setTablePage(p - 1)) as React.Dispatch<React.SetStateAction<number>>}
           onViewAccount={(account) => {
             setViewTarget(account);
             setShowViewModal(true);

@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse
-from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -53,20 +52,8 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         All authenticated users can access all users.
         Optionally filter based on query parameters.
-        Archived users are hidden by default unless show_archived=true.
         """
         queryset = User.objects.filter(is_superuser=False).select_related('profile')
-        
-        # Filter archived users unless explicitly requested
-        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
-        if not show_archived:
-            queryset = queryset.filter(profile__is_archived=False)
-        
-        # Filter by position if provided (supports comma-separated values)
-        position = self.request.query_params.get('position', None)
-        if position:
-            positions = [p.strip() for p in position.split(',')]
-            queryset = queryset.filter(profile__position__in=positions)
         
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
@@ -155,53 +142,12 @@ class UserViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
-        """Archive a user instead of deleting"""
+        """Delete a user"""
         instance = self.get_object()
-        if hasattr(instance, 'profile'):
-            instance.profile.is_archived = True
-            instance.profile.date_archived = timezone.now()
-            instance.profile.archived_by = request.user if request.user.is_authenticated else None
-            instance.profile.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+        instance.delete()
         return Response({
-            "message": "User archived successfully",
-            "user": UserListSerializer(instance).data
+            "message": "User deleted successfully"
         }, status=status.HTTP_200_OK)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UnarchiveUserView(APIView):
-    """Unarchive (restore) an archived user account"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
-    
-    def post(self, request, pk=None):
-        """Restore an archived user account"""
-        if not request.user.is_authenticated:
-            return Response({
-                "error": "Authentication required"
-            }, status=status.HTTP_401_UNAUTHORIZED)
-        
-        try:
-            user = User.objects.select_related('profile').get(pk=pk, is_superuser=False)
-        except User.DoesNotExist:
-            return Response({
-                "error": "User not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        if not hasattr(user, 'profile') or not user.profile.is_archived:
-            return Response({
-                "error": "User is not archived"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        user.profile.is_archived = False
-        user.profile.date_archived = None
-        user.profile.archived_by = None
-        user.profile.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
-        
-        return Response({
-            "message": "User unarchived successfully",
-            "user": UserListSerializer(user).data
-        }, status=status.HTTP_200_OK)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurrentUserView(APIView):
@@ -254,8 +200,6 @@ class UserExportView(APIView):
     def _get_account_status(self, user):
         """Get display status of an account"""
         if hasattr(user, 'profile'):
-            if user.profile.is_archived:
-                return 'Archived'
             if user.profile.is_banned:
                 return 'Banned'
             if user.profile.is_activated:
@@ -317,8 +261,8 @@ class UserExportView(APIView):
                 "error": "No valid columns specified"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Get users (exclude archived)
-        users = list(User.objects.filter(is_superuser=False, profile__is_archived=False).select_related('profile'))
+        # Get users
+        users = list(User.objects.filter(is_superuser=False).select_related('profile'))
         
         # Sort users
         users = self._sort_users(users, sort_field, sort_direction)
@@ -550,11 +494,10 @@ class BulkUpdatePointsView(APIView):
             operation = "update"
         
         try:
-            # Get all non-banned, non-archived users (excluding superusers)
+            # Get all non-banned users (excluding superusers)
             active_users = User.objects.filter(
                 is_superuser=False,
-                profile__is_banned=False,
-                profile__is_archived=False
+                profile__is_banned=False
             ).select_related('profile')
             
             updated_count = 0
