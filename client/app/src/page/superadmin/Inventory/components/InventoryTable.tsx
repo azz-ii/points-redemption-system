@@ -10,7 +10,15 @@ interface InventoryTableProps {
   onViewItem: (item: InventoryItem) => void;
   onEditItem: (item: InventoryItem) => void;
   onRetry: () => void;
-  searchQuery: string;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  onExport?: () => void;
+  manualPagination?: boolean;
+  pageCount?: number;
+  totalResults?: number;
+  currentPage?: number;
+  onPageChange?: (pageIndex: number) => void;
+  onSearch?: (query: string) => void;
 }
 
 export function InventoryTable({
@@ -20,7 +28,15 @@ export function InventoryTable({
   onViewItem,
   onEditItem,
   onRetry,
-  searchQuery,
+  onRefresh,
+  refreshing,
+  onExport,
+  manualPagination,
+  pageCount,
+  totalResults,
+  currentPage,
+  onPageChange,
+  onSearch,
 }: InventoryTableProps) {
   const columns = useMemo(
     () =>
@@ -38,11 +54,18 @@ export function InventoryTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
-      showSearch={false}
-      showPagination={false}
-      showColumnVisibility={false}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
+      onExport={onExport}
+      searchPlaceholder="Filter by name, code, or legend..."
       loadingMessage="Loading inventory items..."
-      emptyMessage={searchQuery ? "No items match your search" : "No inventory items found"}
+      emptyMessage="No inventory items found"
+      manualPagination={manualPagination}
+      pageCount={pageCount}
+      totalResults={totalResults}
+      currentPage={currentPage}
+      onPageChange={onPageChange}
+      onSearch={onSearch}
     />
   );
 }

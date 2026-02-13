@@ -97,7 +97,8 @@ function Teams() {
   const fetchApprovers = async () => {
     try {
       console.log("DEBUG Teams: Fetching approvers...");
-      const response = await fetch(`${API_URL}/users/`, {
+      // Explicitly request to show all users including archived ones for complete approver list
+      const response = await fetch(`${API_URL}/users/?show_archived=true&position=Approver`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -109,12 +110,13 @@ function Teams() {
       console.log("DEBUG Teams: Users fetched", {
         status: response.status,
         totalUsers: data.results?.length || 0,
+        rawData: data,
       });
 
       if (response.ok && data.results) {
         const approversList = data.results
-          .filter((user: { position: string }) => user.position === "Approver")
-          .map((user: { id: number; full_name: string; email: string }) => ({
+          .filter((user: { position: string; is_archived?: boolean }) => user.position === "Approver")
+          .map((user: { id: number; full_name: string; email: string; is_archived?: boolean }) => ({
             id: user.id,
             full_name: user.full_name,
             email: user.email,
@@ -122,9 +124,12 @@ function Teams() {
 
         console.log("DEBUG Teams: Approvers filtered", {
           count: approversList.length,
+          approversList: approversList,
         });
 
         setApprovers(approversList);
+      } else {
+        console.error("DEBUG Teams: Failed to fetch approvers", data);
       }
     } catch (err) {
       console.error("DEBUG Teams: Error fetching approvers", err);

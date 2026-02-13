@@ -2,6 +2,7 @@ import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { X, AlertTriangle, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, NewTeamData, ApproverOption, Team, SalesAgentOption } from "./types";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface CreateTeamModalProps extends ModalBaseProps {
   newTeam: NewTeamData;
@@ -47,7 +48,7 @@ export function CreateTeamModal({
     try {
       console.log("DEBUG CreateTeamModal: Fetching available sales agents");
       
-      const response = await fetch(`${API_URL}/users/`, {
+      const response = await fetch(`${API_URL}/users/sales-agents/`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -56,22 +57,23 @@ export function CreateTeamModal({
       });
       
       const data = await response.json();
-      console.log("DEBUG CreateTeamModal: Users fetched", {
+      console.log("DEBUG CreateTeamModal: Sales agents fetched", {
         status: response.status,
-        totalUsers: data.results?.length || 0,
+        totalAgents: data.length || 0,
       });
 
-      if (response.ok && data.results) {
+      if (response.ok && Array.isArray(data)) {
         // Store all users for team membership checking
-        setAllUsers(data.results.map((u: { id: number; team: number | null }) => ({ id: u.id, team: u.team })));
+        setAllUsers(data.map((u: { id: number; team_id: number | null }) => ({ id: u.id, team: u.team_id })));
         
-        // Filter for Sales Agents only
-        const salesAgents = data.results.filter(
-          (user: { position: string }) => user.position === "Sales Agent"
+        // Filter to exclude those already in teams
+        const salesAgents = data.filter(
+          (user: { team_id: number | null }) => !user.team_id
         );
         
         console.log("DEBUG CreateTeamModal: Sales agents filtered", {
           total: salesAgents.length,
+          totalBeforeTeamFilter: data.length,
         });
         
         setAvailableSalesAgents(salesAgents);
@@ -222,37 +224,35 @@ export function CreateTeamModal({
             <label className="text-xs text-gray-500 mb-2 block">
               Approver (Optional)
             </label>
-            <select
-              value={newTeam.approver ?? ""}
-              onChange={(e) => {
-                const value = e.target.value ? Number(e.target.value) : null;
+            <SearchableSelect
+              options={approvers}
+              value={newTeam.approver ?? null}
+              onChange={(value) => {
+                const numValue = value ? Number(value) : null;
                 console.log("DEBUG CreateTeamModal: Approver changed", {
-                  rawValue: e.target.value,
-                  parsedValue: value,
+                  rawValue: value,
+                  parsedValue: numValue,
                 });
                 
                 // Check if this approver is already assigned to other teams
-                if (value) {
-                  const existingTeams = teams.filter(team => team.approver === value);
+                if (numValue) {
+                  const existingTeams = teams.filter(team => team.approver === numValue);
                   if (existingTeams.length > 0) {
                     console.log("DEBUG CreateTeamModal: Approver already assigned to", existingTeams.length, "team(s)");
-                    setPendingApproverId(value);
+                    setPendingApproverId(numValue);
                     setShowConfirmation(true);
                     return;
                   }
                 }
                 
-                setNewTeam({ ...newTeam, approver: value });
+                setNewTeam({ ...newTeam, approver: numValue });
               }}
-              className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-            >
-              <option value="">No Approver</option>
-              {approvers.map((approver) => (
-                <option key={approver.id} value={approver.id}>
-                  {approver.full_name} ({approver.email})
-                </option>
-              ))}
-            </select>
+              placeholder="Search or select an approver..."
+              displayFormat={(approver) => `${approver.full_name} (${approver.email})`}
+              searchKeys={['full_name', 'email']}
+              allowEmpty={true}
+              emptyLabel="No Approver"
+            />
           </div>
 
           {/* Members Section */}
@@ -277,22 +277,19 @@ export function CreateTeamModal({
                   Select Sales Agent
                 </label>
                 <div className="flex gap-2">
-                  <select
-                    value={selectedSalesAgent ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value ? Number(e.target.value) : null;
-                      console.log("DEBUG CreateTeamModal: Sales agent selected", value);
-                      setSelectedSalesAgent(value);
+                  <SearchableSelect
+                    options={filteredSalesAgents}
+                    value={selectedSalesAgent}
+                    onChange={(value) => {
+                      const numValue = value ? Number(value) : null;
+                      console.log("DEBUG CreateTeamModal: Sales agent selected", numValue);
+                      setSelectedSalesAgent(numValue);
                     }}
-                    className="flex-1 px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 text-sm"
-                  >
-                    <option value="">Select an agent...</option>
-                    {filteredSalesAgents.map((agent) => (
-                      <option key={agent.id} value={agent.id}>
-                        {agent.full_name} ({agent.email}) - {agent.points} pts
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Search or select an agent..."
+                    displayFormat={(agent) => `${agent.full_name} (${agent.email}) - ${agent.points} pts`}
+                    searchKeys={['full_name', 'email', 'username']}
+                    className="flex-1"
+                  />
                   <button
                     onClick={handleAddMember}
                     disabled={!selectedSalesAgent}

@@ -800,7 +800,10 @@ function Catalogue() {
             <Input
               placeholder="Search....."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setTablePage(0);
+              }}
               className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
             />
           </div>

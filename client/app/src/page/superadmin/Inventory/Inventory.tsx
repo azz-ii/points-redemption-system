@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import {
   Search,
   Sliders,
-  RotateCw,
   BookOpen,
-  Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { InventoryItem, StockStatus } from "./modals";
 import {
@@ -21,7 +21,6 @@ import { inventoryApi } from "@/lib/inventory-api";
 import {
   InventoryTable,
   InventoryMobileCards,
-  InventoryPagination,
 } from "./components";
 
 interface ApiInventoryItem {
@@ -54,10 +53,11 @@ function Inventory() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-  // Pagination state
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState<number | "ALL">(15);
+  // Pagination state (0-indexed for DataTable compatibility)
+  const [tablePage, setTablePage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 15;
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -75,14 +75,9 @@ function Inventory() {
     try {
       setLoading(true);
 
-      // Build query params
       const params = new URLSearchParams();
-      params.append("page", page.toString());
-      if (rowsPerPage !== "ALL") {
-        params.append("page_size", rowsPerPage.toString());
-      } else {
-        params.append("page_size", "1000"); // Large number for "ALL"
-      }
+      params.append("page", String(tablePage + 1));
+      params.append("page_size", String(PAGE_SIZE));
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
       }
@@ -90,19 +85,15 @@ function Inventory() {
         params.append("status", statusFilter);
       }
 
-      const url = `/api/inventory/?${params.toString()}`;
-      console.log("[Inventory] Fetching inventory items (GET) -> url=", url);
-      const response = await fetch(url, {
+      const response = await fetch(`/api/inventory/?${params.toString()}`, {
         credentials: "include",
       });
-      console.log("[Inventory] GET response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to fetch inventory items");
       }
 
       const data = await response.json();
-      // Handle paginated response format: { count, next, previous, results }
       const inventoryItems: InventoryItem[] = (data.results || []).map(
         (item: ApiInventoryItem) => ({
           id: item.id,
@@ -128,23 +119,25 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, searchQuery, statusFilter]);
+  }, [tablePage, searchQuery, statusFilter]);
 
   useEffect(() => {
     fetchInventoryItems();
   }, [fetchInventoryItems]);
 
-  // Pagination logic
-  const totalPages =
-    rowsPerPage === "ALL"
-      ? 1
-      : Math.max(1, Math.ceil(totalCount / (rowsPerPage as number)));
-  const safePage = Math.min(page, totalPages);
+  const handlePageChange = useCallback((pageIndex: number) => {
+    setTablePage(pageIndex);
+  }, []);
 
-  // Reset to page 1 when search/filter changes
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setTablePage(0);
+  }, []);
+
+  // Reset to page 1 when filter changes
   useEffect(() => {
-    setPage(1);
-  }, [searchQuery, statusFilter]);
+    setTablePage(0);
+  }, [statusFilter]);
 
   // Handle view click
   const handleViewClick = (item: InventoryItem) => {
@@ -302,30 +295,9 @@ function Inventory() {
             </div>
           </div>
 
-          {/* Search and Actions */}
+          {/* Search and Filter */}
           <div className="flex justify-between items-center mb-6">
-            <div
-              className="relative flex items-center bg-card border-border"
-            >
-              <Search className="absolute left-3 h-5 w-5 text-gray-500" />
-              <Input
-                placeholder="Search by name, code, category......"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-80 bg-transparent border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => fetchInventoryItems()}
-                title={loading ? "Refreshing..." : "Refresh"}
-                disabled={loading}
-                className="p-2 rounded-lg border border-border hover:bg-gray-900 transition-colors disabled:opacity-50"
-              >
-                <RotateCw
-                  className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
-                />
-              </button>
+            <div className="relative">
               <div className="relative">
                 <button
                   onClick={() => setShowFilterDropdown(!showFilterDropdown)}
@@ -341,7 +313,7 @@ function Inventory() {
                 </button>
                 {showFilterDropdown && (
                   <div
-                    className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 bg-card border-border"
+                    className="absolute left-0 mt-2 w-48 rounded-lg shadow-lg border z-50 bg-card border-border"
                   >
                     <div className="p-2">
                       <p
@@ -369,45 +341,34 @@ function Inventory() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => setShowSetInventoryModal(true)}
-                className="px-4 py-2 rounded-lg border flex items-center gap-2 border-blue-700 hover:bg-blue-900 text-blue-400 transition-colors"
-              >
-                <BookOpen className="h-5 w-5" />
-                <span>Set Inventory</span>
-              </button>
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="px-4 py-2 rounded-lg border flex items-center gap-2 border-border hover:bg-gray-900 transition-colors"
-              >
-                <Download className="h-5 w-5" />
-                <span>Export</span>
-              </button>
             </div>
+            <button
+              onClick={() => setShowSetInventoryModal(true)}
+              className="px-4 py-2 rounded-lg border flex items-center gap-2 border-blue-700 hover:bg-blue-900 text-blue-400 transition-colors"
+            >
+              <BookOpen className="h-5 w-5" />
+              <span>Set Inventory</span>
+            </button>
           </div>
 
           {/* Table */}
-          <div
-            className="border rounded-lg flex flex-col bg-card border-border transition-colors"
-          >
-            <InventoryTable
-              items={items}
-              loading={loading}
-              error={error}
-              onViewItem={handleViewClick}
-              onEditItem={handleEditClick}
-              onRetry={fetchInventoryItems}
-              searchQuery={searchQuery}
-            />
-
-            <InventoryPagination
-              page={safePage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              onPageChange={setPage}
-              onRowsPerPageChange={setRowsPerPage}
-            />
-          </div>
+          <InventoryTable
+            items={items}
+            loading={loading}
+            error={error}
+            onViewItem={handleViewClick}
+            onEditItem={handleEditClick}
+            onRetry={fetchInventoryItems}
+            onRefresh={fetchInventoryItems}
+            refreshing={loading}
+            onExport={() => setShowExportModal(true)}
+            manualPagination
+            pageCount={pageCount}
+            totalResults={totalCount}
+            currentPage={tablePage}
+            onPageChange={handlePageChange}
+            onSearch={handleSearch}
+          />
         </div>
 
         {/* Mobile Layout */}
@@ -428,7 +389,10 @@ function Inventory() {
               <Input
                 placeholder="Search....."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setTablePage(0);
+                }}
                 className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
               />
             </div>
@@ -460,15 +424,26 @@ function Inventory() {
             searchQuery={searchQuery}
           />
 
-          {items.length > 0 && (
-            <InventoryPagination
-              page={safePage}
-              totalPages={totalPages}
-              rowsPerPage={rowsPerPage}
-              onPageChange={setPage}
-              onRowsPerPageChange={setRowsPerPage}
-              isMobile={true}
-            />
+          {items.length > 0 && !loading && !error && (
+            <div className="flex items-center justify-center gap-2 mt-4 pb-2">
+              <button
+                onClick={() => setTablePage((p) => Math.max(0, p - 1))}
+                disabled={tablePage === 0}
+                className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs font-medium px-2">
+                Page {tablePage + 1} of {pageCount}
+              </span>
+              <button
+                onClick={() => setTablePage((p) => Math.min(pageCount - 1, p + 1))}
+                disabled={tablePage >= pageCount - 1}
+                className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
       {/* Close filter dropdown when clicking outside */}
