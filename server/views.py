@@ -94,13 +94,14 @@ class LoginView(APIView):
                     position = profile.position
                 except UserProfile.DoesNotExist:
                     position = "Admin"  # Default position if profile doesn't exist
+                    profile = None
                 
                 # Log the user in to create a session so `request.user` is populated
                 login(request, user)
 
                 # Get profile picture URL if available
                 profile_picture_url = None
-                if profile.profile_picture:
+                if profile and profile.profile_picture:
                     profile_picture_url = profile.profile_picture.url
 
                 response = Response({

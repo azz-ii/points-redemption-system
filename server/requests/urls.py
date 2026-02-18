@@ -17,6 +17,8 @@ from .analytics import (
     AnalyticsTeamsView,
     AnalyticsTurnaroundView,
     AnalyticsEntitiesView,
+    AnalyticsItemRequestsView,
+    AnalyticsAgentRequestsView,
 )
 
 router = DefaultRouter()
@@ -37,5 +39,7 @@ urlpatterns = [
     path('dashboard/analytics/teams/', AnalyticsTeamsView.as_view(), name='analytics-teams'),
     path('dashboard/analytics/turnaround/', AnalyticsTurnaroundView.as_view(), name='analytics-turnaround'),
     path('dashboard/analytics/entities/', AnalyticsEntitiesView.as_view(), name='analytics-entities'),
+    path('dashboard/analytics/item-requests/', AnalyticsItemRequestsView.as_view(), name='analytics-item-requests'),
+    path('dashboard/analytics/agent-requests/', AnalyticsAgentRequestsView.as_view(), name='analytics-agent-requests'),
     path('', include(router.urls)),
 ]

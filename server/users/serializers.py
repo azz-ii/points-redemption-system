@@ -56,6 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
+            'is_active': {'read_only': True},
         }
     
     def validate(self, data):
@@ -90,9 +91,9 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         
         # Create user
-        user = User.objects.create(**validated_data)
-        user.set_password(password)  # Hash the password
-        user.save()
+        username = validated_data.pop('username')
+        user = User.objects.create_user(username=username, password=password, **validated_data)
+
         
         # Create profile
         UserProfile.objects.create(

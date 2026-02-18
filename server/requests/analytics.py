@@ -465,7 +465,153 @@ class AnalyticsTurnaroundView(APIView):
 
 
 # ──────────────────────────────────────────────
-# 7. Distributor / Customer Analytics
+# 7a. Item Requests Detail (for export)
+# ──────────────────────────────────────────────
+class AnalyticsItemRequestsView(APIView):
+    """Detailed request-level rows for a specific product (for export)."""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _check_admin(request):
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            product_id = request.query_params.get('product_id')
+            if not product_id:
+                return Response({'error': 'product_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            start_date, _ = _parse_date_range(request)
+
+            items_qs = RedemptionRequestItem.objects.filter(
+                product_id=product_id,
+                request__status='APPROVED',
+            ).select_related(
+                'request', 'request__requested_by', 'product',
+                'request__requested_for', 'request__requested_for_customer',
+                'request__team', 'request__reviewed_by', 'request__processed_by',
+            )
+            if start_date:
+                items_qs = items_qs.filter(request__date_requested__gte=start_date)
+
+            items_qs = items_qs.order_by('-request__date_requested')[:500]
+
+            from users.models import UserProfile
+
+            def _user_name(user):
+                if not user:
+                    return None
+                profile = getattr(user, 'profile', None)
+                if profile:
+                    return profile.full_name or user.username
+                return user.username
+
+            result = []
+            for ri in items_qs:
+                req = ri.request
+                result.append({
+                    'request_id': req.id,
+                    'date_requested': req.date_requested.isoformat() if req.date_requested else None,
+                    'agent': _user_name(req.requested_by),
+                    'team': req.team.name if req.team else None,
+                    'requested_for': req.get_requested_for_name(),
+                    'requested_for_type': req.requested_for_type,
+                    'item_name': ri.product.item_name if ri.product else None,
+                    'item_code': ri.product.item_code if ri.product else None,
+                    'quantity': ri.quantity,
+                    'points': ri.total_points,
+                    'status': req.status,
+                    'processing_status': req.processing_status,
+                    'reviewed_by': _user_name(req.reviewed_by),
+                    'date_reviewed': req.date_reviewed.isoformat() if req.date_reviewed else None,
+                    'processed_by': _user_name(req.processed_by),
+                    'date_processed': req.date_processed.isoformat() if req.date_processed else None,
+                    'remarks': req.remarks or '',
+                })
+
+            logger.debug(f"[Analytics] Item requests export: product_id={product_id}, rows={len(result)}")
+            return Response(result)
+
+        except Exception as e:
+            logger.error(f"[Analytics] Item requests export error: {e}", exc_info=True)
+            return Response(
+                {'error': 'Failed to fetch item request details', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+# ──────────────────────────────────────────────
+# 7b. Agent Requests Detail (for export)
+# ──────────────────────────────────────────────
+class AnalyticsAgentRequestsView(APIView):
+    """Detailed request-level rows for a specific agent (for export)."""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _check_admin(request):
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            agent_id = request.query_params.get('agent_id')
+            if not agent_id:
+                return Response({'error': 'agent_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            start_date, _ = _parse_date_range(request)
+
+            qs = _base_qs(start_date).filter(
+                requested_by_id=agent_id,
+            ).select_related(
+                'requested_by', 'requested_for', 'requested_for_customer',
+                'team', 'reviewed_by', 'processed_by',
+            ).prefetch_related('items', 'items__product').order_by('-date_requested')[:500]
+
+            from users.models import UserProfile
+
+            def _user_name(user):
+                if not user:
+                    return None
+                profile = getattr(user, 'profile', None)
+                if profile:
+                    return profile.full_name or user.username
+                return user.username
+
+            result = []
+            for req in qs:
+                items_str = ', '.join(
+                    f"{ri.product.item_name} x{ri.quantity}" if ri.product else f"Item x{ri.quantity}"
+                    for ri in req.items.all()
+                )
+                result.append({
+                    'request_id': req.id,
+                    'date_requested': req.date_requested.isoformat() if req.date_requested else None,
+                    'requested_for': req.get_requested_for_name(),
+                    'requested_for_type': req.requested_for_type,
+                    'items': items_str,
+                    'total_points': req.total_points,
+                    'status': req.status,
+                    'processing_status': req.processing_status,
+                    'reviewed_by': _user_name(req.reviewed_by),
+                    'date_reviewed': req.date_reviewed.isoformat() if req.date_reviewed else None,
+                    'processed_by': _user_name(req.processed_by),
+                    'date_processed': req.date_processed.isoformat() if req.date_processed else None,
+                    'remarks': req.remarks or '',
+                    'rejection_reason': req.rejection_reason or '',
+                })
+
+            logger.debug(f"[Analytics] Agent requests export: agent_id={agent_id}, rows={len(result)}")
+            return Response(result)
+
+        except Exception as e:
+            logger.error(f"[Analytics] Agent requests export error: {e}", exc_info=True)
+            return Response(
+                {'error': 'Failed to fetch agent request details', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+# ──────────────────────────────────────────────
+# 8. Distributor / Customer Analytics
 # ──────────────────────────────────────────────
 class AnalyticsEntitiesView(APIView):
     """Top distributors or customers by redemption volume."""
