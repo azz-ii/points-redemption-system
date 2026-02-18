@@ -3,7 +3,6 @@ import logging
 import os
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.utils import timezone
 from django.db.models import Q, Case, When, Value, CharField, F, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -43,9 +42,8 @@ class ProductListCreateView(APIView):
     def get(self, request):
         """Get paginated list of products"""
         search = request.query_params.get('search', '').strip()
-        show_archived = request.query_params.get('show_archived', 'false').lower() == 'true'
 
-        products = Product.objects.all() if show_archived else Product.objects.filter(is_archived=False)
+        products = Product.objects.all()
 
         if search:
             products = products.filter(
@@ -193,56 +191,17 @@ class ProductDetailView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
     
     def delete(self, request, product_id):
-        """Archive a product instead of deleting"""
+        """Delete a product"""
         try:
             product = Product.objects.get(id=product_id)
-            product.is_archived = True
-            product.date_archived = timezone.now()
-            product.archived_by = request.user if request.user.is_authenticated else None
-            product.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
-            
-            # Check for active requests referencing this product
-            from requests.models import RedemptionRequestItem, RedemptionRequest
-            active_request_count = RedemptionRequestItem.objects.filter(
-                product=product,
-                request__status__in=['PENDING', 'APPROVED'],
-            ).exclude(
-                request__processing_status='PROCESSED'
-            ).values('request').distinct().count()
-            
-            response_data = {
-                "message": "Product archived successfully",
-                "product": ProductSerializer(product, context={'request': request}).data
-            }
-            if active_request_count > 0:
-                response_data["warning"] = f"This product is referenced in {active_request_count} active request(s). Those requests will continue processing normally."
-            
-            return Response(response_data, status=status.HTTP_200_OK)
+            product.delete()
+            return Response({
+                "message": "Product deleted successfully"
+            }, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response({
                 "error": "Product not found"
             }, status=status.HTTP_404_NOT_FOUND)
-
-
-class UnarchiveProductView(APIView):
-    """Unarchive a single product"""
-    parser_classes = [JSONParser]
-
-    def post(self, request, product_id):
-        try:
-            product = Product.objects.get(id=product_id)
-            if not product.is_archived:
-                return Response({"error": "Product is not archived"}, status=status.HTTP_400_BAD_REQUEST)
-            product.is_archived = False
-            product.date_archived = None
-            product.archived_by = None
-            product.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
-            return Response({
-                "message": "Product unarchived successfully",
-                "product": ProductSerializer(product, context={'request': request}).data
-            }, status=status.HTTP_200_OK)
-        except Product.DoesNotExist:
-            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class InventoryPagination(PageNumberPagination):
@@ -262,8 +221,8 @@ class InventoryListView(APIView):
         search = request.query_params.get('search', '').strip()
         status_filter = request.query_params.get('status', '').strip()
         
-        # Only show items that track inventory (has_stock=True), exclude archived
-        products = Product.objects.filter(has_stock=True, is_archived=False)
+        # Only show items that track inventory (has_stock=True)
+        products = Product.objects.filter(has_stock=True)
         
         if search:
             products = products.filter(
@@ -384,8 +343,8 @@ class BulkAssignMarketingView(APIView):
                     "error": "User not found"
                 }, status=status.HTTP_404_NOT_FOUND)
         
-        # Update all active products with the specified legend
-        queryset = Product.objects.filter(legend=legend, is_archived=False)
+        # Update all products with the specified legend
+        queryset = Product.objects.filter(legend=legend)
         updated_count = queryset.update(mktg_admin=mktg_admin)
         
         action = "assigned" if mktg_admin else "unassigned"
@@ -483,8 +442,8 @@ class BulkUpdateStockView(APIView):
             operation = "update"
         
         try:
-            # Get all active products with inventory tracking enabled (exclude archived)
-            tracked_items = Product.objects.filter(has_stock=True, is_archived=False)
+            # Get all products with inventory tracking enabled
+            tracked_items = Product.objects.filter(has_stock=True)
             
             updated_count = 0
             failed_count = 0
@@ -571,7 +530,7 @@ class BatchUpdateStockView(APIView):
                     failed.append({'id': item_id, 'error': 'Missing id or stock'})
                     continue
                 
-                product = Product.objects.get(id=item_id, has_stock=True, is_archived=False)
+                product = Product.objects.get(id=item_id, has_stock=True)
                 product.stock = max(0, int(new_stock))
                 product.save(update_fields=['stock'])
                 updated_ids.append(item_id)

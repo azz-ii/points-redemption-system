@@ -1,6 +1,6 @@
 "use client";
 
-import type { ColumnDef } from "@tantml:react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, CheckCircle, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
