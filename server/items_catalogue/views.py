@@ -64,7 +64,8 @@ class ProductListCreateView(APIView):
     
     def post(self, request):
         """Create a new product"""
-        data = dict(request.data)
+        # Use .dict() for QueryDict (multipart) to flatten list values; fallback for JSON
+        data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
 
         # Handle image upload
         if 'image' in request.FILES:
@@ -146,7 +147,8 @@ class ProductDetailView(APIView):
         """Update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            data = dict(request.data)
+            # Use .dict() for QueryDict (multipart) to flatten list values; fallback for JSON
+            data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
             error_response = self._handle_image(request, data, product)
             if error_response:
                 return error_response
@@ -170,7 +172,8 @@ class ProductDetailView(APIView):
         """Partially update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            data = dict(request.data)
+            # Use .dict() for QueryDict (multipart) to flatten list values; fallback for JSON
+            data = request.data.dict() if hasattr(request.data, 'dict') else dict(request.data)
             error_response = self._handle_image(request, data, product)
             if error_response:
                 return error_response
