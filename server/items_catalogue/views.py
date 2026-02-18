@@ -64,7 +64,7 @@ class ProductListCreateView(APIView):
     
     def post(self, request):
         """Create a new product"""
-        data = request.data.copy()
+        data = dict(request.data)
 
         # Handle image upload
         if 'image' in request.FILES:
@@ -146,7 +146,7 @@ class ProductDetailView(APIView):
         """Update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            data = request.data.copy()
+            data = dict(request.data)
             error_response = self._handle_image(request, data, product)
             if error_response:
                 return error_response
@@ -170,7 +170,7 @@ class ProductDetailView(APIView):
         """Partially update a product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            data = request.data.copy()
+            data = dict(request.data)
             error_response = self._handle_image(request, data, product)
             if error_response:
                 return error_response

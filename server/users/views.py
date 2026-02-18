@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
@@ -148,6 +149,72 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({
             "message": "User deleted successfully"
         }, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'])
+    def archive(self, request, pk=None):
+        """Archive a user account"""
+        try:
+            user = self.get_object()
+            if not hasattr(user, 'profile'):
+                return Response({
+                    "error": "User has no profile"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if user.profile.is_archived:
+                return Response({
+                    "error": "User is already archived"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Archive the user
+            user.profile.is_archived = True
+            user.profile.date_archived = timezone.now()
+            user.profile.archived_by = request.user if request.user.is_authenticated else None
+            user.profile.save()
+            
+            return Response({
+                "message": "User archived successfully",
+                "user": UserListSerializer(user).data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error archiving user {pk}: {str(e)}")
+            return Response({
+                "error": "Failed to archive user",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['post'])
+    def unarchive(self, request, pk=None):
+        """Unarchive/restore a user account"""
+        try:
+            user = self.get_object()
+            if not hasattr(user, 'profile'):
+                return Response({
+                    "error": "User has no profile"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not user.profile.is_archived:
+                return Response({
+                    "error": "User is not archived"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Unarchive the user
+            user.profile.is_archived = False
+            user.profile.date_archived = None
+            user.profile.archived_by = None
+            user.profile.save()
+            
+            return Response({
+                "message": "User unarchived successfully",
+                "user": UserListSerializer(user).data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error unarchiving user {pk}: {str(e)}")
+            return Response({
+                "error": "Failed to unarchive user",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurrentUserView(APIView):
