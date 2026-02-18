@@ -14,6 +14,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
 
+class SalesAgentOptionSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for sales agent dropdown options"""
+    full_name = serializers.CharField(source='profile.full_name', read_only=True)
+    email = serializers.EmailField(source='profile.email', read_only=True)
+    points = serializers.IntegerField(source='profile.points', read_only=True)
+    team_id = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'full_name', 'email', 'points', 'team_id']
+    
+    def get_team_id(self, obj):
+        """Get team ID if user is in a team"""
+        membership = obj.team_memberships.first()
+        return membership.team.id if membership else None
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model with profile"""
     profile = UserProfileSerializer(read_only=True)

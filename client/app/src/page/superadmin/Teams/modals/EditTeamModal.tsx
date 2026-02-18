@@ -16,6 +16,7 @@ import type {
   SalesAgentOption,
 } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface EditTeamModalProps extends ModalBaseProps {
   team: Team | null;
@@ -112,7 +113,7 @@ export function EditTeamModal({
     try {
       console.log("DEBUG EditTeamModal: Fetching available sales agents");
 
-      const response = await fetch(`${API_URL}/users/`, {
+      const response = await fetch(`${API_URL}/users/sales-agents/`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -121,19 +122,20 @@ export function EditTeamModal({
       });
 
       const data = await response.json();
-      console.log("DEBUG EditTeamModal: Users fetched", {
+      console.log("DEBUG EditTeamModal: Sales agents fetched", {
         status: response.status,
-        totalUsers: data.results?.length || 0,
+        totalAgents: data.length || 0,
       });
 
-      if (response.ok && data.results) {
-        // Filter for Sales Agents only
-        const salesAgents = data.results.filter(
-          (user: { position: string }) => user.position === "Sales Agent"
+      if (response.ok && Array.isArray(data)) {
+        // Filter to exclude those already in other teams
+        const salesAgents = data.filter(
+          (user: { team_id: number | null }) => !user.team_id || user.team_id === team?.id
         );
 
         console.log("DEBUG EditTeamModal: Sales agents filtered", {
           total: salesAgents.length,
+          currentTeamId: team?.id,
         });
 
         setAvailableSalesAgents(salesAgents);
@@ -365,19 +367,20 @@ export function EditTeamModal({
             <label className="text-xs text-gray-500 mb-2 block">
               Approver (Optional)
             </label>
-            <select
-              value={editTeam.approver ?? ""}
-              onChange={(e) => {
-                const value = e.target.value ? Number(e.target.value) : null;
+            <SearchableSelect
+              options={approvers}
+              value={editTeam.approver ?? null}
+              onChange={(value) => {
+                const numValue = value ? Number(value) : null;
                 console.log("DEBUG EditTeamModal: Approver changed", {
-                  rawValue: e.target.value,
-                  parsedValue: value,
+                  rawValue: value,
+                  parsedValue: numValue,
                 });
 
                 // Check if this approver is already assigned to other teams (excluding current team)
-                if (value) {
+                if (numValue) {
                   const existingTeams = teams.filter(
-                    (t) => t.approver === value && t.id !== team.id
+                    (t) => t.approver === numValue && t.id !== team.id
                   );
                   if (existingTeams.length > 0) {
                     console.log(
@@ -385,23 +388,20 @@ export function EditTeamModal({
                       existingTeams.length,
                       "other team(s)"
                     );
-                    setPendingApproverId(value);
+                    setPendingApproverId(numValue);
                     setShowConfirmation(true);
                     return;
                   }
                 }
 
-                setEditTeam({ ...editTeam, approver: value });
+                setEditTeam({ ...editTeam, approver: numValue });
               }}
-              className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-            >
-              <option value="">No Approver</option>
-              {approvers.map((approver) => (
-                <option key={approver.id} value={approver.id}>
-                  {approver.full_name} ({approver.email})
-                </option>
-              ))}
-            </select>
+              placeholder="Search or select an approver..."
+              displayFormat={(approver) => `${approver.full_name} (${approver.email})`}
+              searchKeys={['full_name', 'email']}
+              allowEmpty={true}
+              emptyLabel="No Approver"
+            />
           </div>
 
           {/* Members Section */}
@@ -427,27 +427,22 @@ export function EditTeamModal({
                   Select Sales Agent
                 </label>
                 <div className="flex gap-2">
-                  <select
-                    value={selectedSalesAgent ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value
-                        ? Number(e.target.value)
-                        : null;
+                  <SearchableSelect
+                    options={filteredSalesAgents}
+                    value={selectedSalesAgent}
+                    onChange={(value) => {
+                      const numValue = value ? Number(value) : null;
                       console.log(
                         "DEBUG EditTeamModal: Sales agent selected",
-                        value
+                        numValue
                       );
-                      setSelectedSalesAgent(value);
+                      setSelectedSalesAgent(numValue);
                     }}
-                    className="flex-1 px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 text-sm"
-                  >
-                    <option value="">Select an agent...</option>
-                    {filteredSalesAgents.map((agent) => (
-                      <option key={agent.id} value={agent.id}>
-                        {agent.full_name} ({agent.email}) - {agent.points} pts
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Search or select an agent..."
+                    displayFormat={(agent) => `${agent.full_name} (${agent.email}) - ${agent.points} pts`}
+                    searchKeys={['full_name', 'email', 'username']}
+                    className="flex-1"
+                  />
                   <button
                     onClick={handleAddMember}
                     disabled={!selectedSalesAgent || actionLoading}

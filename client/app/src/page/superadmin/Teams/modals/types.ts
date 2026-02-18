@@ -56,6 +56,7 @@ export interface ApproverOption {
   id: number;
   full_name: string;
   email: string;
+  [key: string]: unknown;
 }
 
 // Marketing admin option for team assignment
@@ -63,6 +64,7 @@ export interface MarketingAdminOption {
   id: number;
   full_name: string;
   email: string;
+  [key: string]: unknown;
 }
 
 export interface SalesAgentOption {
@@ -71,6 +73,7 @@ export interface SalesAgentOption {
   full_name: string;
   email: string;
   points: number;
+  [key: string]: unknown;
 }
 
 export interface User {

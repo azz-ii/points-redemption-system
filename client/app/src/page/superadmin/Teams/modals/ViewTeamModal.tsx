@@ -3,6 +3,7 @@ import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface ViewTeamModalProps extends ModalBaseProps {
   team: { id: number } | null;
@@ -96,7 +97,7 @@ export function ViewTeamModal({
     try {
       console.log("DEBUG ViewTeamModal: Fetching available sales agents");
 
-      const response = await fetch(`${API_URL}/users/`, {
+      const response = await fetch(`${API_URL}/users/sales-agents/`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -105,22 +106,18 @@ export function ViewTeamModal({
       });
 
       const data = await response.json();
-      console.log("DEBUG ViewTeamModal: Users fetched", {
+      console.log("DEBUG ViewTeamModal: Sales agents fetched", {
         status: response.status,
-        totalUsers: data.accounts?.length || 0,
+        totalAgents: data.length || 0,
       });
 
-      if (response.ok && data.accounts) {
-        // Filter for Sales Agents only and exclude current team members
-        const salesAgents = data.accounts.filter(
-          (user: { position: string }) => user.position === "Sales Agent"
-        );
-
-        console.log("DEBUG ViewTeamModal: Sales agents filtered", {
-          total: salesAgents.length,
+      if (response.ok && Array.isArray(data)) {
+        // All data is already sales agents, no need to filter by position
+        console.log("DEBUG ViewTeamModal: Sales agents loaded", {
+          total: data.length,
         });
 
-        setAvailableSalesAgents(salesAgents);
+        setAvailableSalesAgents(data);
       }
     } catch (err) {
       console.error("DEBUG ViewTeamModal: Error fetching sales agents", err);
@@ -349,28 +346,22 @@ export function ViewTeamModal({
                       Select Sales Agent
                     </label>
                     <div className="flex gap-2">
-                      <select
-                        value={selectedSalesAgent ?? ""}
-                        onChange={(e) => {
-                          const value = e.target.value
-                            ? Number(e.target.value)
-                            : null;
+                      <SearchableSelect
+                        options={filteredSalesAgents}
+                        value={selectedSalesAgent}
+                        onChange={(value) => {
+                          const numValue = value ? Number(value) : null;
                           console.log(
                             "DEBUG ViewTeamModal: Sales agent selected",
-                            value
+                            numValue
                           );
-                          setSelectedSalesAgent(value);
+                          setSelectedSalesAgent(numValue);
                         }}
-                        className="flex-1 px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 text-sm"
-                      >
-                        <option value="">Select an agent...</option>
-                        {filteredSalesAgents.map((agent) => (
-                          <option key={agent.id} value={agent.id}>
-                            {agent.full_name} ({agent.email}) - {agent.points}{" "}
-                            pts
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Search or select an agent..."
+                        displayFormat={(agent) => `${agent.full_name} (${agent.email}) - ${agent.points} pts`}
+                        searchKeys={['full_name', 'email', 'username']}
+                        className="flex-1"
+                      />
                       <button
                         onClick={handleAddMember}
                         disabled={!selectedSalesAgent || actionLoading}

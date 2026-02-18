@@ -26,7 +26,7 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return  # Skip CSRF check
 
 from .models import UserProfile
-from .serializers import UserSerializer, UserListSerializer
+from .serializers import UserSerializer, UserListSerializer, SalesAgentOptionSerializer
 
 
 class UserPagination(PageNumberPagination):
@@ -215,6 +215,67 @@ class UserViewSet(viewsets.ModelViewSet):
                 "error": "Failed to unarchive user",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UnarchiveUserView(APIView):
+    """Unarchive (restore) an archived user account"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def post(self, request, pk=None):
+        """Restore an archived user account"""
+        if not request.user.is_authenticated:
+            return Response({
+                "error": "Authentication required"
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            user = User.objects.select_related('profile').get(pk=pk, is_superuser=False)
+        except User.DoesNotExist:
+            return Response({
+                "error": "User not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if not hasattr(user, 'profile') or not user.profile.is_archived:
+            return Response({
+                "error": "User is not archived"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.profile.is_archived = False
+        user.profile.date_archived = None
+        user.profile.archived_by = None
+        user.profile.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+        
+        return Response({
+            "message": "User unarchived successfully",
+            "user": UserListSerializer(user).data
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SalesAgentsListView(APIView):
+    """Lightweight endpoint to get all non-archived sales agents for dropdown selections"""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+    
+    def get(self, request):
+        """Return all non-archived sales agents without pagination"""
+        try:
+            sales_agents = User.objects.filter(
+                is_superuser=False,
+                profile__position='Sales Agent',
+                profile__is_archived=False
+            ).select_related('profile').prefetch_related('team_memberships').order_by('profile__full_name')
+            
+            serializer = SalesAgentOptionSerializer(sales_agents, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error fetching sales agents list: {str(e)}")
+            return Response({
+                "error": "Failed to fetch sales agents",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CurrentUserView(APIView):
