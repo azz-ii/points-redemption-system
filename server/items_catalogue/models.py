@@ -10,6 +10,7 @@ class ItemLegend(models.TextChoices):
     AD_MATERIALS = 'AD_MATERIALS', 'Ad Materials'
     POINT_OF_SALE = 'POINT_OF_SALE', 'Point of Sale'
     ASSET = 'ASSET', 'Asset'
+    COLLATERAL = 'COLLATERAL', 'Collateral'
     OTHERS = 'OTHERS', 'Others'
 
 
