@@ -184,6 +184,10 @@ class ProductDetailView(APIView):
                     "message": "Product updated successfully",
                     "product": ProductSerializer(product, context={'request': request}).data
                 }, status=status.HTTP_200_OK)
+            
+            # Log validation errors for debugging
+            print(f"[PATCH /catalogue/{product_id}/] Validation errors:", serializer.errors)
+            
             return Response({
                 "error": "Failed to update product",
                 "details": serializer.errors
