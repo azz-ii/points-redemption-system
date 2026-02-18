@@ -11,6 +11,7 @@ class ItemLegend(models.TextChoices):
     POINT_OF_SALE = 'POINT_OF_SALE', 'Point of Sale'
     ASSET = 'ASSET', 'Asset'
     COLLATERAL = 'COLLATERAL', 'Collateral'
+    BENEFIT = 'BENEFIT', 'Benefit'
     OTHERS = 'OTHERS', 'Others'
 
 
