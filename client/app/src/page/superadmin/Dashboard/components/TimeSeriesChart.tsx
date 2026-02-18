@@ -27,8 +27,16 @@ function fmtLabel(iso: string): string {
 export function TimeSeriesChart({ data, loading }: TimeSeriesChartProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        Loading trends...
+      <div className="animate-pulse space-y-3">
+        <div className="h-[300px] rounded-lg bg-muted flex items-end gap-1 p-4 pt-8">
+          {[65, 45, 70, 50, 80, 55, 75, 40, 60, 85, 50, 70].map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t bg-muted-foreground/10"
+              style={{ height: `${h}%` }}
+            />
+          ))}
+        </div>
       </div>
     );
   }

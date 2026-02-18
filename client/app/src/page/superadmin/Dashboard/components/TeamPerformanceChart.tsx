@@ -18,8 +18,28 @@ interface TeamPerformanceChartProps {
 export function TeamPerformanceChart({ data, loading }: TeamPerformanceChartProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        Loading team data...
+      <div className="animate-pulse space-y-4">
+        <div className="h-[300px] rounded-lg bg-muted flex items-end justify-around gap-3 p-4 pt-8">
+          {[[70, 30, 55], [60, 40, 50], [80, 25, 60], [50, 35, 45]].map((bars, i) => (
+            <div key={i} className="flex-1 flex gap-1 items-end">
+              <div className="flex-1 rounded-t bg-muted-foreground/10" style={{ height: `${bars[0]}%` }} />
+              <div className="flex-1 rounded-t bg-muted-foreground/10" style={{ height: `${bars[1]}%` }} />
+              <div className="flex-1 rounded-t bg-muted-foreground/10" style={{ height: `${bars[2]}%` }} />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="h-3 w-20 rounded bg-muted" />
+              <div className="h-3 w-8 rounded bg-muted ml-auto" />
+              <div className="h-3 w-8 rounded bg-muted" />
+              <div className="h-3 w-8 rounded bg-muted" />
+              <div className="h-3 w-10 rounded bg-muted" />
+              <div className="h-3 w-12 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

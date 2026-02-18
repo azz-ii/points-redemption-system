@@ -1,27 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import {
   RotateCcw,
   X,
   AlertCircle,
-  RefreshCw,
   FileDown,
   BarChart3,
 } from "lucide-react";
-import {
-  dashboardApi,
-  type RedemptionRequest as APIRedemptionRequest,
-} from "@/lib/distributors-api";
-import { redemptionRequestsApi } from "@/lib/api";
-import { RedemptionTable } from "../Redemption/components";
-import {
-  ViewRedemptionModal,
-  EditRedemptionModal,
-  MarkAsProcessedModal,
-  CancelRequestModal,
-  type RedemptionItem,
-} from "../Redemption/modals";
+import { dashboardApi } from "@/lib/distributors-api";
 import { toast } from "sonner";
 import {
   analyticsApi,
@@ -44,11 +30,10 @@ import {
   TurnaroundChart,
   EntityAnalyticsChart,
   ExportAnalyticsModal,
+  ChartExportButton,
 } from "./components";
 
 function Dashboard() {
-  const navigate = useNavigate();
-
   // ── Existing state ──
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState("");
@@ -56,17 +41,6 @@ function Dashboard() {
   const [showPasswordStep, setShowPasswordStep] = useState(false);
   const [password, setPassword] = useState("");
   const [isResettingPoints, setIsResettingPoints] = useState(false);
-
-  // Redemption requests (pending table)
-  const [requests, setRequests] = useState<APIRedemptionRequest[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Modals
-  const [selectedRequest, setSelectedRequest] = useState<RedemptionItem | null>(null);
-  const [editRequest, setEditRequest] = useState<RedemptionItem | null>(null);
-  const [processRequest, setProcessRequest] = useState<RedemptionItem | null>(null);
-  const [cancelRequest, setCancelRequest] = useState<RedemptionItem | null>(null);
 
   // ── Analytics state ──
   const [dateRange, setDateRange] = useState<DateRange>("30");
@@ -93,26 +67,6 @@ function Dashboard() {
   const [distributors, setDistributors] = useState<EntityAnalytics[]>([]);
   const [customers, setCustomers] = useState<EntityAnalytics[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(true);
-
-  // ── Fetch pending requests (same as before) ──
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setRequestsLoading(true);
-        const response = await dashboardApi.getRedemptionRequests(100, 0);
-        const filteredRequests = (response.results as APIRedemptionRequest[]).filter(
-          (req) => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED",
-        );
-        setRequests(filteredRequests);
-      } catch (error) {
-        console.error("[Dashboard] Error fetching requests:", error);
-        toast.error("Failed to load redemption requests");
-      } finally {
-        setRequestsLoading(false);
-      }
-    };
-    fetchRequests();
-  }, []);
 
   // ── Fetch analytics data when range changes ──
   const fetchAnalytics = useCallback(async (range: DateRange) => {
@@ -154,57 +108,6 @@ function Dashboard() {
     fetchAnalytics(dateRange);
   }, [dateRange, fetchAnalytics]);
 
-  // ── Modal handlers (unchanged) ──
-  const handleViewRequest = (item: RedemptionItem) => setSelectedRequest(item);
-  const handleEditRequest = (item: RedemptionItem) => setEditRequest(item);
-  const handleMarkAsProcessed = (item: RedemptionItem) => setProcessRequest(item);
-  const handleCancelRequest = (item: RedemptionItem) => setCancelRequest(item);
-
-  const refetchRequests = async () => {
-    const response = await dashboardApi.getRedemptionRequests(100, 0);
-    const filtered = (response.results as APIRedemptionRequest[]).filter(
-      (req) => req.status === "APPROVED" && req.processing_status === "NOT_PROCESSED",
-    );
-    setRequests(filtered);
-  };
-
-  const confirmMarkAsProcessed = async (remarks?: string) => {
-    if (!processRequest) return;
-    try {
-      setProcessRequest(null);
-      await redemptionRequestsApi.markAsProcessed(processRequest.id, remarks);
-      toast.success("Request marked as processed successfully");
-      await refetchRequests();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to mark request as processed");
-    }
-  };
-
-  const confirmCancelRequest = async (reason: string, remarks: string) => {
-    if (!cancelRequest) return;
-    try {
-      setCancelRequest(null);
-      await redemptionRequestsApi.cancelRequest(cancelRequest.id, reason, remarks);
-      toast.success("Request cancelled successfully");
-      await refetchRequests();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to cancel request");
-    }
-  };
-
-  const handleRefreshRequests = async () => {
-    try {
-      setIsRefreshing(true);
-      await refetchRequests();
-      toast.success("Requests refreshed successfully");
-    } catch (error) {
-      console.error("[Dashboard] Error refreshing:", error);
-      toast.error("Failed to refresh requests");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   const handleResetAllPointsConfirm = async () => {
     if (!password) { toast.error("Please enter your password"); return; }
     try {
@@ -226,38 +129,13 @@ function Dashboard() {
     }
   };
 
-  // Convert API response to RedemptionItem for table
-  const tableRequests = requests.map(
-    (req) =>
-      ({
-        id: req.id,
-        requested_by: req.requested_by,
-        requested_by_name: req.requested_by_name,
-        requested_for: req.requested_for,
-        requested_for_name: req.requested_for_name,
-        status: req.status,
-        processing_status: req.processing_status,
-        total_points: req.total_points,
-        date_requested: req.date_requested,
-        reviewed_by: req.reviewed_by,
-        reviewed_by_name: req.reviewed_by_name,
-        date_reviewed: req.date_reviewed,
-        processed_by: req.processed_by,
-        processed_by_name: req.processed_by_name,
-        date_processed: req.date_processed,
-        cancelled_by: req.cancelled_by,
-        cancelled_by_name: req.cancelled_by_name,
-        date_cancelled: req.date_cancelled,
-        remarks: req.remarks,
-        rejection_reason: req.rejection_reason,
-        items: req.items,
-      }) as RedemptionItem,
-  );
-
   // ── Chart card wrapper ──
-  const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  const ChartCard = ({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) => (
     <div className="rounded-lg border bg-card border-border p-5">
-      <h3 className="text-sm font-semibold mb-4">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {action}
+      </div>
       {children}
     </div>
   );
@@ -287,124 +165,186 @@ function Dashboard() {
 
       {/* ── Charts Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Time Series — full width */}
-        <div className="lg:col-span-2">
-          <ChartCard title="Request Trends">
-            <TimeSeriesChart data={timeSeries} loading={timeSeriesLoading} />
-          </ChartCard>
-        </div>
-
-        {/* Item Popularity */}
-        <ChartCard title="Top Redeemed Items">
-          <ItemPopularityChart data={items} loading={itemsLoading} />
-        </ChartCard>
-
-        {/* Agent Performance */}
-        <ChartCard title="Agent Performance">
-          <AgentPerformanceChart data={agents} loading={agentsLoading} />
-        </ChartCard>
-
-        {/* Team Performance */}
-        <ChartCard title="Team Performance">
-          <TeamPerformanceChart data={teams} loading={teamsLoading} />
+        {/* Time Series */}
+        <ChartCard
+          title="Request Trends"
+          action={
+            <ChartExportButton
+              filename="request-trends"
+              disabled={timeSeriesLoading}
+              data={timeSeries.map((e) => ({
+                Date: e.date,
+                Requests: e.request_count,
+                "Points Redeemed": e.points_redeemed,
+                Approved: e.approved_count,
+                Rejected: e.rejected_count,
+              }))}
+            />
+          }
+        >
+          <TimeSeriesChart data={timeSeries} loading={timeSeriesLoading} />
         </ChartCard>
 
         {/* Turnaround Time */}
-        <ChartCard title="Turnaround Time">
+        <ChartCard
+          title="Turnaround Time"
+          action={
+            <ChartExportButton
+              filename="turnaround-time"
+              disabled={turnaroundLoading}
+              data={turnaround?.trend.map((e) => ({
+                Month: e.month,
+                "Avg Hours": e.avg_total_hours ?? "N/A",
+                Count: e.count,
+              })) ?? []}
+            />
+          }
+        >
           <TurnaroundChart data={turnaround} loading={turnaroundLoading} />
         </ChartCard>
 
-        {/* Entity Analytics — full width */}
-        <div className="lg:col-span-2">
-          <ChartCard title="Distributor & Customer Analytics">
-            <EntityAnalyticsChart
-              distributors={distributors}
-              customers={customers}
-              loading={entitiesLoading}
+        {/* Item Popularity */}
+        <ChartCard
+          title="Top Redeemed Items"
+          action={
+            <ChartExportButton
+              filename="item-popularity"
+              disabled={itemsLoading}
+              data={items.map((e) => ({
+                Item: e.item_name,
+                Code: e.item_code,
+                Category: e.legend,
+                Quantity: e.total_quantity,
+                Points: e.total_points,
+                Requests: e.request_count,
+              }))}
             />
-          </ChartCard>
-        </div>
-      </div>
-
-      {/* ── Pending Requests Section ── */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Pending Redemption Requests</h3>
-          <button
-            onClick={handleRefreshRequests}
-            disabled={isRefreshing}
-            className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
-              isRefreshing
-                ? "opacity-50 cursor-not-allowed"
-                : "bg-card border-border text-foreground hover:bg-accent"
-            }`}
-            title="Refresh requests"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            {isRefreshing ? "Refreshing..." : "Refresh"}
-          </button>
-        </div>
-
-        {/* Mobile cards */}
-        <div className="md:hidden">
-          {requestsLoading ? (
-            <div className="text-center py-8"><p className="text-muted-foreground">Loading requests...</p></div>
-          ) : tableRequests.length === 0 ? (
-            <div className="text-center py-8"><p className="text-muted-foreground">No pending requests</p></div>
-          ) : (
-            <div className="space-y-3">
-              {tableRequests.slice(0, 5).map((request) => (
-                <div key={request.id} className="p-4 rounded-lg border bg-card border-border">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-semibold text-sm">#{request.id}</p>
-                      <p className="text-xs text-muted-foreground">{request.requested_by_name}</p>
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      request.status === "PENDING"
-                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        : request.status === "APPROVED"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                    }`}>
-                      {request.status}
-                    </span>
-                  </div>
-                  <p className="text-sm mb-1">For: {request.requested_for_name}</p>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {request.total_points} points · {new Date(request.date_requested).toLocaleDateString()}
-                  </p>
-                  <button
-                    onClick={() => setSelectedRequest(request)}
-                    className="w-full py-2 rounded bg-primary text-white hover:bg-primary/90 text-sm font-semibold transition-colors"
-                  >
-                    View Details
-                  </button>
-                </div>
-              ))}
-              {tableRequests.length > 5 && (
-                <button
-                  onClick={() => navigate("/admin/redemption")}
-                  className="w-full py-2.5 rounded border text-sm font-semibold transition-colors"
-                >
-                  View All ({tableRequests.length})
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Desktop table */}
-        <div className="hidden md:block">
-          <RedemptionTable
-            redemptions={tableRequests}
-            loading={requestsLoading}
-            onView={handleViewRequest}
-            onEdit={handleEditRequest}
-            onMarkAsProcessed={handleMarkAsProcessed}
-            onCancelRequest={handleCancelRequest}
+          }
+        >
+          <ItemPopularityChart
+            data={items}
+            loading={itemsLoading}
+            detailItems={items.map((item) => ({
+              id: item.product_id,
+              label: item.item_name,
+              fetcher: async () => {
+                const rows = await analyticsApi.getItemRequests(item.product_id, dateRange);
+                return rows.map((r) => ({
+                  "Request ID": r.request_id,
+                  "Date Requested": r.date_requested,
+                  "Item": r.item_name,
+                  "Item Code": r.item_code,
+                  "Quantity": r.quantity,
+                  "Points": r.points,
+                  "Agent": r.agent,
+                  "Team": r.team || "-",
+                  "Requested For": r.requested_for,
+                  "Type": r.requested_for_type,
+                  "Status": r.status,
+                  "Processing": r.processing_status,
+                  "Reviewed By": r.reviewed_by || "-",
+                  "Date Reviewed": r.date_reviewed || "-",
+                  "Processed By": r.processed_by || "-",
+                  "Date Processed": r.date_processed || "-",
+                  "Remarks": r.remarks,
+                }));
+              },
+            }))}
           />
-        </div>
+        </ChartCard>
+
+        {/* Agent Performance */}
+        <ChartCard
+          title="Agent Performance"
+          action={
+            <ChartExportButton
+              filename="agent-performance"
+              disabled={agentsLoading}
+              data={agents.map((e) => ({
+                Agent: e.agent_name,
+                Team: e.team_name || "-",
+                "Total Requests": e.total_requests,
+                Approved: e.approved_count,
+                Rejected: e.rejected_count,
+                "Approval Rate %": e.approval_rate,
+                Points: e.total_points,
+              }))}
+            />
+          }
+        >
+          <AgentPerformanceChart
+            data={agents}
+            loading={agentsLoading}
+            detailItems={agents.map((agent) => ({
+              id: agent.agent_id,
+              label: agent.agent_name,
+              fetcher: async () => {
+                const rows = await analyticsApi.getAgentRequests(agent.agent_id, dateRange);
+                return rows.map((r) => ({
+                  "Request ID": r.request_id,
+                  "Date Requested": r.date_requested,
+                  "Requested For": r.requested_for,
+                  "Type": r.requested_for_type,
+                  "Items": r.items,
+                  "Total Points": r.total_points,
+                  "Status": r.status,
+                  "Processing": r.processing_status,
+                  "Reviewed By": r.reviewed_by || "-",
+                  "Date Reviewed": r.date_reviewed || "-",
+                  "Processed By": r.processed_by || "-",
+                  "Date Processed": r.date_processed || "-",
+                  "Remarks": r.remarks,
+                  "Rejection Reason": r.rejection_reason,
+                }));
+              },
+            }))}
+          />
+        </ChartCard>
+
+        {/* Team Performance */}
+        <ChartCard
+          title="Team Performance"
+          action={
+            <ChartExportButton
+              filename="team-performance"
+              disabled={teamsLoading}
+              data={teams.map((e) => ({
+                Team: e.team_name,
+                "Total Requests": e.total_requests,
+                Approved: e.approved_count,
+                Rejected: e.rejected_count,
+                "Approval Rate %": e.approval_rate,
+                Points: e.total_points,
+              }))}
+            />
+          }
+        >
+          <TeamPerformanceChart data={teams} loading={teamsLoading} />
+        </ChartCard>
+
+        {/* Entity Analytics */}
+        <ChartCard
+          title="Distributor & Customer Analytics"
+          action={
+            <ChartExportButton
+              filename="entity-analytics"
+              disabled={entitiesLoading}
+              data={[...distributors, ...customers].map((e) => ({
+                Name: e.entity_name,
+                Type: e.entity_type,
+                Requests: e.request_count,
+                Points: e.total_points,
+                Processed: e.processed_count,
+              }))}
+            />
+          }
+        >
+          <EntityAnalyticsChart
+            distributors={distributors}
+            customers={customers}
+            loading={entitiesLoading}
+          />
+        </ChartCard>
       </div>
 
       {/* ── Reset Points Modal ── */}
@@ -509,25 +449,6 @@ function Dashboard() {
             )}
           </div>
         </div>
-      )}
-
-      {/* ── Redemption Modals ── */}
-      {selectedRequest && (
-        <ViewRedemptionModal isOpen={!!selectedRequest} onClose={() => setSelectedRequest(null)} item={selectedRequest} />
-      )}
-      {editRequest && (
-        <EditRedemptionModal
-          isOpen={!!editRequest}
-          onClose={() => setEditRequest(null)}
-          item={editRequest}
-          onSave={() => { setEditRequest(null); refetchRequests(); }}
-        />
-      )}
-      {processRequest && (
-        <MarkAsProcessedModal isOpen={!!processRequest} onClose={() => setProcessRequest(null)} item={processRequest} onConfirm={confirmMarkAsProcessed} />
-      )}
-      {cancelRequest && (
-        <CancelRequestModal isOpen={!!cancelRequest} onClose={() => setCancelRequest(null)} item={cancelRequest} onConfirm={confirmCancelRequest} />
       )}
 
       {/* ── Export Analytics Modal ── */}

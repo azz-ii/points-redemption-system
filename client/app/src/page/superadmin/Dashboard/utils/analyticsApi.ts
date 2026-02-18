@@ -91,6 +91,43 @@ export interface EntityAnalytics {
   processed_count: number;
 }
 
+export interface ItemRequestDetail {
+  request_id: number;
+  date_requested: string | null;
+  agent: string | null;
+  team: string | null;
+  requested_for: string | null;
+  requested_for_type: string;
+  item_name: string | null;
+  item_code: string | null;
+  quantity: number;
+  points: number;
+  status: string;
+  processing_status: string;
+  reviewed_by: string | null;
+  date_reviewed: string | null;
+  processed_by: string | null;
+  date_processed: string | null;
+  remarks: string;
+}
+
+export interface AgentRequestDetail {
+  request_id: number;
+  date_requested: string | null;
+  requested_for: string | null;
+  requested_for_type: string;
+  items: string;
+  total_points: number;
+  status: string;
+  processing_status: string;
+  reviewed_by: string | null;
+  date_reviewed: string | null;
+  processed_by: string | null;
+  date_processed: string | null;
+  remarks: string;
+  rejection_reason: string;
+}
+
 export type DateRange = "7" | "30" | "90" | "365" | "all";
 
 // ── Helper ──────────────────────────────────────────────
@@ -156,6 +193,18 @@ export const analyticsApi = {
   getEntities(type: "distributor" | "customer", range: DateRange = "30", limit: number = 10) {
     return fetchJson<EntityAnalytics[]>(
       `${API_BASE_URL}/dashboard/analytics/entities/?type=${type}&range=${range}&limit=${limit}`,
+    );
+  },
+
+  getItemRequests(productId: number, range: DateRange = "30") {
+    return fetchJson<ItemRequestDetail[]>(
+      `${API_BASE_URL}/dashboard/analytics/item-requests/?product_id=${productId}&range=${range}`,
+    );
+  },
+
+  getAgentRequests(agentId: number, range: DateRange = "30") {
+    return fetchJson<AgentRequestDetail[]>(
+      `${API_BASE_URL}/dashboard/analytics/agent-requests/?agent_id=${agentId}&range=${range}`,
     );
   },
 };

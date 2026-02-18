@@ -45,7 +45,7 @@ function Accounts() {
     email: "",
     position: "",
     points: 0,
-    is_activated: false,
+    is_activated: true,
     is_banned: false,
   });
   const [newAccountImage, setNewAccountImage] = useState<File | null>(null);
@@ -59,7 +59,7 @@ function Accounts() {
     email: "",
     position: "",
     points: 0,
-    is_activated: false,
+    is_activated: true,
     is_banned: false,
   });
   const [editAccountImage, setEditAccountImage] = useState<File | null>(null);
@@ -207,7 +207,7 @@ function Accounts() {
       email: "",
       position: "",
       points: 0,
-      is_activated: false,
+      is_activated: true,
       is_banned: false,
     });
     setNewAccountImage(null);

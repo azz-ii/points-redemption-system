@@ -40,8 +40,30 @@ export function EntityAnalyticsChart({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        Loading entity data...
+      <div className="animate-pulse space-y-4">
+        <div className="flex gap-1">
+          <div className="h-7 w-24 rounded-md bg-muted" />
+          <div className="h-7 w-20 rounded-md bg-muted" />
+        </div>
+        <div className="space-y-2.5 py-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="h-3 w-28 rounded bg-muted flex-shrink-0" />
+              <div className="h-6 rounded bg-muted" style={{ width: `${75 - i * 12}%` }} />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-muted" />
+              <div className="h-3 flex-1 rounded bg-muted" />
+              <div className="h-3 w-10 rounded bg-muted" />
+              <div className="h-3 w-10 rounded bg-muted" />
+              <div className="h-3 w-10 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

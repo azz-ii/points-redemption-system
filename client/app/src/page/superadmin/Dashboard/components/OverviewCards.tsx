@@ -50,13 +50,20 @@ export function OverviewCards({ data, loading }: OverviewCardsProps) {
             key={card.key}
             className="p-4 rounded-lg border bg-card border-border transition-colors"
           >
-            <div className={`flex items-center gap-1.5 mb-2 ${card.color}`}>
-              {card.icon}
-              <p className="text-xs font-medium truncate">{card.label}</p>
-            </div>
-            <p className="text-2xl font-bold">
-              {loading ? "-" : value}
-            </p>
+            {loading ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-3.5 w-20 rounded bg-muted" />
+                <div className="h-7 w-12 rounded bg-muted" />
+              </div>
+            ) : (
+              <>
+                <div className={`flex items-center gap-1.5 mb-2 ${card.color}`}>
+                  {card.icon}
+                  <p className="text-xs font-medium truncate">{card.label}</p>
+                </div>
+                <p className="text-2xl font-bold">{value}</p>
+              </>
+            )}
           </div>
         );
       })}

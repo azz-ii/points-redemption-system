@@ -35,8 +35,24 @@ function fmtHours(h: number | null): string {
 export function TurnaroundChart({ data, loading }: TurnaroundChartProps) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        Loading turnaround data...
+      <div className="animate-pulse space-y-4">
+        <div className="grid grid-cols-3 gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="p-3 rounded-lg border border-border space-y-2">
+              <div className="h-3 w-20 mx-auto rounded bg-muted" />
+              <div className="h-6 w-12 mx-auto rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+        <div className="h-[250px] rounded-lg bg-muted flex items-end gap-1 p-4 pt-8">
+          {[40, 55, 35, 70, 50, 65, 45, 60].map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t bg-muted-foreground/10"
+              style={{ height: `${h}%` }}
+            />
+          ))}
+        </div>
       </div>
     );
   }

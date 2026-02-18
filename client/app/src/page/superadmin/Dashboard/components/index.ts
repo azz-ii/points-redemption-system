@@ -7,3 +7,4 @@ export { TeamPerformanceChart } from "./TeamPerformanceChart";
 export { TurnaroundChart } from "./TurnaroundChart";
 export { EntityAnalyticsChart } from "./EntityAnalyticsChart";
 export { ExportAnalyticsModal } from "./ExportAnalyticsModal";
+export { ChartExportButton } from "./ChartExportButton";
