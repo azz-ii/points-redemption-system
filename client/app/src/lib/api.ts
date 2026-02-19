@@ -26,6 +26,7 @@ export interface Product {
   stock: number;
   committed_stock: number;
   available_stock: number;
+  image?: string | null;
   mktg_admin?: number | null;
   requires_sales_approval?: boolean;
   is_archived: boolean;
@@ -128,6 +129,7 @@ const legendToCategoryMap: Record<string, string> = {
 // Transform backend product data to frontend format
 export function transformProductToRedeemItem(product: Product): RedeemItemData {
   console.log("[API] Transforming product:", product);
+  console.log("[API] Product image field:", product.image);
   
   // Parse points - handle both numeric and formula strings
   let pointsValue = 0;
@@ -161,9 +163,11 @@ export function transformProductToRedeemItem(product: Product): RedeemItemData {
     available_stock: product.available_stock || 0,
     min_order_qty: product.min_order_qty ?? 1,
     max_order_qty: product.max_order_qty ?? null,
+    image: product.image || undefined,
   };
 
   console.log("[API] Transformed item:", transformed);
+  console.log("[API] Transformed item image:", transformed.image);
   return transformed;
 }
 

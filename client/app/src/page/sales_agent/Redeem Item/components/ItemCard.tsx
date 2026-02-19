@@ -21,10 +21,11 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
           <div className="absolute inset-0 bg-gray-300 dark:bg-gray-700 animate-pulse" />
         )}
         <img
-          src={item.image}
+          src={item.image || "/images/tshirt.png"}
           alt={item.name}
           onLoad={() => setImageLoading(false)}
           onError={(e) => {
+            console.error(`Failed to load image for ${item.name}:`, item.image);
             e.currentTarget.src = "/images/tshirt.png";
             setImageLoading(false);
           }}
