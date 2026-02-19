@@ -37,8 +37,3 @@ class DistributorSerializer(serializers.ModelSerializer):
         if obj.archived_by:
             return obj.archived_by.username
         return None
-    
-    def create(self, validated_data):
-        # Set the added_by field to the current user
-        validated_data['added_by'] = self.context['request'].user
-        return super().create(validated_data)

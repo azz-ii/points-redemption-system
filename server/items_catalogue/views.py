@@ -42,8 +42,19 @@ class ProductListCreateView(APIView):
     def get(self, request):
         """Get paginated list of products"""
         search = request.query_params.get('search', '').strip()
+        show_archived = request.query_params.get('show_archived', 'false').lower() == 'true'
 
         products = Product.objects.all()
+
+        # Apply archived filter - toggle between active and archived views
+        if show_archived:
+            # Show ONLY archived products
+            products = products.filter(is_archived=True)
+            logger.info(f"Showing archived products only - Found {products.count()} archived products")
+        else:
+            # Show ONLY active (non-archived) products
+            products = products.filter(is_archived=False)
+            logger.info(f"Showing active products only - Found {products.count()} active products")
 
         if search:
             products = products.filter(
@@ -53,6 +64,7 @@ class ProductListCreateView(APIView):
                 Q(category__icontains=search) |
                 Q(description__icontains=search)
             )
+            logger.info(f"Filtering products by search: '{search}' - Found {products.count()} products")
 
         products = products.order_by('item_name', 'id')
 

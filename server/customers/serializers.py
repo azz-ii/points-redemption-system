@@ -27,8 +27,3 @@ class CustomerSerializer(serializers.ModelSerializer):
         
         # Fallback to username if profile doesn't exist
         return obj.added_by.username
-    
-    def create(self, validated_data):
-        # Set the added_by field to the current user
-        validated_data['added_by'] = self.context['request'].user
-        return super().create(validated_data)

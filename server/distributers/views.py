@@ -51,15 +51,20 @@ class DistributorViewSet(viewsets.ModelViewSet):
         """
         All authenticated users can access all distributors.
         Optionally filter based on query parameters.
-        By default, archived distributors are excluded unless show_archived=true.
         """
         # Start with all distributors
         queryset = Distributor.objects.all()
         
-        # Filter archived distributors by default
-        show_archived = self.request.query_params.get('show_archived', '').lower() == 'true'
-        if not show_archived:
+        # Apply archived filter - toggle between active and archived views
+        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
+        if show_archived:
+            # Show ONLY archived distributors
+            queryset = queryset.filter(is_archived=True)
+            logger.info(f"Showing archived distributors only - Found {queryset.count()} archived distributors")
+        else:
+            # Show ONLY active (non-archived) distributors
             queryset = queryset.filter(is_archived=False)
+            logger.info(f"Showing active distributors only - Found {queryset.count()} active distributors")
         
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
@@ -72,14 +77,17 @@ class DistributorViewSet(viewsets.ModelViewSet):
             ) | queryset.filter(
                 location__icontains=search
             )
+            logger.info(f"Filtering distributors by search: '{search}' - Found {queryset.count()} distributors")
         
         return queryset.order_by('name')
     
     def perform_create(self, serializer):
         """
         Set the added_by field to the current user when creating.
+        Set to None if user is not authenticated.
         """
-        serializer.save(added_by=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(added_by=user)
     
     @action(detail=False, methods=['get'])
     def search(self, request):

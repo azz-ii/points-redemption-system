@@ -56,6 +56,17 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         queryset = User.objects.filter(is_superuser=False).select_related('profile')
         
+        # Apply archived filter - toggle between active and archived views
+        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
+        if show_archived:
+            # Show ONLY archived accounts
+            queryset = queryset.filter(profile__is_archived=True)
+            logger.info(f"Showing archived users only - Found {queryset.count()} archived users")
+        else:
+            # Show ONLY active (non-archived) accounts
+            queryset = queryset.filter(profile__is_archived=False)
+            logger.info(f"Showing active users only - Found {queryset.count()} active users")
+        
         # Apply position filter if provided (comma-separated positions supported)
         position = self.request.query_params.get('position', None)
         if position:
@@ -90,7 +101,8 @@ class UserViewSet(viewsets.ModelViewSet):
         # Log query parameters for debugging
         position = request.query_params.get('position', None)
         search = request.query_params.get('search', None)
-        logger.info(f"UserViewSet.list called - position: {position}, search: {search}")
+        show_archived = request.query_params.get('show_archived', 'false')
+        logger.info(f"UserViewSet.list called - position: {position}, search: {search}, show_archived: {show_archived}")
         
         response = super().list(request, *args, **kwargs)
         
@@ -99,6 +111,7 @@ class UserViewSet(viewsets.ModelViewSet):
             response.data['_debug'] = {
                 'position_filter': position,
                 'search_filter': search,
+                'show_archived': show_archived,
                 'total_results': response.data.get('count', 0)
             }
         

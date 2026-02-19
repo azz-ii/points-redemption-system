@@ -243,6 +243,7 @@ export const customersApi = {
     const response = await fetch(`${API_BASE_URL}/customers/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to create customer');
@@ -252,6 +253,7 @@ export const customersApi = {
     const response = await fetch(`${API_BASE_URL}/customers/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to create customer');
@@ -261,6 +263,7 @@ export const customersApi = {
     const response = await fetch(`${API_BASE_URL}/customers/${id}/`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update customer');
@@ -270,6 +273,7 @@ export const customersApi = {
     const response = await fetch(`${API_BASE_URL}/customers/${id}/`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update customer');
@@ -278,12 +282,14 @@ export const customersApi = {
   delete: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/customers/${id}/`, {
       method: 'DELETE',
+      credentials: 'include',
     });
     if (!response.ok) throw new Error('Failed to delete customer');
   },
   deleteCustomer: async (id: number): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/customers/${id}/`, {
       method: 'DELETE',
+      credentials: 'include',
     });
     if (!response.ok) throw new Error('Failed to delete customer');
   },

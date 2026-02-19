@@ -82,6 +82,13 @@ function Distributors() {
     setTablePage(page);
   }, []);
 
+  const handleToggleArchived = useCallback((checked: boolean) => {
+    setLoading(true);
+    setDistributors([]); // Clear distributors to show full loading UI
+    setShowArchived(checked);
+    setTablePage(0);
+  }, []);
+
   // Modal and form state for creating new distributor
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -503,25 +510,12 @@ function Distributors() {
                 <input
                   type="checkbox"
                   checked={showArchived}
-                  onChange={(e) => setShowArchived(e.target.checked)}
+                  onChange={(e) => handleToggleArchived(e.target.checked)}
                   className="rounded border-gray-300"
                 />
                 Show Archived
               </label>
             </div>
-          </div>
-
-          <div className="mb-4 flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="show-archived"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <label htmlFor="show-archived" className="text-sm text-muted-foreground">
-              Show Archived Distributors
-            </label>
           </div>
           <DistributorsTable
             distributors={distributors}

@@ -183,6 +183,12 @@ function Accounts() {
     setTablePage(page);
   }, []);
 
+  const handleToggleArchived = useCallback((checked: boolean) => {
+    setLoading(true); // Set loading immediately when toggle changes
+    setAccounts([]); // Clear accounts to show full loading UI
+    setShowArchived(checked);
+  }, []);
+
   // Create new account (non-blocking)
   const handleCreateAccount = async () => {
     if (
@@ -824,7 +830,7 @@ function Accounts() {
             <input
               type="checkbox"
               checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
+              onChange={(e) => handleToggleArchived(e.target.checked)}
               className="rounded border-gray-300"
             />
             Show Archived

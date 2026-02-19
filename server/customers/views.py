@@ -52,9 +52,19 @@ class CustomerViewSet(viewsets.ModelViewSet):
         All authenticated users can access all customers.
         Optionally filter based on query parameters.
         """
-        # All users get full access to all customers
+        # Start with all customers
+        queryset = Customer.objects.all()
+        
+        # Apply archived filter - toggle between active and archived views
         show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
-        queryset = Customer.objects.all() if show_archived else Customer.objects.filter(is_archived=False)
+        if show_archived:
+            # Show ONLY archived customers
+            queryset = queryset.filter(is_archived=True)
+            logger.info(f"Showing archived customers only - Found {queryset.count()} archived customers")
+        else:
+            # Show ONLY active (non-archived) customers
+            queryset = queryset.filter(is_archived=False)
+            logger.info(f"Showing active customers only - Found {queryset.count()} active customers")
         
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
@@ -67,14 +77,17 @@ class CustomerViewSet(viewsets.ModelViewSet):
             ) | queryset.filter(
                 location__icontains=search
             )
+            logger.info(f"Filtering customers by search: '{search}' - Found {queryset.count()} customers")
         
         return queryset.order_by('name')
     
     def perform_create(self, serializer):
         """
         Set the added_by field to the current user when creating.
+        Set to None if user is not authenticated.
         """
-        serializer.save(added_by=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(added_by=user)
     
     def destroy(self, request, *args, **kwargs):
         """Archive a customer instead of deleting"""

@@ -127,6 +127,13 @@ function Catalogue() {
     setTablePage(0);
   }, []);
 
+  const handleToggleArchived = useCallback((checked: boolean) => {
+    setLoading(true);
+    setItems([]); // Clear items to show full loading UI
+    setShowArchived(checked);
+    setTablePage(0);
+  }, []);
+
   // Modal and form state for creating new item
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -754,7 +761,7 @@ function Catalogue() {
               <input
                 type="checkbox"
                 checked={showArchived}
-                onChange={(e) => setShowArchived(e.target.checked)}
+                onChange={(e) => handleToggleArchived(e.target.checked)}
                 className="rounded border-gray-300"
               />
               Show Archived
@@ -824,7 +831,7 @@ function Catalogue() {
             <input
               type="checkbox"
               checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
+              onChange={(e) => handleToggleArchived(e.target.checked)}
               className="rounded border-gray-300"
             />
             Show Archived

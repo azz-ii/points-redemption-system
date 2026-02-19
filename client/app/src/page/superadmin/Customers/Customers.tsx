@@ -81,6 +81,13 @@ function Customers() {
     setTablePage(page);
   }, []);
 
+  const handleToggleArchived = useCallback((checked: boolean) => {
+    setLoading(true);
+    setCustomers([]); // Clear customers to show full loading UI
+    setShowArchived(checked);
+    setTablePage(0);
+  }, []);
+
   // Modal and form state for creating new customer
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -474,19 +481,17 @@ function Customers() {
                 View and manage customer information.
               </p>
             </div>
-          </div>
-
-          <div className="mb-4 flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="show-archived"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <label htmlFor="show-archived" className="text-sm text-muted-foreground">
-              Show Archived Customers
-            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => handleToggleArchived(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Show Archived
+              </label>
+            </div>
           </div>
           <CustomersTable
             customers={customers}
