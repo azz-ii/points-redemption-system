@@ -56,6 +56,14 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         queryset = User.objects.filter(is_superuser=False).select_related('profile')
         
+        # Apply position filter if provided (comma-separated positions supported)
+        position = self.request.query_params.get('position', None)
+        if position:
+            positions = [p.strip() for p in position.split(',') if p.strip()]
+            if positions:
+                queryset = queryset.filter(profile__position__in=positions)
+                logger.info(f"Filtering users by positions: {positions} - Found {queryset.count()} users")
+        
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
         
@@ -67,6 +75,7 @@ class UserViewSet(viewsets.ModelViewSet):
             ) | queryset.filter(
                 profile__email__icontains=search
             )
+            logger.info(f"Filtering users by search: '{search}' - Found {queryset.count()} users")
         
         return queryset.order_by('username')
     
@@ -75,6 +84,25 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return UserSerializer
         return UserListSerializer
+    
+    def list(self, request, *args, **kwargs):
+        """Override list to add debug info to response"""
+        # Log query parameters for debugging
+        position = request.query_params.get('position', None)
+        search = request.query_params.get('search', None)
+        logger.info(f"UserViewSet.list called - position: {position}, search: {search}")
+        
+        response = super().list(request, *args, **kwargs)
+        
+        # Add debug info to response
+        if hasattr(response, 'data') and isinstance(response.data, dict):
+            response.data['_debug'] = {
+                'position_filter': position,
+                'search_filter': search,
+                'total_results': response.data.get('count', 0)
+            }
+        
+        return response
     
     def create(self, request, *args, **kwargs):
         """Create a new user with profile"""
