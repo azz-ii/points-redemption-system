@@ -108,4 +108,41 @@ export const inventoryApi = {
     
     return data;
   },
+
+  getAllInventory: async (filters?: { search?: string; status?: string }): Promise<InventoryItem[]> => {
+    // Fetch all inventory items by requesting maximum page size and iterating through pages
+    let allItems: InventoryItem[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const url = new URL(`${API_BASE_URL}/inventory/`, window.location.origin);
+      url.searchParams.append('page', page.toString());
+      url.searchParams.append('page_size', '100'); // Use 100 for efficiency
+      
+      // Apply filters if provided
+      if (filters?.search) {
+        url.searchParams.append('search', filters.search);
+      }
+      if (filters?.status) {
+        url.searchParams.append('status', filters.status);
+      }
+      
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch inventory items');
+      
+      const data = await response.json();
+      const results = Array.isArray(data) ? data : (data.results || []);
+      
+      allItems = [...allItems, ...results];
+      
+      // Check if there are more pages (pagination response has 'next' field)
+      hasMore = !Array.isArray(data) && data.next !== null;
+      page++;
+    }
+    
+    return allItems;
+  },
 };

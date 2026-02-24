@@ -214,7 +214,7 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        requests={requests}
+        requests={filteredRequests}
       />
     </>
   );

@@ -659,7 +659,8 @@ function Distributors() {
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        distributors={distributors}
+        searchQuery={searchQuery}
+        showArchived={showArchived}
       />
 
       {/* Set Points Modal */}

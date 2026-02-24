@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
-import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
 import type { Distributor } from "@/lib/distributors-api";
+import { distributorsApi } from "@/lib/distributors-api";
 import {
   exportDistributors,
   DEFAULT_EXPORT_COLUMNS,
@@ -12,16 +13,49 @@ import {
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  distributors: Distributor[];
+  searchQuery?: string;
+  showArchived?: boolean;
 }
 
-export function ExportModal({ isOpen, onClose, distributors }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: ExportModalProps) {
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [fetchingDistributors, setFetchingDistributors] = useState(false);
+  const [allDistributors, setAllDistributors] = useState<Distributor[]>([]);
+  const [fetchedCount, setFetchedCount] = useState(0);
+
+  // Fetch all filtered distributors when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAllDistributors = async () => {
+      try {
+        setFetchingDistributors(true);
+        setError("");
+        setFetchedCount(0);
+        
+        // Fetch with filters
+        const distributors = await distributorsApi.getAllDistributors({
+          search: searchQuery,
+          showArchived: showArchived,
+        });
+        
+        setAllDistributors(distributors);
+        setFetchedCount(distributors.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch distributors");
+        setAllDistributors([]);
+      } finally {
+        setFetchingDistributors(false);
+      }
+    };
+
+    fetchAllDistributors();
+  }, [isOpen, searchQuery, showArchived]);
 
   const handleColumnToggle = useCallback((key: ExportColumn["key"]) => {
     setColumns((prev) =>
@@ -46,7 +80,7 @@ export function ExportModal({ isOpen, onClose, distributors }: ExportModalProps)
       return;
     }
 
-    if (distributors.length === 0) {
+    if (allDistributors.length === 0) {
       setError("No distributors to export");
       return;
     }
@@ -58,7 +92,7 @@ export function ExportModal({ isOpen, onClose, distributors }: ExportModalProps)
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `distributors_export_${timestamp}`;
       
-      exportDistributors(distributors, {
+      exportDistributors(allDistributors, {
         columns,
         sortField,
         sortDirection,
@@ -73,16 +107,20 @@ export function ExportModal({ isOpen, onClose, distributors }: ExportModalProps)
     } finally {
       setExporting(false);
     }
-  }, [distributors, columns, sortField, sortDirection, format, onClose]);
+  }, [allDistributors, columns, sortField, sortDirection, format, onClose]);
 
   const handleClose = useCallback(() => {
     setError("");
+    setAllDistributors([]);
+    setFetchedCount(0);
     onClose();
   }, [onClose]);
 
   if (!isOpen) return null;
 
   const enabledCount = columns.filter((col) => col.enabled).length;
+  const isLoading = fetchingDistributors;
+  const canExport = !isLoading && allDistributors.length > 0 && !exporting;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -99,21 +137,30 @@ export function ExportModal({ isOpen, onClose, distributors }: ExportModalProps)
               Export Distributors
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {distributors.length} distributor{distributors.length !== 1 ? "s" : ""} will be exported
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Fetching distributors... {fetchedCount > 0 ? `${fetchedCount} found` : ""}
+                </span>
+              ) : (
+                <span>
+                  {allDistributors.length} distributor{allDistributors.length !== 1 ? "s" : ""} will be exported
+                </span>
+              )}
             </p>
           </div>
           <button
             onClick={handleClose}
             aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
+            disabled={isLoading || exporting}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-          {/* Format Selection */}
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto\">\n          {/* Format Selection */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Export Format
@@ -294,17 +341,32 @@ export function ExportModal({ isOpen, onClose, distributors }: ExportModalProps)
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-card hover:bg-accent text-foreground"
+              disabled={isLoading || exporting}
+              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleExport}
-              disabled={exporting || enabledCount === 0}
+              disabled={!canExport || enabledCount === 0}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
-              <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : exporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export {format.toUpperCase()}
+                </>
+              )}
             </button>
           </div>
         </div>

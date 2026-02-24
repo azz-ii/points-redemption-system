@@ -971,7 +971,8 @@ function Catalogue() {
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        items={items}
+        searchQuery={searchQuery}
+        showArchived={showArchived}
       />
     </>
   );

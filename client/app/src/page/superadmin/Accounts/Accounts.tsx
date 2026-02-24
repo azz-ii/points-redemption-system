@@ -1058,7 +1058,8 @@ function Accounts() {
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        accounts={accounts}
+        searchQuery={searchQuery}
+        showArchived={showArchived}
       />
 
       <SetPointsModal

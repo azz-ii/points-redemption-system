@@ -635,7 +635,8 @@ function Customers() {
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        customers={customers}
+        searchQuery={searchQuery}
+        showArchived={showArchived}
       />
 
       {/* Set Points Modal */}

@@ -197,7 +197,7 @@ export const customersApi = {
     // Handle both array and paginated response formats
     return Array.isArray(data) ? data : (data.results || []);
   },
-  getAllCustomers: async (): Promise<Customer[]> => {
+  getAllCustomers: async (filters?: { search?: string; showArchived?: boolean }): Promise<Customer[]> => {
     // Fetch all customers by requesting maximum page size and iterating through pages
     let allCustomers: Customer[] = [];
     let page = 1;
@@ -207,6 +207,14 @@ export const customersApi = {
       const url = new URL(`${API_BASE_URL}/customers/`, window.location.origin);
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
+      
+      // Apply filters if provided
+      if (filters?.search) {
+        url.searchParams.append('search', filters.search);
+      }
+      if (filters?.showArchived !== undefined) {
+        url.searchParams.append('show_archived', filters.showArchived.toString());
+      }
       
       const response = await fetch(url.toString(), {
         credentials: 'include',

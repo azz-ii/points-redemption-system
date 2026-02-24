@@ -233,7 +233,7 @@ function Marketing() {
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        users={marketingUsers}
+        searchQuery={searchQuery}
       />
     </>
   );

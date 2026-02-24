@@ -481,7 +481,8 @@ function Inventory() {
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
-        items={items}
+        searchQuery={searchQuery}
+        statusFilter={statusFilter}
       />
 
       <SetInventoryModal
