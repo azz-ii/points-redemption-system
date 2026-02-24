@@ -19,6 +19,9 @@ interface MarketingUsersTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function MarketingUsersTable({
@@ -37,6 +40,9 @@ export function MarketingUsersTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: MarketingUsersTableProps) {
   const columns = useMemo(
     () =>
@@ -74,6 +80,9 @@ export function MarketingUsersTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

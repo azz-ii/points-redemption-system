@@ -4,6 +4,7 @@ import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
 import type { Account, ModalBaseProps, LegendAssignment } from "./types";
 import { LEGEND_OPTIONS } from "./types";
+import { FormSkeleton } from "@/components/shared/form-skeleton";
 
 interface EditAccountModalProps extends ModalBaseProps {
   account: Account | null;
@@ -190,8 +191,16 @@ export function EditAccountModal({
             </p>
 
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-6 w-24 rounded-full bg-muted animate-pulse" />
+                      <div className="h-3 w-32 rounded bg-muted animate-pulse" />
+                    </div>
+                    <div className="h-8 w-16 rounded-md bg-muted animate-pulse" />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="space-y-3">

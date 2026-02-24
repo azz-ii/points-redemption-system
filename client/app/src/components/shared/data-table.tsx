@@ -28,6 +28,7 @@ import {
   RotateCw,
   Download,
   Coins,
+  BookOpen,
 } from "lucide-react"
 
 import {
@@ -63,6 +64,7 @@ interface DataTableProps<TData, TValue> {
   createButtonLabel?: string
   createButtonIcon?: "user" | "plus"
   onSetPoints?: () => void
+  onSetInventory?: () => void
   onRefresh?: () => void
   refreshing?: boolean
   onExport?: (selectedRows: TData[]) => void
@@ -93,6 +95,10 @@ interface DataTableProps<TData, TValue> {
   onPageChange?: (pageIndex: number) => void
   onSearch?: (query: string) => void
 
+  // Page size selection
+  pageSizeOptions?: number[]
+  onPageSizeChange?: (pageSize: number) => void
+
   // Inline editing (Accounts-specific)
   editingRowId?: number | null
   editedData?: Record<string, any>
@@ -112,6 +118,7 @@ export function DataTable<TData, TValue>({
   createButtonLabel = "Add New",
   createButtonIcon = "plus",
   onSetPoints,
+  onSetInventory,
   onRefresh,
   refreshing = false,
   onExport,
@@ -136,6 +143,8 @@ export function DataTable<TData, TValue>({
   currentPage,
   onPageChange,
   onSearch,
+  pageSizeOptions = [15, 50, 100],
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -207,7 +216,7 @@ export function DataTable<TData, TValue>({
     : []
   const hasSelection = selectedRows.length > 0
 
-  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints
+  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints || onSetInventory
 
   return (
     <div className="space-y-4">
@@ -307,8 +316,17 @@ export function DataTable<TData, TValue>({
               </Button>
             )}
           </div>
-          {(onCreateNew || onSetPoints) && (
+          {(onCreateNew || onSetPoints || onSetInventory) && (
             <div className="flex gap-2">
+              {onSetInventory && (
+                <button
+                  onClick={onSetInventory}
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 border border-blue-700 hover:bg-blue-900 text-blue-400 transition-colors font-semibold"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  <span>Set Inventory</span>
+                </button>
+              )}
               {onSetPoints && (
                 <button
                   onClick={onSetPoints}
@@ -450,16 +468,43 @@ export function DataTable<TData, TValue>({
         </div>
 
         {showPagination && (
-          <div className="flex items-center justify-between p-4 border-t">
-            <div className="flex-1 text-sm text-muted-foreground">
-              {hasSelection ? (
-                <span>
-                  {selectedRows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} row(s) selected
-                </span>
-              ) : (
-                <span>
-                  Showing {table.getRowModel().rows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} results
-                </span>
+          <div className="flex items-center justify-between p-4 border-t gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 text-sm text-muted-foreground">
+                {hasSelection ? (
+                  <span>
+                    {selectedRows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} row(s) selected
+                  </span>
+                ) : (
+                  <span>
+                    Showing {table.getRowModel().rows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} results
+                  </span>
+                )}
+              </div>
+              {pageSizeOptions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                  <select
+                    value={table.getState().pagination.pageSize}
+                    onChange={(e) => {
+                      const newSize = Number(e.target.value)
+                      table.setPageSize(newSize)
+                      onPageSizeChange?.(newSize)
+                    }}
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {pageSizeOptions.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                    {manualPagination && totalResults ? (
+                      <option value={totalResults}>All ({totalResults})</option>
+                    ) : !manualPagination ? (
+                      <option value={data.length}>All</option>
+                    ) : null}
+                  </select>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-2">

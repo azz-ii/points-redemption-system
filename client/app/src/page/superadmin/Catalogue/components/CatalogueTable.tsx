@@ -22,6 +22,9 @@ interface CatalogueTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function CatalogueTable({
@@ -44,6 +47,9 @@ export function CatalogueTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: CatalogueTableProps) {
   const columns = createColumns({
     onView,
@@ -74,6 +80,9 @@ export function CatalogueTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

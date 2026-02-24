@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { Account } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
+import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
 
 interface PaginatedAccountsResponse {
   count: number;
@@ -256,6 +257,18 @@ export function SetPointsModal({
             </div>
 
             {/* Account Rows */}
+            {isLoadingPage && (
+              <PaginatedTableSkeleton
+                columns={[
+                  { span: 3, widthPercent: 70 },
+                  { span: 4, widthPercent: 80 },
+                  { span: 2, widthPercent: 60 },
+                  { span: 2, widthPercent: 50 },
+                  { span: 1, widthPercent: 60 },
+                ]}
+                rowCount={10}
+              />
+            )}
             {!isLoadingPage && activeAccounts.map((account) => {
               const delta = pointsToAdd[account.id] || 0;
               const currentPoints = account.points || 0;

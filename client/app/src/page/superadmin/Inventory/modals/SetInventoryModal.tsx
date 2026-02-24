@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { InventoryItem } from "./types";
 import { SetInventoryConfirmationModal } from "./SetInventoryConfirmationModal";
+import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
 
 interface PaginatedInventoryResponse {
   count: number;
@@ -256,6 +257,18 @@ export function SetInventoryModal({
               </div>
 
               {/* Item Rows */}
+              {isLoadingPage && (
+                <PaginatedTableSkeleton
+                  columns={[
+                    { span: 2, widthPercent: 80 },
+                    { span: 4, widthPercent: 70 },
+                    { span: 2, widthPercent: 60 },
+                    { span: 2, widthPercent: 50 },
+                    { span: 2, widthPercent: 60 },
+                  ]}
+                  rowCount={10}
+                />
+              )}
               {!isLoadingPage && trackedItems.map((item) => {
                 const delta = stockToAdd[item.id] || 0;
                 const currentStock = item.stock || 0;

@@ -70,6 +70,7 @@ export function ProcessRequestsTable({
         initialSorting={[{ id: "date_requested", desc: true }]}
         loadingMessage="Loading items..."
         emptyMessage="No items found"
+        pageSizeOptions={[15, 50, 100]}
       />
     </div>
   );

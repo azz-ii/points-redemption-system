@@ -34,6 +34,9 @@ interface AccountsTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function AccountsTable({
@@ -67,6 +70,9 @@ export function AccountsTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: AccountsTableProps) {
   const columns = useMemo(
     () =>
@@ -132,6 +138,9 @@ export function AccountsTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

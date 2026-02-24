@@ -65,6 +65,7 @@ export function RedemptionStatusTable({
         initialSorting={[{ id: "date_requested", desc: true }]}
         loadingMessage="Loading requests..."
         emptyMessage="No redemption requests found"
+        pageSizeOptions={[15, 50, 100]}
       />
     </div>
   );

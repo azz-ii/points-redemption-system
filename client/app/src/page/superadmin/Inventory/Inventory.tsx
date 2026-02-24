@@ -4,8 +4,6 @@ import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import {
   Search,
-  Sliders,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -15,7 +13,6 @@ import {
   EditStockModal,
   ExportModal,
   SetInventoryModal,
-  STATUS_OPTIONS,
 } from "./modals";
 import { inventoryApi } from "@/lib/inventory-api";
 import {
@@ -50,14 +47,12 @@ function Inventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Pagination state (0-indexed for DataTable compatibility)
   const [tablePage, setTablePage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const PAGE_SIZE = 15;
-  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const [pageSize, setPageSize] = useState(15);
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -77,12 +72,9 @@ function Inventory() {
 
       const params = new URLSearchParams();
       params.append("page", String(tablePage + 1));
-      params.append("page_size", String(PAGE_SIZE));
+      params.append("page_size", String(pageSize));
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
-      }
-      if (statusFilter) {
-        params.append("status", statusFilter);
       }
 
       const response = await fetch(`/api/inventory/?${params.toString()}`, {
@@ -119,7 +111,7 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, [tablePage, searchQuery, statusFilter]);
+  }, [tablePage, pageSize, searchQuery]);
 
   useEffect(() => {
     fetchInventoryItems();
@@ -129,15 +121,15 @@ function Inventory() {
     setTablePage(pageIndex);
   }, []);
 
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setTablePage(0);
+  }, []);
+
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     setTablePage(0);
   }, []);
-
-  // Reset to page 1 when filter changes
-  useEffect(() => {
-    setTablePage(0);
-  }, [statusFilter]);
 
   // Handle view click
   const handleViewClick = (item: InventoryItem) => {
@@ -295,62 +287,6 @@ function Inventory() {
             </div>
           </div>
 
-          {/* Search and Filter */}
-          <div className="flex justify-between items-center mb-6">
-            <div className="relative">
-              <div className="relative">
-                <button
-                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  className={`px-4 py-2 rounded-lg border flex items-center gap-2 border-border hover:bg-gray-900 transition-colors ${statusFilter ? "ring-2 ring-blue-500" : ""}`}
-                >
-                  <Sliders className="h-5 w-5" />
-                  <span>Filter</span>
-                  {statusFilter && (
-                    <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
-                      1
-                    </span>
-                  )}
-                </button>
-                {showFilterDropdown && (
-                  <div
-                    className="absolute left-0 mt-2 w-48 rounded-lg shadow-lg border z-50 bg-card border-border"
-                  >
-                    <div className="p-2">
-                      <p
-                        className="text-xs font-medium mb-2 px-2 text-muted-foreground"
-                      >
-                        Stock Status
-                      </p>
-                      {STATUS_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          onClick={() => {
-                            setStatusFilter(option.value);
-                            setShowFilterDropdown(false);
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded text-sm ${
-                            statusFilter === option.value
-                              ? "bg-blue-500 text-white"
-                              : "hover:bg-accent"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setShowSetInventoryModal(true)}
-              className="px-4 py-2 rounded-lg border flex items-center gap-2 border-blue-700 hover:bg-blue-900 text-blue-400 transition-colors"
-            >
-              <BookOpen className="h-5 w-5" />
-              <span>Set Inventory</span>
-            </button>
-          </div>
-
           {/* Table */}
           <InventoryTable
             items={items}
@@ -362,12 +298,16 @@ function Inventory() {
             onRefresh={fetchInventoryItems}
             refreshing={loading}
             onExport={() => setShowExportModal(true)}
+            onSetInventory={() => setShowSetInventoryModal(true)}
             manualPagination
             pageCount={pageCount}
             totalResults={totalCount}
             currentPage={tablePage}
             onPageChange={handlePageChange}
             onSearch={handleSearch}
+            pageSize={pageSize}
+            pageSizeOptions={[15, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
 
@@ -396,21 +336,6 @@ function Inventory() {
                 className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
               />
             </div>
-          </div>
-
-          {/* Mobile Filter */}
-          <div className="mb-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border text-sm font-medium bg-card border-border text-foreground"
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Mobile Cards and Pagination */}
@@ -446,13 +371,6 @@ function Inventory() {
             </div>
           )}
         </div>
-      {/* Close filter dropdown when clicking outside */}
-      {showFilterDropdown && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowFilterDropdown(false)}
-        />
-      )}
 
       <ViewInventoryModal
         isOpen={showViewModal && !!viewTarget}
@@ -482,7 +400,6 @@ function Inventory() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         searchQuery={searchQuery}
-        statusFilter={statusFilter}
       />
 
       <SetInventoryModal

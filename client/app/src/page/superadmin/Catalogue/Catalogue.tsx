@@ -35,8 +35,8 @@ function Catalogue() {
   // Pagination state (0-indexed for DataTable compatibility)
   const [tablePage, setTablePage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const PAGE_SIZE = 15;
-  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const [pageSize, setPageSize] = useState(15);
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
   // Fetch users for dropdowns
   useEffect(() => {
@@ -62,7 +62,7 @@ function Catalogue() {
 
       const params = new URLSearchParams();
       params.append("page", String(tablePage + 1));
-      params.append("page_size", String(PAGE_SIZE));
+      params.append("page_size", String(pageSize));
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
       }
@@ -112,7 +112,7 @@ function Catalogue() {
     } finally {
       setLoading(false);
     }
-  }, [tablePage, searchQuery, showArchived]);
+  }, [tablePage, pageSize, searchQuery, showArchived]);
 
   useEffect(() => {
     fetchCatalogueItems();
@@ -120,6 +120,11 @@ function Catalogue() {
 
   const handlePageChange = useCallback((pageIndex: number) => {
     setTablePage(pageIndex);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setTablePage(0);
   }, []);
 
   const handleSearch = useCallback((query: string) => {
@@ -790,6 +795,9 @@ function Catalogue() {
           currentPage={tablePage}
           onPageChange={handlePageChange}
           onSearch={handleSearch}
+          pageSize={pageSize}
+          pageSizeOptions={[15, 50, 100]}
+          onPageSizeChange={handlePageSizeChange}
         />
       </div>
 

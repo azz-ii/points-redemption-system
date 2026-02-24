@@ -27,16 +27,16 @@ function Customers() {
 
   // Server-side pagination state
   const [tablePage, setTablePage] = useState(0);
+  const [pageSize, setPageSize] = useState(15);
   const [totalCount, setTotalCount] = useState(0);
-  const PAGE_SIZE = 15;
-  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
       const url = new URL(`${API_URL}/customers/`, window.location.origin);
       url.searchParams.append('page', String(tablePage + 1));
-      url.searchParams.append('page_size', String(PAGE_SIZE));
+      url.searchParams.append('page_size', String(pageSize));
       if (showArchived) {
         url.searchParams.append('show_archived', 'true');
       }
@@ -60,7 +60,7 @@ function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [tablePage, searchQuery, showArchived]);
+  }, [tablePage, pageSize, searchQuery, showArchived]);
 
   // Fetch customers on mount and when dependencies change
   useEffect(() => {
@@ -79,6 +79,11 @@ function Customers() {
 
   const handlePageChange = useCallback((page: number) => {
     setTablePage(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setTablePage(0);
   }, []);
 
   const handleToggleArchived = useCallback((checked: boolean) => {
@@ -518,6 +523,9 @@ function Customers() {
             currentPage={tablePage}
             onPageChange={handlePageChange}
             onSearch={handleSearch}
+            pageSize={pageSize}
+            pageSizeOptions={[15, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
 

@@ -13,12 +13,16 @@ interface InventoryTableProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
+  onSetInventory?: () => void;
   manualPagination?: boolean;
   pageCount?: number;
   totalResults?: number;
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function InventoryTable({
@@ -31,12 +35,16 @@ export function InventoryTable({
   onRefresh,
   refreshing,
   onExport,
+  onSetInventory,
   manualPagination,
   pageCount,
   totalResults,
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: InventoryTableProps) {
   const columns = useMemo(
     () =>
@@ -57,6 +65,7 @@ export function InventoryTable({
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
+      onSetInventory={onSetInventory}
       searchPlaceholder="Filter by name, code, or legend..."
       loadingMessage="Loading inventory items..."
       emptyMessage="No inventory items found"
@@ -66,6 +75,9 @@ export function InventoryTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

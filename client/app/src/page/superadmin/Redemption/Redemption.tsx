@@ -178,7 +178,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
             </div>
           ) : (
             <RedemptionTable
-              redemptions={paginatedRequests}
+              redemptions={filteredRequests}
               loading={loading}
               onView={handleViewClick}
               onMarkAsProcessed={handleMarkProcessedClick}
@@ -187,31 +187,6 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
               refreshing={refreshing}
               onExport={() => setShowExportModal(true)}
             />
-          )}
-
-          {/* Desktop Pagination */}
-          {!loading && !error && (
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <span className="text-sm font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
           )}
         </div>
 

@@ -17,7 +17,7 @@ function ExecutiveAssistantHistory() {
   const _handleLogout = useLogout();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const [itemsPerPage, setItemsPerPage] = useState(15);
 
   const [historyItems] = useState<ApprovalHistoryItem[]>([
     {
@@ -165,14 +165,33 @@ function ExecutiveAssistantHistory() {
 
           {/* Pagination */}
           <div className="px-6 py-4 border-t flex justify-between items-center bg-muted border-border">
-            <span className="text-sm text-muted-foreground">
-              Showing{" "}
-              {paginatedItems.length > 0
-                ? (currentPage - 1) * itemsPerPage + 1
-                : 0}{" "}
-              to {Math.min(currentPage * itemsPerPage, filteredItems.length)}{" "}
-              of {filteredItems.length}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                Showing{" "}
+                {paginatedItems.length > 0
+                  ? (currentPage - 1) * itemsPerPage + 1
+                  : 0}{" "}
+                to {Math.min(currentPage * itemsPerPage, filteredItems.length)}{" "}
+                of {filteredItems.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows per page</span>
+                <select
+                  className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setItemsPerPage(val === filteredItems.length ? filteredItems.length : val);
+                    setCurrentPage(1);
+                  }}
+                >
+                  {[15, 50, 100].map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                  <option value={filteredItems.length}>All ({filteredItems.length})</option>
+                </select>
+              </div>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}

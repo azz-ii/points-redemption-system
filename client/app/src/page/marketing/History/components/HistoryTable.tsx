@@ -50,6 +50,7 @@ export function HistoryTable({
       pageSize={15}
       loadingMessage="Loading history..."
       emptyMessage="No history records found"
+      pageSizeOptions={[15, 50, 100]}
     />
   );
 }

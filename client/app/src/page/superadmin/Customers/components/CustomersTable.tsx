@@ -24,6 +24,9 @@ interface CustomersTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function CustomersTable({
@@ -48,6 +51,9 @@ export function CustomersTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: CustomersTableProps) {
   const columns = createColumns({
     onView,
@@ -89,6 +95,9 @@ export function CustomersTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

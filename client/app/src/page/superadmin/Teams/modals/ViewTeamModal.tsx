@@ -4,6 +4,7 @@ import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { ModalSkeleton } from "@/components/shared/modal-skeleton";
 
 interface ViewTeamModalProps extends ModalBaseProps {
   team: { id: number } | null;
@@ -291,9 +292,13 @@ export function ViewTeamModal({
         {/* Content */}
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
-            <div className="text-center text-gray-500 py-8">
-              Loading team details...
-            </div>
+            <ModalSkeleton
+              showFormSection={true}
+              formFieldCount={2}
+              formColumns={2}
+              showMembersSection={true}
+              memberRowCount={5}
+            />
           ) : teamDetails ? (
             <>
               {/* Team Details Section */}

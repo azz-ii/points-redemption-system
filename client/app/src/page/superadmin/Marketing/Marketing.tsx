@@ -24,8 +24,8 @@ function Marketing() {
   const [tablePage, setTablePage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const PAGE_SIZE = 15;
-  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const [pageSize, setPageSize] = useState(15);
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -43,7 +43,7 @@ function Marketing() {
       // Fetch one page of Marketing/Admin users using server-side position filter
       const url = new URL(`${API_URL}/users/`, window.location.origin);
       url.searchParams.append('page', String(tablePage + 1));
-      url.searchParams.append('page_size', String(PAGE_SIZE));
+      url.searchParams.append('page_size', String(pageSize));
       url.searchParams.append('position', 'Marketing,Admin');
       if (searchQuery) {
         url.searchParams.append('search', searchQuery);
@@ -95,7 +95,7 @@ function Marketing() {
     } finally {
       setLoading(false);
     }
-  }, [tablePage, searchQuery]);
+  }, [tablePage, pageSize, searchQuery]);
 
   useEffect(() => {
     fetchData();
@@ -108,6 +108,11 @@ function Marketing() {
 
   const handlePageChange = useCallback((page: number) => {
     setTablePage(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setTablePage(0);
   }, []);
 
   const handleEditClick = (user: MarketingUser) => {
@@ -169,6 +174,9 @@ function Marketing() {
             currentPage={tablePage}
             onPageChange={handlePageChange}
             onSearch={handleSearch}
+            pageSize={pageSize}
+            pageSizeOptions={[15, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
 

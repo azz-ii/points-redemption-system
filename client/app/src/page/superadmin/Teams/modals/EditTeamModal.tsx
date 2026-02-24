@@ -17,6 +17,7 @@ import type {
 } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { TableSkeleton } from "@/components/shared/table-skeleton";
 
 interface EditTeamModalProps extends ModalBaseProps {
   team: Team | null;
@@ -109,7 +110,7 @@ export function EditTeamModal({
     }
   }, [team]);
 
-  const fetchAvailableSalesAgents = async () => {
+  const fetchAvailableSalesAgents = useCallback(async () => {
     try {
       console.log("DEBUG EditTeamModal: Fetching available sales agents");
 
@@ -143,7 +144,7 @@ export function EditTeamModal({
     } catch (err) {
       console.error("DEBUG EditTeamModal: Error fetching sales agents", err);
     }
-  };
+  }, [team?.id]);
 
   const handleAddMember = async () => {
     if (!team || !selectedSalesAgent) {
@@ -282,7 +283,7 @@ export function EditTeamModal({
       setSelectedSalesAgent(null);
       setErrorDialog({ show: false, title: "", message: "" });
     }
-  }, [isOpen, team, fetchTeamDetails]);
+  }, [isOpen, team, fetchTeamDetails, fetchAvailableSalesAgents]);
 
   if (!isOpen || !team) return null;
 
@@ -291,12 +292,6 @@ export function EditTeamModal({
   const filteredSalesAgents = availableSalesAgents.filter(
     (agent) => !memberUserIds.includes(agent.id)
   );
-
-  const handleClose = () => {
-    console.log("DEBUG EditTeamModal: Closing modal");
-    onClose();
-    setError("");
-  };
 
   const handleSubmit = () => {
     console.log("DEBUG EditTeamModal: Submit clicked", {
@@ -456,9 +451,17 @@ export function EditTeamModal({
 
             {/* Members Table */}
             {memberLoading ? (
-              <div className="text-center text-gray-500 py-4 text-sm">
-                Loading members...
-              </div>
+              <TableSkeleton
+                rowCount={5}
+                showCheckbox={false}
+                showToolbar={false}
+                columnConfig={[
+                  { width: 150, type: "text" },     // Name
+                  { width: 180, type: "text" },     // Email
+                  { width: 80, type: "text" },      // Points
+                  { width: 100, align: "right", type: "actions" }, // Actions
+                ]}
+              />
             ) : (
               <div
                 className="border rounded-lg overflow-hidden border-border"

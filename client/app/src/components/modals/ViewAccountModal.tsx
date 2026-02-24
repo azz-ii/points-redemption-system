@@ -3,6 +3,7 @@ import { X, User, Edit2, Save, XCircle, Upload } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { fetchWithCsrf } from "@/lib/csrf";
 import type { ModalBaseProps } from "./types";
+import { FormSkeleton } from "@/components/shared/form-skeleton";
 
 interface UserAccount {
   id: number;
@@ -177,9 +178,29 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
 
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <p className="text-gray-500">Loading account details...</p>
+            <div className="space-y-6">
+              {/* Profile picture skeleton */}
+              <div className="space-y-3">
+                <div className="h-4 w-28 rounded bg-muted animate-pulse" />
+                <div className="flex justify-center">
+                  <div className="w-32 h-32 rounded-full bg-muted animate-pulse" />
+                </div>
+              </div>
+              {/* Credentials skeleton */}
+              <div className="space-y-4">
+                <div className="h-4 w-24 rounded bg-muted animate-pulse" />
+                <FormSkeleton fieldCount={2} columns={2} />
+              </div>
+              {/* Personal Info skeleton */}
+              <div className="space-y-4">
+                <div className="h-4 w-36 rounded bg-muted animate-pulse" />
+                <FormSkeleton fieldCount={2} columns={2} />
+              </div>
+              {/* Account Details skeleton */}
+              <div className="space-y-4">
+                <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+                <FormSkeleton fieldCount={2} columns={2} />
+              </div>
             </div>
           ) : error && !account ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">

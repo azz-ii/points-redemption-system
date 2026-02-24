@@ -29,10 +29,10 @@ function Accounts() {
 
   // Server-side pagination state
   const [tablePage, setTablePage] = useState(0);
+  const [pageSize, setPageSize] = useState(15);
   const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const PAGE_SIZE = 15;
-  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -139,7 +139,7 @@ function Accounts() {
       setLoading(true);
       const url = new URL(`${API_URL}/users/`, window.location.origin);
       url.searchParams.append('page', String(tablePage + 1));
-      url.searchParams.append('page_size', String(PAGE_SIZE));
+      url.searchParams.append('page_size', String(pageSize));
       if (showArchived) {
         url.searchParams.append('show_archived', 'true');
       }
@@ -162,7 +162,7 @@ function Accounts() {
     } finally {
       setLoading(false);
     }
-  }, [tablePage, searchQuery, showArchived]);
+  }, [tablePage, pageSize, searchQuery, showArchived]);
 
   // Load accounts on mount and when dependencies change
   useEffect(() => {
@@ -181,6 +181,11 @@ function Accounts() {
 
   const handlePageChange = useCallback((page: number) => {
     setTablePage(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setTablePage(0); // Reset to first page when page size changes
   }, []);
 
   const handleToggleArchived = useCallback((checked: boolean) => {
@@ -890,6 +895,9 @@ function Accounts() {
           currentPage={tablePage}
           onPageChange={handlePageChange}
           onSearch={handleSearch}
+          pageSize={pageSize}
+          pageSizeOptions={[15, 50, 100]}
+          onPageSizeChange={handlePageSizeChange}
         />
       </div>
 
