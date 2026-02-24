@@ -65,14 +65,18 @@ export function RequestsTable({
           </thead>
           <tbody className="divide-y divide-border">
             {loading ? (
-              <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <p className="text-sm text-gray-500">Loading requests...</p>
-                  </div>
-                </td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => (
+                <tr key={i}>
+                  <td className="px-6 py-4"><div className="h-4 w-10 rounded bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="h-4 w-20 rounded bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="h-4 w-16 rounded bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="h-6 w-20 rounded-full bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="h-4 w-24 rounded bg-muted animate-pulse" /></td>
+                  <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-8 rounded-md bg-muted animate-pulse" /><div className="h-8 w-8 rounded-md bg-muted animate-pulse" /><div className="h-8 w-8 rounded-md bg-muted animate-pulse" /></div></td>
+                </tr>
+              ))
             ) : requests.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-6 py-12 text-center">

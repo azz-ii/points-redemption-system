@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import { StatusChip } from "./StatusChip";
 import type { RedemptionRequest } from "../modals/types";
 
@@ -23,6 +24,11 @@ export function RedemptionStatusMobileCards({
   loading,
   error,
 }: RedemptionStatusMobileCardsProps) {
+  // Show skeleton during initial load
+  if (loading && requests.length === 0) {
+    return <MobileCardsSkeleton count={6} headerTitle="Request History" />;
+  }
+
   return (
     <div className="md:hidden" aria-live="polite">
       <h2 className="text-xl font-bold mb-2">Request History</h2>
@@ -30,12 +36,7 @@ export function RedemptionStatusMobileCards({
         Showing {requests.length} of {filteredCount} request{filteredCount !== 1 ? 's' : ''}
       </p>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Loading requests...</p>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="text-center py-16">
           <p className="text-destructive">{error}</p>
         </div>

@@ -1,4 +1,5 @@
 import { Eye } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { RequestItem } from "../../ProcessRequests/modals/types";
 
 interface HistoryMobileCardsProps {
@@ -39,14 +40,7 @@ export function HistoryMobileCards({
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="flex flex-col items-center gap-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-sm text-gray-500">Loading history...</p>
-        </div>
-      </div>
-    );
+    return <MobileCardsSkeleton count={6} showHeader={false} />;
   }
 
   if (requests.length === 0) {

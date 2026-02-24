@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 import { Eye, Ban, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { Account } from "../modals";
 
 interface AccountsMobileCardsProps {
@@ -41,9 +42,7 @@ export function AccountsMobileCards({
     <>
       <div className="space-y-3">
         {loading && accounts.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            Loading accounts...
-          </div>
+          <MobileCardsSkeleton count={6} showHeader={false} />
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 mb-4">{error}</p>

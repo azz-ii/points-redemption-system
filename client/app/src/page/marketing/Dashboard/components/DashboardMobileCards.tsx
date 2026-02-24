@@ -1,4 +1,5 @@
 import { Eye, CheckCircle } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { FlattenedRequestItem } from "../../ProcessRequests/modals/types";
 
 interface DashboardMobileCardsProps {
@@ -28,14 +29,7 @@ export function DashboardMobileCards({
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="flex flex-col items-center gap-2">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-sm text-muted-foreground">Loading items...</p>
-        </div>
-      </div>
-    );
+    return <MobileCardsSkeleton count={6} showHeader={false} />;
   }
 
   if (items.length === 0) {

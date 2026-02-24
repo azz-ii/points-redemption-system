@@ -1,4 +1,5 @@
 import { Eye, Edit, Trash2, ChevronLeft, ChevronRight, Archive, ArchiveRestore } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { Distributor } from "../modals/types";
 
 interface DistributorsMobileCardsProps {
@@ -46,9 +47,7 @@ export function DistributorsMobileCards({
       {/* Cards */}
       <div className="space-y-3">
         {loading && distributors.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            Loading distributors...
-          </div>
+          <MobileCardsSkeleton count={6} showHeader={false} />
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 text-sm">{error}</p>

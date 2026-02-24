@@ -353,19 +353,46 @@ export function DataTable<TData, TValue>({
             </TableHeader>
             <TableBody>
               {loading && data.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      <p className="text-sm text-muted-foreground">
-                        {loadingMessage}
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                // Skeleton loading rows
+                Array.from({ length: 10 }).map((_, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {Array.from({ length: columns.length }).map((_, colIndex) => {
+                      // Determine skeleton type based on column index
+                      const isFirstCol = colIndex === 0;
+                      const isLastCol = colIndex === columns.length - 1;
+                      const isSecondLastCol = colIndex === columns.length - 2;
+                      
+                      return (
+                        <TableCell key={colIndex}>
+                          {isFirstCol && enableRowSelection ? (
+                            // Checkbox column
+                            <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                          ) : isLastCol ? (
+                            // Actions column
+                            <div className="flex justify-end gap-2">
+                              <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
+                              <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
+                            </div>
+                          ) : isSecondLastCol ? (
+                            // Status badge column
+                            <div className="h-6 w-20 rounded-full bg-muted animate-pulse" />
+                          ) : (
+                            // Regular text column with varying widths
+                            <div 
+                              className="h-4 rounded bg-muted animate-pulse"
+                              style={{ 
+                                width: colIndex === 1 ? '60px' : 
+                                       colIndex === 2 ? '140px' : 
+                                       colIndex === 3 ? '80px' : 
+                                       colIndex === 4 ? '100px' : '120px' 
+                              }}
+                            />
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
               ) : error ? (
                 <TableRow>
                   <TableCell

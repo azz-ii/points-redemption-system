@@ -1,4 +1,5 @@
 ﻿import { Eye, CheckCircle } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { RedemptionItem } from "../modals/types";
 
 interface RedemptionMobileCardsProps {
@@ -53,9 +54,7 @@ export function RedemptionMobileCards({
     >
       <div className="space-y-3 p-4">
         {loading ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
-            Loading requests...
-          </div>
+          <MobileCardsSkeleton count={6} showHeader={false} />
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">
             No requests found
