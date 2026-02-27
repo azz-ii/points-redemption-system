@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Trash2, X, ChevronDown, Info, Search } from "lucide-react";
 import { distributorsApi } from "@/lib/distributors-api";
 import { customersApi } from "@/lib/customers-api";
-import { redemptionRequestsApi, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
+import { redemptionRequestsApi, clearCartBackend, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
 import { toast } from "sonner";
 
 export interface CartItem {
@@ -267,6 +267,10 @@ export default function CartModal({
       .then((response) => {
         // Silently succeed - user already sees success toast
         console.log("Redemption request created:", response);
+        // Clear the persisted server-side cart after the request is confirmed
+        clearCartBackend().catch(err =>
+          console.warn("Failed to clear backend cart after submit:", err)
+        );
       })
       .catch((error: unknown) => {
         console.error("Error submitting redemption request:", error);

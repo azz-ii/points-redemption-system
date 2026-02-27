@@ -73,6 +73,8 @@ urlpatterns = [
     path('api/', include('teams.urls')),
     # Points Audit Log API
     path('api/points-audit/', include('points_audit.urls')),
+    # Cart API
+    path('api/cart/', include('cart.urls')),
 ]
 
 # Serve static and media files in development

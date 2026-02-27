@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "@/context/AuthContext";
 import CartModal, { type CartItem } from "@/components/cart-modal";
-import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser } from "@/lib/api";
+import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser, getCart, saveCart } from "@/lib/api";
 import { toast } from "sonner";
 import {
   RedeemItemHeader,
@@ -30,7 +30,11 @@ export default function RedeemItem() {
   const [userLoading, setUserLoading] = useState(true);
   const itemsPerPage = 6;
 
-  // Fetch items and user profile on component mount
+  // Track whether the initial cart load has completed so we don't immediately
+  // write back what we just fetched.
+  const cartLoadedRef = useRef(false);
+
+  // Fetch items, user profile, and saved cart on component mount
   useEffect(() => {
     console.log("[Redeem-Item] Component mounted, fetching catalogue items and user profile...");
     
@@ -46,11 +50,46 @@ export default function RedeemItem() {
         
         setItems(fetchedItems);
         console.log("[Redeem-Item] State updated with items");
+
+        // Restore saved cart — cross-reference against live catalogue so stale
+        // (archived/deleted) products are silently dropped.
+        try {
+          const savedItems = await getCart();
+          if (savedItems.length > 0) {
+            const activeIdSet = new Set(fetchedItems.map(i => i.id));
+            const restored: CartItem[] = savedItems
+              .filter(si => activeIdSet.has(String(si.product_id)))
+              .map(si => {
+                const live = fetchedItems.find(i => i.id === String(si.product_id))!;
+                const minQty = live.min_order_qty ?? 1;
+                return {
+                  id: live.id,
+                  name: live.name,
+                  points: live.points,
+                  image: live.image,
+                  quantity: si.quantity ?? minQty,
+                  needs_driver: si.needs_driver,
+                  pricing_type: live.pricing_type,
+                  points_multiplier: live.points_multiplier,
+                  dynamic_quantity: si.dynamic_quantity != null ? Number(si.dynamic_quantity) : (live.pricing_type === 'FIXED' ? undefined : 0),
+                  available_stock: live.available_stock,
+                  min_order_qty: minQty,
+                  max_order_qty: live.max_order_qty,
+                };
+              });
+            setCartItems(restored);
+          }
+        } catch (cartErr) {
+          console.warn("[Redeem-Item] Could not restore saved cart:", cartErr);
+        } finally {
+          cartLoadedRef.current = true;
+        }
       } catch (err) {
         console.error("[Redeem-Item] Error loading catalogue items:", err);
         const errorMessage = err instanceof Error ? err.message : "Failed to load catalogue items";
         setError(errorMessage);
         console.error("[Redeem-Item] Error state set:", errorMessage);
+        cartLoadedRef.current = true; // allow saves even if catalogue fails
       } finally {
         setLoading(false);
         console.log("[Redeem-Item] Loading complete");
@@ -81,6 +120,20 @@ export default function RedeemItem() {
 
     loadData();
   }, []);
+
+  // Debounced cart persistence — save any cart change to the server after 500 ms.
+  // Skip until the initial cart load has finished to avoid overwriting the saved cart.
+  useEffect(() => {
+    if (!cartLoadedRef.current) return;
+
+    const timer = setTimeout(() => {
+      saveCart(cartItems).catch(err =>
+        console.warn("[Redeem-Item] Failed to persist cart:", err)
+      );
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [cartItems]);
 
   // Extract unique categories from items
   const categories = ["All", ...Array.from(new Set(items.map(item => item.category)))];

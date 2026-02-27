@@ -65,7 +65,8 @@ INSTALLED_APPS = [
     'otp',
     'teams',
     'utils',
-    'points_audit'
+    'points_audit',
+    'cart',
 ]
 
 MIDDLEWARE = [
