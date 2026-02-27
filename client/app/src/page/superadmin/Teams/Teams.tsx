@@ -22,7 +22,6 @@ import {
   DeleteTeamModal,
   type NewTeamData,
   type EditTeamData,
-  type ApproverOption,
   type MarketingAdminOption,
 } from "./modals";
 import { TeamsTable } from "./components";
@@ -47,17 +46,15 @@ function Teams() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
-  const [approvers, setApprovers] = useState<ApproverOption[]>([]);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [marketingAdmins, setMarketingAdmins] = useState<
     MarketingAdminOption[]
   >([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
-    approver: null,
   });
   const [editTeam, setEditTeam] = useState<EditTeamData>({
     name: "",
-    approver: null,
   });
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -90,49 +87,6 @@ function Teams() {
       console.error("Error fetching teams:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Fetch approvers for dropdown
-  const fetchApprovers = async () => {
-    try {
-      console.log("DEBUG Teams: Fetching approvers...");
-      // Explicitly request to show all users including archived ones for complete approver list
-      const response = await fetch(`${API_URL}/users/?show_archived=true&position=Approver`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-
-      console.log("DEBUG Teams: Users fetched", {
-        status: response.status,
-        totalUsers: data.results?.length || 0,
-        rawData: data,
-      });
-
-      if (response.ok && data.results) {
-        const approversList = data.results
-          .filter((user: { position: string; is_archived?: boolean }) => user.position === "Approver")
-          .map((user: { id: number; full_name: string; email: string; is_archived?: boolean }) => ({
-            id: user.id,
-            full_name: user.full_name,
-            email: user.email,
-          }));
-
-        console.log("DEBUG Teams: Approvers filtered", {
-          count: approversList.length,
-          approversList: approversList,
-        });
-
-        setApprovers(approversList);
-      } else {
-        console.error("DEBUG Teams: Failed to fetch approvers", data);
-      }
-    } catch (err) {
-      console.error("DEBUG Teams: Error fetching approvers", err);
     }
   };
 
@@ -177,7 +131,6 @@ function Teams() {
   // Load teams on mount
   useEffect(() => {
     fetchTeams();
-    fetchApprovers();
     fetchMarketingAdmins();
   }, []);
 
@@ -185,13 +138,7 @@ function Teams() {
   const filteredTeams = teams.filter(
     (team) =>
       team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      team.id.toString().includes(searchQuery) ||
-      team.approver_details?.full_name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      team.approver_details?.email
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
+      team.id.toString().includes(searchQuery),
   );
 
   const totalPages = Math.max(
@@ -283,12 +230,11 @@ function Teams() {
 
         toast.success(`Team "${newTeam.name}" created successfully!`);
         setIsCreateModalOpen(false);
-        setNewTeam({ name: "", approver: null });
+        setNewTeam({ name: "" });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
           data.name?.[0] ||
-          data.approver?.[0] ||
           data.error ||
           "Failed to create team";
         setCreateError(errorMessage);
@@ -318,7 +264,6 @@ function Teams() {
     setTeamToEdit(team);
     setEditTeam({
       name: team.name,
-      approver: team.approver_details?.id ?? null,
     });
     setEditError("");
     setIsEditModalOpen(true);
@@ -364,12 +309,11 @@ function Teams() {
         toast.success(`Team "${editTeam.name}" updated successfully!`);
         setIsEditModalOpen(false);
         setTeamToEdit(null);
-        setEditTeam({ name: "", approver: null });
+        setEditTeam({ name: "" });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
           data.name?.[0] ||
-          data.approver?.[0] ||
           data.error ||
           "Failed to update team";
         setEditError(errorMessage);
@@ -545,10 +489,6 @@ function Teams() {
                         <p className="font-semibold text-sm mb-1">
                           {team.name}
                         </p>
-                        <p className="text-xs mb-1">
-                          <span className="font-medium">Approver:</span>{" "}
-                          {team.approver_details?.full_name || "No Approver"}
-                        </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white text-center">
@@ -650,12 +590,11 @@ function Teams() {
         onClose={() => {
           console.log("DEBUG Teams: Closing create modal");
           setIsCreateModalOpen(false);
-          setNewTeam({ name: "", approver: null });
+          setNewTeam({ name: "" });
           setCreateError("");
         }}
         newTeam={newTeam}
         setNewTeam={setNewTeam}
-        approvers={approvers}
         teams={teams}
         loading={createLoading}
         error={createError}
@@ -680,13 +619,12 @@ function Teams() {
           console.log("DEBUG Teams: Closing edit modal");
           setIsEditModalOpen(false);
           setTeamToEdit(null);
-          setEditTeam({ name: "", approver: null });
+          setEditTeam({ name: "" });
           setEditError("");
         }}
         team={teamToEdit}
         editTeam={editTeam}
         setEditTeam={setEditTeam}
-        approvers={approvers}
         teams={teams}
         loading={editLoading}
         error={editError}

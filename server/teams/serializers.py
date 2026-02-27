@@ -3,18 +3,6 @@ from django.contrib.auth.models import User
 from .models import Team, TeamMembership
 from users.models import UserProfile
 
-
-class ApproverSerializer(serializers.ModelSerializer):
-    """Serializer for approver user details"""
-    full_name = serializers.CharField(source='profile.full_name', read_only=True)
-    email = serializers.EmailField(source='profile.email', read_only=True)
-    position = serializers.CharField(source='profile.position', read_only=True)
-    
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'full_name', 'email', 'position']
-
-
 class TeamMemberSerializer(serializers.ModelSerializer):
     """Serializer for team member user details"""
     full_name = serializers.CharField(source='profile.full_name', read_only=True)
@@ -62,36 +50,27 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
 
 class TeamSerializer(serializers.ModelSerializer):
     """Basic serializer for Team model"""
-    approver_details = ApproverSerializer(source='approver', read_only=True)
     member_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
-        fields = ['id', 'name', 'approver', 'approver_details', 'member_count', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'member_count', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_member_count(self, obj):
         """Get the count of team members"""
         return obj.member_count  # Uses the property from the model
-    
-    def validate_approver(self, value):
-        """Validate that approver has Approver position"""
-        if value and hasattr(value, 'profile'):
-            if value.profile.position != 'Approver':
-                raise serializers.ValidationError('Selected user must have Approver position.')
-        return value
 
 
 class TeamDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for Team with members list"""
-    approver_details = ApproverSerializer(source='approver', read_only=True)
     members = serializers.SerializerMethodField()
     member_count = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Team
         fields = [
-            'id', 'name', 'approver', 'approver_details',
+            'id', 'name',
             'members', 'member_count',
             'created_at', 'updated_at'
         ]

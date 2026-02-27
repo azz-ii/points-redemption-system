@@ -9,6 +9,7 @@ interface InventoryTableProps {
   error: string | null;
   onViewItem: (item: InventoryItem) => void;
   onEditItem: (item: InventoryItem) => void;
+  onViewHistory: (item: InventoryItem) => void;
   onRetry: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -31,6 +32,7 @@ export function InventoryTable({
   error,
   onViewItem,
   onEditItem,
+  onViewHistory,
   onRetry,
   onRefresh,
   refreshing,
@@ -51,8 +53,9 @@ export function InventoryTable({
       createColumns({
         onViewItem,
         onEditItem,
+        onViewHistory,
       }),
-    [onViewItem, onEditItem]
+    [onViewItem, onEditItem, onViewHistory]
   );
 
   return (

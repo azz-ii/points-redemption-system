@@ -15,16 +15,15 @@ class TeamMembershipInline(admin.TabularInline):
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     """Admin interface for Team model"""
-    list_display = ['name', 'approver_name', 'member_count', 'created_at']
+    list_display = ['name', 'member_count', 'created_at']
     list_filter = ['created_at']
-    search_fields = ['name', 'approver__profile__full_name', 'approver__username']
-    autocomplete_fields = ['approver']
+    search_fields = ['name']
     inlines = [TeamMembershipInline]
     readonly_fields = ['created_at', 'updated_at', 'member_count']
     
     fieldsets = (
         ('Team Information', {
-            'fields': ('name', 'approver')
+            'fields': ('name',)
         }),
         ('Statistics', {
             'fields': ('member_count',),
@@ -35,14 +34,6 @@ class TeamAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-
-    def approver_name(self, obj):
-        """Display approver's full name"""
-        if obj.approver and hasattr(obj.approver, 'profile'):
-            return obj.approver.profile.full_name
-        return 'No Approver'
-    approver_name.short_description = 'Approver'
-    approver_name.admin_order_field = 'approver__profile__full_name'
 
     def member_count(self, obj):
         """Display number of team members"""

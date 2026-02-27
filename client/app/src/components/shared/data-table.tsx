@@ -343,7 +343,7 @@ export function DataTable<TData, TValue>({
       )}
 
       <div className="border rounded-lg overflow-hidden" style={{ height: "70vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, overflow: "auto" }}>
+        <div style={{ flex: 1, overflow: "auto", scrollbarGutter: "stable", paddingRight: "20px" }}>
           <Table style={{ width: "100%", minWidth: table.getTotalSize() }}>
             <TableHeader className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (

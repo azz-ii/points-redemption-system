@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Product, StockAuditLog, log_stock_change, bulk_log_stock_changes, generate_stock_batch_id
-from .serializers import ProductSerializer, ProductInventorySerializer
+from .serializers import ProductSerializer, ProductInventorySerializer, StockAuditLogSerializer
 
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -686,3 +686,40 @@ class BatchUpdateStockView(APIView):
 CatalogueItemListCreateView = ProductListCreateView
 CatalogueItemDetailView = ProductDetailView
 CatalogueItemUpdateView = ProductDetailView  # PUT to /catalogue/<id>/ now handles updates
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class StockAuditLogListView(APIView):
+    """List stock audit logs for a specific product with pagination."""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+
+    def get(self, request, product_id):
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        queryset = (
+            StockAuditLog.objects
+            .filter(product_id=product_id)
+            .select_related('changed_by')
+            .order_by('-created_at')
+        )
+
+        page = int(request.query_params.get('page', 1))
+        page_size = min(int(request.query_params.get('page_size', 15)), 100)
+
+        total_count = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        logs = queryset[start:end]
+
+        serializer = StockAuditLogSerializer(logs, many=True)
+        return Response({
+            'count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'results': serializer.data,
+        })

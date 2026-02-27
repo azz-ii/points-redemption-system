@@ -169,7 +169,7 @@ export function PointsHistoryModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pr-5" style={{ scrollbarGutter: "stable" }}>
           {isLoading && (
             <div className="px-6 py-4">
               <PaginatedTableSkeleton

@@ -15,6 +15,7 @@ import {
   SetInventoryModal,
 } from "./modals";
 import { inventoryApi } from "@/lib/inventory-api";
+import { InventoryHistoryModal } from "@/components/modals";
 import {
   InventoryTable,
   InventoryMobileCards,
@@ -64,6 +65,10 @@ function Inventory() {
   const [editData, setEditData] = useState({ action: "add" as "add" | "decrease", quantity: "", reason: "" });
   const [updating, setUpdating] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  // History modal state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyTarget, setHistoryTarget] = useState<InventoryItem | null>(null);
 
   // Fetch inventory items from API
   const fetchInventoryItems = useCallback(async () => {
@@ -147,6 +152,12 @@ function Inventory() {
     });
     setEditError(null);
     setShowEditModal(true);
+  };
+
+  // Handle stock history click
+  const handleViewHistory = (item: InventoryItem) => {
+    setHistoryTarget(item);
+    setShowHistoryModal(true);
   };
 
   // Handle set inventory - batch updates (only changed items)
@@ -296,6 +307,7 @@ function Inventory() {
             error={error}
             onViewItem={handleViewClick}
             onEditItem={handleEditClick}
+            onViewHistory={handleViewHistory}
             onRetry={fetchInventoryItems}
             onRefresh={fetchInventoryItems}
             refreshing={loading}
@@ -413,6 +425,18 @@ function Inventory() {
         onBulkSubmit={handleBulkSetStock}
         onResetAll={handleResetAllStock}
       />
+
+      {historyTarget && (
+        <InventoryHistoryModal
+          isOpen={showHistoryModal}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setHistoryTarget(null);
+          }}
+          productId={historyTarget.id}
+          productName={historyTarget.item_name}
+        />
+      )}
     </>
   );
 }

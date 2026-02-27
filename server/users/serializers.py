@@ -185,9 +185,9 @@ class UserListSerializer(serializers.ModelSerializer):
         return None
     
     def get_is_team_approver(self, obj):
-        """Check if user is an approver of any team"""
+        """Check if user is an approver"""
         if hasattr(obj, 'profile') and obj.profile.position == 'Approver':
-            return obj.managed_teams.exists()
+            return True
         return False
     
     def get_archived_by_username(self, obj):

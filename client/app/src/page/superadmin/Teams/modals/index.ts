@@ -10,9 +10,7 @@ export type {
   TeamMember,
   NewTeamData,
   EditTeamData,
-  ApproverOption,
   MarketingAdminOption,
   SalesAgentOption,
-  ApproverDetails,
   UserDetails,
 } from "./types";

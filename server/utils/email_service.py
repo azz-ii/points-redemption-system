@@ -571,62 +571,6 @@ def send_request_submitted_email(request_obj, distributor, approvers_emails):
         return False
 
 
-def send_approver_assigned_to_team_email(team, approver, assigned_by):
-    """
-    Send email notification when an approver is assigned to a team
-    
-    Args:
-        team: Team model instance
-        approver: User who was assigned as approver
-        assigned_by: User who made the assignment
-    
-    Returns:
-        bool: True if email sent successfully, False otherwise
-    """
-    try:
-        if not hasattr(approver, 'profile') or not approver.profile.email:
-            logger.warning(f"No email address found for approver {approver.username}")
-            return False
-        
-        recipient_email = approver.profile.email
-        logger.debug(f"Preparing approver assignment email for {approver.username} ({recipient_email})")
-        
-        # Get member count
-        member_count = team.memberships.count() if hasattr(team, 'memberships') else 0
-        
-        # Get marketing admin name if exists
-        marketing_admin_name = None
-        if team.marketing_admin and hasattr(team.marketing_admin, 'profile'):
-            marketing_admin_name = team.marketing_admin.profile.full_name
-        
-        # Get assigner name
-        assigned_by_name = 'System'
-        if assigned_by and hasattr(assigned_by, 'profile'):
-            assigned_by_name = assigned_by.profile.full_name
-        elif assigned_by:
-            assigned_by_name = assigned_by.username
-        
-        context = {
-            'team_name': team.name,
-            'approver_full_name': approver.profile.full_name,
-            'member_count': member_count,
-            'marketing_admin_name': marketing_admin_name,
-            'assigned_by': assigned_by_name,
-        }
-        
-        return send_html_email(
-            subject=f"You've been assigned as Approver for {team.name}",
-            template_name='emails/added_to_a_team_approver.html',
-            context=context,
-            recipient_list=[recipient_email]
-        )
-        
-    except Exception as e:
-        logger.error(f"Error sending approver assignment email: {str(e)}")
-        logger.exception("Full traceback:")
-        return False
-
-
 def send_agent_added_to_team_email(team, agent, added_by):
     """
     Send email notification when a sales agent is added to a team
@@ -647,13 +591,6 @@ def send_agent_added_to_team_email(team, agent, added_by):
         recipient_email = agent.profile.email
         logger.debug(f"Preparing team addition email for {agent.username} ({recipient_email})")
         
-        # Get approver info
-        approver_name = None
-        approver_email = None
-        if team.approver and hasattr(team.approver, 'profile'):
-            approver_name = team.approver.profile.full_name
-            approver_email = team.approver.profile.email
-        
         # Get adder name
         added_by_name = 'System'
         if added_by and hasattr(added_by, 'profile'):
@@ -668,8 +605,6 @@ def send_agent_added_to_team_email(team, agent, added_by):
         context = {
             'team_name': team.name,
             'agent_full_name': agent.profile.full_name,
-            'approver_name': approver_name,
-            'approver_email': approver_email,
             'added_by': added_by_name,
             'date_added': date_added,
         }
@@ -689,30 +624,28 @@ def send_agent_added_to_team_email(team, agent, added_by):
 
 def send_request_withdrawn_email(request_obj, distributor, withdrawn_by):
     """
-    Send email notification to approver when a sales agent withdraws their request
-    
+    Send email notification to approvers when a sales agent withdraws their request
+
     Args:
         request_obj: RedemptionRequest model instance
         distributor: Distributor model instance
         withdrawn_by: User who withdrew the request (sales agent)
-    
+
     Returns:
         bool: True if email sent successfully, False otherwise
     """
     try:
-        # Send to the team approver
-        if not request_obj.team or not request_obj.team.approver:
-            logger.warning(f"No team approver found for withdrawn request #{request_obj.id}")
+        # Send to all approvers
+        from users.models import UserProfile
+        approver_profiles = UserProfile.objects.filter(position='Approver').exclude(email__isnull=True).exclude(email='')
+        recipient_emails = list(approver_profiles.values_list('email', flat=True))
+
+        if not recipient_emails:
+            logger.warning(f"No approvers found to notify for withdrawn request #{request_obj.id}")
             return False
-        
-        approver = request_obj.team.approver
-        if not hasattr(approver, 'profile') or not approver.profile.email:
-            logger.warning(f"No email address found for approver {approver.username}")
-            return False
-        
-        recipient_email = approver.profile.email
-        logger.debug(f"Preparing withdrawal email for request #{request_obj.id} to {recipient_email}")
-        
+
+        logger.debug(f"Preparing withdrawal email for request #{request_obj.id} to {len(recipient_emails)} approver(s)")
+
         # Get sales agent profile details
         sales_agent_profile = withdrawn_by.profile
         
@@ -739,7 +672,6 @@ def send_request_withdrawn_email(request_obj, distributor, withdrawn_by):
             'request_id': request_obj.id,
             'sales_agent_name': sales_agent_profile.full_name,
             'sales_agent_username': withdrawn_by.username,
-            'approver_name': approver.profile.full_name if hasattr(approver, 'profile') else approver.username,
             'distributor_name': distributor.name,
             'distributor_location': distributor.location,
             'items': items_list,
@@ -753,7 +685,7 @@ def send_request_withdrawn_email(request_obj, distributor, withdrawn_by):
             subject=f"Request #{request_obj.id} Withdrawn by {sales_agent_profile.full_name}",
             template_name='emails/request_withdrawn.html',
             context=context,
-            recipient_list=[recipient_email]
+            recipient_list=recipient_emails
         )
         
     except Exception as e:

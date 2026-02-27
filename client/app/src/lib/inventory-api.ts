@@ -148,3 +148,39 @@ export const inventoryApi = {
     return allItems;
   },
 };
+
+export interface StockAuditLog {
+  id: number;
+  product: number;
+  product_name: string;
+  previous_stock: number;
+  new_stock: number;
+  stock_delta: number;
+  adjustment_type: 'ADD' | 'DECREASE' | 'BULK_ADD' | 'BULK_DECREASE' | 'BULK_RESET';
+  reason: string;
+  changed_by_username: string;
+  batch_id: string | null;
+  created_at: string;
+}
+
+export interface StockAuditLogResponse {
+  count: number;
+  page: number;
+  page_size: number;
+  results: StockAuditLog[];
+}
+
+export const stockAuditApi = {
+  getStockHistory: async (
+    productId: number,
+    page: number = 1,
+    pageSize: number = 15,
+  ): Promise<StockAuditLogResponse> => {
+    const url = new URL(`${API_BASE_URL}/inventory/${productId}/stock-audit/`, window.location.origin);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('page_size', pageSize.toString());
+    const response = await fetch(url.toString(), { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch stock history');
+    return response.json();
+  },
+};

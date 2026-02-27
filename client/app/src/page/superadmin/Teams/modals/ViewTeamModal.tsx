@@ -306,21 +306,12 @@ export function ViewTeamModal({
                 <h3 className="text-sm font-semibold text-gray-500">
                   Team Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Team Name</label>
                     <input
                       type="text"
                       value={teamDetails.name}
-                      disabled
-                      className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Approver</label>
-                    <input
-                      type="text"
-                      value={teamDetails.approver_details ? teamDetails.approver_details.full_name : "No Approver"}
                       disabled
                       className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                     />
