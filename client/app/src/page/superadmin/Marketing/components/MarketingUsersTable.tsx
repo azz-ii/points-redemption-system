@@ -75,6 +75,7 @@ export function MarketingUsersTable({
       loadingMessage="Loading users..."
       emptyMessage="No marketing users found"
       manualPagination={manualPagination}
+      initialSorting={[{ id: "id", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}

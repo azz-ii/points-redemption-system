@@ -23,9 +23,8 @@ export interface ExportOptions {
 export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
   { key: "id", label: "ID", enabled: true },
   { key: "name", label: "Name", enabled: true },
-  { key: "contact_email", label: "Contact Email", enabled: true },
-  { key: "phone", label: "Phone", enabled: true },
-  { key: "location", label: "Location", enabled: true },
+  { key: "brand", label: "Brand", enabled: true },
+  { key: "sales_channel", label: "Sales Channel", enabled: true },
   { key: "points", label: "Points", enabled: true },
   { key: "formatted_date", label: "Date Added", enabled: true },
   { key: "added_by_name", label: "Added By", enabled: true },
@@ -196,12 +195,10 @@ export function generateExcel(customers: Customer[], options: ExportOptions): vo
         return { wch: 8 };
       case "name":
         return { wch: 25 };
-      case "contact_email":
-        return { wch: 30 };
-      case "phone":
-        return { wch: 15 };
-      case "location":
+      case "brand":
         return { wch: 25 };
+      case "sales_channel":
+        return { wch: 20 };
       case "points":
         return { wch: 10 };
       case "formatted_date":

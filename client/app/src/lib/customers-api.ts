@@ -5,9 +5,8 @@ const API_BASE_URL = API_URL;
 export interface Customer {
   id: number;
   name: string;
-  contact_email?: string;
-  phone?: string;
-  location?: string;
+  brand?: string;
+  sales_channel?: string;
   points?: number;
   date_added?: string;
   created_at?: string;

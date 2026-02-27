@@ -73,58 +73,31 @@ export function CreateCustomerModal({
               />
             </div>
 
-            {/* Contact Email */}
+            {/* Brand */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Contact Email *
-              </label>
-              <input
-                type="email"
-                value={newCustomer.contact_email}
-                onChange={(e) =>
-                  setNewCustomer({
-                    ...newCustomer,
-                    contact_email: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="email@example.com"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Phone *</label>
-              <input
-                type="tel"
-                value={newCustomer.phone}
-                onChange={(e) =>
-                  setNewCustomer({
-                    ...newCustomer,
-                    phone: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="+63 XXX XXX XXXX"
-              />
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Location *
-              </label>
+              <label className="block text-sm font-medium mb-2">Brand *</label>
               <input
                 type="text"
-                value={newCustomer.location}
+                value={newCustomer.brand}
                 onChange={(e) =>
-                  setNewCustomer({
-                    ...newCustomer,
-                    location: e.target.value,
-                  })
+                  setNewCustomer({ ...newCustomer, brand: e.target.value })
                 }
                 className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="City, Province"
+                placeholder="Enter brand name"
+              />
+            </div>
+
+            {/* Sales Channel */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Sales Channel *</label>
+              <input
+                type="text"
+                value={newCustomer.sales_channel}
+                onChange={(e) =>
+                  setNewCustomer({ ...newCustomer, sales_channel: e.target.value })
+                }
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+                placeholder="Enter sales channel"
               />
             </div>
           </div>

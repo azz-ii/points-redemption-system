@@ -3,9 +3,8 @@ export type { ModalBaseProps } from "@/components/modals";
 export interface Customer {
   id: number;
   name: string;
-  contact_email?: string;
-  phone?: string;
-  location?: string;
+  brand?: string;
+  sales_channel?: string;
   points?: number;
   created_at?: string;
   updated_at?: string;
@@ -20,7 +19,6 @@ export interface Customer {
 
 export interface CustomerFormData {
   name: string;
-  contact_email: string;
-  phone: string;
-  location: string;
+  brand: string;
+  sales_channel: string;
 }

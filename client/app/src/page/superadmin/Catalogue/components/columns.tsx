@@ -42,6 +42,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
     size: 40,
   },
   {
+    accessorKey: "id",
+    header: "ID",
+    enableResizing: false,
+    size: 60,
+  },
+  {
     accessorKey: "item_code",
     header: ({ column }) => {
       return (

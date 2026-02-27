@@ -73,9 +73,9 @@ class CustomerViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 name__icontains=search
             ) | queryset.filter(
-                contact_email__icontains=search
+                brand__icontains=search
             ) | queryset.filter(
-                location__icontains=search
+                sales_channel__icontains=search
             )
             logger.info(f"Filtering customers by search: '{search}' - Found {queryset.count()} customers")
         
@@ -115,7 +115,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
         Lightweight endpoint for dropdown use - returns id, name, and location only.
         No pagination for efficient single-request loading.
         """
-        queryset = Customer.objects.filter(is_archived=False).values('id', 'name', 'location').order_by('name')
+        queryset = Customer.objects.filter(is_archived=False).values('id', 'name', 'brand', 'sales_channel').order_by('name')
         return Response(list(queryset))
 
 
@@ -129,9 +129,8 @@ class CustomerExportView(APIView):
     AVAILABLE_COLUMNS = {
         'id': 'ID',
         'name': 'Name',
-        'contact_email': 'Contact Email',
-        'phone': 'Phone',
-        'location': 'Location',
+        'brand': 'Brand',
+        'sales_channel': 'Sales Channel',
         'points': 'Points',
         'date_added': 'Date Added',
         'added_by_name': 'Added By',
@@ -143,12 +142,10 @@ class CustomerExportView(APIView):
             return customer.id
         elif column == 'name':
             return customer.name
-        elif column == 'contact_email':
-            return customer.contact_email or ''
-        elif column == 'phone':
-            return customer.phone or ''
-        elif column == 'location':
-            return customer.location or ''
+        elif column == 'brand':
+            return customer.brand or ''
+        elif column == 'sales_channel':
+            return customer.sales_channel or ''
         elif column == 'points':
             return customer.points or 0
         elif column == 'date_added':
@@ -173,7 +170,7 @@ class CustomerExportView(APIView):
                  else c.added_by.username if c.added_by else ''), reverse=reverse)
         elif sort_field in ['id', 'points']:
             return sorted(customers, key=lambda c: getattr(c, sort_field, 0), reverse=reverse)
-        elif sort_field in ['name', 'contact_email', 'phone', 'location']:
+        elif sort_field in ['name', 'brand', 'sales_channel']:
             return sorted(customers, key=lambda c: getattr(c, sort_field, '').lower(), reverse=reverse)
         return customers
     

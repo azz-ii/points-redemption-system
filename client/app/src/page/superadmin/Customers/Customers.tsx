@@ -99,16 +99,14 @@ function Customers() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [newCustomer, setNewCustomer] = useState({
     name: "",
-    contact_email: "",
-    phone: "",
-    location: "",
+    brand: "",
+    sales_channel: "",
   });
 
   const [editCustomer, setEditCustomer] = useState({
     name: "",
-    contact_email: "",
-    phone: "",
-    location: "",
+    brand: "",
+    sales_channel: "",
   });
 
   // Modal state for edit/view/archive
@@ -142,16 +140,12 @@ function Customers() {
       setCreateError("Name is required");
       return;
     }
-    if (!newCustomer.contact_email.trim()) {
-      setCreateError("Contact email is required");
+    if (!newCustomer.brand.trim()) {
+      setCreateError("Brand is required");
       return;
     }
-    if (!newCustomer.phone.trim()) {
-      setCreateError("Phone is required");
-      return;
-    }
-    if (!newCustomer.location.trim()) {
-      setCreateError("Location is required");
+    if (!newCustomer.sales_channel.trim()) {
+      setCreateError("Sales channel is required");
       return;
     }
 
@@ -161,9 +155,8 @@ function Customers() {
       setCustomers((prev) => [...prev, createdCustomer]);
       setNewCustomer({
         name: "",
-        contact_email: "",
-        phone: "",
-        location: "",
+        brand: "",
+        sales_channel: "",
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -180,9 +173,8 @@ function Customers() {
     setEditingCustomerId(customer.id);
     setEditCustomer({
       name: customer.name,
-      contact_email: customer.contact_email ?? "",
-      phone: customer.phone ?? "",
-      location: customer.location ?? "",
+      brand: customer.brand ?? "",
+      sales_channel: customer.sales_channel ?? "",
     });
     setShowEditModal(true);
     setEditError(null);
@@ -199,16 +191,12 @@ function Customers() {
       setEditError("Name is required");
       return;
     }
-    if (!editCustomer.contact_email.trim()) {
-      setEditError("Contact email is required");
+    if (!editCustomer.brand.trim()) {
+      setEditError("Brand is required");
       return;
     }
-    if (!editCustomer.phone.trim()) {
-      setEditError("Phone is required");
-      return;
-    }
-    if (!editCustomer.location.trim()) {
-      setEditError("Location is required");
+    if (!editCustomer.sales_channel.trim()) {
+      setEditError("Sales channel is required");
       return;
     }
 
@@ -503,7 +491,6 @@ function Customers() {
             loading={loading}
             error={error}
             onRetry={fetchCustomers}
-            onView={handleViewClick}
             onEdit={handleEditClick}
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}
@@ -577,7 +564,6 @@ function Customers() {
             page={tablePage + 1}
             totalPages={pageCount}
             onPageChange={(p) => setTablePage(p - 1)}
-            onView={handleViewClick}
             onEdit={handleEditClick}
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}

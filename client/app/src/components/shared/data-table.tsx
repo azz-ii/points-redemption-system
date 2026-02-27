@@ -82,6 +82,7 @@ interface DataTableProps<TData, TValue> {
   showColumnVisibility?: boolean
   pageSize?: number
   initialSorting?: SortingState
+  initialColumnVisibility?: VisibilityState
   loadingMessage?: string
   emptyMessage?: string
 
@@ -128,6 +129,7 @@ export function DataTable<TData, TValue>({
   showColumnVisibility = true,
   pageSize = 15,
   initialSorting = [],
+  initialColumnVisibility = {},
   loadingMessage = "Loading...",
   emptyMessage = "No results found",
   editingRowId = null,
@@ -145,7 +147,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility)
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [searchValue, setSearchValue] = React.useState("")

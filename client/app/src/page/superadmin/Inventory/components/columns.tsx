@@ -15,6 +15,12 @@ export const createColumns = (
   context: ColumnContext
 ): ColumnDef<InventoryItem>[] => [
   {
+    accessorKey: "id",
+    header: "ID",
+    enableResizing: false,
+    size: 60,
+  },
+  {
     accessorKey: "item_name",
     header: ({ column }) => {
       return (
