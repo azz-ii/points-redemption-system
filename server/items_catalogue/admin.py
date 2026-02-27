@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product
+from .models import Product, StockAuditLog
 
 
 @admin.register(Product)
@@ -7,7 +7,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ['item_code', 'item_name', 'category', 'legend', 'has_stock', 'stock', 'committed_stock', 'points', 'price', 'is_archived']
     list_filter = ['legend', 'has_stock', 'is_archived', 'pricing_type']
     search_fields = ['item_code', 'item_name', 'description', 'category']
-    list_editable = ['stock', 'has_stock']
+    list_editable = ['has_stock']
     ordering = ['item_name', 'item_code']
     
     fieldsets = (
@@ -31,4 +31,13 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by')
         }),
     )
+
+
+@admin.register(StockAuditLog)
+class StockAuditLogAdmin(admin.ModelAdmin):
+    list_display = ['product_name', 'adjustment_type', 'previous_stock', 'new_stock', 'stock_delta', 'reason', 'changed_by', 'created_at']
+    list_filter = ['adjustment_type', 'created_at']
+    search_fields = ['product_name', 'reason']
+    readonly_fields = ['product', 'product_name', 'previous_stock', 'new_stock', 'stock_delta', 'adjustment_type', 'reason', 'changed_by', 'batch_id', 'created_at']
+    ordering = ['-created_at']
 

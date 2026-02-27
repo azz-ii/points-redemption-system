@@ -38,6 +38,11 @@ class ProductSerializer(serializers.ModelSerializer):
             'price': {'required': True},
         }
 
+    def update(self, instance, validated_data):
+        # Prevent direct stock edits via catalogue endpoint — stock is managed via inventory API
+        validated_data.pop('stock', None)
+        return super().update(instance, validated_data)
+
 
 class ProductInventorySerializer(serializers.ModelSerializer):
     """Serializer for Product with inventory-focused fields"""

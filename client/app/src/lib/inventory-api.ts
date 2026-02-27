@@ -46,7 +46,7 @@ export const inventoryApi = {
     return data;
   },
 
-  batchUpdateStock: async (updates: { id: number; stock: number }[]): Promise<BatchUpdateResponse> => {
+  batchUpdateStock: async (updates: { id: number; adjustment: number; reason: string }[]): Promise<BatchUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/inventory/batch_update_stock/`, {
       method: 'POST',
       headers: {
@@ -65,7 +65,7 @@ export const inventoryApi = {
     return data;
   },
 
-  bulkUpdateStock: async (stockDelta: number, password: string): Promise<BulkUpdateResponse> => {
+  bulkUpdateStock: async (stockDelta: number, password: string, reason: string = ''): Promise<BulkUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/inventory/bulk_update_stock/`, {
       method: 'POST',
       headers: {
@@ -75,6 +75,7 @@ export const inventoryApi = {
       body: JSON.stringify({
         stock_delta: stockDelta,
         password: password,
+        reason: reason,
       }),
     });
     
@@ -87,7 +88,7 @@ export const inventoryApi = {
     return data;
   },
 
-  resetAllStock: async (password: string): Promise<BulkUpdateResponse> => {
+  resetAllStock: async (password: string, reason: string = ''): Promise<BulkUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/inventory/bulk_update_stock/`, {
       method: 'POST',
       headers: {
@@ -97,6 +98,7 @@ export const inventoryApi = {
       body: JSON.stringify({
         reset_to_zero: true,
         password: password,
+        reason: reason,
       }),
     });
     

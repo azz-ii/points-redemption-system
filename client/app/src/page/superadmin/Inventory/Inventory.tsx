@@ -61,7 +61,7 @@ function Inventory() {
   const [viewTarget, setViewTarget] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
-  const [editData, setEditData] = useState({ stock: "" });
+  const [editData, setEditData] = useState({ action: "add" as "add" | "decrease", quantity: "", reason: "" });
   const [updating, setUpdating] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -141,14 +141,16 @@ function Inventory() {
   const handleEditClick = (item: InventoryItem) => {
     setEditTarget(item);
     setEditData({
-      stock: item.stock.toString(),
+      action: "add",
+      quantity: "",
+      reason: "",
     });
     setEditError(null);
     setShowEditModal(true);
   };
 
   // Handle set inventory - batch updates (only changed items)
-  const handleSetStock = async (updates: { id: number; stock: number }[]) => {
+  const handleSetStock = async (updates: { id: number; adjustment: number; reason: string }[]) => {
     try {
       setLoading(true);
 
@@ -176,10 +178,10 @@ function Inventory() {
   };
 
   // Handle bulk set stock
-  const handleBulkSetStock = async (stockDelta: number, password: string) => {
+  const handleBulkSetStock = async (stockDelta: number, password: string, reason: string) => {
     try {
       setLoading(true);
-      const result = await inventoryApi.bulkUpdateStock(stockDelta, password);
+      const result = await inventoryApi.bulkUpdateStock(stockDelta, password, reason);
 
       // Success
       setShowSetInventoryModal(false);
@@ -197,10 +199,10 @@ function Inventory() {
   };
 
   // Handle reset all stock
-  const handleResetAllStock = async (password: string) => {
+  const handleResetAllStock = async (password: string, reason: string) => {
     try {
       setLoading(true);
-      const result = await inventoryApi.resetAllStock(password);
+      const result = await inventoryApi.resetAllStock(password, reason);
 
       // Success
       setShowSetInventoryModal(false);
@@ -222,25 +224,26 @@ function Inventory() {
 
     setEditError(null);
 
-    // Validation
-    const stock = parseInt(editData.stock);
+    const qty = parseInt(editData.quantity);
+    if (isNaN(qty) || qty <= 0) {
+      setEditError("Quantity must be a positive number");
+      return;
+    }
 
-    if (isNaN(stock) || stock < 0) {
-      setEditError("Stock must be a valid non-negative number");
+    const adjustment = editData.action === "decrease" ? -qty : qty;
+    const reason = editData.reason.trim();
+
+    if (adjustment < 0 && !reason) {
+      setEditError("Reason is required when decreasing stock");
       return;
     }
 
     try {
       setUpdating(true);
       const payload = {
-        stock: stock,
+        adjustment,
+        reason,
       };
-      console.log(
-        "[Inventory] Updating stock (PATCH) id=",
-        editTarget.id,
-        " payload:",
-        payload,
-      );
       const response = await fetchWithCsrf(`/api/inventory/${editTarget.id}/`, {
         method: "PATCH",
         credentials: "include",
@@ -249,7 +252,6 @@ function Inventory() {
         },
         body: JSON.stringify(payload),
       });
-      console.log("[Inventory] PATCH response status:", response.status);
 
       if (!response.ok) {
         const data = await response.json();

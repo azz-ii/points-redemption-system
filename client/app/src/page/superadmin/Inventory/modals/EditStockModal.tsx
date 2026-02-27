@@ -2,8 +2,12 @@ import { X } from "lucide-react";
 import type { InventoryItem, ModalBaseProps } from "./types";
 import { getStatusColor, getLegendColor } from "./types";
 
+type AdjustmentAction = "add" | "decrease";
+
 interface EditStockData {
-  stock: string;
+  action: AdjustmentAction;
+  quantity: string;
+  reason: string;
 }
 
 interface EditStockModalProps extends ModalBaseProps {
@@ -27,15 +31,20 @@ export function EditStockModal({
 }: EditStockModalProps) {
   if (!isOpen || !item) return null;
 
-  // Calculate preview status based on current form values
+  const qty = parseInt(data.quantity) || 0;
+  const delta = data.action === "decrease" ? -qty : qty;
+  const previewStock = Math.max(0, item.stock + delta);
+
+  // Calculate preview status based on preview stock
   const getPreviewStatus = () => {
-    const stock = parseInt(data.stock) || 0;
-    if (stock === 0) return "Out of Stock";
-    if (stock <= 10) return "Low Stock"; // Default low stock threshold
+    if (previewStock === 0) return "Out of Stock";
+    if (previewStock <= 10) return "Low Stock";
     return "In Stock";
   };
 
   const previewStatus = getPreviewStatus();
+  const isDecreaseWithoutReason = data.action === "decrease" && !data.reason.trim();
+  const isQuantityEmpty = !data.quantity || qty === 0;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -50,7 +59,7 @@ export function EditStockModal({
           <div>
             <div className="flex items-center gap-3">
               <h2 id="edit-stock-title" className="text-xl font-semibold">
-                Update Stock
+                Adjust Stock
               </h2>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
@@ -61,7 +70,7 @@ export function EditStockModal({
               </span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Modify stock levels for {item.item_name}
+              Adjust stock levels for {item.item_name}
             </p>
           </div>
           <button
@@ -80,15 +89,11 @@ export function EditStockModal({
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Item Information
             </h3>
-            <div
-              className="p-4 rounded-lg bg-card"
-            >
+            <div className="p-4 rounded-lg bg-card">
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <p className="font-semibold">{item.item_name}</p>
-                  <p
-                    className="text-sm font-mono text-muted-foreground"
-                  >
+                  <p className="text-sm font-mono text-muted-foreground">
                     {item.item_code}
                   </p>
                 </div>
@@ -101,25 +106,21 @@ export function EditStockModal({
                 </span>
               </div>
               {item.category && (
-                <p
-                  className="text-sm text-muted-foreground"
-                >
+                <p className="text-sm text-muted-foreground">
                   Category: {item.category}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Stock Inputs */}
+          {/* Stock Levels */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Stock Levels
             </h3>
-            
+
             {/* Current Stock Info (Read-only) */}
-            <div
-              className="p-3 rounded-lg border bg-card border-border"
-            >
+            <div className="p-3 rounded-lg border bg-card border-border">
               <p className="text-xs text-gray-500 mb-2">Current Stock Breakdown</p>
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div>
@@ -145,32 +146,98 @@ export function EditStockModal({
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 {item.committed_stock > 0
-                  ? `${item.committed_stock} unit${item.committed_stock > 1 ? 's' : ''} reserved for pending/approved requests`
-                  : 'No units currently committed'}
+                  ? `${item.committed_stock} unit${item.committed_stock > 1 ? "s" : ""} reserved for pending/approved requests`
+                  : "No units currently committed"}
               </p>
             </div>
 
+            {/* Action Toggle */}
+            <div>
+              <label className="text-xs text-gray-500 mb-2 block">Action *</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setData({ ...data, action: "add", reason: "" })}
+                  className={`flex-1 px-4 py-3 rounded border text-sm font-semibold transition-colors ${
+                    data.action === "add"
+                      ? "bg-green-600 text-white border-green-600"
+                      : "bg-card border-gray-600 text-foreground hover:bg-accent"
+                  }`}
+                >
+                  + Add Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setData({ ...data, action: "decrease" })}
+                  className={`flex-1 px-4 py-3 rounded border text-sm font-semibold transition-colors ${
+                    data.action === "decrease"
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-card border-gray-600 text-foreground hover:bg-accent"
+                  }`}
+                >
+                  − Decrease Stock
+                </button>
+              </div>
+            </div>
+
+            {/* Quantity Input */}
             <div>
               <label
-                htmlFor="stock-input"
+                htmlFor="stock-quantity-input"
                 className="text-xs text-gray-500 mb-2 block"
               >
-                New Total Stock *
+                Quantity *
               </label>
               <input
-                id="stock-input"
+                id="stock-quantity-input"
                 type="number"
-                value={data.stock}
-                onChange={(e) => setData({ ...data, stock: e.target.value })}
-                min="0"
+                value={data.quantity}
+                onChange={(e) => setData({ ...data, quantity: e.target.value })}
+                min="1"
                 className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="Enter stock quantity"
+                placeholder={`Enter quantity to ${data.action === "add" ? "add" : "remove"}`}
                 aria-required="true"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Ensure total stock ≥ committed stock ({item.committed_stock}) to avoid issues
-              </p>
+              {qty > 0 && (
+                <p className="text-xs mt-1 text-muted-foreground">
+                  New total stock: {item.stock} {data.action === "add" ? "+" : "−"} {qty} ={" "}
+                  <span className={`font-semibold ${data.action === "decrease" ? "text-red-500" : "text-green-500"}`}>
+                    {previewStock}
+                  </span>
+                </p>
+              )}
+              {data.action === "decrease" && qty > 0 && previewStock < item.committed_stock && (
+                <p className="text-xs mt-1 text-red-500">
+                  Cannot decrease below committed stock ({item.committed_stock})
+                </p>
+              )}
             </div>
+
+            {/* Reason Input (required for decrease) */}
+            {data.action === "decrease" && (
+              <div>
+                <label
+                  htmlFor="stock-reason-input"
+                  className="text-xs text-gray-500 mb-2 block"
+                >
+                  Reason *
+                </label>
+                <textarea
+                  id="stock-reason-input"
+                  value={data.reason}
+                  onChange={(e) => setData({ ...data, reason: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 resize-none"
+                  placeholder="Enter reason for stock decrease (e.g., damaged goods, inventory correction, expired items)"
+                  aria-required="true"
+                />
+                {isDecreaseWithoutReason && (
+                  <p className="text-xs mt-1 text-orange-400">
+                    Reason is required when decreasing stock
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -192,10 +259,23 @@ export function EditStockModal({
 
             <button
               onClick={onConfirm}
-              disabled={updating}
-              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
+              disabled={
+                updating ||
+                isQuantityEmpty ||
+                (data.action === "decrease" && isDecreaseWithoutReason) ||
+                (data.action === "decrease" && previewStock < item.committed_stock)
+              }
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
+                data.action === "decrease"
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
             >
-              {updating ? "Updating..." : "Update Stock"}
+              {updating
+                ? "Updating..."
+                : data.action === "add"
+                ? `Add ${qty || 0} Stock`
+                : `Decrease ${qty || 0} Stock`}
             </button>
           </div>
         </div>

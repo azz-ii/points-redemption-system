@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
@@ -147,6 +148,97 @@ class Product(models.Model):
         self.stock -= quantity
         self.committed_stock = max(0, self.committed_stock - quantity)
         self.save(update_fields=['stock', 'committed_stock'])
+
+
+class StockAuditLog(models.Model):
+    """Tracks all manual stock changes for inventory-tracked products."""
+
+    class AdjustmentType(models.TextChoices):
+        ADD = 'ADD', 'Add Stock'
+        DECREASE = 'DECREASE', 'Decrease Stock'
+        BULK_ADD = 'BULK_ADD', 'Bulk Add'
+        BULK_DECREASE = 'BULK_DECREASE', 'Bulk Decrease'
+        BULK_RESET = 'BULK_RESET', 'Bulk Reset'
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='stock_audit_logs',
+    )
+    product_name = models.CharField(max_length=255, help_text='Denormalized name for display')
+    previous_stock = models.PositiveIntegerField()
+    new_stock = models.PositiveIntegerField()
+    stock_delta = models.IntegerField(help_text='new_stock - previous_stock')
+    adjustment_type = models.CharField(max_length=20, choices=AdjustmentType.choices)
+    reason = models.TextField(blank=True, default='', help_text='Required for stock decreases')
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='stock_audit_logs',
+        help_text='The user who made the change',
+    )
+    batch_id = models.UUIDField(
+        null=True,
+        blank=True,
+        help_text='Groups records from a single bulk/batch API call',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'stock_audit_log'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['product'], name='idx_stock_product'),
+            models.Index(fields=['created_at'], name='idx_stock_created_at'),
+            models.Index(fields=['batch_id'], name='idx_stock_batch_id'),
+            models.Index(fields=['changed_by'], name='idx_stock_changed_by'),
+        ]
+        verbose_name = 'Stock Audit Log'
+        verbose_name_plural = 'Stock Audit Logs'
+
+    def __str__(self):
+        return f"{self.get_adjustment_type_display()} | {self.product_name} | {self.stock_delta:+d} units"
+
+
+def log_stock_change(product, previous_stock, new_stock, adjustment_type, changed_by, reason='', batch_id=None):
+    """Create a single stock audit log entry."""
+    return StockAuditLog.objects.create(
+        product=product,
+        product_name=product.item_name,
+        previous_stock=previous_stock,
+        new_stock=new_stock,
+        stock_delta=new_stock - previous_stock,
+        adjustment_type=adjustment_type,
+        changed_by=changed_by,
+        reason=reason,
+        batch_id=batch_id,
+    )
+
+
+def bulk_log_stock_changes(entries):
+    """Create multiple stock audit log entries efficiently using bulk_create."""
+    logs = [
+        StockAuditLog(
+            product=e['product'],
+            product_name=e['product_name'],
+            previous_stock=e['previous_stock'],
+            new_stock=e['new_stock'],
+            stock_delta=e['new_stock'] - e['previous_stock'],
+            adjustment_type=e['adjustment_type'],
+            changed_by=e['changed_by'],
+            reason=e.get('reason', ''),
+            batch_id=e.get('batch_id'),
+        )
+        for e in entries
+    ]
+    return StockAuditLog.objects.bulk_create(logs)
+
+
+def generate_stock_batch_id():
+    """Generate a UUID for grouping stock audit entries from a single API call."""
+    return uuid.uuid4()
     
     def __str__(self):
         return f"{self.item_name} ({self.item_code})"
