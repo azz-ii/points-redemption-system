@@ -70,7 +70,8 @@ class UserSerializer(serializers.ModelSerializer):
                 'detail': 'position, full_name and email are required when creating a user.'
             })
         is_activated = validated_data.pop('is_activated', True)
-        uses_points = validated_data.pop('uses_points', False)
+        validated_data.pop('uses_points', None)  # derived from position, ignore any client-supplied value
+        uses_points = (position == 'Sales Agent')
         points = validated_data.pop('points', 0)
         password = validated_data.pop('password')
         
@@ -122,8 +123,9 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.profile.email = email
             if is_activated is not None:
                 instance.profile.is_activated = is_activated
-            if uses_points is not None:
-                instance.profile.uses_points = uses_points
+            # Always sync uses_points from effective position (Sales Agent only)
+            effective_position = position if position is not None else instance.profile.position
+            instance.profile.uses_points = (effective_position == 'Sales Agent')
             if points is not None:
                 instance.profile.points = points
             instance.profile.save()
@@ -134,7 +136,7 @@ class UserSerializer(serializers.ModelSerializer):
                 full_name=full_name or '',
                 email=email or '',
                 is_activated=is_activated if is_activated is not None else True,
-                uses_points=uses_points if uses_points is not None else False,
+                uses_points=((position or '') == 'Sales Agent'),
                 points=points if points is not None else 0,
             )
         

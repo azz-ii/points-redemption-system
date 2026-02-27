@@ -114,7 +114,7 @@ export function AccountsTable({
         const s = String(filterValue).toLowerCase()
         return (
           String(row.getValue("username") || "").toLowerCase().includes(s) ||
-          String(row.getValue("email") || "").toLowerCase().includes(s) ||
+          String(row.original.email || "").toLowerCase().includes(s) ||
           String(row.getValue("full_name") || "").toLowerCase().includes(s)
         )
       }}

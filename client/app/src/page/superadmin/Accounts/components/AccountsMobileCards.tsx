@@ -80,7 +80,7 @@ export function AccountsMobileCards({
                     {account.email || "N/A"}
                   </p>
                   <p className="text-xs font-semibold mt-1">
-                    Points: {account.points?.toLocaleString() ?? 0}
+                    {account.uses_points && `Points: ${account.points?.toLocaleString() ?? 0}`}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">

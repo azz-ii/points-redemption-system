@@ -99,15 +99,17 @@ export function ViewAccountModal({
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Account Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Points</label>
-                <input
-                  type="text"
-                  value={account.points?.toLocaleString() ?? "0"}
-                  disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
-                />
-              </div>
+              {account.uses_points && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Points</label>
+                  <input
+                    type="text"
+                    value={account.points?.toLocaleString() ?? "0"}
+                    disabled
+                    className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-2">Status</label>
                 <input

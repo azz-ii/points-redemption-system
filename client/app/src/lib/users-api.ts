@@ -9,6 +9,7 @@ export interface Account {
   email: string;
   position: string;
   points: number;
+  uses_points: boolean;
   is_activated: boolean;
   is_active?: boolean;
   is_banned: boolean;

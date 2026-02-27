@@ -38,6 +38,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
     ),
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 40,
   },
   {
     accessorKey: "item_code",
@@ -229,5 +231,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ]

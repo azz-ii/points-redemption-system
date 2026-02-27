@@ -201,6 +201,10 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     ...(!manualPagination && globalFilterFn ? { globalFilterFn } : {}),
+    columnResizeMode: "onChange" as const,
+    defaultColumn: {
+      minSize: 50,
+    },
     initialState: {
       pagination: {
         pageSize,
@@ -338,18 +342,34 @@ export function DataTable<TData, TValue>({
 
       <div className="border rounded-lg overflow-hidden" style={{ height: "70vh", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1, overflow: "auto" }}>
-          <Table>
+          <Table style={{ width: "100%", minWidth: table.getTotalSize() }}>
             <TableHeader className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="font-semibold">
+                    <TableHead
+                      key={header.id}
+                      className="font-semibold relative group"
+                      style={{ width: header.getSize() }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 group-hover:opacity-100 hover:bg-primary ${
+                            header.column.getIsResizing()
+                              ? "bg-primary opacity-100 w-[3px]"
+                              : "bg-border"
+                          }`}
+                        />
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -360,14 +380,13 @@ export function DataTable<TData, TValue>({
                 // Skeleton loading rows
                 Array.from({ length: 10 }).map((_, rowIndex) => (
                   <TableRow key={rowIndex}>
-                    {Array.from({ length: columns.length }).map((_, colIndex) => {
-                      // Determine skeleton type based on column index
+                    {table.getAllColumns().filter(col => col.getIsVisible()).map((column, colIndex) => {
                       const isFirstCol = colIndex === 0;
-                      const isLastCol = colIndex === columns.length - 1;
-                      const isSecondLastCol = colIndex === columns.length - 2;
+                      const isLastCol = colIndex === table.getVisibleFlatColumns().length - 1;
+                      const isSecondLastCol = colIndex === table.getVisibleFlatColumns().length - 2;
                       
                       return (
-                        <TableCell key={colIndex}>
+                        <TableCell key={column.id} style={{ width: column.getSize() }}>
                           {isFirstCol && enableRowSelection ? (
                             // Checkbox column
                             <div className="h-4 w-4 rounded bg-muted animate-pulse" />
@@ -381,16 +400,8 @@ export function DataTable<TData, TValue>({
                             // Status badge column
                             <div className="h-6 w-20 rounded-full bg-muted animate-pulse" />
                           ) : (
-                            // Regular text column with varying widths
-                            <div 
-                              className="h-4 rounded bg-muted animate-pulse"
-                              style={{ 
-                                width: colIndex === 1 ? '60px' : 
-                                       colIndex === 2 ? '140px' : 
-                                       colIndex === 3 ? '80px' : 
-                                       colIndex === 4 ? '100px' : '120px' 
-                              }}
-                            />
+                            // Regular text column
+                            <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
                           )}
                         </TableCell>
                       );
@@ -429,7 +440,7 @@ export function DataTable<TData, TValue>({
                       className={isRowEditing ? "bg-blue-50 dark:bg-blue-950" : ""}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()

@@ -176,57 +176,59 @@ export function EditAccountModal({
                 </select>
               </div>
 
-              <div>
-                <label
-                  htmlFor="edit-points"
-                  className="text-xs text-gray-500 mb-2 block"
-                >
-                  Points *
-                </label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    id="edit-points"
-                    type="number"
-                    min="0"
-                    value={editAccount.points}
-                    onChange={(e) =>
-                      setEditAccount({
-                        ...editAccount,
-                        points: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
-                    placeholder="Enter points"
-                    aria-required="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditAccount({
-                        ...editAccount,
-                        points: editAccount.points + 10,
-                      })
-                    }
-                    aria-label="Add 10 points"
-                    className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+              {editAccount.position === "Sales Agent" && (
+                <div>
+                  <label
+                    htmlFor="edit-points"
+                    className="text-xs text-gray-500 mb-2 block"
                   >
-                    +10
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditAccount({
-                        ...editAccount,
-                        points: editAccount.points + 100,
-                      })
-                    }
-                    aria-label="Add 100 points"
-                    className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
-                  >
-                    +100
-                  </button>
+                    Points *
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      id="edit-points"
+                      type="number"
+                      min="0"
+                      value={editAccount.points}
+                      onChange={(e) =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                      placeholder="Enter points"
+                      aria-required="true"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: editAccount.points + 10,
+                        })
+                      }
+                      aria-label="Add 10 points"
+                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                    >
+                      +10
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: editAccount.points + 100,
+                        })
+                      }
+                      aria-label="Add 100 points"
+                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                    >
+                      +100
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

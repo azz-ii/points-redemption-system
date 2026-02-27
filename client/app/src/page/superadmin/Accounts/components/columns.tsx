@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
 import {
   EditableTextCell,
-  EditableEmailCell,
   EditableNumberCell,
   EditableSelectCell,
 } from "./editable-cells"
@@ -53,6 +52,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 40,
   },
   {
     accessorKey: "id",
@@ -118,35 +119,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
   },
   {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === row.original.id
-      const value = isEditing ? (meta?.editedData?.email ?? row.getValue("email")) : row.getValue("email")
-      
-      return (
-        <EditableEmailCell
-          value={value as string}
-          isEditing={isEditing}
-          onChange={(val) => meta?.onFieldChange?.("email", val)}
-          error={meta?.fieldErrors?.email}
-        />
-      )
-    },
-  },
-  {
     accessorKey: "position",
     header: ({ column }) => {
       return (
@@ -192,6 +164,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     cell: ({ row, table }) => {
       const meta = table.options.meta as any
       const isEditing = meta?.editingRowId === row.original.id
+
+      if (!row.original.uses_points) {
+        return <span className="text-muted-foreground">—</span>
+      }
+
       const value = isEditing ? (meta?.editedData?.points ?? row.getValue("points")) : row.getValue("points")
       
       return (
@@ -365,5 +342,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ]

@@ -230,5 +230,7 @@ export const createColumns = (
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ];

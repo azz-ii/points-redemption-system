@@ -11,6 +11,7 @@ interface UserAccount {
   email: string;
   position: string;
   points: number;
+  uses_points: boolean;
   is_activated: boolean;
 }
 
