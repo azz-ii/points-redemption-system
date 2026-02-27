@@ -10,11 +10,9 @@ interface AccountsTableProps {
   onRetry?: () => void;
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
-  onBanAccount: (account: Account) => void;
   onArchiveAccount: (account: Account) => void;
   onUnarchiveAccount: (account: Account) => void;
   onArchiveSelected?: (accounts: Account[]) => void;
-  onBanSelected?: (accounts: Account[]) => void;
   onCreateNew?: () => void;
   onSetPoints?: () => void;
   onRefresh?: () => void;
@@ -46,11 +44,9 @@ export function AccountsTable({
   onRetry,
   onViewAccount,
   onEditAccount,
-  onBanAccount,
   onArchiveAccount,
   onUnarchiveAccount,
   onArchiveSelected,
-  onBanSelected,
   onCreateNew,
   onSetPoints,
   onRefresh,
@@ -79,7 +75,6 @@ export function AccountsTable({
       createColumns({
         onViewAccount,
         onEditAccount,
-        onBanAccount,
         onArchiveAccount,
         onUnarchiveAccount,
         onViewPointsHistory,
@@ -90,7 +85,6 @@ export function AccountsTable({
     [
       onViewAccount,
       onEditAccount,
-      onBanAccount,
       onArchiveAccount,
       onUnarchiveAccount,
       onViewPointsHistory,
@@ -108,7 +102,6 @@ export function AccountsTable({
       error={error}
       onRetry={onRetry}
       onDeleteSelected={onArchiveSelected}
-      onBanSelected={onBanSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add User"
       createButtonIcon="user"

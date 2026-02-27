@@ -22,7 +22,6 @@ import {
   ChevronRight,
   Trash2,
   Settings2,
-  Ban,
   Plus,
   UserPlus,
   RotateCw,
@@ -59,7 +58,6 @@ interface DataTableProps<TData, TValue> {
 
   // Toolbar actions
   onDeleteSelected?: (selectedRows: TData[]) => void
-  onBanSelected?: (selectedRows: TData[]) => void
   onCreateNew?: () => void
   createButtonLabel?: string
   createButtonIcon?: "user" | "plus"
@@ -113,7 +111,6 @@ export function DataTable<TData, TValue>({
   error = null,
   onRetry,
   onDeleteSelected,
-  onBanSelected,
   onCreateNew,
   createButtonLabel = "Add New",
   createButtonIcon = "plus",
@@ -162,7 +159,7 @@ export function DataTable<TData, TValue>({
     return () => clearTimeout(timer)
   }, [searchValue, onSearch])
 
-  const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected || onBanSelected)
+  const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected)
   const CreateIcon = createButtonIcon === "user" ? UserPlus : Plus
 
   const table = useReactTable({
@@ -292,17 +289,6 @@ export function DataTable<TData, TValue>({
               >
                 <Download className="h-4 w-4" />
                 Export{hasSelection ? ` (${selectedRows.length})` : ""}
-              </Button>
-            )}
-            {hasSelection && onBanSelected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onBanSelected(selectedRows)}
-                className="border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950"
-              >
-                <Ban className="mr-2 h-4 w-4" />
-                Ban {selectedRows.length}
               </Button>
             )}
             {hasSelection && onDeleteSelected && (

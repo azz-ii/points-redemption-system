@@ -37,7 +37,6 @@ class LoginView(APIView):
                 # Fetch user position from UserProfile
                 try:
                     from users.models import UserProfile
-                    from datetime import datetime, timezone
                     profile = UserProfile.objects.get(user=user)
                     
                     # Check if account is archived (overrides all other statuses)
@@ -55,42 +54,6 @@ class LoginView(APIView):
                             "message": "Please activate your account by setting a new password"
                         }, status=status.HTTP_200_OK)
                     
-                    # Check if user is banned
-                    if profile.is_banned:
-                        # Check if ban has expired
-                        if profile.unban_date:
-                            now = datetime.now(timezone.utc)
-                            if now >= profile.unban_date:
-                                # Unban the user
-                                profile.is_banned = False
-                                profile.ban_reason = None
-                                profile.ban_message = None
-                                profile.ban_duration = None
-                                profile.ban_date = None
-                                profile.unban_date = None
-                                profile.save()
-                            else:
-                                # Still banned
-                                ban_info = {
-                                    "error": "Account banned",
-                                    "detail": profile.ban_message or "Your account has been banned.",
-                                    "ban_reason": profile.ban_reason,
-                                    "ban_date": profile.ban_date.isoformat() if profile.ban_date else None,
-                                    "unban_date": profile.unban_date.isoformat() if profile.unban_date else None,
-                                    "is_permanent": False
-                                }
-                                return Response(ban_info, status=status.HTTP_403_FORBIDDEN)
-                        else:
-                            # Permanent ban
-                            ban_info = {
-                                "error": "Account permanently banned",
-                                "detail": profile.ban_message or "Your account has been permanently banned.",
-                                "ban_reason": profile.ban_reason,
-                                "ban_date": profile.ban_date.isoformat() if profile.ban_date else None,
-                                "is_permanent": True
-                            }
-                            return Response(ban_info, status=status.HTTP_403_FORBIDDEN)
-                    
                     position = profile.position
                 except UserProfile.DoesNotExist:
                     position = "Admin"  # Default position if profile doesn't exist
@@ -99,16 +62,10 @@ class LoginView(APIView):
                 # Log the user in to create a session so `request.user` is populated
                 login(request, user)
 
-                # Get profile picture URL if available
-                profile_picture_url = None
-                if profile and profile.profile_picture:
-                    profile_picture_url = profile.profile_picture.url
-
                 response = Response({
                     "message": "Login successful",
                     "position": position,
                     "username": username,
-                    "profile_picture": profile_picture_url
                 }, status=status.HTTP_200_OK)
                 
                 # Ensure CSRF cookie is set

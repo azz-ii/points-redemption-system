@@ -122,9 +122,6 @@ export function AppSidebar({ items, mobileOpen, onMobileClose }: AppSidebarProps
   const [role, setRole] = useState<string | null>(() => {
     try { return localStorage.getItem("position"); } catch { return null; }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try { return localStorage.getItem("profilePicture"); } catch { return null; }
-  });
 
   // Fallback nav items from stored role
   const navItems = items ?? getNavItemsForRole(role ?? "admin");
@@ -133,7 +130,6 @@ export function AppSidebar({ items, mobileOpen, onMobileClose }: AppSidebarProps
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -211,18 +207,7 @@ export function AppSidebar({ items, mobileOpen, onMobileClose }: AppSidebarProps
           } rounded-lg py-2 transition-colors hover:bg-sidebar-accent`}
         >
           <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-muted ring-border">
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                }}
-              />
-            ) : null}
-            <span className={`text-foreground font-semibold text-sm ${profilePicture ? "hidden" : ""}`}>
+            <span className="text-foreground font-semibold text-sm">
               {(username || "U").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -325,18 +310,7 @@ export function AppSidebar({ items, mobileOpen, onMobileClose }: AppSidebarProps
               className="w-full flex items-center gap-3 px-2 rounded-lg py-2 transition-colors hover:bg-sidebar-accent"
             >
               <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-muted ring-border">
-                {profilePicture ? (
-                  <img
-                    src={profilePicture}
-                    alt={`${username}'s profile`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                    }}
-                  />
-                ) : null}
-                <span className={`text-foreground font-semibold text-sm ${profilePicture ? "hidden" : ""}`}>
+                <span className="text-foreground font-semibold text-sm">
                   {(username || "U").charAt(0).toUpperCase()}
                 </span>
               </div>

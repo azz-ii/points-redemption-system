@@ -9,9 +9,7 @@ import {
   ViewAccountModal,
   CreateAccountModal,
   EditAccountModal,
-  BanAccountModal,
   ArchiveAccountModal,
-  BulkBanAccountModal,
   BulkArchiveAccountModal,
   UnarchiveAccountModal,
   ExportModal,
@@ -22,7 +20,7 @@ import { AccountsTable, AccountsMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Accounts() {
-  const { updateProfilePicture, username: loggedInUsername } = useAuth();
+  const { username: loggedInUsername } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -46,12 +44,7 @@ function Accounts() {
     position: "",
     points: 0,
     is_activated: true,
-    is_banned: false,
   });
-  const [newAccountImage, setNewAccountImage] = useState<File | null>(null);
-  const [newAccountImagePreview, setNewAccountImagePreview] = useState<
-    string | null
-  >(null);
 
   const [editAccount, setEditAccount] = useState({
     username: "",
@@ -60,33 +53,14 @@ function Accounts() {
     position: "",
     points: 0,
     is_activated: true,
-    is_banned: false,
   });
-  const [editAccountImage, setEditAccountImage] = useState<File | null>(null);
-  const [editAccountImagePreview, setEditAccountImagePreview] = useState<
-    string | null
-  >(null);
 
-  const [showBanModal, setShowBanModal] = useState(false);
-  const [banTarget, setBanTarget] = useState<Account | null>(null);
-  const [banReason, setBanReason] = useState("");
-  const [banMessage, setBanMessage] = useState("");
-  const [banDuration, setBanDuration] = useState<
-    "1" | "7" | "30" | "permanent"
-  >("1");
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTarget, setViewTarget] = useState<Account | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState<Account | null>(null);
   const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
   const [unarchiveTarget, setUnarchiveTarget] = useState<Account | null>(null);
-  const [showBulkBanModal, setShowBulkBanModal] = useState(false);
-  const [bulkBanTargets, setBulkBanTargets] = useState<Account[]>([]);
-  const [bulkBanReason, setBulkBanReason] = useState("");
-  const [bulkBanMessage, setBulkBanMessage] = useState("");
-  const [bulkBanDuration, setBulkBanDuration] = useState<
-    "1" | "7" | "30" | "permanent"
-  >("1");
   const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -99,39 +73,6 @@ function Accounts() {
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [editedData, setEditedData] = useState<Partial<Account>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  // Image handling helpers
-  const handleNewAccountImageSelect = (file: File | null) => {
-    setNewAccountImage(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewAccountImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleNewAccountImageRemove = () => {
-    setNewAccountImage(null);
-    setNewAccountImagePreview(null);
-  };
-
-  const handleEditAccountImageSelect = (file: File | null) => {
-    setEditAccountImage(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditAccountImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleEditAccountImageRemove = () => {
-    setEditAccountImage(null);
-    setEditAccountImagePreview(null);
-  };
 
   // Fetch accounts on component mount
   const fetchAccounts = useCallback(async () => {
@@ -210,7 +151,6 @@ function Accounts() {
     // Close modal and reset form immediately
     setShowCreateModal(false);
     const fullName = newAccount.full_name;
-    const imageFile = newAccountImage;
     setNewAccount({
       username: "",
       password: "",
@@ -219,23 +159,17 @@ function Accounts() {
       position: "",
       points: 0,
       is_activated: true,
-      is_banned: false,
     });
-    setNewAccountImage(null);
-    setNewAccountImagePreview(null);
     setError("");
 
     // Show optimistic success message
     toast.success(`Account for ${fullName} created successfully!`);
 
-    // Prepare form data for file upload
+    // Prepare form data
     const formData = new FormData();
     Object.entries(newAccount).forEach(([key, value]) => {
       formData.append(key, String(value));
     });
-    if (imageFile) {
-      formData.append("profile_picture", imageFile);
-    }
 
     // Execute API call in background without blocking
     fetchWithCsrf(`${API_URL}/users/`, {
@@ -270,18 +204,8 @@ function Accounts() {
       prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
     );
 
-    // If the updated account is the logged-in user, update sidebar profile picture
-    if (loggedInUsername && updatedAccount.username === loggedInUsername) {
-      if (updatedAccount.profile_picture) {
-        updateProfilePicture(updatedAccount.profile_picture);
-      }
-    }
-
     // Update the viewTarget to reflect changes in the modal
     setViewTarget(updatedAccount);
-
-    // Show success toast
-    toast.success("Profile picture updated successfully");
   };
 
   // Open edit modal
@@ -294,10 +218,7 @@ function Accounts() {
       position: account.position,
       points: account.points || 0,
       is_activated: account.is_activated,
-      is_banned: account.is_banned,
     });
-    setEditAccountImage(null);
-    setEditAccountImagePreview(null);
     setShowEditModal(true);
     setError("");
   };
@@ -319,14 +240,11 @@ function Accounts() {
     try {
       setLoading(true);
 
-      // Prepare form data for file upload
+      // Prepare form data
       const formData = new FormData();
       Object.entries(editAccount).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      if (editAccountImage) {
-        formData.append("profile_picture", editAccountImage);
-      }
 
       const response = await fetchWithCsrf(`/api/users/${editingAccount.id}/`, {
         method: "PUT",
@@ -336,12 +254,6 @@ function Accounts() {
       const data = await response.json();
 
       if (response.ok) {
-        // If the updated account is the logged-in user, update profile picture in localStorage
-        if (data.user?.username === loggedInUsername) {
-          const updatedProfilePicture = data.user.profile_picture || null;
-          updateProfilePicture(updatedProfilePicture);
-        }
-
         setShowEditModal(false);
         setEditingAccount(null);
         setError("");
@@ -452,156 +364,6 @@ function Accounts() {
       setError("Error archiving accounts");
       console.error("Error archiving accounts:", err);
       toast.error("Error archiving some accounts");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Ban selected accounts (bulk ban)
-  const handleBanSelected = async (selectedAccounts: Account[]) => {
-    setBulkBanTargets(selectedAccounts);
-    setBulkBanReason("");
-    setBulkBanMessage("");
-    setBulkBanDuration("1");
-    setShowBulkBanModal(true);
-    setError("");
-  };
-
-  // Confirm bulk ban
-  const handleBulkBanConfirm = async () => {
-    if (!bulkBanReason) {
-      setError("Ban reason is required");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const ban_date = new Date().toISOString();
-      let unban_date: string | null = null;
-      let durationValue: number | null = null;
-
-      if (bulkBanDuration !== "permanent") {
-        durationValue = parseInt(bulkBanDuration, 10);
-        const d = new Date();
-        d.setUTCDate(d.getUTCDate() + durationValue);
-        unban_date = d.toISOString();
-      }
-
-      // Ban all selected accounts
-      const banResults = await Promise.allSettled(
-        bulkBanTargets.map((account) => {
-          const payload = {
-            username: account.username,
-            full_name: account.full_name,
-            email: account.email,
-            position: account.position,
-            is_activated: account.is_activated,
-            is_banned: true,
-            ban_reason: bulkBanReason,
-            ban_message: bulkBanMessage || null,
-            ban_duration: durationValue,
-            ban_date,
-            unban_date,
-          };
-
-          return fetchWithCsrf(`/api/users/${account.id}/`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-        }),
-      );
-
-      const successCount = banResults.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
-      const failCount = banResults.filter(
-        (r) => r.status === "rejected",
-      ).length;
-
-      setShowBulkBanModal(false);
-      setBulkBanTargets([]);
-      setError("");
-
-      if (failCount === 0) {
-        toast.success(`Successfully banned ${successCount} account(s)`);
-      } else {
-        toast.error(`Banned ${successCount} of ${bulkBanTargets.length} account(s). ${failCount} failed.`);
-      }
-
-      fetchAccounts();
-    } catch (err) {
-      setError("Error banning accounts");
-      console.error("Error banning accounts:", err);
-      toast.error("Error banning some accounts");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Open ban modal is handled inline when clicking Ban button
-
-  // Submit ban: compute ban_date and unban_date then send update
-  const handleBanSubmit = async () => {
-    if (!banTarget) return;
-    if (!banReason) {
-      setError("Ban reason is required");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const ban_date = new Date().toISOString();
-      let unban_date: string | null = null;
-      let durationValue: number | null = null;
-
-      if (banDuration !== "permanent") {
-        durationValue = parseInt(banDuration, 10);
-        const d = new Date();
-        d.setUTCDate(d.getUTCDate() + durationValue);
-        unban_date = d.toISOString();
-      }
-
-      const payload = {
-        username: banTarget.username,
-        full_name: banTarget.full_name,
-        email: banTarget.email,
-        position: banTarget.position,
-        is_activated: banTarget.is_activated,
-        is_banned: true,
-        ban_reason: banReason,
-        ban_message: banMessage || null,
-        ban_duration: durationValue,
-        ban_date,
-        unban_date,
-      };
-
-      const response = await fetchWithCsrf(`/api/users/${banTarget.id}/`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setShowBanModal(false);
-        setBanTarget(null);
-        setError("");
-        fetchAccounts();
-      } else {
-        setError(
-          data.details?.username?.[0] ||
-            data.error ||
-            data.detail ||
-            "Failed to ban user",
-        );
-      }
-    } catch (err) {
-      setError("Error connecting to server");
-      console.error("Error banning user:", err);
     } finally {
       setLoading(false);
     }
@@ -872,7 +634,6 @@ function Accounts() {
             setShowUnarchiveModal(true);
           }}
           onArchiveSelected={handleArchiveSelected}
-          onBanSelected={handleBanSelected}
           onCreateNew={() => setShowCreateModal(true)}
           onSetPoints={() => setShowSetPointsModal(true)}
           onRefresh={fetchAccounts}
@@ -932,14 +693,6 @@ function Accounts() {
             setShowViewModal(true);
           }}
           onEditAccount={handleEditClick}
-          onBanAccount={(account) => {
-            setBanTarget(account);
-            setBanReason("");
-            setBanMessage("");
-            setBanDuration("1");
-            setShowBanModal(true);
-            setError("");
-          }}
           onArchiveAccount={(account) => {
             setArchiveTarget(account);
             setShowArchiveModal(true);
@@ -957,29 +710,6 @@ function Accounts() {
         error={error}
         setError={setError}
         onSubmit={handleCreateAccount}
-        profileImage={newAccountImage}
-        profileImagePreview={newAccountImagePreview}
-        onImageSelect={handleNewAccountImageSelect}
-        onImageRemove={handleNewAccountImageRemove}
-      />
-
-      <BanAccountModal
-        isOpen={showBanModal}
-        onClose={() => {
-          setShowBanModal(false);
-          setBanTarget(null);
-        }}
-        account={banTarget}
-        banReason={banReason}
-        setBanReason={setBanReason}
-        banMessage={banMessage}
-        setBanMessage={setBanMessage}
-        banDuration={banDuration}
-        setBanDuration={setBanDuration}
-        loading={loading}
-        error={error}
-        setError={setError}
-        onSubmit={handleBanSubmit}
       />
 
       <EditAccountModal
@@ -995,10 +725,6 @@ function Accounts() {
         error={error}
         setError={setError}
         onSubmit={handleUpdateAccount}
-        profileImage={editAccountImage}
-        profileImagePreview={editAccountImagePreview}
-        onImageSelect={handleEditAccountImageSelect}
-        onImageRemove={handleEditAccountImageRemove}
       />
 
       <ViewAccountModal
@@ -1031,25 +757,6 @@ function Accounts() {
         account={unarchiveTarget}
         loading={loading}
         onConfirm={(id) => handleUnarchiveAccount(id)}
-      />
-
-      <BulkBanAccountModal
-        isOpen={showBulkBanModal}
-        onClose={() => {
-          setShowBulkBanModal(false);
-          setBulkBanTargets([]);
-        }}
-        accounts={bulkBanTargets}
-        banReason={bulkBanReason}
-        setBanReason={setBulkBanReason}
-        banMessage={bulkBanMessage}
-        setBanMessage={setBulkBanMessage}
-        banDuration={bulkBanDuration}
-        setBanDuration={setBulkBanDuration}
-        loading={loading}
-        error={error}
-        setError={setError}
-        onSubmit={handleBulkBanConfirm}
       />
 
       <BulkArchiveAccountModal

@@ -2,7 +2,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
-import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 
 interface EditAccountData {
   username: string;
@@ -11,7 +10,6 @@ interface EditAccountData {
   position: string;
   points: number;
   is_activated: boolean;
-  is_banned: boolean;
 }
 
 interface EditAccountModalProps extends ModalBaseProps {
@@ -22,10 +20,6 @@ interface EditAccountModalProps extends ModalBaseProps {
   error: string;
   setError: Dispatch<SetStateAction<string>>;
   onSubmit: () => void;
-  profileImage: File | null;
-  profileImagePreview: string | null;
-  onImageSelect: (file: File | null) => void;
-  onImageRemove: () => void;
 }
 
 export function EditAccountModal({
@@ -38,10 +32,6 @@ export function EditAccountModal({
   error,
   setError,
   onSubmit,
-  profileImage: _profileImage,
-  profileImagePreview,
-  onImageSelect,
-  onImageRemove,
 }: EditAccountModalProps) {
   if (!isOpen || !account) return null;
 
@@ -154,19 +144,6 @@ export function EditAccountModal({
                 />
               </div>
             </div>
-          </div>
-
-          {/* Profile Picture Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-              Profile Picture
-            </h3>
-            <ProfilePictureUpload
-              currentImage={account?.profile_picture}
-              onImageSelect={onImageSelect}
-              onImageRemove={onImageRemove}
-              preview={profileImagePreview}
-            />
           </div>
 
           {/* Role & Points Section */}

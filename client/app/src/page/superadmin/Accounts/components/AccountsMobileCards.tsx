@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
-import { Eye, Ban, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { Account } from "../modals";
 
@@ -15,7 +15,6 @@ interface AccountsMobileCardsProps {
   setCurrentPage: Dispatch<SetStateAction<number>>;
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
-  onBanAccount: (account: Account) => void;
   onArchiveAccount: (account: Account) => void;
 }
 
@@ -30,7 +29,6 @@ export function AccountsMobileCards({
   setCurrentPage,
   onViewAccount,
   onEditAccount,
-  onBanAccount,
   onArchiveAccount,
 }: AccountsMobileCardsProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -108,11 +106,6 @@ export function AccountsMobileCards({
                           Inactive
                         </span>
                       )}
-                      {account.is_banned && (
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
-                          Banned
-                        </span>
-                      )}
                     </>
                   )}
                 </div>
@@ -159,17 +152,6 @@ export function AccountsMobileCards({
                         >
                           <Pencil className="h-4 w-4" />
                           Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            onBanAccount(account);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-orange-500 hover:bg-accent"
-                          disabled={loading}
-                        >
-                          <Ban className="h-4 w-4" />
-                          Ban
                         </button>
                         <button
                           onClick={() => {

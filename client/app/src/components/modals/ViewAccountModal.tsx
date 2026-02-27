@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, User, Edit2, Save, XCircle, Upload } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+﻿import { useState, useEffect } from "react";
+import { X, User } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import type { ModalBaseProps } from "./types";
 import { FormSkeleton } from "@/components/shared/form-skeleton";
@@ -13,20 +12,13 @@ interface UserAccount {
   position: string;
   points: number;
   is_activated: boolean;
-  is_banned: boolean;
-  profile_picture?: string | null;
 }
 
 interface ViewAccountModalProps extends ModalBaseProps {}
 
 export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
-  const { updateProfilePicture } = useAuth();
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEditingPicture, setIsEditingPicture] = useState(false);
-  const [newImage, setNewImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
   // Fetch current user data
@@ -55,100 +47,12 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
     }
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
-      return;
-    }
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image size must be less than 5MB");
-      return;
-    }
-
-    setNewImage(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-    setError("");
-  };
-
-  const handleImageRemove = () => {
-    setNewImage(null);
-    setImagePreview(null);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingPicture(false);
-    setNewImage(null);
-    setImagePreview(null);
-    setError("");
-  };
-
-  const handleSaveProfilePicture = async () => {
-    if (!account) return;
-
-    setIsSaving(true);
-    setError("");
-
-    try {
-      const formData = new FormData();
-      formData.append("username", account.username);
-      formData.append("full_name", account.full_name);
-      formData.append("email", account.email);
-      formData.append("position", account.position);
-      formData.append("points", String(account.points || 0));
-      formData.append("is_activated", String(account.is_activated));
-      formData.append("is_banned", String(account.is_banned));
-
-      if (newImage) {
-        formData.append("profile_picture", newImage);
-      }
-
-      const response = await fetchWithCsrf(`/api/users/${account.id}/`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAccount(data.user);
-        // Update auth context with new profile picture
-        if (data.user?.profile_picture) {
-          updateProfilePicture(data.user.profile_picture);
-        }
-        setIsEditingPicture(false);
-        setNewImage(null);
-        setImagePreview(null);
-      } else {
-        setError(data.error || "Failed to update profile picture");
-      }
-    } catch (err) {
-      setError("Error connecting to server");
-      console.error("Error updating profile picture:", err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleClose = () => {
-    setIsEditingPicture(false);
-    setNewImage(null);
-    setImagePreview(null);
     setError("");
     onClose();
   };
 
   if (!isOpen) return null;
-
-  const displayImage = imagePreview || account?.profile_picture;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -179,12 +83,9 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="space-y-6">
-              {/* Profile picture skeleton */}
-              <div className="space-y-3">
-                <div className="h-4 w-28 rounded bg-muted animate-pulse" />
-                <div className="flex justify-center">
-                  <div className="w-32 h-32 rounded-full bg-muted animate-pulse" />
-                </div>
+              {/* Avatar skeleton */}
+              <div className="flex justify-center">
+                <div className="w-24 h-24 rounded-full bg-muted animate-pulse" />
               </div>
               {/* Credentials skeleton */}
               <div className="space-y-4">
@@ -214,121 +115,11 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
             </div>
           ) : account ? (
             <>
-              {/* Profile Picture Section */}
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                    Profile Picture
-                  </h3>
-                  {!isEditingPicture ? (
-                    <button
-                      onClick={() => setIsEditingPicture(true)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-muted hover:bg-accent text-foreground`}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                      Edit
-                    </button>
-                  ) : null}
+              {/* Avatar Section */}
+              <div className="flex justify-center">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-muted">
+                  <User className="w-10 h-10 text-muted-foreground" />
                 </div>
-
-                {isEditingPicture ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      {/* Preview */}
-                      <div
-                        className={`w-24 h-24 rounded-full flex items-center justify-center overflow-hidden bg-muted border-border border-2`}
-                      >
-                        {displayImage ? (
-                          <img
-                            src={displayImage}
-                            alt="Profile preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-10 h-10 text-gray-400" />
-                        )}
-                      </div>
-
-                      {/* Upload Area */}
-                      <div className="flex-1">
-                        <label
-                          className={`relative border-2 border-dashed rounded-lg p-4 cursor-pointer transition-colors flex items-center gap-3 border-border bg-muted hover:bg-accent`}
-                        >
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageSelect}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                          <Upload className="w-5 h-5 text-gray-400" />
-                          <div>
-                            <p className="text-sm font-medium">
-                              {displayImage ? "Change photo" : "Upload photo"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              PNG, JPG, WebP up to 5MB
-                            </p>
-                          </div>
-                        </label>
-
-                        {displayImage && (
-                          <button
-                            type="button"
-                            onClick={handleImageRemove}
-                            className="mt-2 text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1"
-                          >
-                            <X className="w-3 h-3" />
-                            Remove photo
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {error && <p className="text-sm text-red-500">{error}</p>}
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveProfilePicture}
-                        disabled={isSaving || !newImage}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed`}
-                      >
-                        <Save className="h-4 w-4" />
-                        {isSaving ? "Saving..." : "Save"}
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        disabled={isSaving}
-                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <XCircle className="h-4 w-4" />
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex justify-center">
-                    <div
-                      className={`w-32 h-32 rounded-full flex items-center justify-center overflow-hidden bg-muted`}
-                    >
-                      {account.profile_picture ? (
-                        <img
-                          src={account.profile_picture}
-                          alt={`${account.full_name}'s profile`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                            e.currentTarget.nextElementSibling?.classList.remove(
-                              "hidden"
-                            );
-                          }}
-                        />
-                      ) : null}
-                      <User
-                        className={`w-16 h-16 text-muted-foreground ${account.profile_picture ? "hidden" : ""}`}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Credentials Section */}
@@ -416,9 +207,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                     </label>
                     <input
                       type="text"
-                      value={`${account.is_activated ? "Active" : "Inactive"}${
-                        account.is_banned ? " • Banned" : ""
-                      }`}
+                      value={account.is_activated ? "Active" : "Inactive"}
                       disabled
                       className={`w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none`}
                     />

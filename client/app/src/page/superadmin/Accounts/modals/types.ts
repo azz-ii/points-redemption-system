@@ -9,12 +9,10 @@ export interface Account {
   points: number;
   is_activated: boolean;
   is_active?: boolean;
-  is_banned: boolean;
   is_archived: boolean;
   date_archived?: string | null;
   archived_by?: number | null;
   archived_by_username?: string | null;
-  profile_picture?: string | null;
 }
 
 export const POSITION_OPTIONS = [

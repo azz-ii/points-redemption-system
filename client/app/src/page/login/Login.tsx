@@ -25,8 +25,8 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLoginSuccess = (position: string, profilePicture?: string | null) => {
-    login(position, username, profilePicture);
+  const handleLoginSuccess = (position: string) => {
+    login(position, username);
     navigate("/dashboard", { replace: true });
   };
 
@@ -54,32 +54,19 @@ function Login() {
         }
         
         const position = data.position || "Admin";
-        const profilePicture = data.profile_picture || null;
         setUsername("");
         setPassword("");
         toast.success("Login successful", {
           description: data.message || "Welcome back!"
         });
-        setTimeout(() => handleLoginSuccess(position, profilePicture), 1000);
+        setTimeout(() => handleLoginSuccess(position), 1000);
       } else {
         console.error("Login failed:", data);
         
-        // Check if user is banned
-        if (response.status === 403 && data.error && (data.error.includes("banned") || data.error.includes("activated"))) {
-          let description = "";
-          
-          if (data.error.includes("not activated")) {
-            description = data.detail || "Your account has not been activated.";
-          } else if (data.is_permanent) {
-            description = `Reason: ${data.ban_reason || "No reason provided"}\n\n${data.detail || "Your account has been permanently banned."}`;
-          } else {
-            const unbanDate = data.unban_date ? new Date(data.unban_date).toLocaleString() : "Unknown";
-            description = `Reason: ${data.ban_reason || "No reason provided"}\n${data.detail || "Your account is temporarily banned."}\n\nUnban Date: ${unbanDate}`;
-          }
-          
-          toast.error(data.error.includes("not activated") ? "Account Not Activated" : "Account Banned", {
-            description
-          });
+        // Check if account is not activated
+        if (response.status === 403 && data.error && data.error.includes("activated")) {
+          const description = data.detail || "Your account has not been activated.";
+          toast.error("Account Not Activated", { description });
         } else {
           toast.error("Access Denied", {
             description: data.error || data.detail || "Invalid credentials"

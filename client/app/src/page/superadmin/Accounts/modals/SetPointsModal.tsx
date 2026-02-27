@@ -56,10 +56,8 @@ export function SetPointsModal({
   const [confirmationType, setConfirmationType] = useState<"bulk" | "reset">("bulk");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Filter to only show not banned users
-  const activeAccounts = (accounts || []).filter((account) => !account.is_banned);
-
   // Calculate pagination
+  const activeAccounts = accounts || [];
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
 

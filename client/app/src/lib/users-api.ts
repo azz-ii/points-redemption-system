@@ -16,7 +16,6 @@ export interface Account {
   date_archived?: string | null;
   archived_by?: number | null;
   archived_by_username?: string | null;
-  profile_picture?: string | null;
 }
 
 export interface PaginatedAccountsResponse {
