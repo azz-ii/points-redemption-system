@@ -78,6 +78,7 @@ function Accounts() {
   const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true);
+      setError("");
       const url = new URL(`${API_URL}/users/`, window.location.origin);
       url.searchParams.append('page', String(tablePage + 1));
       url.searchParams.append('page_size', String(pageSize));
@@ -110,11 +111,6 @@ function Accounts() {
     fetchAccounts();
   }, [fetchAccounts]);
 
-  // Reset to first page when showArchived changes
-  useEffect(() => {
-    setTablePage(0);
-  }, [showArchived]);
-
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     setTablePage(0);
@@ -130,9 +126,11 @@ function Accounts() {
   }, []);
 
   const handleToggleArchived = useCallback((checked: boolean) => {
-    setLoading(true); // Set loading immediately when toggle changes
-    setAccounts([]); // Clear accounts to show full loading UI
     setShowArchived(checked);
+    setTablePage(0);
+    setSearchQuery("");
+    setAccounts([]);
+    setLoading(true);
   }, []);
 
   // Create new account (non-blocking)
@@ -279,8 +277,8 @@ function Accounts() {
   const handleArchiveAccount = async (id: number) => {
     try {
       setLoading(true);
-      const response = await fetchWithCsrf(`/api/users/${id}/`, {
-        method: "DELETE",
+      const response = await fetchWithCsrf(`/api/users/${id}/archive/`, {
+        method: "POST",
       });
 
       if (response.ok) {
@@ -337,8 +335,8 @@ function Accounts() {
 
       const archiveResults = await Promise.allSettled(
         bulkArchiveTargets.map((account) =>
-          fetchWithCsrf(`/api/users/${account.id}/`, {
-            method: "DELETE",
+          fetchWithCsrf(`/api/users/${account.id}/archive/`, {
+            method: "POST",
           }),
         ),
       );
@@ -606,6 +604,7 @@ function Accounts() {
 
         {/* Desktop Table */}
         <AccountsTable
+          key={showArchived ? "archived" : "active"}
           accounts={accounts}
           loading={loading}
           error={error}

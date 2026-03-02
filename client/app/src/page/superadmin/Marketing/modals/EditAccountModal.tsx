@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
-import { X, Package, Loader2, Check, AlertCircle } from "lucide-react";
+import { X, Package, Loader2, Check } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
 import type { Account, ModalBaseProps, LegendAssignment } from "./types";
 import { LEGEND_OPTIONS } from "./types";
-import { FormSkeleton } from "@/components/shared/form-skeleton";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EditAccountModalProps extends ModalBaseProps {
   account: Account | null;
@@ -19,6 +29,14 @@ interface LegendState {
   itemCount: number;
 }
 
+interface PendingAction {
+  legend: string;
+  assign: boolean;
+  confirmationType: "reassign" | "multi-assign" | "both" | "unassign";
+  currentOwner: string | null;
+  existingLegends: string[];
+}
+
 export function EditAccountModal({
   isOpen,
   onClose,
@@ -28,14 +46,11 @@ export function EditAccountModal({
   const [legendStates, setLegendStates] = useState<LegendState[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
   useEffect(() => {
     if (isOpen && account) {
       fetchAssignments();
-      setError("");
-      setSuccessMessage("");
     }
   }, [isOpen, account]);
 
@@ -63,19 +78,17 @@ export function EditAccountModal({
       }
     } catch (err) {
       console.error("Error fetching assignments:", err);
-      setError("Failed to load assignments");
+      toast.error("Failed to load assignments");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleLegend = async (legend: string, assign: boolean) => {
+  const executeToggle = async (legend: string, assign: boolean) => {
     if (!account) return;
 
     try {
       setSaving(true);
-      setError("");
-      setSuccessMessage("");
 
       const response = await fetchWithCsrf(`${API_URL}/catalogue/bulk-assign-marketing/`, {
         method: "POST",
@@ -91,7 +104,7 @@ export function EditAccountModal({
       const data = await response.json();
 
       if (response.ok) {
-        setSuccessMessage(
+        toast.success(
           assign
             ? `${getLegendLabel(legend)} assigned to ${account.full_name}`
             : `${getLegendLabel(legend)} unassigned`
@@ -99,22 +112,69 @@ export function EditAccountModal({
         await fetchAssignments();
         onSuccess();
       } else {
-        setError(data.error || "Failed to update assignment");
+        toast.error(data.error || "Failed to update assignment");
       }
     } catch (err) {
       console.error("Error updating assignment:", err);
-      setError("Error connecting to server");
+      toast.error("Error connecting to server");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleToggleLegend = (legend: string, assign: boolean) => {
+    if (!account) return;
+
+    if (!assign) {
+      setPendingAction({
+        legend,
+        assign,
+        confirmationType: "unassign",
+        currentOwner: null,
+        existingLegends: [],
+      });
+      return;
+    }
+
+    const targetState = legendStates.find((s) => s.legend === legend);
+    const isReassign =
+      !!targetState?.currentOwnerId && targetState.currentOwnerId !== account.id;
+    const existingLegends = legendStates
+      .filter((s) => s.isAssigned && s.legend !== legend)
+      .map((s) => getLegendLabel(s.legend));
+    const isMultiAssign = existingLegends.length > 0;
+
+    if (!isReassign && !isMultiAssign) {
+      executeToggle(legend, assign);
+      return;
+    }
+
+    const confirmationType =
+      isReassign && isMultiAssign ? "both" : isReassign ? "reassign" : "multi-assign";
+
+    setPendingAction({
+      legend,
+      assign,
+      confirmationType,
+      currentOwner: targetState?.currentOwner ?? null,
+      existingLegends,
+    });
+  };
+
+  const confirmAction = () => {
+    if (!pendingAction) return;
+    executeToggle(pendingAction.legend, pendingAction.assign);
+    setPendingAction(null);
+  };
+
+  const cancelAction = () => {
+    setPendingAction(null);
   };
 
   if (!isOpen || !account) return null;
 
   const handleClose = () => {
     onClose();
-    setError("");
-    setSuccessMessage("");
   };
 
   const getLegendLabel = (legend: string) => {
@@ -137,6 +197,7 @@ export function EditAccountModal({
   };
 
   return (
+    <>
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
         role="dialog"
@@ -259,18 +320,6 @@ export function EditAccountModal({
 
         {/* Footer */}
         <div className="p-8">
-          {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              {error}
-            </div>
-          )}
-          {successMessage && (
-            <div className="w-full mb-4 p-3 bg-green-500 bg-opacity-20 border border-green-500 rounded text-green-500 text-sm flex items-center gap-2">
-              <Check className="h-4 w-4" />
-              {successMessage}
-            </div>
-          )}
           <button
             onClick={handleClose}
             className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
@@ -280,5 +329,87 @@ export function EditAccountModal({
         </div>
       </div>
     </div>
+
+    <AlertDialog open={pendingAction !== null} onOpenChange={(open) => !open && cancelAction()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {pendingAction?.confirmationType === "unassign"
+              ? "Confirm Unassignment"
+              : "Confirm Assignment"}
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              {pendingAction?.confirmationType === "unassign" && (
+                <p>
+                  Are you sure you want to unassign{" "}
+                  <span className="font-medium text-foreground">
+                    {getLegendLabel(pendingAction.legend)}
+                  </span>{" "}
+                  from{" "}
+                  <span className="font-medium text-foreground">
+                    {account.full_name}
+                  </span>
+                  ? This legend will become unassigned.
+                </p>
+              )}
+              {(pendingAction?.confirmationType === "reassign" ||
+                pendingAction?.confirmationType === "both") && (
+                <p>
+                  <span className="font-medium text-foreground">
+                    {getLegendLabel(pendingAction.legend)}
+                  </span>{" "}
+                  is currently assigned to{" "}
+                  <span className="font-medium text-foreground">
+                    {pendingAction.currentOwner}
+                  </span>
+                  . Assigning it to{" "}
+                  <span className="font-medium text-foreground">
+                    {account.full_name}
+                  </span>{" "}
+                  will remove it from the current owner.
+                </p>
+              )}
+              {(pendingAction?.confirmationType === "multi-assign" ||
+                pendingAction?.confirmationType === "both") && (
+                <p>
+                  <span className="font-medium text-foreground">
+                    {account.full_name}
+                  </span>{" "}
+                  is already assigned to{" "}
+                  <span className="font-medium text-foreground">
+                    {pendingAction?.existingLegends.join(", ")}
+                  </span>
+                  . Are you sure you want to also assign{" "}
+                  <span className="font-medium text-foreground">
+                    {pendingAction && getLegendLabel(pendingAction.legend)}
+                  </span>
+                  ?
+                </p>
+              )}
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            onClick={cancelAction}
+            className="border border-border bg-card hover:bg-accent text-foreground"
+          >
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={confirmAction}
+            className={
+              pendingAction?.confirmationType === "unassign"
+                ? "bg-red-600 hover:bg-red-700 text-white"
+                : "bg-amber-600 hover:bg-amber-700 text-white"
+            }
+          >
+            Confirm
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

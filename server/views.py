@@ -33,6 +33,26 @@ class LoginView(APIView):
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
             user = authenticate(username=username, password=password)
+
+            # authenticate() returns None for inactive users; check manually for archived accounts
+            if user is None:
+                from django.contrib.auth.models import User as DjangoUser
+                from users.models import UserProfile
+                try:
+                    candidate = DjangoUser.objects.get(username=username)
+                    if candidate.check_password(password):
+                        try:
+                            profile = UserProfile.objects.get(user=candidate)
+                            if profile.is_archived:
+                                return Response({
+                                    "error": "Account archived",
+                                    "detail": "This account has been archived and cannot access the system."
+                                }, status=status.HTTP_403_FORBIDDEN)
+                        except UserProfile.DoesNotExist:
+                            pass
+                except DjangoUser.DoesNotExist:
+                    pass
+
             if user:
                 # Fetch user position from UserProfile
                 try:

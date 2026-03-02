@@ -63,8 +63,13 @@ function Login() {
       } else {
         console.error("Login failed:", data);
         
+        // Check if account is archived
+        if (response.status === 403 && data.error === "Account archived") {
+          toast.error("Account Archived", {
+            description: data.detail || "This account has been archived and cannot access the system."
+          });
         // Check if account is not activated
-        if (response.status === 403 && data.error && data.error.includes("activated")) {
+        } else if (response.status === 403 && data.error && data.error.includes("activated")) {
           const description = data.detail || "Your account has not been activated.";
           toast.error("Account Not Activated", { description });
         } else {

@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -79,13 +80,13 @@ class UserViewSet(viewsets.ModelViewSet):
         search = self.request.query_params.get('search', None)
         
         if search:
-            queryset = queryset.filter(
+            queryset = (queryset.filter(
                 username__icontains=search
             ) | queryset.filter(
                 profile__full_name__icontains=search
             ) | queryset.filter(
                 profile__email__icontains=search
-            )
+            )).distinct()
             logger.info(f"Filtering users by search: '{search}' - Found {queryset.count()} users")
         
         return queryset.order_by('username')
@@ -180,12 +181,11 @@ class UserViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
-        """Delete a user"""
-        instance = self.get_object()
-        instance.delete()
-        return Response({
-            "message": "User deleted successfully"
-        }, status=status.HTTP_200_OK)
+        """Permanent deletion is disabled. Use the archive action instead."""
+        return Response(
+            {"error": "Permanent deletion is not allowed. Use the archive endpoint instead."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
     
     @action(detail=True, methods=['post'])
     def archive(self, request, pk=None):
@@ -203,6 +203,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             # Archive the user
+            user.is_active = False
+            user.save(update_fields=['is_active'])
             user.profile.is_archived = True
             user.profile.date_archived = timezone.now()
             user.profile.archived_by = request.user if request.user.is_authenticated else None
@@ -236,6 +238,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             # Unarchive the user
+            user.is_active = True
+            user.save(update_fields=['is_active'])
             user.profile.is_archived = False
             user.profile.date_archived = None
             user.profile.archived_by = None
@@ -278,6 +282,8 @@ class UnarchiveUserView(APIView):
                 "error": "User is not archived"
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        user.is_active = True
+        user.save(update_fields=['is_active'])
         user.profile.is_archived = False
         user.profile.date_archived = None
         user.profile.archived_by = None
