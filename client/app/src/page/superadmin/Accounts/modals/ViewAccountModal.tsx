@@ -1,5 +1,6 @@
 ﻿import { X, User } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
+import { AccountAnalytics } from "@/components/shared/account-analytics";
 
 interface ViewAccountModalProps extends ModalBaseProps {
   account: Account | null;
@@ -19,7 +20,7 @@ export function ViewAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
       >
         <div className="flex justify-between items-center p-8">
           <div>
@@ -121,6 +122,9 @@ export function ViewAccountModal({
               </div>
             </div>
           </div>
+
+          {/* Performance Analytics Section */}
+          <AccountAnalytics accountId={account.id} position={account.position} />
         </div>
         <div className="p-8 flex justify-end">
           <button

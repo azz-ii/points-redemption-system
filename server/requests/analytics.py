@@ -683,3 +683,249 @@ class AnalyticsEntitiesView(APIView):
                 {'error': 'Failed to fetch entity analytics', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+# ──────────────────────────────────────────────
+# 9. Per-User Analytics (for ViewAccountModal)
+# ──────────────────────────────────────────────
+class UserAnalyticsView(APIView):
+    """Per-user analytics stats, tailored by position (Sales Agent, Approver, Marketing)."""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _check_admin(request):
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from users.models import UserProfile
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+
+            try:
+                target_user = User.objects.select_related('profile').get(pk=user_id)
+                profile = target_user.profile
+            except (User.DoesNotExist, UserProfile.DoesNotExist):
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            position = profile.position
+
+            if position == 'Sales Agent':
+                return self._sales_agent_stats(target_user)
+            elif position == 'Approver':
+                return self._approver_stats(target_user)
+            elif position == 'Marketing':
+                return self._marketing_stats(target_user)
+            else:
+                return Response({
+                    'position': position,
+                    'stats': None,
+                    'recent_activity': [],
+                })
+
+        except Exception as e:
+            logger.error(f"[Analytics] User stats error: {e}", exc_info=True)
+            return Response(
+                {'error': 'Failed to fetch user analytics', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def _user_name(self, user):
+        if not user:
+            return None
+        profile = getattr(user, 'profile', None)
+        if profile:
+            return profile.full_name or user.username
+        return user.username
+
+    def _sales_agent_stats(self, user):
+        qs = RedemptionRequest.objects.filter(requested_by=user)
+        total = qs.count()
+
+        agg = qs.aggregate(
+            pending_count=Count('id', filter=Q(status='PENDING')),
+            approved_count=Count('id', filter=Q(status='APPROVED')),
+            rejected_count=Count('id', filter=Q(status='REJECTED')),
+            withdrawn_count=Count('id', filter=Q(status='WITHDRAWN')),
+            processed_count=Count('id', filter=Q(processing_status='PROCESSED')),
+            cancelled_count=Count('id', filter=Q(processing_status='CANCELLED')),
+            total_points_redeemed=Coalesce(Sum('total_points', filter=Q(status='APPROVED')), 0),
+        )
+
+        approval_rate = round((agg['approved_count'] / total) * 100, 1) if total > 0 else 0
+
+        # Average turnaround: date_requested → date_reviewed for reviewed requests
+        reviewed_qs = qs.filter(date_reviewed__isnull=False)
+        avg_turnaround = reviewed_qs.annotate(
+            dur=ExpressionWrapper(
+                F('date_reviewed') - F('date_requested'),
+                output_field=DurationField(),
+            )
+        ).aggregate(avg=Avg('dur'))
+        avg_hours = None
+        if avg_turnaround['avg']:
+            avg_hours = round(avg_turnaround['avg'].total_seconds() / 3600, 1)
+
+        # Recent requests (up to 50 for client-side filtering)
+        recent = (
+            qs.select_related('requested_for', 'requested_for_customer', 'reviewed_by')
+            .prefetch_related('items', 'items__product')
+            .order_by('-date_requested')[:50]
+        )
+        recent_activity = []
+        for req in recent:
+            items_str = ', '.join(
+                f"{ri.product.item_name} x{ri.quantity}" if ri.product else f"Item x{ri.quantity}"
+                for ri in req.items.all()
+            )
+            recent_activity.append({
+                'request_id': req.id,
+                'date_requested': req.date_requested.isoformat() if req.date_requested else None,
+                'requested_for': req.get_requested_for_name(),
+                'items': items_str,
+                'total_points': req.total_points,
+                'status': req.status,
+                'processing_status': req.processing_status,
+            })
+
+        return Response({
+            'position': 'Sales Agent',
+            'stats': {
+                'total_requests': total,
+                'pending_count': agg['pending_count'],
+                'approved_count': agg['approved_count'],
+                'rejected_count': agg['rejected_count'],
+                'withdrawn_count': agg['withdrawn_count'],
+                'processed_count': agg['processed_count'],
+                'cancelled_count': agg['cancelled_count'],
+                'approval_rate': approval_rate,
+                'total_points_redeemed': agg['total_points_redeemed'],
+                'avg_turnaround_hours': avg_hours,
+            },
+            'recent_activity': recent_activity,
+        })
+
+    def _approver_stats(self, user):
+        # Requests this approver reviewed (approved or rejected)
+        qs = RedemptionRequest.objects.filter(reviewed_by=user)
+        total = qs.count()
+
+        agg = qs.aggregate(
+            approved_count=Count('id', filter=Q(status='APPROVED')),
+            rejected_count=Count('id', filter=Q(status='REJECTED')),
+        )
+
+        approval_rate = round((agg['approved_count'] / total) * 100, 1) if total > 0 else 0
+
+        # Average review time: date_requested → date_reviewed
+        avg_review = qs.filter(date_reviewed__isnull=False).annotate(
+            dur=ExpressionWrapper(
+                F('date_reviewed') - F('date_requested'),
+                output_field=DurationField(),
+            )
+        ).aggregate(avg=Avg('dur'))
+        avg_hours = None
+        if avg_review['avg']:
+            avg_hours = round(avg_review['avg'].total_seconds() / 3600, 1)
+
+        # Also check sales approvals
+        sales_qs = RedemptionRequest.objects.filter(sales_approved_by=user)
+        sales_total = sales_qs.count()
+        sales_agg = sales_qs.aggregate(
+            sales_approved=Count('id', filter=Q(sales_approval_status='APPROVED')),
+            sales_rejected=Count('id', filter=Q(sales_approval_status='REJECTED')),
+        )
+
+        # Recent reviewed requests (up to 50 for client-side filtering)
+        recent = (
+            qs.select_related('requested_by', 'requested_by__profile', 'requested_for', 'requested_for_customer')
+            .order_by('-date_reviewed')[:50]
+        )
+        recent_activity = []
+        for req in recent:
+            recent_activity.append({
+                'request_id': req.id,
+                'date_reviewed': req.date_reviewed.isoformat() if req.date_reviewed else None,
+                'requested_by': self._user_name(req.requested_by),
+                'requested_for': req.get_requested_for_name(),
+                'total_points': req.total_points,
+                'status': req.status,
+            })
+
+        return Response({
+            'position': 'Approver',
+            'stats': {
+                'total_reviewed': total,
+                'approved_count': agg['approved_count'],
+                'rejected_count': agg['rejected_count'],
+                'approval_rate': approval_rate,
+                'avg_review_hours': avg_hours,
+                'sales_approvals_total': sales_total,
+                'sales_approved_count': sales_agg['sales_approved'],
+                'sales_rejected_count': sales_agg['sales_rejected'],
+            },
+            'recent_activity': recent_activity,
+        })
+
+    def _marketing_stats(self, user):
+        # Items this marketing user has processed
+        items_qs = RedemptionRequestItem.objects.filter(item_processed_by=user)
+        total_items = items_qs.count()
+
+        # Distinct requests touched
+        requests_touched = items_qs.values('request').distinct().count()
+
+        # Average processing time: request.date_reviewed → item.item_processed_at
+        avg_proc = items_qs.filter(
+            item_processed_at__isnull=False,
+            request__date_reviewed__isnull=False,
+        ).annotate(
+            dur=ExpressionWrapper(
+                F('item_processed_at') - F('request__date_reviewed'),
+                output_field=DurationField(),
+            )
+        ).aggregate(avg=Avg('dur'))
+        avg_hours = None
+        if avg_proc['avg']:
+            avg_hours = round(avg_proc['avg'].total_seconds() / 3600, 1)
+
+        # Requests where this user processed items — check processed vs cancelled
+        touched_request_ids = items_qs.values_list('request_id', flat=True).distinct()
+        touched_requests = RedemptionRequest.objects.filter(id__in=touched_request_ids)
+        proc_agg = touched_requests.aggregate(
+            processed_count=Count('id', filter=Q(processing_status='PROCESSED')),
+            cancelled_count=Count('id', filter=Q(processing_status='CANCELLED')),
+        )
+
+        # Recent processed items (up to 50 for client-side filtering)
+        recent_items = (
+            items_qs.select_related('product', 'request', 'request__requested_by', 'request__requested_by__profile')
+            .order_by('-item_processed_at')[:50]
+        )
+        recent_activity = []
+        for ri in recent_items:
+            recent_activity.append({
+                'request_id': ri.request_id,
+                'item_name': ri.product.item_name if ri.product else None,
+                'quantity': ri.quantity,
+                'total_points': ri.total_points,
+                'processed_at': ri.item_processed_at.isoformat() if ri.item_processed_at else None,
+                'requested_by': self._user_name(ri.request.requested_by),
+                'processing_status': ri.request.processing_status,
+            })
+
+        return Response({
+            'position': 'Marketing',
+            'stats': {
+                'total_items_processed': total_items,
+                'total_requests_touched': requests_touched,
+                'processed_count': proc_agg['processed_count'],
+                'cancelled_count': proc_agg['cancelled_count'],
+                'avg_processing_hours': avg_hours,
+            },
+            'recent_activity': recent_activity,
+        })
