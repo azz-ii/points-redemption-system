@@ -197,6 +197,59 @@ export type UserAnalyticsResponse =
   | { position: "Marketing"; stats: MarketingStatsData; recent_activity: MarketingActivity[] }
   | { position: string; stats: null; recent_activity: [] };
 
+// ── Per-Team Analytics Types ───────────────────────────
+
+export interface TeamTopItem {
+  product_name: string;
+  category: string;
+  total_quantity: number;
+  total_points: number;
+}
+
+export interface TeamStatsData {
+  total_requests: number;
+  pending_count: number;
+  approved_count: number;
+  rejected_count: number;
+  withdrawn_count: number;
+  processed_count: number;
+  cancelled_count: number;
+  approval_rate: number;
+  total_points_redeemed: number;
+  avg_turnaround_hours: number | null;
+  avg_processing_hours: number | null;
+  member_count: number;
+  top_items: TeamTopItem[];
+}
+
+export interface TeamMemberBreakdown {
+  user_id: number;
+  full_name: string;
+  total_requests: number;
+  approved_count: number;
+  rejected_count: number;
+  pending_count: number;
+  total_points_redeemed: number;
+  approval_rate: number;
+}
+
+export interface TeamActivity {
+  request_id: number;
+  requested_by: string | null;
+  date_requested: string | null;
+  requested_for: string | null;
+  items: string;
+  total_points: number;
+  status: string;
+  processing_status: string;
+}
+
+export interface TeamAnalyticsResponse {
+  stats: TeamStatsData;
+  member_breakdown: TeamMemberBreakdown[];
+  recent_activity: TeamActivity[];
+}
+
 export type DateRange = "7" | "30" | "90" | "365" | "all";
 
 // ── Helper ──────────────────────────────────────────────
@@ -280,6 +333,12 @@ export const analyticsApi = {
   getUserStats(userId: number) {
     return fetchJson<UserAnalyticsResponse>(
       `${API_BASE_URL}/dashboard/analytics/user-stats/?user_id=${userId}`,
+    );
+  },
+
+  getTeamStats(teamId: number) {
+    return fetchJson<TeamAnalyticsResponse>(
+      `${API_BASE_URL}/dashboard/analytics/team-stats/?team_id=${teamId}`,
     );
   },
 };

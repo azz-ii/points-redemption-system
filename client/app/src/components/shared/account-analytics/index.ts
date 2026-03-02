@@ -4,3 +4,7 @@ export { StatGrid } from "./StatGrid";
 export { SalesAgentStats } from "./SalesAgentStats";
 export { ApproverStats } from "./ApproverStats";
 export { MarketingStats } from "./MarketingStats";
+export { TeamAnalytics } from "./TeamAnalytics";
+export { TeamOverviewStats } from "./TeamOverviewStats";
+export { TeamMemberBreakdown } from "./TeamMemberBreakdown";
+export { TeamTopItems } from "./TeamTopItems";

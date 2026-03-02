@@ -20,6 +20,7 @@ import {
   ViewTeamModal,
   EditTeamModal,
   DeleteTeamModal,
+  AnalyticsModal,
   type NewTeamData,
   type EditTeamData,
 } from "./modals";
@@ -39,6 +40,7 @@ function Teams() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{ id: number } | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
@@ -55,6 +57,7 @@ function Teams() {
   });
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+  const [teamForAnalytics, setTeamForAnalytics] = useState<{ id: number; name: string } | null>(null);
 
   // Fetch teams on component mount
   const fetchTeams = async () => {
@@ -291,6 +294,12 @@ function Teams() {
     }
   };
 
+  // Handle analytics team click
+  const handleAnalyticsClick = (team: Team) => {
+    setTeamForAnalytics({ id: team.id, name: team.name });
+    setIsAnalyticsModalOpen(true);
+  };
+
   // Handle delete team click
   const handleDeleteClick = (team: Team) => {
     console.log("DEBUG Teams: Opening delete modal for team", {
@@ -378,6 +387,7 @@ function Teams() {
             onView={(team) => handleViewTeam(team.id)}
             onEdit={handleEditClick}
             onDelete={handleDeleteClick}
+            onAnalytics={handleAnalyticsClick}
             onCreateNew={() => {
               console.log("DEBUG Teams: Opening create modal");
               setIsCreateModalOpen(true);
@@ -514,6 +524,16 @@ function Teams() {
                                 <Trash2 className="h-4 w-4" />
                                 Delete Team
                               </button>
+                              <button
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  handleAnalyticsClick(team);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
+                              >
+                                <Eye className="h-4 w-4" />
+                                Analytics
+                              </button>
                             </div>
                           </div>
                         )}
@@ -607,6 +627,15 @@ function Teams() {
         team={teamToDelete}
         loading={deleteLoading}
         onConfirm={handleDeleteTeam}
+      />
+
+      <AnalyticsModal
+        isOpen={isAnalyticsModalOpen}
+        onClose={() => {
+          setIsAnalyticsModalOpen(false);
+          setTeamForAnalytics(null);
+        }}
+        team={teamForAnalytics}
       />
     </>
   );

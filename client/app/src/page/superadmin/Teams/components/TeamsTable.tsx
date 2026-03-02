@@ -7,6 +7,7 @@ interface TeamsTableProps {
   onView: (team: Team) => void;
   onEdit: (team: Team) => void;
   onDelete: (team: Team) => void;
+  onAnalytics: (team: Team) => void;
   onDeleteSelected?: (teams: Team[]) => void;
   onCreateNew?: () => void;
   onRefresh?: () => void;
@@ -19,6 +20,7 @@ export function TeamsTable({
   onView,
   onEdit,
   onDelete,
+  onAnalytics,
   onDeleteSelected,
   onCreateNew,
   onRefresh,
@@ -28,6 +30,7 @@ export function TeamsTable({
     onView,
     onEdit,
     onDelete,
+    onAnalytics,
   });
 
   return (

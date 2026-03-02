@@ -929,3 +929,161 @@ class UserAnalyticsView(APIView):
             },
             'recent_activity': recent_activity,
         })
+
+
+# ──────────────────────────────────────────────
+class TeamAnalyticsView(APIView):
+    """Per-team analytics: aggregate stats, member breakdown, top items, recent activity."""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not _check_admin(request):
+            return Response({'error': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+
+        team_id = request.query_params.get('team_id')
+        if not team_id:
+            return Response({'error': 'team_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from teams.models import Team
+            try:
+                team = Team.objects.prefetch_related('memberships', 'memberships__user', 'memberships__user__profile').get(pk=team_id)
+            except Team.DoesNotExist:
+                return Response({'error': 'Team not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            qs = RedemptionRequest.objects.filter(team=team)
+            total = qs.count()
+
+            # ── Aggregate stats ─────────────────────
+            agg = qs.aggregate(
+                pending_count=Count('id', filter=Q(status='PENDING')),
+                approved_count=Count('id', filter=Q(status='APPROVED')),
+                rejected_count=Count('id', filter=Q(status='REJECTED')),
+                withdrawn_count=Count('id', filter=Q(status='WITHDRAWN')),
+                processed_count=Count('id', filter=Q(processing_status='PROCESSED')),
+                cancelled_count=Count('id', filter=Q(processing_status='CANCELLED')),
+                total_points_redeemed=Coalesce(Sum('total_points', filter=Q(status='APPROVED')), 0),
+            )
+
+            reviewed_total = agg['approved_count'] + agg['rejected_count']
+            approval_rate = round((agg['approved_count'] / reviewed_total) * 100, 1) if reviewed_total > 0 else 0
+
+            # Avg turnaround: date_requested → date_reviewed
+            avg_turn = qs.filter(date_reviewed__isnull=False).annotate(
+                dur=ExpressionWrapper(F('date_reviewed') - F('date_requested'), output_field=DurationField())
+            ).aggregate(avg=Avg('dur'))
+            avg_turnaround_hours = round(avg_turn['avg'].total_seconds() / 3600, 1) if avg_turn['avg'] else None
+
+            # Avg processing: date_reviewed → date_processed
+            avg_proc = qs.filter(date_processed__isnull=False, date_reviewed__isnull=False).annotate(
+                dur=ExpressionWrapper(F('date_processed') - F('date_reviewed'), output_field=DurationField())
+            ).aggregate(avg=Avg('dur'))
+            avg_processing_hours = round(avg_proc['avg'].total_seconds() / 3600, 1) if avg_proc['avg'] else None
+
+            member_count = team.memberships.count()
+
+            # ── Top 5 items ─────────────────────────
+            top_items_qs = (
+                RedemptionRequestItem.objects
+                .filter(request__team=team)
+                .values('product__item_name', 'product__category')
+                .annotate(
+                    total_quantity=Sum('quantity'),
+                    total_points=Sum('total_points'),
+                )
+                .order_by('-total_quantity')[:5]
+            )
+            top_items = [
+                {
+                    'product_name': row['product__item_name'] or 'Unknown',
+                    'category': row['product__category'] or '',
+                    'total_quantity': row['total_quantity'],
+                    'total_points': row['total_points'],
+                }
+                for row in top_items_qs
+            ]
+
+            # ── Member breakdown ────────────────────
+            member_breakdown = []
+            for membership in team.memberships.select_related('user', 'user__profile').all():
+                u = membership.user
+                m_qs = qs.filter(requested_by=u)
+                m_total = m_qs.count()
+                m_agg = m_qs.aggregate(
+                    approved_count=Count('id', filter=Q(status='APPROVED')),
+                    rejected_count=Count('id', filter=Q(status='REJECTED')),
+                    pending_count=Count('id', filter=Q(status='PENDING')),
+                    total_points_redeemed=Coalesce(Sum('total_points', filter=Q(status='APPROVED')), 0),
+                )
+                m_reviewed = m_agg['approved_count'] + m_agg['rejected_count']
+                m_approval = round((m_agg['approved_count'] / m_reviewed) * 100, 1) if m_reviewed > 0 else 0
+
+                profile = getattr(u, 'profile', None)
+                member_breakdown.append({
+                    'user_id': u.id,
+                    'full_name': profile.full_name if profile else u.username,
+                    'total_requests': m_total,
+                    'approved_count': m_agg['approved_count'],
+                    'rejected_count': m_agg['rejected_count'],
+                    'pending_count': m_agg['pending_count'],
+                    'total_points_redeemed': m_agg['total_points_redeemed'],
+                    'approval_rate': m_approval,
+                })
+
+            # Sort by total_requests descending
+            member_breakdown.sort(key=lambda x: x['total_requests'], reverse=True)
+
+            # ── Recent activity (up to 50) ──────────
+            recent = (
+                qs.select_related(
+                    'requested_by', 'requested_by__profile',
+                    'requested_for', 'requested_for_customer',
+                )
+                .prefetch_related('items', 'items__product')
+                .order_by('-date_requested')[:50]
+            )
+            recent_activity = []
+            for req in recent:
+                items_str = ', '.join(
+                    f"{ri.product.item_name} x{ri.quantity}" if ri.product else f"Item x{ri.quantity}"
+                    for ri in req.items.all()
+                )
+                by_profile = getattr(req.requested_by, 'profile', None) if req.requested_by else None
+                recent_activity.append({
+                    'request_id': req.id,
+                    'requested_by': by_profile.full_name if by_profile else (req.requested_by.username if req.requested_by else None),
+                    'date_requested': req.date_requested.isoformat() if req.date_requested else None,
+                    'requested_for': req.get_requested_for_name(),
+                    'items': items_str,
+                    'total_points': req.total_points,
+                    'status': req.status,
+                    'processing_status': req.processing_status,
+                })
+
+            return Response({
+                'stats': {
+                    'total_requests': total,
+                    'pending_count': agg['pending_count'],
+                    'approved_count': agg['approved_count'],
+                    'rejected_count': agg['rejected_count'],
+                    'withdrawn_count': agg['withdrawn_count'],
+                    'processed_count': agg['processed_count'],
+                    'cancelled_count': agg['cancelled_count'],
+                    'approval_rate': approval_rate,
+                    'total_points_redeemed': agg['total_points_redeemed'],
+                    'avg_turnaround_hours': avg_turnaround_hours,
+                    'avg_processing_hours': avg_processing_hours,
+                    'member_count': member_count,
+                    'top_items': top_items,
+                },
+                'member_breakdown': member_breakdown,
+                'recent_activity': recent_activity,
+            })
+
+        except Exception as e:
+            logger.error(f"[Analytics] Team stats error: {e}", exc_info=True)
+            return Response(
+                {'error': 'Failed to fetch team analytics', 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

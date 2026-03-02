@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown } from "lucide-react"
+import { Eye, Pencil, Trash2, ArrowUpDown, BarChart3 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 
@@ -25,6 +25,7 @@ interface ColumnContext {
   onView: (team: Team) => void
   onEdit: (team: Team) => void
   onDelete: (team: Team) => void
+  onAnalytics: (team: Team) => void
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
@@ -137,6 +138,15 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
 
       return (
         <div className="flex justify-end gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => context.onAnalytics(team)}
+            className="bg-purple-500 hover:bg-purple-600 text-white"
+            title="Analytics"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
           <Button
             variant="default"
             size="sm"

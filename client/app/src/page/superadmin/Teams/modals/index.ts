@@ -3,6 +3,7 @@ export { CreateTeamModal } from "./CreateTeamModal";
 export { ViewTeamModal } from "./ViewTeamModal";
 export { EditTeamModal } from "./EditTeamModal";
 export { DeleteTeamModal } from "./DeleteTeamModal";
+export { AnalyticsModal } from "./AnalyticsModal";
 export type {
   ModalBaseProps,
   Team,
