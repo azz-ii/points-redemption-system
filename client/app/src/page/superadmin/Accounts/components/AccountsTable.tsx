@@ -19,6 +19,7 @@ interface AccountsTableProps {
   refreshing?: boolean;
   onExport?: (selectedRows: Account[]) => void;
   onViewPointsHistory?: (account: Account) => void;
+  onSendPasswordResetEmail?: (account: Account) => void;
   editingRowId?: number | null;
   editedData?: Record<string, any>;
   onToggleInlineEdit?: (account: Account) => void;
@@ -53,6 +54,7 @@ export function AccountsTable({
   refreshing,
   onExport,
   onViewPointsHistory,
+  onSendPasswordResetEmail,
   editingRowId,
   editedData,
   onToggleInlineEdit,
@@ -81,6 +83,7 @@ export function AccountsTable({
         onToggleInlineEdit,
         onSaveInlineEdit,
         onCancelInlineEdit,
+        onSendPasswordResetEmail,
       }),
     [
       onViewAccount,
@@ -91,6 +94,7 @@ export function AccountsTable({
       onToggleInlineEdit,
       onSaveInlineEdit,
       onCancelInlineEdit,
+      onSendPasswordResetEmail,
     ]
   );
 

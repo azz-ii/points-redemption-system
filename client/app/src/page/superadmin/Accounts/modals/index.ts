@@ -6,4 +6,5 @@ export { BulkArchiveAccountModal } from "./BulkDeleteAccountModal";
 export { UnarchiveAccountModal } from "./UnarchiveAccountModal";
 export { ExportModal } from "./ExportModal";
 export { SetPointsModal } from "./SetPointsModal";
+export { SendPasswordResetEmailModal } from "./SendPasswordResetEmailModal";
 export type { Account } from "./types";

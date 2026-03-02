@@ -14,6 +14,7 @@ import {
   UnarchiveAccountModal,
   ExportModal,
   SetPointsModal,
+  SendPasswordResetEmailModal,
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
@@ -68,6 +69,8 @@ function Accounts() {
   const [showPointsHistory, setShowPointsHistory] = useState(false);
   const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Account | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [showSendResetEmailModal, setShowSendResetEmailModal] = useState(false);
+  const [sendResetEmailTarget, setSendResetEmailTarget] = useState<Account | null>(null);
 
   // Inline edit state
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
@@ -634,6 +637,10 @@ function Accounts() {
             setPointsHistoryTarget(account);
             setShowPointsHistory(true);
           }}
+          onSendPasswordResetEmail={(account) => {
+            setSendResetEmailTarget(account);
+            setShowSendResetEmailModal(true);
+          }}
           editingRowId={editingRowId}
           editedData={editedData}
           onToggleInlineEdit={handleToggleInlineEdit}
@@ -688,6 +695,10 @@ function Accounts() {
             setArchiveTarget(account);
             setShowArchiveModal(true);
             setError("");
+          }}
+          onSendPasswordResetEmail={(account) => {
+            setSendResetEmailTarget(account);
+            setShowSendResetEmailModal(true);
           }}
         />
       </div>
@@ -790,6 +801,15 @@ function Accounts() {
           entityName={pointsHistoryTarget.full_name || pointsHistoryTarget.username}
         />
       )}
+
+      <SendPasswordResetEmailModal
+        isOpen={showSendResetEmailModal}
+        onClose={() => {
+          setShowSendResetEmailModal(false);
+          setSendResetEmailTarget(null);
+        }}
+        account={sendResetEmailTarget}
+      />
 
     </>
   );

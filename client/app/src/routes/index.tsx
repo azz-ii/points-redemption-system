@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 // Login pages
 import Login from "../page/login/Login";
+import PasswordReset from "../page/login/PasswordReset";
 
 // Dashboard pages
 import SalesDashboard from "../page/sales_agent/Dashboard";
@@ -96,6 +97,9 @@ export function AppRoutes() {
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
       </Route>
+
+      {/* Password reset - accessible regardless of auth status */}
+      <Route path="/password-reset" element={<PasswordReset />} />
 
       {/* Protected routes - require authentication */}
       <Route element={<ProtectedRoute />}>

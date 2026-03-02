@@ -14,7 +14,7 @@ from rest_framework.pagination import PageNumberPagination
 import logging
 import io
 from datetime import datetime
-from utils.email_service import send_account_created_email
+from utils.email_service import send_account_created_email, send_password_reset_link_email
 from points_audit.utils import log_points_change, bulk_log_points_changes, generate_batch_id
 from points_audit.models import PointsAuditLog
 
@@ -254,6 +254,71 @@ class UserViewSet(viewsets.ModelViewSet):
             logger.error(f"Error unarchiving user {pk}: {str(e)}")
             return Response({
                 "error": "Failed to unarchive user",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'], url_path='send_password_reset_email')
+    def send_password_reset_email(self, request, pk=None):
+        """Send a password reset link email to the user (admin-initiated)"""
+        try:
+            user = self.get_object()
+            logger.info(f"send_password_reset_email called for user pk={pk}")
+
+            if not hasattr(user, 'profile'):
+                logger.warning(f"User {pk} has no profile")
+                return Response({
+                    "error": "User has no profile"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            email = user.profile.email
+            if not email:
+                logger.warning(f"User {pk} has no email address")
+                return Response({
+                    "error": "User has no email address configured"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Derive frontend URL from request origin or referer
+            origin = request.META.get('HTTP_ORIGIN', '')
+            referer = request.META.get('HTTP_REFERER', '')
+            if origin:
+                frontend_url = origin
+            elif referer:
+                from urllib.parse import urlparse
+                parsed = urlparse(referer)
+                frontend_url = f"{parsed.scheme}://{parsed.netloc}"
+            else:
+                frontend_url = 'http://localhost:5173'
+            
+            from urllib.parse import quote
+            reset_url = f"{frontend_url}/password-reset?email={quote(email)}"
+            logger.info(f"Constructed reset URL: {reset_url}")
+
+            full_name = user.profile.full_name or user.username
+            email_sent = send_password_reset_link_email(
+                email=email,
+                full_name=full_name,
+                username=user.username,
+                reset_url=reset_url,
+            )
+
+            if email_sent:
+                logger.info(f"✓ Password reset email sent to {email} for user {user.username}")
+                return Response({
+                    "message": f"Password reset email sent to {email}",
+                    "email_sent": True,
+                }, status=status.HTTP_200_OK)
+            else:
+                logger.error(f"✗ Failed to send password reset email to {email}")
+                return Response({
+                    "error": "Failed to send email. Please try again later.",
+                    "email_sent": False,
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Exception as e:
+            logger.error(f"Error sending password reset email for user {pk}: {str(e)}")
+            logger.exception("Full traceback:")
+            return Response({
+                "error": "Failed to send password reset email",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -422,6 +422,42 @@ def send_password_changed_email(email, full_name, username):
         return False
 
 
+def send_password_reset_link_email(email, full_name, username, reset_url):
+    """
+    Send password reset link email (triggered by admin)
+    
+    Args:
+        email (str): User's email address
+        full_name (str): User's full name
+        username (str): User's username
+        reset_url (str): The full URL to the password reset page
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        logger.debug(f"Preparing password reset link email for {username} ({email})")
+        logger.debug(f"Reset URL: {reset_url}")
+        
+        context = {
+            'full_name': full_name,
+            'username': username,
+            'reset_url': reset_url,
+        }
+        
+        return send_html_email(
+            subject=f"Password Reset - Points Redemption System",
+            template_name='emails/password_reset_link.html',
+            context=context,
+            recipient_list=[email]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending password reset link email to {email}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False
+
+
 def send_approved_request_notification_to_admin(request_obj, distributor, approved_by):
     """
     Send email notification to all superadmins when a request is approved

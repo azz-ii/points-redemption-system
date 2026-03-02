@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock } from "lucide-react"
+import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock, Mail } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
@@ -20,6 +20,7 @@ interface ColumnContext {
   onToggleInlineEdit?: (account: Account) => void
   onSaveInlineEdit?: (accountId: number) => void
   onCancelInlineEdit?: () => void
+  onSendPasswordResetEmail?: (account: Account) => void
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
@@ -336,6 +337,16 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
             disabled={isAnyRowEditing}
           >
             <Clock className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => context.onSendPasswordResetEmail?.(account)}
+            className="bg-amber-500 hover:bg-amber-600 text-white"
+            title="Send Password Reset Email"
+            disabled={isAnyRowEditing}
+          >
+            <Mail className="h-4 w-4" />
           </Button>
         </div>
       )
