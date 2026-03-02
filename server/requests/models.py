@@ -5,6 +5,7 @@ from distributers.models import Distributor
 from customers.models import Customer
 from items_catalogue.models import Product
 from teams.models import Team
+from points_audit.utils import log_points_change
 
 class PointsDeductionChoice(models.TextChoices):
     SELF = 'SELF', 'Self (Sales Agent)'
@@ -282,8 +283,19 @@ class RedemptionRequest(models.Model):
                 raise ValueError(
                     f'Insufficient points: Sales agent has {user_profile.points} points but needs {self.total_points} points'
                 )
+            previous_points = user_profile.points
             user_profile.points -= self.total_points
             user_profile.save()
+            log_points_change(
+                entity_type='USER',
+                entity_id=user_profile.user_id,
+                entity_name=user_profile.full_name or self.requested_by.username,
+                previous_points=previous_points,
+                new_points=user_profile.points,
+                action_type='REDEMPTION_DEDUCT',
+                changed_by=self.requested_by,
+                reason=f'Redemption request #{self.id}',
+            )
             
         elif self.points_deducted_from == 'DISTRIBUTOR':
             distributor = self.requested_for
@@ -293,8 +305,19 @@ class RedemptionRequest(models.Model):
                 raise ValueError(
                     f'Insufficient points: Distributor has {distributor.points} points but needs {self.total_points} points'
                 )
+            previous_points = distributor.points
             distributor.points -= self.total_points
             distributor.save()
+            log_points_change(
+                entity_type='DISTRIBUTOR',
+                entity_id=distributor.id,
+                entity_name=distributor.name,
+                previous_points=previous_points,
+                new_points=distributor.points,
+                action_type='REDEMPTION_DEDUCT',
+                changed_by=self.requested_by,
+                reason=f'Redemption request #{self.id}',
+            )
             
         elif self.points_deducted_from == 'CUSTOMER':
             customer = self.requested_for_customer
@@ -304,8 +327,19 @@ class RedemptionRequest(models.Model):
                 raise ValueError(
                     f'Insufficient points: Customer has {customer.points} points but needs {self.total_points} points'
                 )
+            previous_points = customer.points
             customer.points -= self.total_points
             customer.save()
+            log_points_change(
+                entity_type='CUSTOMER',
+                entity_id=customer.id,
+                entity_name=customer.name,
+                previous_points=previous_points,
+                new_points=customer.points,
+                action_type='REDEMPTION_DEDUCT',
+                changed_by=self.requested_by,
+                reason=f'Redemption request #{self.id}',
+            )
 
     def update_overall_status(self):
         """

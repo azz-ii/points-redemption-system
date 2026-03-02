@@ -24,6 +24,7 @@ from utils.email_service import (
 from users.models import UserProfile
 from distributers.models import Distributor
 from customers.models import Customer
+from points_audit.utils import log_points_change
 
 # Configure logger for request operations
 logger = logging.getLogger('email')
@@ -187,9 +188,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 
                 # Only deduct points and stock if fully approved
                 if redemption_request.is_fully_approved():
-                    success, error_response = self._deduct_points_and_stock(redemption_request)
-                    if not success:
-                        return error_response
+                    try:
+                        redemption_request.deduct_points()
+                    except ValueError as e:
+                        return Response(
+                            {'error': 'Insufficient points', 'detail': str(e)},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                     
                     # Update request status
                     redemption_request.status = 'APPROVED'
@@ -438,20 +443,53 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 # Refund points if the request was approved (points were deducted)
                 if redemption_request.points_deducted_from == 'SELF':
                     user_profile = redemption_request.requested_by.profile
+                    previous_points = user_profile.points
                     user_profile.points += redemption_request.total_points
                     user_profile.save()
+                    log_points_change(
+                        entity_type='USER',
+                        entity_id=user_profile.user_id,
+                        entity_name=user_profile.full_name or redemption_request.requested_by.username,
+                        previous_points=previous_points,
+                        new_points=user_profile.points,
+                        action_type='REDEMPTION_REFUND',
+                        changed_by=user,
+                        reason=f'Cancellation of request #{redemption_request.id}',
+                    )
                     logger.info(f"Refunded {redemption_request.total_points} points to sales agent {redemption_request.requested_by.username}")
                 elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
                     distributor = redemption_request.requested_for
                     if distributor:
+                        previous_points = distributor.points
                         distributor.points += redemption_request.total_points
                         distributor.save()
+                        log_points_change(
+                            entity_type='DISTRIBUTOR',
+                            entity_id=distributor.id,
+                            entity_name=distributor.name,
+                            previous_points=previous_points,
+                            new_points=distributor.points,
+                            action_type='REDEMPTION_REFUND',
+                            changed_by=user,
+                            reason=f'Cancellation of request #{redemption_request.id}',
+                        )
                         logger.info(f"Refunded {redemption_request.total_points} points to distributor {distributor.name}")
                 elif redemption_request.points_deducted_from == 'CUSTOMER':
                     customer = redemption_request.requested_for_customer
                     if customer:
+                        previous_points = customer.points
                         customer.points += redemption_request.total_points
                         customer.save()
+                        log_points_change(
+                            entity_type='CUSTOMER',
+                            entity_id=customer.id,
+                            entity_name=customer.name,
+                            previous_points=previous_points,
+                            new_points=customer.points,
+                            action_type='REDEMPTION_REFUND',
+                            changed_by=user,
+                            reason=f'Cancellation of request #{redemption_request.id}',
+                        )
                         logger.info(f"Refunded {redemption_request.total_points} points to customer {customer.name}")
                 
                 # Release committed stock (stock was not deducted at approval, only committed at creation)
@@ -570,74 +608,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
 
-    def _deduct_points_and_stock(self, redemption_request):
-        """
-        Helper method to deduct points when a request is fully approved.
-        Stock is committed at request creation and deducted at processing.
-        Should only be called within a transaction.
-        Returns (success, error_response) tuple.
-        """
-        # Check if sufficient points are available
-        if redemption_request.points_deducted_from == 'SELF':
-            user_profile = redemption_request.requested_by.profile
-            if user_profile.points < redemption_request.total_points:
-                return False, Response(
-                    {
-                        'error': 'Insufficient points',
-                        'detail': f'Sales agent has {user_profile.points} points but needs {redemption_request.total_points} points'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
-            distributor = redemption_request.requested_for
-            if not distributor:
-                return False, Response(
-                    {'error': 'No distributor assigned to this request'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            if distributor.points < redemption_request.total_points:
-                return False, Response(
-                    {
-                        'error': 'Insufficient points',
-                        'detail': f'Distributor has {distributor.points} points but needs {redemption_request.total_points} points'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        elif redemption_request.points_deducted_from == 'CUSTOMER':
-            customer = redemption_request.requested_for_customer
-            if not customer:
-                return False, Response(
-                    {'error': 'No customer assigned to this request'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            if customer.points < redemption_request.total_points:
-                return False, Response(
-                    {
-                        'error': 'Insufficient points',
-                        'detail': f'Customer has {customer.points} points but needs {redemption_request.total_points} points'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        # Note: Stock is already committed at request creation.
-        # Stock deduction happens when marketing processes the request.
-        
-        # Deduct points from the appropriate account
-        if redemption_request.points_deducted_from == 'SELF':
-            user_profile = redemption_request.requested_by.profile
-            user_profile.points -= redemption_request.total_points
-            user_profile.save()
-        elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
-            distributor = redemption_request.requested_for
-            distributor.points -= redemption_request.total_points
-            distributor.save()
-        elif redemption_request.points_deducted_from == 'CUSTOMER':
-            customer = redemption_request.requested_for_customer
-            customer.points -= redemption_request.total_points
-            customer.save()
-        
-        return True, None
-    
     def _uncommit_stock(self, redemption_request):
         """
         Helper method to release committed stock when a request is rejected/withdrawn/cancelled.
@@ -700,9 +670,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 
                 # If fully approved now, deduct points and stock
                 if redemption_request.is_fully_approved():
-                    success, error_response = self._deduct_points_and_stock(redemption_request)
-                    if not success:
-                        raise Exception(error_response.data.get('detail', 'Failed to deduct points/stock'))
+                    redemption_request.deduct_points()  # Raises ValueError if insufficient points
                     
                     redemption_request.reviewed_by = user
                     redemption_request.date_reviewed = timezone.now()
@@ -1057,7 +1025,7 @@ class DashboardRedemptionRequestsView(APIView):
 
 class ResetAllPointsView(APIView):
     """
-    API endpoint to reset all points to zero for both agents and distributors.
+    API endpoint to reset all points to zero for agents, distributors, and customers.
     Requires superadmin authentication and password verification.
     """
     permission_classes = [IsAuthenticated]
@@ -1098,12 +1066,15 @@ class ResetAllPointsView(APIView):
                 
                 # Reset all user profile points
                 UserProfile.objects.all().update(points=0)
+                
+                # Reset all customer points
+                Customer.objects.all().update(points=0)
             
             logger.info(f"Superadmin {request.user.username} reset all points to zero")
             
             return Response({
                 'success': True,
-                'message': 'All points have been reset to zero for both agents and distributors'
+                'message': 'All points have been reset to zero for agents, distributors, and customers'
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
