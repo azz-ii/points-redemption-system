@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
 import type { Product } from "./types";
 import {
   exportProducts,
@@ -8,20 +8,56 @@ import {
   type SortField,
   type SortDirection,
 } from "../utils/exportUtils";
+import { catalogueApi } from "@/lib/catalogue-api";
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  items: Product[];
+  searchQuery?: string;
+  showArchived?: boolean;
 }
 
-export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: ExportModalProps) {
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [fetchingProducts, setFetchingProducts] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [fetchedCount, setFetchedCount] = useState(0);
+
+  // Fetch all filtered products when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAllProducts = async () => {
+      try {
+        setFetchingProducts(true);
+        setError("");
+        setFetchedCount(0);
+        
+        // Fetch with filters
+        const products = await catalogueApi.getAllProducts({
+          search: searchQuery,
+          showArchived: showArchived,
+        });
+        
+        setAllProducts(products);
+        setTotalCount(products.length);
+        setFetchedCount(products.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch products");
+        setAllProducts([]);
+      } finally {
+        setFetchingProducts(false);
+      }
+    };
+
+    fetchAllProducts();
+  }, [isOpen, searchQuery, showArchived]);
 
   const handleColumnToggle = useCallback((key: ExportColumn["key"]) => {
     setColumns((prev) =>
@@ -46,7 +82,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
       return;
     }
 
-    if (items.length === 0) {
+    if (allProducts.length === 0) {
       setError("No products to export");
       return;
     }
@@ -58,7 +94,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `products_export_${timestamp}`;
       
-      exportProducts(items, {
+      exportProducts(allProducts, {
         columns,
         sortField,
         sortDirection,
@@ -73,16 +109,21 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
     } finally {
       setExporting(false);
     }
-  }, [items, columns, sortField, sortDirection, format, onClose]);
+  }, [allProducts, columns, sortField, sortDirection, format, onClose]);
 
   const handleClose = useCallback(() => {
     setError("");
+    setAllProducts([]);
+    setFetchedCount(0);
+    setTotalCount(0);
     onClose();
   }, [onClose]);
 
   if (!isOpen) return null;
 
   const enabledCount = columns.filter((col) => col.enabled).length;
+  const isLoading = fetchingProducts;
+  const canExport = !isLoading && allProducts.length > 0 && !exporting;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -99,13 +140,23 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
               Export Products
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {items.length} product{items.length !== 1 ? "s" : ""} will be exported
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Fetching products... {fetchedCount > 0 ? `${fetchedCount} found` : ""}
+                </span>
+              ) : (
+                <span>
+                  {allProducts.length} product{allProducts.length !== 1 ? "s" : ""} will be exported
+                </span>
+              )}
             </p>
           </div>
           <button
             onClick={handleClose}
             aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
+            disabled={isLoading || exporting}
           >
             <X className="h-5 w-5" />
           </button>
@@ -294,17 +345,32 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground"
+              disabled={isLoading || exporting}
+              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleExport}
-              disabled={exporting || enabledCount === 0}
+              disabled={!canExport || enabledCount === 0}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
             >
-              <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : exporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export {format.toUpperCase()}
+                </>
+              )}
             </button>
           </div>
         </div>

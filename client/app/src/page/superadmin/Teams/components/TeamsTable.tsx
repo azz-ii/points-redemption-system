@@ -57,6 +57,8 @@ export function TeamsTable({
       }}
       loadingMessage="Loading teams..."
       emptyMessage="No teams found"
+      pageSizeOptions={[15, 50, 100]}
+      initialSorting={[{ id: "id", desc: false }]}
     />
   );
 }

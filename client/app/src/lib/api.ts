@@ -610,3 +610,73 @@ export const requestHistoryApi = {
   },
 };
 
+// ============================================
+// Cart Persistence API
+// ============================================
+
+export interface BackendCartItem {
+  product_id: string;
+  quantity: number;
+  dynamic_quantity: number | null;
+  needs_driver: boolean;
+}
+
+/**
+ * Fetch the current user's saved cart from the server.
+ * Returns raw backend items; callers should cross-reference against the live
+ * catalogue to resolve full CartItem fields and drop any archived products.
+ */
+export async function getCart(): Promise<BackendCartItem[]> {
+  const response = await fetch(`${API_BASE_URL}/cart/`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch cart: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return (data.items ?? []) as BackendCartItem[];
+}
+
+/**
+ * Fully replace the server-side cart with the given items.
+ * Call this (debounced) on every cart mutation.
+ */
+export async function saveCart(items: import('@/components/cart-modal').CartItem[]): Promise<void> {
+  const payload: BackendCartItem[] = items.map(item => ({
+    product_id: item.id,
+    quantity: item.quantity,
+    dynamic_quantity: item.dynamic_quantity != null ? item.dynamic_quantity : null,
+    needs_driver: item.needs_driver ?? false,
+  }));
+
+  const response = await fetch(`${API_BASE_URL}/cart/`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ items: payload }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to save cart: ${response.status}`);
+  }
+}
+
+/**
+ * Clear the server-side cart. Call after a redemption request is successfully submitted.
+ */
+export async function clearCartBackend(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/cart/`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to clear cart: ${response.status}`);
+  }
+}
+

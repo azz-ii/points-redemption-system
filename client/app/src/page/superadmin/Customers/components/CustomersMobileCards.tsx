@@ -1,4 +1,5 @@
 import { Eye, Edit, ChevronLeft, ChevronRight, Archive, ArchiveRestore } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { Customer } from "../modals/types";
 
 interface CustomersMobileCardsProps {
@@ -46,9 +47,7 @@ export function CustomersMobileCards({
       {/* Cards */}
       <div className="space-y-3">
         {loading && customers.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            Loading customers...
-          </div>
+          <MobileCardsSkeleton count={6} showHeader={false} />
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 text-sm">{error}</p>

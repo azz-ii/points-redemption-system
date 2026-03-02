@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -40,13 +40,6 @@ export function Sidebar() {
   const [role, setRole] = useState<string | null>(() => {
     try {
       return localStorage.getItem("position");
-    } catch {
-      return null;
-    }
-  });
-  const [profilePicture, _setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
     } catch {
       return null;
     }
@@ -218,22 +211,7 @@ export function Sidebar() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -294,13 +272,6 @@ export function SidebarSuperAdmin() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
-    } catch {
-      return null;
-    }
-  });
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
@@ -366,7 +337,6 @@ export function SidebarSuperAdmin() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -469,22 +439,7 @@ export function SidebarSuperAdmin() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -545,13 +500,6 @@ export function SidebarSales() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
-    } catch {
-      return null;
-    }
-  });
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
@@ -585,7 +533,6 @@ export function SidebarSales() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -688,22 +635,7 @@ export function SidebarSales() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -764,13 +696,6 @@ export function SidebarApprover() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
-    } catch {
-      return null;
-    }
-  });
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
@@ -798,7 +723,6 @@ export function SidebarApprover() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -901,22 +825,7 @@ export function SidebarApprover() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -977,13 +886,6 @@ export function SidebarMarketing() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
-    } catch {
-      return null;
-    }
-  });
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
@@ -1017,7 +919,6 @@ export function SidebarMarketing() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -1120,22 +1021,7 @@ export function SidebarMarketing() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1196,13 +1082,6 @@ export function SidebarReception() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
-    } catch {
-      return null;
-    }
-  });
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
@@ -1230,7 +1109,6 @@ export function SidebarReception() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -1329,22 +1207,7 @@ export function SidebarReception() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1405,13 +1268,6 @@ export function SidebarExecutiveAssistant() {
       return null;
     }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem("profilePicture");
-    } catch {
-      return null;
-    }
-  });
   const [showAccountModal, setShowAccountModal] = useState(false);
 
   const navItems = [
@@ -1439,7 +1295,6 @@ export function SidebarExecutiveAssistant() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -1538,22 +1393,7 @@ export function SidebarExecutiveAssistant() {
                 : "bg-blue-500 ring-blue-400/30"
             }`}
           >
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden",
-                  );
-                }}
-              />
-            ) : null}
-            <span
-              className={`text-white font-semibold text-sm ${profilePicture ? "hidden" : ""}`}
-            >
+            <span className="text-white font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>

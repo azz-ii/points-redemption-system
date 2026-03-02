@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
-import { Eye, Ban, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Pencil, Archive, ChevronLeft, ChevronRight } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { Account } from "../modals";
 
 interface AccountsMobileCardsProps {
@@ -14,7 +15,6 @@ interface AccountsMobileCardsProps {
   setCurrentPage: Dispatch<SetStateAction<number>>;
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
-  onBanAccount: (account: Account) => void;
   onArchiveAccount: (account: Account) => void;
 }
 
@@ -29,7 +29,6 @@ export function AccountsMobileCards({
   setCurrentPage,
   onViewAccount,
   onEditAccount,
-  onBanAccount,
   onArchiveAccount,
 }: AccountsMobileCardsProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -41,9 +40,7 @@ export function AccountsMobileCards({
     <>
       <div className="space-y-3">
         {loading && accounts.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            Loading accounts...
-          </div>
+          <MobileCardsSkeleton count={6} showHeader={false} />
         ) : error ? (
           <div className="text-center py-8">
             <p className="text-red-500 mb-4">{error}</p>
@@ -83,7 +80,7 @@ export function AccountsMobileCards({
                     {account.email || "N/A"}
                   </p>
                   <p className="text-xs font-semibold mt-1">
-                    Points: {account.points?.toLocaleString() ?? 0}
+                    {account.uses_points && `Points: ${account.points?.toLocaleString() ?? 0}`}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">
@@ -107,11 +104,6 @@ export function AccountsMobileCards({
                       ) : (
                         <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
                           Inactive
-                        </span>
-                      )}
-                      {account.is_banned && (
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
-                          Banned
                         </span>
                       )}
                     </>
@@ -160,17 +152,6 @@ export function AccountsMobileCards({
                         >
                           <Pencil className="h-4 w-4" />
                           Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            onBanAccount(account);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-orange-500 hover:bg-accent"
-                          disabled={loading}
-                        >
-                          <Ban className="h-4 w-4" />
-                          Ban
                         </button>
                         <button
                           onClick={() => {

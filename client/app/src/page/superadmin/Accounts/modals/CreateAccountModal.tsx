@@ -2,7 +2,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
-import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 
 interface NewAccountData {
   username: string;
@@ -12,7 +11,6 @@ interface NewAccountData {
   position: string;
   points: number;
   is_activated: boolean;
-  is_banned: boolean;
 }
 
 interface CreateAccountModalProps extends ModalBaseProps {
@@ -22,10 +20,6 @@ interface CreateAccountModalProps extends ModalBaseProps {
   error: string;
   setError: Dispatch<SetStateAction<string>>;
   onSubmit: () => void;
-  profileImage: File | null;
-  profileImagePreview: string | null;
-  onImageSelect: (file: File | null) => void;
-  onImageRemove: () => void;
 }
 
 export function CreateAccountModal({
@@ -37,10 +31,6 @@ export function CreateAccountModal({
   error,
   setError,
   onSubmit,
-  profileImage: _profileImage,
-  profileImagePreview,
-  onImageSelect,
-  onImageRemove,
 }: CreateAccountModalProps) {
   if (!isOpen) return null;
 
@@ -174,19 +164,6 @@ export function CreateAccountModal({
             </div>
           </div>
 
-          {/* Profile Picture Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-              Profile Picture
-            </h3>
-            <ProfilePictureUpload
-              currentImage={null}
-              onImageSelect={onImageSelect}
-              onImageRemove={onImageRemove}
-              preview={profileImagePreview}
-            />
-          </div>
-
           {/* Role & Points Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -217,29 +194,31 @@ export function CreateAccountModal({
                 </select>
               </div>
 
-              <div>
-                <label
-                  htmlFor="points"
-                  className="text-xs text-gray-500 mb-2 block"
-                >
-                  Points *
-                </label>
-                <input
-                  id="points"
-                  type="number"
-                  min="0"
-                  value={newAccount.points}
-                  onChange={(e) =>
-                    setNewAccount({
-                      ...newAccount,
-                      points: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
-                  placeholder="Enter points"
-                  aria-required="true"
-                />
-              </div>
+              {newAccount.position === "Sales Agent" && (
+                <div>
+                  <label
+                    htmlFor="points"
+                    className="text-xs text-gray-500 mb-2 block"
+                  >
+                    Points *
+                  </label>
+                  <input
+                    id="points"
+                    type="number"
+                    min="0"
+                    value={newAccount.points}
+                    onChange={(e) =>
+                      setNewAccount({
+                        ...newAccount,
+                        points: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                    placeholder="Enter points"
+                    aria-required="true"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -11,8 +11,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from .models import Product
-from .serializers import ProductSerializer, ProductInventorySerializer
+from .models import Product, StockAuditLog, log_stock_change, bulk_log_stock_changes, generate_stock_batch_id
+from .serializers import ProductSerializer, ProductInventorySerializer, StockAuditLogSerializer
 
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -294,21 +294,63 @@ class InventoryDetailView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
     
     def patch(self, request, product_id):
-        """Update stock and/or reorder level for a product"""
+        """Adjust stock for a product. Accepts adjustment (delta) and reason.
+        Reason is required when decreasing stock."""
         try:
             product = Product.objects.get(id=product_id)
             
-            stock = request.data.get('stock')
+            adjustment = request.data.get('adjustment')
+            reason = request.data.get('reason', '').strip()
             
-            if stock is not None:
-                try:
-                    product.stock = int(stock)
-                except (ValueError, TypeError):
-                    return Response({
-                        "error": "Stock must be a valid integer"
-                    }, status=status.HTTP_400_BAD_REQUEST)
+            if adjustment is None:
+                return Response({
+                    "error": "Adjustment value is required"
+                }, status=status.HTTP_400_BAD_REQUEST)
             
-            product.save()
+            try:
+                adjustment = int(adjustment)
+            except (ValueError, TypeError):
+                return Response({
+                    "error": "Adjustment must be a valid integer"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if adjustment == 0:
+                return Response({
+                    "error": "Adjustment cannot be zero"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Require reason for decreases
+            if adjustment < 0 and not reason:
+                return Response({
+                    "error": "Reason is required when decreasing stock"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate stock won't go below committed_stock
+            new_stock = product.stock + adjustment
+            if new_stock < 0:
+                return Response({
+                    "error": "Stock cannot go below zero"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if new_stock < product.committed_stock:
+                return Response({
+                    "error": f"Stock cannot go below committed stock ({product.committed_stock})"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            previous_stock = product.stock
+            product.stock = new_stock
+            product.save(update_fields=['stock'])
+            
+            # Log the change
+            adj_type = StockAuditLog.AdjustmentType.ADD if adjustment > 0 else StockAuditLog.AdjustmentType.DECREASE
+            user = request.user if request.user.is_authenticated else None
+            log_stock_change(
+                product=product,
+                previous_stock=previous_stock,
+                new_stock=new_stock,
+                adjustment_type=adj_type,
+                changed_by=user,
+                reason=reason,
+            )
             
             serializer = ProductInventorySerializer(product)
             return Response({
@@ -440,10 +482,16 @@ class BulkUpdateStockView(APIView):
         
         # Check if this is a reset operation
         reset_to_zero = request.data.get('reset_to_zero', False)
+        reason = str(request.data.get('reason', '')).strip()
         
         if reset_to_zero:
             stock_delta = None
             operation = "reset"
+            # Reason is required for resets (they decrease stock)
+            if not reason:
+                return Response({
+                    "error": "Reason is required for stock reset"
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Get stock delta
             stock_delta = request.data.get('stock_delta')
@@ -458,6 +506,13 @@ class BulkUpdateStockView(APIView):
                 return Response({
                     "error": "Stock delta must be a valid integer"
                 }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Require reason for negative deltas
+            if stock_delta < 0 and not reason:
+                return Response({
+                    "error": "Reason is required when decreasing stock"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             operation = "update"
         
         try:
@@ -467,22 +522,43 @@ class BulkUpdateStockView(APIView):
             updated_count = 0
             failed_count = 0
             failed_items = []
+            audit_entries = []
+            batch_id = generate_stock_batch_id()
+            user = request.user if request.user.is_authenticated else None
             
             # Update each item's stock
             for item in tracked_items:
                 try:
+                    previous_stock = item.stock
                     if reset_to_zero:
                         item.stock = 0
+                        adj_type = StockAuditLog.AdjustmentType.BULK_RESET
                     else:
                         # Calculate new stock, ensure it doesn't go negative
                         new_stock = max(0, item.stock + stock_delta)
                         item.stock = new_stock
+                        adj_type = StockAuditLog.AdjustmentType.BULK_ADD if stock_delta > 0 else StockAuditLog.AdjustmentType.BULK_DECREASE
                     item.save(update_fields=['stock'])
                     updated_count += 1
+                    
+                    audit_entries.append({
+                        'product': item,
+                        'product_name': item.item_name,
+                        'previous_stock': previous_stock,
+                        'new_stock': item.stock,
+                        'adjustment_type': adj_type,
+                        'changed_by': user,
+                        'reason': reason,
+                        'batch_id': batch_id,
+                    })
                 except Exception as e:
                     logger.error(f"Failed to update stock for item {item.item_code}: {str(e)}")
                     failed_count += 1
                     failed_items.append(item.item_code)
+            
+            # Bulk log all audit entries
+            if audit_entries:
+                bulk_log_stock_changes(audit_entries)
             
             if reset_to_zero:
                 message = f"Successfully reset stock to 0 for {updated_count} item(s)"
@@ -539,27 +615,63 @@ class BatchUpdateStockView(APIView):
         
         updated_ids = []
         failed = []
+        audit_entries = []
+        batch_id = generate_stock_batch_id()
+        user = request.user if request.user.is_authenticated else None
         
         for update in updates:
             try:
                 item_id = update.get('id')
-                new_stock = update.get('stock')
+                adjustment = update.get('adjustment')
+                reason = str(update.get('reason', '')).strip()
                 
-                if item_id is None or new_stock is None:
-                    failed.append({'id': item_id, 'error': 'Missing id or stock'})
+                if item_id is None or adjustment is None:
+                    failed.append({'id': item_id, 'error': 'Missing id or adjustment'})
+                    continue
+                
+                adjustment = int(adjustment)
+                if adjustment == 0:
+                    continue  # Skip no-ops
+                
+                # Require reason for decreases
+                if adjustment < 0 and not reason:
+                    failed.append({'id': item_id, 'error': 'Reason is required when decreasing stock'})
                     continue
                 
                 product = Product.objects.get(id=item_id, has_stock=True)
-                product.stock = max(0, int(new_stock))
+                
+                new_stock = max(0, product.stock + adjustment)
+                if new_stock < product.committed_stock:
+                    failed.append({'id': item_id, 'error': f'Stock cannot go below committed stock ({product.committed_stock})'})
+                    continue
+                
+                previous_stock = product.stock
+                product.stock = new_stock
                 product.save(update_fields=['stock'])
                 updated_ids.append(item_id)
+                
+                adj_type = StockAuditLog.AdjustmentType.ADD if adjustment > 0 else StockAuditLog.AdjustmentType.DECREASE
+                audit_entries.append({
+                    'product': product,
+                    'product_name': product.item_name,
+                    'previous_stock': previous_stock,
+                    'new_stock': new_stock,
+                    'adjustment_type': adj_type,
+                    'changed_by': user,
+                    'reason': reason,
+                    'batch_id': batch_id,
+                })
             except Product.DoesNotExist:
                 failed.append({'id': item_id, 'error': 'Product not found or not inventory-tracked'})
             except (ValueError, TypeError) as e:
-                failed.append({'id': item_id, 'error': f'Invalid stock value: {str(e)}'})
+                failed.append({'id': item_id, 'error': f'Invalid adjustment value: {str(e)}'})
             except Exception as e:
                 logger.error(f"Failed to update stock for item {item_id}: {str(e)}")
                 failed.append({'id': item_id, 'error': str(e)})
+        
+        # Bulk log all audit entries
+        if audit_entries:
+            bulk_log_stock_changes(audit_entries)
         
         return Response({
             "message": f"Updated {len(updated_ids)} item(s)",
@@ -574,3 +686,40 @@ class BatchUpdateStockView(APIView):
 CatalogueItemListCreateView = ProductListCreateView
 CatalogueItemDetailView = ProductDetailView
 CatalogueItemUpdateView = ProductDetailView  # PUT to /catalogue/<id>/ now handles updates
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class StockAuditLogListView(APIView):
+    """List stock audit logs for a specific product with pagination."""
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    permission_classes = []
+
+    def get(self, request, product_id):
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        queryset = (
+            StockAuditLog.objects
+            .filter(product_id=product_id)
+            .select_related('changed_by')
+            .order_by('-created_at')
+        )
+
+        page = int(request.query_params.get('page', 1))
+        page_size = min(int(request.query_params.get('page_size', 15)), 100)
+
+        total_count = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        logs = queryset[start:end]
+
+        serializer = StockAuditLogSerializer(logs, many=True)
+        return Response({
+            'count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'results': serializer.data,
+        })

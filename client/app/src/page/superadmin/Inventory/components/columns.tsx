@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit, ArrowUpDown } from "lucide-react";
+import { Eye, Edit, ArrowUpDown, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { InventoryItem, StockStatus } from "../modals/types";
 import { getStatusColor, getLegendColor } from "../modals/types";
@@ -9,11 +9,18 @@ import { getStatusColor, getLegendColor } from "../modals/types";
 interface ColumnContext {
   onViewItem: (item: InventoryItem) => void;
   onEditItem: (item: InventoryItem) => void;
+  onViewHistory: (item: InventoryItem) => void;
 }
 
 export const createColumns = (
   context: ColumnContext
 ): ColumnDef<InventoryItem>[] => [
+  {
+    accessorKey: "id",
+    header: "ID",
+    enableResizing: false,
+    size: 60,
+  },
   {
     accessorKey: "item_name",
     header: ({ column }) => {
@@ -225,10 +232,20 @@ export const createColumns = (
           >
             <Edit className="h-4 w-4" />
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => context.onViewHistory(item)}
+            title="Stock History"
+          >
+            <Clock className="h-4 w-4" />
+          </Button>
         </div>
       );
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 120,
   },
 ];

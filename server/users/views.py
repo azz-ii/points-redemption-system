@@ -121,8 +121,6 @@ class UserViewSet(viewsets.ModelViewSet):
         """Create a new user with profile"""
         # Handle both JSON and multipart form data
         data = request.data.copy()
-        if 'profile_picture' in request.FILES:
-            data['profile_picture'] = request.FILES['profile_picture']
         
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
@@ -168,8 +166,6 @@ class UserViewSet(viewsets.ModelViewSet):
         
         # Handle both JSON and multipart form data
         data = request.data.copy()
-        if 'profile_picture' in request.FILES:
-            data['profile_picture'] = request.FILES['profile_picture']
         
         serializer = UserSerializer(instance, data=data, partial=partial)
         if serializer.is_valid():
@@ -369,8 +365,6 @@ class UserExportView(APIView):
     def _get_account_status(self, user):
         """Get display status of an account"""
         if hasattr(user, 'profile'):
-            if user.profile.is_banned:
-                return 'Banned'
             if user.profile.is_activated:
                 return 'Active'
         return 'Inactive'

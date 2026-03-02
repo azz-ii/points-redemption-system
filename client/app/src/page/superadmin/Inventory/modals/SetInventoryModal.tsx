@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import type { InventoryItem } from "./types";
 import { SetInventoryConfirmationModal } from "./SetInventoryConfirmationModal";
+import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
 
 interface PaginatedInventoryResponse {
   count: number;
@@ -15,9 +16,9 @@ interface SetInventoryModalProps {
   onClose: () => void;
   onFetchPage: (page: number, pageSize: number, searchQuery: string) => Promise<PaginatedInventoryResponse>;
   loading: boolean;
-  onSubmit: (updates: { id: number; stock: number }[]) => void;
-  onBulkSubmit?: (stockDelta: number, password: string) => void;
-  onResetAll?: (password: string) => void;
+  onSubmit: (updates: { id: number; adjustment: number; reason: string }[]) => void;
+  onBulkSubmit?: (stockDelta: number, password: string, reason: string) => void;
+  onResetAll?: (password: string, reason: string) => void;
 }
 
 export function SetInventoryModal({
@@ -30,6 +31,7 @@ export function SetInventoryModal({
   onResetAll,
 }: SetInventoryModalProps) {
   const [stockToAdd, setStockToAdd] = useState<Record<number, number>>({});
+  const [stockReasons, setStockReasons] = useState<Record<number, string>>({});
 
   // Data state
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -47,6 +49,7 @@ export function SetInventoryModal({
   // Advanced section state
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [bulkStockDelta, setBulkStockDelta] = useState<number>(0);
+  const [bulkReason, setBulkReason] = useState("");
   const [confirmBulkUpdate, setConfirmBulkUpdate] = useState(false);
 
   // Confirmation modal state
@@ -108,6 +111,7 @@ export function SetInventoryModal({
       setDebouncedSearchQuery("");
       // Reset stock changes
       setStockToAdd({});
+      setStockReasons({});
     }
   }, [isOpen]);
 
@@ -130,20 +134,30 @@ export function SetInventoryModal({
 
   const handleSubmit = () => {
     // Only submit updates for items with non-zero deltas
-    const updates: { id: number; stock: number }[] = [];
+    const updates: { id: number; adjustment: number; reason: string }[] = [];
+    let missingReasons: string[] = [];
     
     // Get all item IDs that have stock changes
     Object.entries(stockToAdd).forEach(([idStr, delta]) => {
       if (delta !== 0) {
         const id = parseInt(idStr, 10);
-        // Find the item to get current stock
-        const item = trackedItems.find(i => i.id === id);
-        if (item) {
-          const newStock = Math.max(0, item.stock + delta);
-          updates.push({ id, stock: newStock });
+        const reason = (stockReasons[id] || '').trim();
+        
+        // Require reason for decreases
+        if (delta < 0 && !reason) {
+          const item = trackedItems.find(i => i.id === id);
+          missingReasons.push(item?.item_name || `Item #${id}`);
+          return;
         }
+        
+        updates.push({ id, adjustment: delta, reason });
       }
     });
+    
+    if (missingReasons.length > 0) {
+      alert(`Reason is required when decreasing stock for: ${missingReasons.join(', ')}`);
+      return;
+    }
     
     if (updates.length === 0) {
       alert("No changes to save. Please add or subtract stock for at least one item.");
@@ -163,6 +177,11 @@ export function SetInventoryModal({
       alert("Stock delta cannot be 0.");
       return;
     }
+    // Require reason for decreases
+    if (bulkStockDelta < 0 && !bulkReason.trim()) {
+      alert("Reason is required when decreasing stock.");
+      return;
+    }
     // Open confirmation modal
     setConfirmationType("bulk");
     setShowConfirmModal(true);
@@ -170,6 +189,11 @@ export function SetInventoryModal({
 
   const handleResetAll = () => {
     if (!onResetAll) return;
+    // Reason is required for reset
+    if (!bulkReason.trim()) {
+      alert("Reason is required for resetting all stock.");
+      return;
+    }
     // Open confirmation modal
     setConfirmationType("reset");
     setShowConfirmModal(true);
@@ -177,9 +201,9 @@ export function SetInventoryModal({
 
   const handleConfirmAction = () => {
     if (confirmationType === "bulk") {
-      onBulkSubmit?.(bulkStockDelta, confirmPassword);
+      onBulkSubmit?.(bulkStockDelta, confirmPassword, bulkReason.trim());
     } else {
-      onResetAll?.(confirmPassword);
+      onResetAll?.(confirmPassword, bulkReason.trim());
     }
     setShowConfirmModal(false);
     setConfirmPassword("");
@@ -256,54 +280,83 @@ export function SetInventoryModal({
               </div>
 
               {/* Item Rows */}
+              {isLoadingPage && (
+                <PaginatedTableSkeleton
+                  columns={[
+                    { span: 2, widthPercent: 80 },
+                    { span: 4, widthPercent: 70 },
+                    { span: 2, widthPercent: 60 },
+                    { span: 2, widthPercent: 50 },
+                    { span: 2, widthPercent: 60 },
+                  ]}
+                  rowCount={10}
+                />
+              )}
               {!isLoadingPage && trackedItems.map((item) => {
                 const delta = stockToAdd[item.id] || 0;
                 const currentStock = item.stock || 0;
                 const newTotal = Math.max(0, currentStock + delta);
+                const reason = stockReasons[item.id] || '';
+                const needsReason = delta < 0;
                 
                 return (
-                  <div
-                    key={item.id}
-                    className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
-                  >
+                  <div key={item.id}>
                     <div
-                      className="col-span-2 text-sm font-medium text-foreground"
+                      className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
                     >
-                      {item.item_code}
+                      <div
+                        className="col-span-2 text-sm font-medium text-foreground"
+                      >
+                        {item.item_code}
+                      </div>
+                      <div
+                        className="col-span-4 text-sm text-muted-foreground"
+                      >
+                        {item.item_name}
+                      </div>
+                      <div
+                        className="col-span-2 text-sm text-muted-foreground"
+                      >
+                        {currentStock.toLocaleString()}
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          value={delta === 0 ? "" : delta}
+                          onChange={(e) =>
+                            handleStockChange(item.id, e.target.value)
+                          }
+                          placeholder="0"
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                          disabled={loading}
+                        />
+                      </div>
+                      <div
+                        className={`col-span-2 text-sm font-semibold ${
+                          delta > 0
+                            ? "text-green-500"
+                            : delta < 0
+                            ? "text-red-500"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {newTotal.toLocaleString()}
+                      </div>
                     </div>
-                    <div
-                      className="col-span-4 text-sm text-muted-foreground"
-                    >
-                      {item.item_name}
-                    </div>
-                    <div
-                      className="col-span-2 text-sm text-muted-foreground"
-                    >
-                      {currentStock.toLocaleString()}
-                    </div>
-                    <div className="col-span-2">
-                      <input
-                        type="number"
-                        value={delta === 0 ? "" : delta}
-                        onChange={(e) =>
-                          handleStockChange(item.id, e.target.value)
-                        }
-                        placeholder="0"
-                        className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
-                        disabled={loading}
-                      />
-                    </div>
-                    <div
-                      className={`col-span-2 text-sm font-semibold ${
-                        delta > 0
-                          ? "text-green-500"
-                          : delta < 0
-                          ? "text-red-500"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {newTotal.toLocaleString()}
-                    </div>
+                    {needsReason && (
+                      <div className="py-2 pl-4 border-b border-border bg-red-900/10">
+                        <input
+                          type="text"
+                          value={reason}
+                          onChange={(e) =>
+                            setStockReasons((prev) => ({ ...prev, [item.id]: e.target.value }))
+                          }
+                          placeholder="Reason for decrease (required)"
+                          className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-muted border-red-600/50 text-foreground placeholder-gray-500"
+                          disabled={loading}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -436,6 +489,28 @@ export function SetInventoryModal({
                     >
                       Positive numbers add stock, negative numbers subtract
                     </p>
+                  </div>
+
+                  {/* Reason Input (required for decreases and reset) */}
+                  <div className="mb-4">
+                    <label
+                      className="block text-sm font-medium mb-2 text-foreground"
+                    >
+                      Reason {(bulkStockDelta < 0 || true) && <span className="text-red-400">*</span>}
+                    </label>
+                    <input
+                      type="text"
+                      value={bulkReason}
+                      onChange={(e) => setBulkReason(e.target.value)}
+                      placeholder="Enter reason for stock change"
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                      disabled={loading}
+                    />
+                    {bulkStockDelta < 0 && !bulkReason.trim() && (
+                      <p className="text-xs mt-1 text-orange-400">
+                        Reason is required when decreasing stock
+                      </p>
+                    )}
                   </div>
 
                   {/* Confirmation Checkbox */}

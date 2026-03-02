@@ -24,6 +24,9 @@ interface DistributorsTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function DistributorsTable({
@@ -48,6 +51,9 @@ export function DistributorsTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: DistributorsTableProps) {
   const columns = createColumns({
     onView,
@@ -84,11 +90,15 @@ export function DistributorsTable({
       loadingMessage="Loading distributors..."
       emptyMessage="No distributors found"
       manualPagination={manualPagination}
+      initialSorting={[{ id: "id", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

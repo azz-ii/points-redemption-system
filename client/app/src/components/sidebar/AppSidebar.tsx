@@ -6,6 +6,7 @@ import {
   History,
   ChevronLeft,
   Menu,
+  X,
   User,
   Package,
   ClipboardList,
@@ -104,9 +105,11 @@ export function getMobileNavItemsForRole(position: string): NavItem[] {
 // ── Sidebar Component ──
 interface AppSidebarProps {
   items?: NavItem[];
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export function AppSidebar({ items }: AppSidebarProps) {
+export function AppSidebar({ items, mobileOpen, onMobileClose }: AppSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -119,9 +122,6 @@ export function AppSidebar({ items }: AppSidebarProps) {
   const [role, setRole] = useState<string | null>(() => {
     try { return localStorage.getItem("position"); } catch { return null; }
   });
-  const [profilePicture, setProfilePicture] = useState<string | null>(() => {
-    try { return localStorage.getItem("profilePicture"); } catch { return null; }
-  });
 
   // Fallback nav items from stored role
   const navItems = items ?? getNavItemsForRole(role ?? "admin");
@@ -130,7 +130,6 @@ export function AppSidebar({ items }: AppSidebarProps) {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "username") setUsername(e.newValue);
       if (e.key === "position") setRole(e.newValue);
-      if (e.key === "profilePicture") setProfilePicture(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -143,6 +142,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
   })();
 
   return (
+    <>
     <aside
       className={`hidden md:flex md:flex-col ${
         sidebarExpanded ? "md:w-60" : "md:w-20"
@@ -207,18 +207,7 @@ export function AppSidebar({ items }: AppSidebarProps) {
           } rounded-lg py-2 transition-colors hover:bg-sidebar-accent`}
         >
           <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-muted ring-border">
-            {profilePicture ? (
-              <img
-                src={profilePicture}
-                alt={`${username}'s profile`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                }}
-              />
-            ) : null}
-            <span className={`text-foreground font-semibold text-sm ${profilePicture ? "hidden" : ""}`}>
+            <span className="text-foreground font-semibold text-sm">
               {(username || "U").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -248,5 +237,109 @@ export function AppSidebar({ items }: AppSidebarProps) {
         onClose={() => setShowAccountModal(false)}
       />
     </aside>
+
+    {/* ── Mobile Drawer (superadmin only, toggled from DashboardLayout) ── */}
+    {mobileOpen !== undefined && (
+      <>
+        {/* Backdrop */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/50 md:hidden"
+            onClick={onMobileClose}
+          />
+        )}
+
+        {/* Slide-in drawer */}
+        <div
+          className={`fixed top-0 left-0 h-full z-50 w-64 bg-sidebar border-r border-sidebar-border flex flex-col py-4 px-3 justify-between md:hidden transition-transform duration-300 ease-in-out ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          {/* Top: Logo + Nav */}
+          <div className="space-y-4 overflow-y-auto">
+            {/* Logo + close button */}
+            <div className="flex items-center justify-between mb-2 px-2">
+              <img
+                src={oracleLogoMobile}
+                alt="Oracle Petroleum"
+                className="w-14 h-auto object-contain shrink-0"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="24"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="currentColor" font-size="10" font-family="sans-serif">ORACLE</text></svg>';
+                }}
+              />
+              <button
+                onClick={onMobileClose}
+                className="p-2 rounded-lg shrink-0 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+                title="Close menu"
+              >
+                <X className="h-5 w-5 shrink-0" />
+              </button>
+            </div>
+
+            {/* Navigation items */}
+            <nav className="space-y-1">
+              {navItems.map(({ id, label, icon: Icon, path }) => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    navigate(path);
+                    onMobileClose?.();
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
+                    currentPage === id
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
+                  }`}
+                  title={label}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="text-sm truncate">{label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Bottom: User Profile + Theme + Logout */}
+          <div className="space-y-3 border-t border-sidebar-border pt-3">
+            <button
+              onClick={() => {
+                setShowAccountModal(true);
+                onMobileClose?.();
+              }}
+              className="w-full flex items-center gap-3 px-2 rounded-lg py-2 transition-colors hover:bg-sidebar-accent"
+            >
+              <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-muted ring-border">
+                <span className="text-foreground font-semibold text-sm">
+                  {(username || "U").charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="text-left">
+                <p className="font-medium text-sm text-foreground">{username || "Guest"}</p>
+                <p className="text-xs text-muted-foreground">{role || "User"}</p>
+              </div>
+            </button>
+            <div className="flex items-center justify-between gap-2">
+              <ThemeToggle />
+              <Button
+                onClick={handleLogout}
+                variant="destructive"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 font-medium cursor-pointer"
+                title="Log Out"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span className="text-sm font-semibold">Log Out</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <ViewAccountModal
+          isOpen={showAccountModal}
+          onClose={() => setShowAccountModal(false)}
+        />
+      </>
+    )}
+    </>
   );
 }

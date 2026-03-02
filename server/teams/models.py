@@ -1,22 +1,12 @@
 from django.db import models
 from django.conf import settings
-from django.core.exceptions import ValidationError
 
 
 class Team(models.Model):
     """
-    Represents a team with one approver and multiple sales agents.
+    Represents a team with multiple sales agents.
     """
     name = models.CharField(max_length=255, unique=True, help_text='Team name')
-    approver = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='managed_teams',
-        limit_choices_to={'profile__position': 'Approver'},
-        help_text='Approver who manages this team'
-    )
     is_archived = models.BooleanField(default=False, help_text='Whether this team is archived')
     date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the team was archived')
     archived_by = models.ForeignKey(
@@ -37,14 +27,7 @@ class Team(models.Model):
         verbose_name_plural = 'Teams'
 
     def __str__(self):
-        approver_name = self.approver.profile.full_name if self.approver and hasattr(self.approver, 'profile') else 'No Approver'
-        return f"{self.name} (Approver: {approver_name})"
-
-    def clean(self):
-        """Validate that approver has Approver position"""
-        if self.approver and hasattr(self.approver, 'profile'):
-            if self.approver.profile.position != 'Approver':
-                raise ValidationError({'approver': 'Selected user must have Approver position.'})
+        return f"{self.name}"
 
     @property
     def member_count(self):

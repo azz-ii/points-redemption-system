@@ -50,6 +50,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
     ),
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 40,
   },
   {
     accessorKey: "id",
@@ -186,5 +188,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ]

@@ -16,7 +16,6 @@ from .serializers import (
     RemoveMemberSerializer
 )
 from utils.email_service import (
-    send_approver_assigned_to_team_email,
     send_agent_added_to_team_email
 )
 
@@ -74,9 +73,9 @@ class TeamViewSet(viewsets.ModelViewSet):
                 return Team.objects.filter(id=membership.team.id)
             return Team.objects.none()
         
-        # Approver - can see teams they manage
+        # Approver - can see all teams
         elif position == 'Approver':
-            return Team.objects.filter(approver=user)
+            return Team.objects.all()
         
         # Administrative support positions - global access
         elif position in ['Marketing', 'Reception', 'Executive Assistant']:
@@ -85,44 +84,6 @@ class TeamViewSet(viewsets.ModelViewSet):
         # Unspecified positions - no access
         else:
             return Team.objects.none()
-    
-    def perform_create(self, serializer):
-        """Create a new team and send email if approver is assigned"""
-        team = serializer.save()
-        
-        # Send email notification to approver if one was assigned
-        if team.approver:
-            logger.info(f"Team '{team.name}' created with approver {team.approver.username}, sending notification...")
-            email_sent = send_approver_assigned_to_team_email(
-                team=team,
-                approver=team.approver,
-                assigned_by=self.request.user
-            )
-            if email_sent:
-                logger.info(f"✓ Approver assignment email sent for team '{team.name}'")
-            else:
-                logger.warning(f"⚠ Failed to send approver assignment email for team '{team.name}'")
-    
-    def perform_update(self, serializer):
-        """Update team details and notify new approver if changed"""
-        # Get the old approver before saving
-        old_approver = serializer.instance.approver
-        
-        team = serializer.save()
-        
-        # Check if approver was changed (new approver assigned or changed to different person)
-        new_approver = team.approver
-        if new_approver and new_approver != old_approver:
-            logger.info(f"Team '{team.name}' approver changed to {new_approver.username}, sending notification...")
-            email_sent = send_approver_assigned_to_team_email(
-                team=team,
-                approver=new_approver,
-                assigned_by=self.request.user
-            )
-            if email_sent:
-                logger.info(f"✓ Approver assignment email sent for team '{team.name}'")
-            else:
-                logger.warning(f"⚠ Failed to send approver assignment email for team '{team.name}'")
     
     def destroy(self, request, *args, **kwargs):
         """Delete a team - prevent if it has members"""

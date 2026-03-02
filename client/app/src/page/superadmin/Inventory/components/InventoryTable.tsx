@@ -9,16 +9,21 @@ interface InventoryTableProps {
   error: string | null;
   onViewItem: (item: InventoryItem) => void;
   onEditItem: (item: InventoryItem) => void;
+  onViewHistory: (item: InventoryItem) => void;
   onRetry: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
+  onSetInventory?: () => void;
   manualPagination?: boolean;
   pageCount?: number;
   totalResults?: number;
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function InventoryTable({
@@ -27,24 +32,30 @@ export function InventoryTable({
   error,
   onViewItem,
   onEditItem,
+  onViewHistory,
   onRetry,
   onRefresh,
   refreshing,
   onExport,
+  onSetInventory,
   manualPagination,
   pageCount,
   totalResults,
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: InventoryTableProps) {
   const columns = useMemo(
     () =>
       createColumns({
         onViewItem,
         onEditItem,
+        onViewHistory,
       }),
-    [onViewItem, onEditItem]
+    [onViewItem, onEditItem, onViewHistory]
   );
 
   return (
@@ -57,15 +68,21 @@ export function InventoryTable({
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
+      onSetInventory={onSetInventory}
       searchPlaceholder="Filter by name, code, or legend..."
       loadingMessage="Loading inventory items..."
       emptyMessage="No inventory items found"
       manualPagination={manualPagination}
+      initialSorting={[{ id: "id", desc: false }]}
+      initialColumnVisibility={{ id: false }}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

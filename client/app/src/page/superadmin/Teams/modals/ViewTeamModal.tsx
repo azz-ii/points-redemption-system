@@ -4,6 +4,7 @@ import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, TeamDetail, SalesAgentOption } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { ModalSkeleton } from "@/components/shared/modal-skeleton";
 
 interface ViewTeamModalProps extends ModalBaseProps {
   team: { id: number } | null;
@@ -291,9 +292,13 @@ export function ViewTeamModal({
         {/* Content */}
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
-            <div className="text-center text-gray-500 py-8">
-              Loading team details...
-            </div>
+            <ModalSkeleton
+              showFormSection={true}
+              formFieldCount={2}
+              formColumns={2}
+              showMembersSection={true}
+              memberRowCount={5}
+            />
           ) : teamDetails ? (
             <>
               {/* Team Details Section */}
@@ -301,21 +306,12 @@ export function ViewTeamModal({
                 <h3 className="text-sm font-semibold text-gray-500">
                   Team Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Team Name</label>
                     <input
                       type="text"
                       value={teamDetails.name}
-                      disabled
-                      className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Approver</label>
-                    <input
-                      type="text"
-                      value={teamDetails.approver_details ? teamDetails.approver_details.full_name : "No Approver"}
                       disabled
                       className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                     />

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Trash2, X, ChevronDown, Info, Search } from "lucide-react";
 import { distributorsApi } from "@/lib/distributors-api";
 import { customersApi } from "@/lib/customers-api";
-import { redemptionRequestsApi, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
+import { redemptionRequestsApi, clearCartBackend, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
 import { toast } from "sonner";
 
 export interface CartItem {
@@ -267,6 +267,10 @@ export default function CartModal({
       .then((response) => {
         // Silently succeed - user already sees success toast
         console.log("Redemption request created:", response);
+        // Clear the persisted server-side cart after the request is confirmed
+        clearCartBackend().catch(err =>
+          console.warn("Failed to clear backend cart after submit:", err)
+        );
       })
       .catch((error: unknown) => {
         console.error("Error submitting redemption request:", error);
@@ -598,34 +602,57 @@ export default function CartModal({
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">Recipient Details</h3>
                   
-                  {/* Entity Type Toggle */}
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                        entityType === 'DISTRIBUTOR'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground hover:bg-accent'
-                      }`}
-                    >
-                      Distributor
-                    </button>
-                    <button
-                      onClick={() => handleEntityTypeChange('CUSTOMER')}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                        entityType === 'CUSTOMER'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground hover:bg-accent'
-                      }`}
-                    >
-                      Customer
-                    </button>
-                  </div>
-                  
-                  <div className="mt-4 space-y-4">
-                    {entityType === 'DISTRIBUTOR' ? (
-                      /* Distributor Searchable Combobox */
+                  {loadingEntities ? (
+                    /* Skeleton Loading */
+                    <div className="mt-4 space-y-4">
+                      {/* Toggle buttons skeleton */}
+                      <div className="flex gap-2">
+                        <div className="flex-1 h-10 bg-muted animate-pulse rounded-lg" />
+                        <div className="flex-1 h-10 bg-muted animate-pulse rounded-lg" />
+                      </div>
+                      
+                      {/* Input skeleton */}
                       <div className="space-y-1">
+                        <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                        <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
+                      </div>
+                      
+                      {/* Textarea skeleton */}
+                      <div className="space-y-1">
+                        <div className="h-4 w-40 bg-muted animate-pulse rounded" />
+                        <div className="h-24 w-full bg-muted animate-pulse rounded-md" />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Entity Type Toggle */}
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
+                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                            entityType === 'DISTRIBUTOR'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-foreground hover:bg-accent'
+                          }`}
+                        >
+                          Distributor
+                        </button>
+                        <button
+                          onClick={() => handleEntityTypeChange('CUSTOMER')}
+                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                            entityType === 'CUSTOMER'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-foreground hover:bg-accent'
+                          }`}
+                        >
+                          Customer
+                        </button>
+                      </div>
+                      
+                      <div className="mt-4 space-y-4">
+                        {entityType === 'DISTRIBUTOR' ? (
+                          /* Distributor Searchable Combobox */
+                          <div className="space-y-1">
                         <label
                           className={`text-sm text-foreground`}
                         >
@@ -761,6 +788,8 @@ export default function CartModal({
                       />
                     </div>
                   </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -1113,40 +1142,63 @@ export default function CartModal({
                 <div className="p-3">
                   <h3 className="text-sm font-semibold">Recipient Details</h3>
                   
-                  {/* Entity Type Toggle */}
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
-                      className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                        entityType === 'DISTRIBUTOR'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground hover:bg-accent'
-                      }`}
-                    >
-                      Distributor
-                    </button>
-                    <button
-                      onClick={() => handleEntityTypeChange('CUSTOMER')}
-                      className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                        entityType === 'CUSTOMER'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground hover:bg-accent'
-                      }`}
-                    >
-                      Customer
-                    </button>
-                  </div>
-                  
-                  <div className="mt-3 space-y-3">
-                    {entityType === 'DISTRIBUTOR' ? (
-                      /* Distributor Searchable Combobox */
+                  {loadingEntities ? (
+                    /* Skeleton Loading */
+                    <div className="mt-3 space-y-3">
+                      {/* Toggle buttons skeleton */}
+                      <div className="flex gap-2">
+                        <div className="flex-1 h-9 bg-muted animate-pulse rounded-lg" />
+                        <div className="flex-1 h-9 bg-muted animate-pulse rounded-lg" />
+                      </div>
+                      
+                      {/* Input skeleton */}
                       <div className="space-y-1">
-                        <label
-                          className={`text-xs text-foreground`}
+                        <div className="h-3 w-28 bg-muted animate-pulse rounded" />
+                        <div className="h-9 w-full bg-muted animate-pulse rounded-md" />
+                      </div>
+                      
+                      {/* Textarea skeleton */}
+                      <div className="space-y-1">
+                        <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+                        <div className="h-20 w-full bg-muted animate-pulse rounded-md" />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Entity Type Toggle */}
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
+                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                            entityType === 'DISTRIBUTOR'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-foreground hover:bg-accent'
+                          }`}
                         >
-                          Distributor Name
-                        </label>
-                        <div className="relative" ref={distributorDropdownRef}>
+                          Distributor
+                        </button>
+                        <button
+                          onClick={() => handleEntityTypeChange('CUSTOMER')}
+                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                            entityType === 'CUSTOMER'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-foreground hover:bg-accent'
+                          }`}
+                        >
+                          Customer
+                        </button>
+                      </div>
+                      
+                      <div className="mt-3 space-y-3">
+                        {entityType === 'DISTRIBUTOR' ? (
+                          /* Distributor Searchable Combobox */
+                          <div className="space-y-1">
+                            <label
+                              className={`text-xs text-foreground`}
+                            >
+                              Distributor Name
+                            </label>
+                            <div className="relative" ref={distributorDropdownRef}>
                           <div className="relative">
                             <input
                               type="text"
@@ -1288,6 +1340,8 @@ export default function CartModal({
                       />
                     </div>
                   </div>
+                    </>
+                  )}
                 </div>
               </div>
 

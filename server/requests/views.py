@@ -63,38 +63,11 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             # If not in a team, only see own requests
             return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__product')
         
-        # Approver - team-scoped access
+        # Approver - see all requests that require sales approval
         elif profile.position == 'Approver':
-            # Approvers see only their managed team's requests
-            managed_teams = Team.objects.filter(approver=user)
-            logger.info(f"🔍 [APPROVER DEBUG] User: {user.id} ({user.username})")
-            logger.info(f"🔍 [APPROVER DEBUG] Managed teams count: {managed_teams.count()}")
-            logger.info(f"🔍 [APPROVER DEBUG] Managed team IDs: {list(managed_teams.values_list('id', 'name'))}")
-            
-            if managed_teams.exists():
-                from django.db.models import Q
-                from teams.models import TeamMembership
-                
-                # Get all users in the managed teams
-                team_member_ids = TeamMembership.objects.filter(
-                    team__in=managed_teams
-                ).values_list('user_id', flat=True)
-                logger.info(f"🔍 [APPROVER DEBUG] Team member IDs: {list(team_member_ids)}")
-                
-                # Filter by team field OR by requesting user being in managed teams (fallback for NULL team)
-                # Only show requests that require sales approval
-                queryset = RedemptionRequest.objects.filter(
-                    Q(team__in=managed_teams) | Q(team__isnull=True, requested_by_id__in=team_member_ids),
-                    requires_sales_approval=True
-                ).distinct().prefetch_related('items', 'items__product')
-                
-                logger.info(f"🔍 [APPROVER DEBUG] Total requests found: {queryset.count()}")
-                logger.info(f"🔍 [APPROVER DEBUG] Request details: {list(queryset.values('id', 'team_id', 'requested_by_id', 'status'))}")
-                
-                return queryset
-            # If not managing any team, see no requests
-            logger.warning(f"⚠️ [APPROVER DEBUG] User {user.username} is not managing any teams!")
-            return RedemptionRequest.objects.none()
+            return RedemptionRequest.objects.filter(
+                requires_sales_approval=True
+            ).distinct().prefetch_related('items', 'items__product')
         
         # Marketing - see only APPROVED requests with items assigned to them
         elif profile.position == 'Marketing':
@@ -151,38 +124,24 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         logger.info(f"✅ [CREATE DEBUG] Request #{redemption_request.id} created with team_id={redemption_request.team_id}")
         
-        # Get the team approver for notification
-        if membership.team.approver:
-            # Send notification to the team's approver
-            team_approver = membership.team.approver
-            if hasattr(team_approver, 'profile') and team_approver.profile.email:
-                approver_email = team_approver.profile.email
-                logger.info(f"New request #{redemption_request.id} created, sending notification to team approver...")
-                entity = redemption_request.get_requested_for_entity()
-                email_sent = send_request_submitted_email(
-                    request_obj=redemption_request,
-                    distributor=entity,
-                    approvers_emails=[approver_email]
-                )
-                
-                if email_sent:
-                    logger.info(f"✓ Submission notification sent to team approver for request #{redemption_request.id}")
-                else:
-                    logger.warning(f"⚠ Failed to send notification to team approver for request #{redemption_request.id}")
+        # Notify all approvers of the new request
+        approvers = UserProfile.objects.filter(position='Approver').exclude(email__isnull=True).exclude(email='')
+        approvers_emails = list(approvers.values_list('email', flat=True))
+
+        if approvers_emails:
+            logger.info(f"New request #{redemption_request.id} created, sending notification to approvers...")
+            entity = redemption_request.get_requested_for_entity()
+            email_sent = send_request_submitted_email(
+                request_obj=redemption_request,
+                distributor=entity,
+                approvers_emails=approvers_emails
+            )
+            if email_sent:
+                logger.info(f"✓ Submission notification sent to approvers for request #{redemption_request.id}")
             else:
-                logger.warning(f"⚠ Team approver has no email for request #{redemption_request.id}")
+                logger.warning(f"⚠ Failed to send notification to approvers for request #{redemption_request.id}")
         else:
-            # Fallback: notify all non-Sales Agent users if no team approver
-            logger.warning(f"⚠ No team approver found, falling back to all approvers for request #{redemption_request.id}")
-            approvers = UserProfile.objects.exclude(position='Sales Agent').exclude(email__isnull=True).exclude(email='')
-            approvers_emails = list(approvers.values_list('email', flat=True))
-            
-            if approvers_emails:
-                send_request_submitted_email(
-                    request_obj=redemption_request,
-                    distributor=redemption_request.get_requested_for_entity(),
-                    approvers_emails=approvers_emails
-                )
+            logger.warning(f"⚠ No approvers with emails found for request #{redemption_request.id}")
         
         # Return the created request with full details
         response_serializer = RedemptionRequestSerializer(redemption_request)
@@ -195,9 +154,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         For dual approval requests, this works as the sales approval track.
         For sales-only requests, this fully approves and deducts points/stock.
         """
-        from teams.models import Team
-        
         redemption_request = self.get_object()
+        user = request.user
         
         # Check if this request requires sales approval
         if not redemption_request.requires_sales_approval:
@@ -205,26 +163,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 {'error': 'This request does not require sales approval and has been auto-approved'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Check if approver has permission for this request's team
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Only Approvers need team-based permission check
-        if profile and profile.position == 'Approver':
-            # Check if request belongs to a team managed by this approver
-            if not redemption_request.team:
-                return Response(
-                    {'error': 'Permission denied: Request does not belong to any team'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Check if this approver manages the request's team
-            if redemption_request.team.approver != user:
-                return Response(
-                    {'error': 'Permission denied: You can only approve requests from your team'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
         
         if redemption_request.status != 'PENDING':
             return Response(
@@ -311,9 +249,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         Reject a redemption request (legacy endpoint).
         For dual approval requests, this works as the sales rejection track.
         """
-        from teams.models import Team
-        
         redemption_request = self.get_object()
+        user = request.user
         
         # Check if this request requires sales approval
         if not redemption_request.requires_sales_approval:
@@ -321,26 +258,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 {'error': 'This request does not require sales approval and has been auto-approved'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Check if approver has permission for this request's team
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Only Approvers need team-based permission check
-        if profile and profile.position == 'Approver':
-            # Check if request belongs to a team managed by this approver
-            if not redemption_request.team:
-                return Response(
-                    {'error': 'Permission denied: Request does not belong to any team'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Check if this approver manages the request's team
-            if redemption_request.team.approver != user:
-                return Response(
-                    {'error': 'Permission denied: You can only reject requests from your team'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
         
         if redemption_request.status != 'PENDING':
             return Response(
@@ -626,21 +543,18 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         logger.info(f"Request #{redemption_request.id} withdrawn by sales agent {user.username}")
         
-        # Send withdrawal email notification to the team approver
+        # Send withdrawal email notification to approvers
         from utils.email_service import send_request_withdrawn_email, send_request_withdrawn_confirmation_email
         
-        if redemption_request.team and redemption_request.team.approver:
-            approver = redemption_request.team.approver
-            if hasattr(approver, 'profile') and approver.profile.email:
-                email_sent = send_request_withdrawn_email(
-                    request_obj=redemption_request,
-                    distributor=redemption_request.get_requested_for_entity(),
-                    withdrawn_by=user
-                )
-                if email_sent:
-                    logger.info(f"Withdrawal notification sent to approver {approver.username}")
-                else:
-                    logger.warning(f"Failed to send withdrawal notification to approver {approver.username}")
+        email_sent = send_request_withdrawn_email(
+            request_obj=redemption_request,
+            distributor=redemption_request.get_requested_for_entity(),
+            withdrawn_by=user
+        )
+        if email_sent:
+            logger.info(f"Withdrawal notification sent to approvers for request #{redemption_request.id}")
+        else:
+            logger.warning(f"Failed to send withdrawal notification for request #{redemption_request.id}")
         
         # Send confirmation email to the sales agent
         confirmation_sent = send_request_withdrawn_confirmation_email(

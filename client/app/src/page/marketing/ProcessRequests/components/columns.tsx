@@ -38,6 +38,8 @@ export const createColumns = (
     ),
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 40,
   },
   {
     accessorKey: "requestId",
@@ -266,5 +268,7 @@ export const createColumns = (
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ];

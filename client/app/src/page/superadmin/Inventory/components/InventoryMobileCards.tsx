@@ -1,4 +1,5 @@
 import { Eye, Edit } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { InventoryItem } from "../modals/types";
 import { getStatusColor, getLegendColor } from "../modals/types";
 
@@ -22,14 +23,7 @@ export function InventoryMobileCards({
   searchQuery,
 }: InventoryMobileCardsProps) {
   if (loading) {
-    return (
-      <div className="text-center py-32">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-500 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
+    return <MobileCardsSkeleton count={6} showHeader={false} />;
   }
 
   if (error) {

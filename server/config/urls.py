@@ -38,7 +38,7 @@ from views import (
     ChangePasswordView,
     ActivateAccountView,
 )
-from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView
+from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView, StockAuditLogListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -60,6 +60,7 @@ urlpatterns = [
     path('api/inventory/', InventoryListView.as_view(), name='inventory_list'),
     path('api/inventory/bulk_update_stock/', BulkUpdateStockView.as_view(), name='bulk_update_stock'),
     path('api/inventory/batch_update_stock/', BatchUpdateStockView.as_view(), name='batch_update_stock'),
+    path('api/inventory/<int:product_id>/stock-audit/', StockAuditLogListView.as_view(), name='stock_audit_log'),
     path('api/inventory/<int:product_id>/', InventoryDetailView.as_view(), name='inventory_detail'),
     # Distributor Management API
     path('', include('distributers.urls')),
@@ -73,6 +74,8 @@ urlpatterns = [
     path('api/', include('teams.urls')),
     # Points Audit Log API
     path('api/points-audit/', include('points_audit.urls')),
+    # Cart API
+    path('api/cart/', include('cart.urls')),
 ]
 
 # Serve static and media files in development

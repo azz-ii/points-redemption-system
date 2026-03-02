@@ -10,11 +10,9 @@ interface AccountsTableProps {
   onRetry?: () => void;
   onViewAccount: (account: Account) => void;
   onEditAccount: (account: Account) => void;
-  onBanAccount: (account: Account) => void;
   onArchiveAccount: (account: Account) => void;
   onUnarchiveAccount: (account: Account) => void;
   onArchiveSelected?: (accounts: Account[]) => void;
-  onBanSelected?: (accounts: Account[]) => void;
   onCreateNew?: () => void;
   onSetPoints?: () => void;
   onRefresh?: () => void;
@@ -34,6 +32,9 @@ interface AccountsTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function AccountsTable({
@@ -43,11 +44,9 @@ export function AccountsTable({
   onRetry,
   onViewAccount,
   onEditAccount,
-  onBanAccount,
   onArchiveAccount,
   onUnarchiveAccount,
   onArchiveSelected,
-  onBanSelected,
   onCreateNew,
   onSetPoints,
   onRefresh,
@@ -67,13 +66,15 @@ export function AccountsTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: AccountsTableProps) {
   const columns = useMemo(
     () =>
       createColumns({
         onViewAccount,
         onEditAccount,
-        onBanAccount,
         onArchiveAccount,
         onUnarchiveAccount,
         onViewPointsHistory,
@@ -84,7 +85,6 @@ export function AccountsTable({
     [
       onViewAccount,
       onEditAccount,
-      onBanAccount,
       onArchiveAccount,
       onUnarchiveAccount,
       onViewPointsHistory,
@@ -102,7 +102,6 @@ export function AccountsTable({
       error={error}
       onRetry={onRetry}
       onDeleteSelected={onArchiveSelected}
-      onBanSelected={onBanSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add User"
       createButtonIcon="user"
@@ -115,7 +114,7 @@ export function AccountsTable({
         const s = String(filterValue).toLowerCase()
         return (
           String(row.getValue("username") || "").toLowerCase().includes(s) ||
-          String(row.getValue("email") || "").toLowerCase().includes(s) ||
+          String(row.original.email || "").toLowerCase().includes(s) ||
           String(row.getValue("full_name") || "").toLowerCase().includes(s)
         )
       }}
@@ -132,6 +131,9 @@ export function AccountsTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

@@ -9,6 +9,7 @@ export interface Account {
   email: string;
   position: string;
   points: number;
+  uses_points: boolean;
   is_activated: boolean;
   is_active?: boolean;
   is_banned: boolean;
@@ -16,7 +17,6 @@ export interface Account {
   date_archived?: string | null;
   archived_by?: number | null;
   archived_by_username?: string | null;
-  profile_picture?: string | null;
 }
 
 export interface PaginatedAccountsResponse {
@@ -87,7 +87,7 @@ export const usersApi = {
     // Handle both array and paginated response formats
     return Array.isArray(data) ? data : (data.results || []);
   },
-  getAllAccounts: async (): Promise<Account[]> => {
+  getAllAccounts: async (filters?: { search?: string; showArchived?: boolean; position?: string }): Promise<Account[]> => {
     // Fetch all accounts by requesting maximum page size and iterating through pages
     let allAccounts: Account[] = [];
     let page = 1;
@@ -97,6 +97,17 @@ export const usersApi = {
       const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
+      
+      // Apply filters if provided
+      if (filters?.search) {
+        url.searchParams.append('search', filters.search);
+      }
+      if (filters?.showArchived !== undefined) {
+        url.searchParams.append('show_archived', filters.showArchived.toString());
+      }
+      if (filters?.position) {
+        url.searchParams.append('position', filters.position);
+      }
       
       const response = await fetch(url.toString(), {
         credentials: 'include',

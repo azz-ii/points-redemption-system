@@ -7,7 +7,6 @@ interface CustomersTableProps {
   loading: boolean;
   error?: string | null;
   onRetry?: () => void;
-  onView: (customer: Customer) => void;
   onEdit: (customer: Customer) => void;
   onArchive: (customer: Customer) => void;
   onUnarchive: (customer: Customer) => void;
@@ -24,6 +23,9 @@ interface CustomersTableProps {
   currentPage?: number;
   onPageChange?: (pageIndex: number) => void;
   onSearch?: (query: string) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function CustomersTable({
@@ -31,7 +33,6 @@ export function CustomersTable({
   loading,
   error,
   onRetry,
-  onView,
   onEdit,
   onArchive,
   onUnarchive,
@@ -48,9 +49,11 @@ export function CustomersTable({
   currentPage,
   onPageChange,
   onSearch,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
 }: CustomersTableProps) {
   const columns = createColumns({
-    onView,
     onEdit,
     onArchive,
     onUnarchive,
@@ -72,23 +75,27 @@ export function CustomersTable({
       refreshing={refreshing}
       onExport={onExport}
       onSetPoints={onSetPoints}
-      searchPlaceholder="Filter by name, email, or location..."
+      searchPlaceholder="Filter by name, brand, or sales channel..."
       globalFilterFn={(row, _columnId, filterValue) => {
         const s = String(filterValue).toLowerCase()
         return (
           String(row.getValue("name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("contact_email") || "").toLowerCase().includes(s) ||
-          String(row.getValue("location") || "").toLowerCase().includes(s)
+          String(row.getValue("brand") || "").toLowerCase().includes(s) ||
+          String(row.getValue("sales_channel") || "").toLowerCase().includes(s)
         )
       }}
       loadingMessage="Loading customers..."
       emptyMessage="No customers found"
       manualPagination={manualPagination}
+      initialSorting={[{ id: "id", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={onPageSizeChange}
     />
   );
 }

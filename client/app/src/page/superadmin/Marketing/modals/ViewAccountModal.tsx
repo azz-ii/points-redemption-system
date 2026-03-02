@@ -3,6 +3,7 @@ import { X, Package, Loader2 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import type { Account, ModalBaseProps, LegendAssignment } from "./types";
 import { LEGEND_OPTIONS } from "./types";
+import { FormSkeleton } from "@/components/shared/form-skeleton";
 
 interface ViewAccountModalProps extends ModalBaseProps {
   account: Account | null;
@@ -133,8 +134,13 @@ export function ViewAccountModal({
             </h3>
 
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div className="h-6 w-24 rounded-full bg-muted animate-pulse" />
+                    <div className="h-4 w-16 rounded bg-muted animate-pulse" />
+                  </div>
+                ))}
               </div>
             ) : assignments.length > 0 ? (
               <div className="space-y-3">

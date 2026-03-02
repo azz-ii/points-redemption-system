@@ -1,9 +1,7 @@
 export { ViewAccountModal } from "./ViewAccountModal";
 export { CreateAccountModal } from "./CreateAccountModal";
 export { EditAccountModal } from "./EditAccountModal";
-export { BanAccountModal } from "./BanAccountModal";
 export { ArchiveAccountModal } from "./DeleteAccountModal";
-export { BulkBanAccountModal } from "./BulkBanAccountModal";
 export { BulkArchiveAccountModal } from "./BulkDeleteAccountModal";
 export { UnarchiveAccountModal } from "./UnarchiveAccountModal";
 export { ExportModal } from "./ExportModal";

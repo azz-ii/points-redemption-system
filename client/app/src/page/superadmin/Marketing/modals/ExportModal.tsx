@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
-import type { MarketingUser } from "../components/types";
+import { useState, useCallback, useEffect } from "react";
+import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
+import type { MarketingUser, LegendAssignment } from "../components/types";
 import {
   exportMarketingUsers,
   DEFAULT_EXPORT_COLUMNS,
@@ -8,20 +8,81 @@ import {
   type SortField,
   type SortDirection,
 } from "../utils/exportUtils";
+import { usersApi } from "@/lib/users-api";
+import { API_URL } from "@/lib/config";
 
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  users: MarketingUser[];
+  searchQuery?: string;
 }
 
-export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) {
+  const [fetchingUsers, setFetchingUsers] = useState(false);
+  const [allUsers, setAllUsers] = useState<MarketingUser[]>([]);
+  const [fetchedCount, setFetchedCount] = useState(0);
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+
+  // Fetch all filtered users when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAllUsers = async () => {
+      setFetchingUsers(true);
+      setError("");
+      try {
+        // Fetch all Marketing/Admin users with filters
+        const users = await usersApi.getAllAccounts({
+          search: searchQuery,
+          position: 'Marketing,Admin',
+        });
+
+        // Fetch legend assignments
+        const assignmentsResponse = await fetch(
+          `${API_URL}/catalogue/bulk-assign-marketing/`,
+          { credentials: 'include' }
+        );
+
+        let assignmentsByUser: Record<number, LegendAssignment[]> = {};
+        if (assignmentsResponse.ok) {
+          const assignmentsData = await assignmentsResponse.json();
+          if (assignmentsData.assignments) {
+            for (const assignment of assignmentsData.assignments) {
+              if (assignment.mktg_admin_id) {
+                if (!assignmentsByUser[assignment.mktg_admin_id]) {
+                  assignmentsByUser[assignment.mktg_admin_id] = [];
+                }
+                assignmentsByUser[assignment.mktg_admin_id].push({
+                  legend: assignment.legend,
+                  item_count: assignment.item_count,
+                });
+              }
+            }
+          }
+        }
+
+        // Merge users with their assignments
+        const usersWithAssignments: MarketingUser[] = users.map((user: any) => ({
+          ...user,
+          assigned_legends: assignmentsByUser[user.id] || [],
+        }));
+
+        setAllUsers(usersWithAssignments);
+        setFetchedCount(usersWithAssignments.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch users");
+      } finally {
+        setFetchingUsers(false);
+      }
+    };
+
+    fetchAllUsers();
+  }, [isOpen, searchQuery]);
 
   const handleColumnToggle = useCallback((key: ExportColumn["key"]) => {
     setColumns((prev) =>
@@ -46,7 +107,7 @@ export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
       return;
     }
 
-    if (users.length === 0) {
+    if (allUsers.length === 0) {
       setError("No marketing users to export");
       return;
     }
@@ -58,7 +119,7 @@ export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `marketing_users_export_${timestamp}`;
       
-      exportMarketingUsers(users, {
+      exportMarketingUsers(allUsers, {
         columns,
         sortField,
         sortDirection,
@@ -73,10 +134,12 @@ export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
     } finally {
       setExporting(false);
     }
-  }, [users, columns, sortField, sortDirection, format, onClose]);
+  }, [allUsers, columns, sortField, sortDirection, format, onClose]);
 
   const handleClose = useCallback(() => {
     setError("");
+    setAllUsers([]);
+    setFetchedCount(0);
     onClose();
   }, [onClose]);
 
@@ -85,9 +148,9 @@ export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
   const enabledCount = columns.filter((col) => col.enabled).length;
 
   // User status summary
-  const activeUsers = users.filter((u) => !u.is_banned && u.is_activated).length;
-  const inactiveUsers = users.filter((u) => !u.is_banned && !u.is_activated).length;
-  const bannedUsers = users.filter((u) => u.is_banned).length;
+  const activeUsers = allUsers.filter((u) => !u.is_banned && u.is_activated).length;
+  const inactiveUsers = allUsers.filter((u) => !u.is_banned && !u.is_activated).length;
+  const bannedUsers = allUsers.filter((u) => u.is_banned).length;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -104,7 +167,14 @@ export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
               Export Marketing Users
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {users.length} user{users.length !== 1 ? "s" : ""} will be exported
+              {fetchingUsers ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Fetching users... {fetchedCount} found
+                </span>
+              ) : (
+                <>{fetchedCount} user{fetchedCount !== 1 ? "s" : ""} will be exported</>
+              )}
             </p>
             <div className="flex gap-3 mt-2 text-xs">
               <span className="text-green-500">{activeUsers} Active</span>
@@ -310,11 +380,15 @@ export function ExportModal({ isOpen, onClose, users }: ExportModalProps) {
             </button>
             <button
               onClick={handleExport}
-              disabled={exporting || enabledCount === 0}
+              disabled={exporting || enabledCount === 0 || fetchingUsers}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
+              {fetchingUsers
+                ? "Loading..."
+                : exporting
+                ? "Exporting..."
+                : `Export ${format.toUpperCase()}`}
             </button>
           </div>
         </div>

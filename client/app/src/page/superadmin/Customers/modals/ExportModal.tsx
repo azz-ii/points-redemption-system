@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
-import type { Customer } from "@/lib/customers-api";
+import { useState, useCallback, useEffect } from "react";
+import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
+import { customersApi, type Customer } from "@/lib/customers-api";
 import {
   exportCustomers,
   DEFAULT_EXPORT_COLUMNS,
@@ -12,16 +12,47 @@ import {
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customers: Customer[];
+  searchQuery?: string;
+  showArchived?: boolean;
 }
 
-export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: ExportModalProps) {
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [fetchingCustomers, setFetchingCustomers] = useState(false);
+  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
+  const [fetchedCount, setFetchedCount] = useState(0);
+
+  // Fetch all filtered customers when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAllCustomers = async () => {
+      try {
+        setFetchingCustomers(true);
+        setError("");
+        
+        const customers = await customersApi.getAllCustomers({
+          search: searchQuery,
+          showArchived: showArchived,
+        });
+        
+        setAllCustomers(customers);
+        setFetchedCount(customers.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch customers");
+        setAllCustomers([]);
+      } finally {
+        setFetchingCustomers(false);
+      }
+    };
+
+    fetchAllCustomers();
+  }, [isOpen, searchQuery, showArchived]);
 
   const handleColumnToggle = useCallback((key: ExportColumn["key"]) => {
     setColumns((prev) =>
@@ -46,7 +77,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
       return;
     }
 
-    if (customers.length === 0) {
+    if (allCustomers.length === 0) {
       setError("No customers to export");
       return;
     }
@@ -58,7 +89,7 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `customers_export_${timestamp}`;
       
-      exportCustomers(customers, {
+      exportCustomers(allCustomers, {
         columns,
         sortField,
         sortDirection,
@@ -73,10 +104,12 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
     } finally {
       setExporting(false);
     }
-  }, [customers, columns, sortField, sortDirection, format, onClose]);
+  }, [allCustomers, columns, sortField, sortDirection, format, onClose]);
 
   const handleClose = useCallback(() => {
     setError("");
+    setAllCustomers([]);
+    setFetchedCount(0);
     onClose();
   }, [onClose]);
 
@@ -99,7 +132,14 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
               Export Customers
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {customers.length} customer{customers.length !== 1 ? "s" : ""} will be exported
+              {fetchingCustomers ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Fetching customers... {fetchedCount} found
+                </span>
+              ) : (
+                <>{fetchedCount} customer{fetchedCount !== 1 ? "s" : ""} will be exported</>
+              )}
             </p>
           </div>
           <button
@@ -300,11 +340,15 @@ export function ExportModal({ isOpen, onClose, customers }: ExportModalProps) {
             </button>
             <button
               onClick={handleExport}
-              disabled={exporting || enabledCount === 0}
+              disabled={exporting || enabledCount === 0 || fetchingCustomers}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
+              {fetchingCustomers
+                ? "Loading..."
+                : exporting
+                ? "Exporting..."
+                : `Export ${format.toUpperCase()}`}
             </button>
           </div>
         </div>

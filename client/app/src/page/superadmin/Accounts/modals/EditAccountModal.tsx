@@ -2,7 +2,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
 import type { Account, ModalBaseProps } from "./types";
 import { POSITION_OPTIONS } from "./types";
-import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 
 interface EditAccountData {
   username: string;
@@ -11,7 +10,6 @@ interface EditAccountData {
   position: string;
   points: number;
   is_activated: boolean;
-  is_banned: boolean;
 }
 
 interface EditAccountModalProps extends ModalBaseProps {
@@ -22,10 +20,6 @@ interface EditAccountModalProps extends ModalBaseProps {
   error: string;
   setError: Dispatch<SetStateAction<string>>;
   onSubmit: () => void;
-  profileImage: File | null;
-  profileImagePreview: string | null;
-  onImageSelect: (file: File | null) => void;
-  onImageRemove: () => void;
 }
 
 export function EditAccountModal({
@@ -38,10 +32,6 @@ export function EditAccountModal({
   error,
   setError,
   onSubmit,
-  profileImage: _profileImage,
-  profileImagePreview,
-  onImageSelect,
-  onImageRemove,
 }: EditAccountModalProps) {
   if (!isOpen || !account) return null;
 
@@ -156,19 +146,6 @@ export function EditAccountModal({
             </div>
           </div>
 
-          {/* Profile Picture Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-              Profile Picture
-            </h3>
-            <ProfilePictureUpload
-              currentImage={account?.profile_picture}
-              onImageSelect={onImageSelect}
-              onImageRemove={onImageRemove}
-              preview={profileImagePreview}
-            />
-          </div>
-
           {/* Role & Points Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -199,57 +176,59 @@ export function EditAccountModal({
                 </select>
               </div>
 
-              <div>
-                <label
-                  htmlFor="edit-points"
-                  className="text-xs text-gray-500 mb-2 block"
-                >
-                  Points *
-                </label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    id="edit-points"
-                    type="number"
-                    min="0"
-                    value={editAccount.points}
-                    onChange={(e) =>
-                      setEditAccount({
-                        ...editAccount,
-                        points: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
-                    placeholder="Enter points"
-                    aria-required="true"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditAccount({
-                        ...editAccount,
-                        points: editAccount.points + 10,
-                      })
-                    }
-                    aria-label="Add 10 points"
-                    className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+              {editAccount.position === "Sales Agent" && (
+                <div>
+                  <label
+                    htmlFor="edit-points"
+                    className="text-xs text-gray-500 mb-2 block"
                   >
-                    +10
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditAccount({
-                        ...editAccount,
-                        points: editAccount.points + 100,
-                      })
-                    }
-                    aria-label="Add 100 points"
-                    className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
-                  >
-                    +100
-                  </button>
+                    Points *
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      id="edit-points"
+                      type="number"
+                      min="0"
+                      value={editAccount.points}
+                      onChange={(e) =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                      placeholder="Enter points"
+                      aria-required="true"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: editAccount.points + 10,
+                        })
+                      }
+                      aria-label="Add 10 points"
+                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                    >
+                      +10
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: editAccount.points + 100,
+                        })
+                      }
+                      aria-label="Add 100 points"
+                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                    >
+                      +100
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

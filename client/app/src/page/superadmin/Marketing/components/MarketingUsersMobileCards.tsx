@@ -1,4 +1,5 @@
 import { Eye, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
+import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { MarketingUser } from "./types";
 
 interface MarketingUsersMobileCardsProps {
@@ -40,19 +41,7 @@ export function MarketingUsersMobileCards({
   onEditAccount,
 }: MarketingUsersMobileCardsProps) {
   if (loading && paginatedUsers.length === 0) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div
-            key={i}
-            className="p-4 rounded-lg animate-pulse bg-card"
-          >
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
-          </div>
-        ))}
-      </div>
-    );
+    return <MobileCardsSkeleton count={6} showHeader={false} />;
   }
 
   if (error) {

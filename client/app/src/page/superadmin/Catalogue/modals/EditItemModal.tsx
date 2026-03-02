@@ -405,23 +405,16 @@ export function EditItemModal({
             {/* Stock */}
             <div>
               <label
-                htmlFor="edit-stock"
                 className="text-xs text-gray-500 mb-2 block"
               >
                 Stock
               </label>
-              <input
-                id="edit-stock"
-                type="number"
-                min="0"
-                value={editItem.stock}
-                onChange={(e) =>
-                  setEditItem({ ...editItem, stock: e.target.value })
-                }
-                disabled={!editItem.has_stock}
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="e.g., 100"
-              />
+              <p className="px-4 py-3 rounded border bg-muted border-border text-foreground text-base opacity-70">
+                {editItem.stock ?? 0} {editItem.has_stock ? '' : '(not tracked)'}
+              </p>
+              <p className="text-xs mt-1 text-muted-foreground">
+                Stock can only be managed from the Inventory page
+              </p>
             </div>
 
             {/* Has Stock Toggle */}

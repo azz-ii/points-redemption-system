@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
-import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
+import { inventoryApi } from "@/lib/inventory-api";
 import type { InventoryItem } from "./types";
 import {
   exportInventoryItems,
@@ -12,16 +13,47 @@ import {
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  items: InventoryItem[];
+  searchQuery?: string;
+  statusFilter?: string;
 }
 
-export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, searchQuery, statusFilter }: ExportModalProps) {
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [fetchingItems, setFetchingItems] = useState(false);
+  const [allItems, setAllItems] = useState<InventoryItem[]>([]);
+  const [fetchedCount, setFetchedCount] = useState(0);
+
+  // Fetch all filtered inventory items when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAllItems = async () => {
+      try {
+        setFetchingItems(true);
+        setError("");
+        
+        const items = await inventoryApi.getAllInventory({
+          search: searchQuery,
+          status: statusFilter,
+        });
+        
+        setAllItems(items);
+        setFetchedCount(items.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch inventory items");
+        setAllItems([]);
+      } finally {
+        setFetchingItems(false);
+      }
+    };
+
+    fetchAllItems();
+  }, [isOpen, searchQuery, statusFilter]);
 
   const handleColumnToggle = useCallback((key: ExportColumn["key"]) => {
     setColumns((prev) =>
@@ -46,7 +78,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
       return;
     }
 
-    if (items.length === 0) {
+    if (allItems.length === 0) {
       setError("No inventory items to export");
       return;
     }
@@ -58,7 +90,7 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `inventory_export_${timestamp}`;
       
-      exportInventoryItems(items, {
+      exportInventoryItems(allItems, {
         columns,
         sortField,
         sortDirection,
@@ -73,10 +105,12 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
     } finally {
       setExporting(false);
     }
-  }, [items, columns, sortField, sortDirection, format, onClose]);
+  }, [allItems, columns, sortField, sortDirection, format, onClose]);
 
   const handleClose = useCallback(() => {
     setError("");
+    setAllItems([]);
+    setFetchedCount(0);
     onClose();
   }, [onClose]);
 
@@ -85,9 +119,9 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
   const enabledCount = columns.filter((col) => col.enabled).length;
 
   // Stock status summary
-  const inStock = items.filter((i) => i.stock_status === "In Stock").length;
-  const lowStock = items.filter((i) => i.stock_status === "Low Stock").length;
-  const outOfStock = items.filter((i) => i.stock_status === "Out of Stock").length;
+  const inStock = allItems.filter((i) => i.stock_status === "In Stock").length;
+  const lowStock = allItems.filter((i) => i.stock_status === "Low Stock").length;
+  const outOfStock = allItems.filter((i) => i.stock_status === "Out of Stock").length;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -104,7 +138,14 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
               Export Inventory
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {items.length} item{items.length !== 1 ? "s" : ""} will be exported
+              {fetchingItems ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Fetching inventory... {fetchedCount} found
+                </span>
+              ) : (
+                <>{fetchedCount} item{fetchedCount !== 1 ? "s" : ""} will be exported</>
+              )}
             </p>
             <div className="flex gap-3 mt-2 text-xs">
               <span className="text-green-500">{inStock} In Stock</span>
@@ -310,11 +351,15 @@ export function ExportModal({ isOpen, onClose, items }: ExportModalProps) {
             </button>
             <button
               onClick={handleExport}
-              disabled={exporting || enabledCount === 0}
+              disabled={exporting || enabledCount === 0 || fetchingItems}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
+              {fetchingItems
+                ? "Loading..."
+                : exporting
+                ? "Exporting..."
+                : `Export ${format.toUpperCase()}`}
             </button>
           </div>
         </div>

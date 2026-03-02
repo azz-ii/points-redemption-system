@@ -69,6 +69,7 @@ export function DashboardTable({
         initialSorting={[{ id: "date_requested", desc: true }]}
         loadingMessage="Loading items..."
         emptyMessage="No items to process"
+        pageSizeOptions={[15, 50, 100]}
       />
     </div>
   );

@@ -22,12 +22,12 @@ import {
   ChevronRight,
   Trash2,
   Settings2,
-  Ban,
   Plus,
   UserPlus,
   RotateCw,
   Download,
   Coins,
+  BookOpen,
 } from "lucide-react"
 
 import {
@@ -58,11 +58,11 @@ interface DataTableProps<TData, TValue> {
 
   // Toolbar actions
   onDeleteSelected?: (selectedRows: TData[]) => void
-  onBanSelected?: (selectedRows: TData[]) => void
   onCreateNew?: () => void
   createButtonLabel?: string
   createButtonIcon?: "user" | "plus"
   onSetPoints?: () => void
+  onSetInventory?: () => void
   onRefresh?: () => void
   refreshing?: boolean
   onExport?: (selectedRows: TData[]) => void
@@ -82,6 +82,7 @@ interface DataTableProps<TData, TValue> {
   showColumnVisibility?: boolean
   pageSize?: number
   initialSorting?: SortingState
+  initialColumnVisibility?: VisibilityState
   loadingMessage?: string
   emptyMessage?: string
 
@@ -92,6 +93,10 @@ interface DataTableProps<TData, TValue> {
   currentPage?: number
   onPageChange?: (pageIndex: number) => void
   onSearch?: (query: string) => void
+
+  // Page size selection
+  pageSizeOptions?: number[]
+  onPageSizeChange?: (pageSize: number) => void
 
   // Inline editing (Accounts-specific)
   editingRowId?: number | null
@@ -107,11 +112,11 @@ export function DataTable<TData, TValue>({
   error = null,
   onRetry,
   onDeleteSelected,
-  onBanSelected,
   onCreateNew,
   createButtonLabel = "Add New",
   createButtonIcon = "plus",
   onSetPoints,
+  onSetInventory,
   onRefresh,
   refreshing = false,
   onExport,
@@ -124,6 +129,7 @@ export function DataTable<TData, TValue>({
   showColumnVisibility = true,
   pageSize = 15,
   initialSorting = [],
+  initialColumnVisibility = {},
   loadingMessage = "Loading...",
   emptyMessage = "No results found",
   editingRowId = null,
@@ -136,10 +142,12 @@ export function DataTable<TData, TValue>({
   currentPage,
   onPageChange,
   onSearch,
+  pageSizeOptions = [15, 50, 100],
+  onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility)
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [searchValue, setSearchValue] = React.useState("")
@@ -153,7 +161,7 @@ export function DataTable<TData, TValue>({
     return () => clearTimeout(timer)
   }, [searchValue, onSearch])
 
-  const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected || onBanSelected)
+  const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected)
   const CreateIcon = createButtonIcon === "user" ? UserPlus : Plus
 
   const table = useReactTable({
@@ -195,6 +203,10 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     ...(!manualPagination && globalFilterFn ? { globalFilterFn } : {}),
+    columnResizeMode: "onChange" as const,
+    defaultColumn: {
+      minSize: 50,
+    },
     initialState: {
       pagination: {
         pageSize,
@@ -207,7 +219,7 @@ export function DataTable<TData, TValue>({
     : []
   const hasSelection = selectedRows.length > 0
 
-  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints
+  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints || onSetInventory
 
   return (
     <div className="space-y-4">
@@ -285,17 +297,6 @@ export function DataTable<TData, TValue>({
                 Export{hasSelection ? ` (${selectedRows.length})` : ""}
               </Button>
             )}
-            {hasSelection && onBanSelected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onBanSelected(selectedRows)}
-                className="border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950"
-              >
-                <Ban className="mr-2 h-4 w-4" />
-                Ban {selectedRows.length}
-              </Button>
-            )}
             {hasSelection && onDeleteSelected && (
               <Button
                 variant="destructive"
@@ -307,8 +308,17 @@ export function DataTable<TData, TValue>({
               </Button>
             )}
           </div>
-          {(onCreateNew || onSetPoints) && (
+          {(onCreateNew || onSetPoints || onSetInventory) && (
             <div className="flex gap-2">
+              {onSetInventory && (
+                <button
+                  onClick={onSetInventory}
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 border border-blue-700 hover:bg-blue-900 text-blue-400 transition-colors font-semibold"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  <span>Set Inventory</span>
+                </button>
+              )}
               {onSetPoints && (
                 <button
                   onClick={onSetPoints}
@@ -333,19 +343,35 @@ export function DataTable<TData, TValue>({
       )}
 
       <div className="border rounded-lg overflow-hidden" style={{ height: "70vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, overflow: "auto" }}>
-          <Table>
+        <div style={{ flex: 1, overflow: "auto", scrollbarGutter: "stable", paddingRight: "20px" }}>
+          <Table style={{ width: "100%", minWidth: table.getTotalSize() }}>
             <TableHeader className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="font-semibold">
+                    <TableHead
+                      key={header.id}
+                      className="font-semibold relative group"
+                      style={{ width: header.getSize() }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 group-hover:opacity-100 hover:bg-primary ${
+                            header.column.getIsResizing()
+                              ? "bg-primary opacity-100 w-[3px]"
+                              : "bg-border"
+                          }`}
+                        />
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -353,19 +379,37 @@ export function DataTable<TData, TValue>({
             </TableHeader>
             <TableBody>
               {loading && data.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      <p className="text-sm text-muted-foreground">
-                        {loadingMessage}
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                // Skeleton loading rows
+                Array.from({ length: 10 }).map((_, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {table.getAllColumns().filter(col => col.getIsVisible()).map((column, colIndex) => {
+                      const isFirstCol = colIndex === 0;
+                      const isLastCol = colIndex === table.getVisibleFlatColumns().length - 1;
+                      const isSecondLastCol = colIndex === table.getVisibleFlatColumns().length - 2;
+                      
+                      return (
+                        <TableCell key={column.id} style={{ width: column.getSize() }}>
+                          {isFirstCol && enableRowSelection ? (
+                            // Checkbox column
+                            <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                          ) : isLastCol ? (
+                            // Actions column
+                            <div className="flex justify-end gap-2">
+                              <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
+                              <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
+                            </div>
+                          ) : isSecondLastCol ? (
+                            // Status badge column
+                            <div className="h-6 w-20 rounded-full bg-muted animate-pulse" />
+                          ) : (
+                            // Regular text column
+                            <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
               ) : error ? (
                 <TableRow>
                   <TableCell
@@ -398,7 +442,7 @@ export function DataTable<TData, TValue>({
                       className={isRowEditing ? "bg-blue-50 dark:bg-blue-950" : ""}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
@@ -423,16 +467,43 @@ export function DataTable<TData, TValue>({
         </div>
 
         {showPagination && (
-          <div className="flex items-center justify-between p-4 border-t">
-            <div className="flex-1 text-sm text-muted-foreground">
-              {hasSelection ? (
-                <span>
-                  {selectedRows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} row(s) selected
-                </span>
-              ) : (
-                <span>
-                  Showing {table.getRowModel().rows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} results
-                </span>
+          <div className="flex items-center justify-between p-4 border-t gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 text-sm text-muted-foreground">
+                {hasSelection ? (
+                  <span>
+                    {selectedRows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} row(s) selected
+                  </span>
+                ) : (
+                  <span>
+                    Showing {table.getRowModel().rows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} results
+                  </span>
+                )}
+              </div>
+              {pageSizeOptions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                  <select
+                    value={table.getState().pagination.pageSize}
+                    onChange={(e) => {
+                      const newSize = Number(e.target.value)
+                      table.setPageSize(newSize)
+                      onPageSizeChange?.(newSize)
+                    }}
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {pageSizeOptions.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                    {manualPagination && totalResults ? (
+                      <option value={totalResults}>All ({totalResults})</option>
+                    ) : !manualPagination ? (
+                      <option value={data.length}>All</option>
+                    ) : null}
+                  </select>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-2">

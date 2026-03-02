@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
 import type { ModalBaseProps, Account } from "./types";
 import {
   exportAccounts,
@@ -8,18 +8,54 @@ import {
   type SortField,
   type SortDirection,
 } from "../utils/exportUtils";
+import { usersApi } from "@/lib/users-api";
 
 interface ExportModalProps extends ModalBaseProps {
-  accounts: Account[];
+  searchQuery?: string;
+  showArchived?: boolean;
 }
 
-export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: ExportModalProps) {
   const [format, setFormat] = useState<"pdf" | "excel">("excel");
   const [columns, setColumns] = useState<ExportColumn[]>(DEFAULT_EXPORT_COLUMNS);
   const [sortField, setSortField] = useState<SortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [fetchingAccounts, setFetchingAccounts] = useState(false);
+  const [allAccounts, setAllAccounts] = useState<Account[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [fetchedCount, setFetchedCount] = useState(0);
+
+  // Fetch all filtered accounts when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchAllAccounts = async () => {
+      try {
+        setFetchingAccounts(true);
+        setError("");
+        setFetchedCount(0);
+        
+        // Fetch with filters
+        const accounts = await usersApi.getAllAccounts({
+          search: searchQuery,
+          showArchived: showArchived,
+        });
+        
+        setAllAccounts(accounts);
+        setTotalCount(accounts.length);
+        setFetchedCount(accounts.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch accounts");
+        setAllAccounts([]);
+      } finally {
+        setFetchingAccounts(false);
+      }
+    };
+
+    fetchAllAccounts();
+  }, [isOpen, searchQuery, showArchived]);
 
   const handleColumnToggle = useCallback((key: ExportColumn["key"]) => {
     setColumns((prev) =>
@@ -44,7 +80,7 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
       return;
     }
 
-    if (accounts.length === 0) {
+    if (allAccounts.length === 0) {
       setError("No accounts to export");
       return;
     }
@@ -56,7 +92,7 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
       const timestamp = new Date().toISOString().split("T")[0];
       const filename = `accounts_export_${timestamp}`;
       
-      exportAccounts(accounts, {
+      exportAccounts(allAccounts, {
         columns,
         sortField,
         sortDirection,
@@ -71,16 +107,21 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
     } finally {
       setExporting(false);
     }
-  }, [accounts, columns, sortField, sortDirection, format, onClose]);
+  }, [allAccounts, columns, sortField, sortDirection, format, onClose]);
 
   const handleClose = useCallback(() => {
     setError("");
+    setAllAccounts([]);
+    setFetchedCount(0);
+    setTotalCount(0);
     onClose();
   }, [onClose]);
 
   if (!isOpen) return null;
 
   const enabledCount = columns.filter((col) => col.enabled).length;
+  const isLoading = fetchingAccounts;
+  const canExport = !isLoading && allAccounts.length > 0 && !exporting;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -97,13 +138,23 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
               Export Accounts
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              {accounts.length} account{accounts.length !== 1 ? "s" : ""} will be exported
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Fetching accounts... {fetchedCount > 0 ? `${fetchedCount} found` : ""}
+                </span>
+              ) : (
+                <span>
+                  {allAccounts.length} account{allAccounts.length !== 1 ? "s" : ""} will be exported
+                </span>
+              )}
             </p>
           </div>
           <button
             onClick={handleClose}
             aria-label="Close dialog"
             className="hover:opacity-70 transition-opacity"
+            disabled={isLoading || exporting}
           >
             <X className="h-5 w-5" />
           </button>
@@ -292,17 +343,32 @@ export function ExportModal({ isOpen, onClose, accounts }: ExportModalProps) {
           <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground"
+              disabled={isLoading || exporting}
+              className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors bg-muted hover:bg-accent text-foreground disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleExport}
-              disabled={exporting || enabledCount === 0}
+              disabled={!canExport || enabledCount === 0}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
             >
-              <Download className="h-4 w-4" />
-              {exporting ? "Exporting..." : `Export ${format.toUpperCase()}`}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : exporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export {format.toUpperCase()}
+                </>
+              )}
             </button>
           </div>
         </div>

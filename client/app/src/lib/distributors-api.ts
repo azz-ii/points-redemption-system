@@ -246,7 +246,7 @@ export const distributorsApi = {
     // Handle both array and paginated response formats
     return Array.isArray(data) ? data : (data.results || []);
   },
-  getAllDistributors: async (): Promise<Distributor[]> => {
+  getAllDistributors: async (filters?: { search?: string; showArchived?: boolean }): Promise<Distributor[]> => {
     // Fetch all distributors by requesting maximum page size and iterating through pages
     let allDistributors: Distributor[] = [];
     let page = 1;
@@ -256,6 +256,14 @@ export const distributorsApi = {
       const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
       url.searchParams.append('page', page.toString());
       url.searchParams.append('page_size', '100'); // Max allowed by backend
+      
+      // Apply filters if provided
+      if (filters?.search) {
+        url.searchParams.append('search', filters.search);
+      }
+      if (filters?.showArchived !== undefined) {
+        url.searchParams.append('show_archived', filters.showArchived.toString());
+      }
       
       const response = await fetch(url.toString(), {
         credentials: 'include',

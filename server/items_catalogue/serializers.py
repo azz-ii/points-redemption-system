@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Product
+from .models import Product, StockAuditLog
 
 User = get_user_model()
 
@@ -38,6 +38,11 @@ class ProductSerializer(serializers.ModelSerializer):
             'price': {'required': True},
         }
 
+    def update(self, instance, validated_data):
+        # Prevent direct stock edits via catalogue endpoint — stock is managed via inventory API
+        validated_data.pop('stock', None)
+        return super().update(instance, validated_data)
+
 
 class ProductInventorySerializer(serializers.ModelSerializer):
     """Serializer for Product with inventory-focused fields"""
@@ -63,3 +68,18 @@ class ProductInventorySerializer(serializers.ModelSerializer):
             return 'Low Stock'
         else:
             return 'In Stock'
+
+
+class StockAuditLogSerializer(serializers.ModelSerializer):
+    changed_by_username = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockAuditLog
+        fields = [
+            'id', 'product', 'product_name', 'previous_stock', 'new_stock',
+            'stock_delta', 'adjustment_type', 'reason', 'changed_by_username',
+            'batch_id', 'created_at',
+        ]
+
+    def get_changed_by_username(self, obj):
+        return obj.changed_by.username if obj.changed_by else "System"

@@ -46,7 +46,7 @@ export const inventoryApi = {
     return data;
   },
 
-  batchUpdateStock: async (updates: { id: number; stock: number }[]): Promise<BatchUpdateResponse> => {
+  batchUpdateStock: async (updates: { id: number; adjustment: number; reason: string }[]): Promise<BatchUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/inventory/batch_update_stock/`, {
       method: 'POST',
       headers: {
@@ -65,7 +65,7 @@ export const inventoryApi = {
     return data;
   },
 
-  bulkUpdateStock: async (stockDelta: number, password: string): Promise<BulkUpdateResponse> => {
+  bulkUpdateStock: async (stockDelta: number, password: string, reason: string = ''): Promise<BulkUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/inventory/bulk_update_stock/`, {
       method: 'POST',
       headers: {
@@ -75,6 +75,7 @@ export const inventoryApi = {
       body: JSON.stringify({
         stock_delta: stockDelta,
         password: password,
+        reason: reason,
       }),
     });
     
@@ -87,7 +88,7 @@ export const inventoryApi = {
     return data;
   },
 
-  resetAllStock: async (password: string): Promise<BulkUpdateResponse> => {
+  resetAllStock: async (password: string, reason: string = ''): Promise<BulkUpdateResponse> => {
     const response = await fetch(`${API_BASE_URL}/inventory/bulk_update_stock/`, {
       method: 'POST',
       headers: {
@@ -97,6 +98,7 @@ export const inventoryApi = {
       body: JSON.stringify({
         reset_to_zero: true,
         password: password,
+        reason: reason,
       }),
     });
     
@@ -107,5 +109,78 @@ export const inventoryApi = {
     }
     
     return data;
+  },
+
+  getAllInventory: async (filters?: { search?: string; status?: string }): Promise<InventoryItem[]> => {
+    // Fetch all inventory items by requesting maximum page size and iterating through pages
+    let allItems: InventoryItem[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const url = new URL(`${API_BASE_URL}/inventory/`, window.location.origin);
+      url.searchParams.append('page', page.toString());
+      url.searchParams.append('page_size', '100'); // Use 100 for efficiency
+      
+      // Apply filters if provided
+      if (filters?.search) {
+        url.searchParams.append('search', filters.search);
+      }
+      if (filters?.status) {
+        url.searchParams.append('status', filters.status);
+      }
+      
+      const response = await fetch(url.toString(), {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch inventory items');
+      
+      const data = await response.json();
+      const results = Array.isArray(data) ? data : (data.results || []);
+      
+      allItems = [...allItems, ...results];
+      
+      // Check if there are more pages (pagination response has 'next' field)
+      hasMore = !Array.isArray(data) && data.next !== null;
+      page++;
+    }
+    
+    return allItems;
+  },
+};
+
+export interface StockAuditLog {
+  id: number;
+  product: number;
+  product_name: string;
+  previous_stock: number;
+  new_stock: number;
+  stock_delta: number;
+  adjustment_type: 'ADD' | 'DECREASE' | 'BULK_ADD' | 'BULK_DECREASE' | 'BULK_RESET';
+  reason: string;
+  changed_by_username: string;
+  batch_id: string | null;
+  created_at: string;
+}
+
+export interface StockAuditLogResponse {
+  count: number;
+  page: number;
+  page_size: number;
+  results: StockAuditLog[];
+}
+
+export const stockAuditApi = {
+  getStockHistory: async (
+    productId: number,
+    page: number = 1,
+    pageSize: number = 15,
+  ): Promise<StockAuditLogResponse> => {
+    const url = new URL(`${API_BASE_URL}/inventory/${productId}/stock-audit/`, window.location.origin);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('page_size', pageSize.toString());
+    const response = await fetch(url.toString(), { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch stock history');
+    return response.json();
   },
 };

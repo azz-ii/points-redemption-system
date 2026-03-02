@@ -3,6 +3,7 @@ import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRig
 import type { Distributor } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
 import type { ChunkedUpdateProgress } from "@/lib/distributors-api";
+import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
 
 interface PaginatedDistributorsResponse {
   count: number;
@@ -280,13 +281,18 @@ export function SetPointsModal({
               </div>
             </div>
 
-            {/* Loading Indicator */}
+            {/* Loading Skeleton */}
             {isLoadingPage && (
-              <div className="text-center py-8">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-                  <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
-                </div>
-              </div>
+              <PaginatedTableSkeleton
+                columns={[
+                  { span: 4, widthPercent: 70 },
+                  { span: 3, widthPercent: 80 },
+                  { span: 2, widthPercent: 60 },
+                  { span: 2, widthPercent: 50 },
+                  { span: 1, widthPercent: 60 },
+                ]}
+                rowCount={10}
+              />
             )}
 
             <div className="space-y-2">

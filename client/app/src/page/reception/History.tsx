@@ -45,7 +45,7 @@ function ReceptionHistory() {
     },
   ]);
 
-  const pageSize = 7;
+  const [pageSize, setPageSize] = useState(15);
   const filteredItems = historyItems.filter((item) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
@@ -159,25 +159,44 @@ function ReceptionHistory() {
 
           {/* Desktop Pagination */}
           <div className="flex items-center justify-between p-4 border-t border-border">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-              disabled={safePage === 1}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-            >
-              <ChevronLeft className="h-4 w-4" /> Previous
-            </button>
-            <span className="text-sm font-medium">
-              Page {safePage} of {totalPages}
-            </span>
-            <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, safePage + 1))
-              }
-              disabled={safePage === totalPages}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-            >
-              Next <ChevronRight className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page</span>
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                value={pageSize}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setPageSize(val === filteredItems.length ? filteredItems.length : val);
+                  setCurrentPage(1);
+                }}
+              >
+                {[15, 50, 100].map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+                <option value={filteredItems.length}>All ({filteredItems.length})</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                disabled={safePage === 1}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+              >
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </button>
+              <span className="text-sm font-medium">
+                Page {safePage} of {totalPages}
+              </span>
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, safePage + 1))
+                }
+                disabled={safePage === totalPages}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+              >
+                Next <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

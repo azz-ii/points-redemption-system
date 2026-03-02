@@ -8,14 +8,6 @@ import { Button } from "@/components/ui/button"
 export interface Team {
   id: number;
   name: string;
-  approver: number | null;
-  approver_details?: {
-    id: number;
-    username: string;
-    full_name: string;
-    email: string;
-    position: string;
-  };
   member_count?: number;
   created_at: string;
   updated_at: string;
@@ -51,6 +43,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
     ),
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 40,
   },
   {
     accessorKey: "id",
@@ -72,37 +66,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
       )
     },
     cell: ({ row }) => <div className="font-semibold">{row.getValue("name") || "N/A"}</div>,
-  },
-  {
-    accessorKey: "approver_details",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Approver
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const approverDetails = row.getValue("approver_details") as Team["approver_details"]
-      return approverDetails ? (
-        <div>
-          <div className="font-medium">{approverDetails.full_name}</div>
-          <div className="text-xs text-muted-foreground">{approverDetails.email}</div>
-        </div>
-      ) : (
-        <span className="text-muted-foreground">No Approver</span>
-      )
-    },
-    sortingFn: (rowA, rowB) => {
-      const a = rowA.original.approver_details?.full_name || ""
-      const b = rowB.original.approver_details?.full_name || ""
-      return a.localeCompare(b)
-    },
   },
   {
     accessorKey: "member_count",
@@ -186,5 +149,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ]

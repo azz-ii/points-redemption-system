@@ -4,6 +4,7 @@ export { ModalContent } from "./ModalContent";
 export { ModalFooter } from "./ModalFooter";
 export { RequestTimeline } from "./RequestTimeline";
 export { ViewAccountModal } from "./ViewAccountModal";
+export { InventoryHistoryModal } from "./InventoryHistoryModal";
 export type { RequestTimelineData } from "./RequestTimeline";
 export type {
   ModalBaseProps,

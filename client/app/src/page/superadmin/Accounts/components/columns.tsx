@@ -1,13 +1,12 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Ban, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, User, Clock } from "lucide-react"
+import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
 import {
   EditableTextCell,
-  EditableEmailCell,
   EditableNumberCell,
   EditableSelectCell,
 } from "./editable-cells"
@@ -15,7 +14,6 @@ import {
 interface ColumnContext {
   onViewAccount: (account: Account) => void
   onEditAccount: (account: Account) => void
-  onBanAccount: (account: Account) => void
   onArchiveAccount: (account: Account) => void
   onUnarchiveAccount: (account: Account) => void
   onViewPointsHistory?: (account: Account) => void
@@ -54,28 +52,13 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 40,
   },
   {
     accessorKey: "id",
     header: "ID",
     cell: ({ row }) => <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>,
-  },
-  {
-    accessorKey: "profile_picture",
-    header: "",
-    cell: ({ row }) => {
-      const profilePicture = row.getValue("profile_picture") as string | null | undefined
-      return (
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center">
-          {profilePicture ? (
-            <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
-          ) : (
-            <User className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-      )
-    },
-    enableSorting: false,
   },
   {
     accessorKey: "username",
@@ -136,35 +119,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
   },
   {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === row.original.id
-      const value = isEditing ? (meta?.editedData?.email ?? row.getValue("email")) : row.getValue("email")
-      
-      return (
-        <EditableEmailCell
-          value={value as string}
-          isEditing={isEditing}
-          onChange={(val) => meta?.onFieldChange?.("email", val)}
-          error={meta?.fieldErrors?.email}
-        />
-      )
-    },
-  },
-  {
     accessorKey: "position",
     header: ({ column }) => {
       return (
@@ -210,6 +164,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     cell: ({ row, table }) => {
       const meta = table.options.meta as any
       const isEditing = meta?.editingRowId === row.original.id
+
+      if (!row.original.uses_points) {
+        return <span className="text-muted-foreground">—</span>
+      }
+
       const value = isEditing ? (meta?.editedData?.points ?? row.getValue("points")) : row.getValue("points")
       
       return (
@@ -238,7 +197,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
     cell: ({ row }) => {
       const isActivated = row.getValue("is_activated") as boolean
-      const isBanned = row.original.is_banned
       const isArchived = row.original.is_archived
       
       if (isArchived) {
@@ -262,23 +220,15 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
               Inactive
             </span>
           )}
-          {isBanned && (
-            <span className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white">
-              Banned
-            </span>
-          )}
         </div>
       )
     },
     filterFn: (row, id, value) => {
-      // Custom filter for status - can filter by "active", "inactive", "banned", or "archived"
       const isActivated = row.getValue(id) as boolean
-      const isBanned = row.original.is_banned
       const isArchived = row.original.is_archived
       
-      if (value === "active") return isActivated && !isBanned && !isArchived
+      if (value === "active") return isActivated && !isArchived
       if (value === "inactive") return !isActivated && !isArchived
-      if (value === "banned") return isBanned && !isArchived
       if (value === "archived") return isArchived
       return true
     },
@@ -360,16 +310,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
           <Button
             variant="default"
             size="sm"
-            onClick={() => context.onBanAccount(account)}
-            className="bg-orange-500 hover:bg-orange-600 text-white"
-            title="Ban"
-            disabled={isAnyRowEditing}
-          >
-            <Ban className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
             onClick={() => context.onToggleInlineEdit?.(account)}
             className="bg-gray-500 hover:bg-gray-600 text-white"
             title="Edit"
@@ -402,5 +342,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
     enableSorting: false,
     enableHiding: false,
+    enableResizing: false,
+    size: 100,
   },
 ]

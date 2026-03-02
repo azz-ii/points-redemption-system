@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, Clock, ArrowUpRight, ArrowDownRight, RotateCcw, Layers, Minus } from "lucide-react";
 import { pointsAuditApi, type PointsAuditLog } from "@/lib/points-audit-api";
+import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
 
 interface PointsHistoryModalProps {
   isOpen: boolean;
@@ -168,10 +169,19 @@ export function PointsHistoryModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pr-5" style={{ scrollbarGutter: "stable" }}>
           {isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" role="status" />
+            <div className="px-6 py-4">
+              <PaginatedTableSkeleton
+                columns={[
+                  { span: 3, widthPercent: 70 },
+                  { span: 2, widthPercent: 80 },
+                  { span: 2, widthPercent: 50 },
+                  { span: 2, widthPercent: 60 },
+                  { span: 3, widthPercent: 75 },
+                ]}
+                rowCount={8}
+              />
             </div>
           )}
 
