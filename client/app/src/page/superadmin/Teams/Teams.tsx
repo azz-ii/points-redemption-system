@@ -46,7 +46,6 @@ function Teams() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [marketingAdmins, setMarketingAdmins] = useState<
     MarketingAdminOption[]
   >([]);
