@@ -272,7 +272,7 @@ export function SetPointsModal({
                 />
                 <input
                   type="text"
-                  placeholder="Search by name, location, or email..."
+                  placeholder="Search by name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
@@ -285,11 +285,10 @@ export function SetPointsModal({
             {isLoadingPage && (
               <PaginatedTableSkeleton
                 columns={[
-                  { span: 4, widthPercent: 70 },
-                  { span: 3, widthPercent: 80 },
+                  { span: 5, widthPercent: 70 },
                   { span: 2, widthPercent: 60 },
-                  { span: 2, widthPercent: 50 },
-                  { span: 1, widthPercent: 60 },
+                  { span: 3, widthPercent: 50 },
+                  { span: 2, widthPercent: 60 },
                 ]}
                 rowCount={10}
               />
@@ -300,11 +299,10 @@ export function SetPointsModal({
               <div
                 className="grid grid-cols-12 gap-4 font-semibold text-sm pb-2 border-b text-foreground border-border"
               >
-                <div className="col-span-4">Name</div>
-                <div className="col-span-3">Location</div>
+                <div className="col-span-5">Name</div>
                 <div className="col-span-2">Current</div>
-                <div className="col-span-2">Add/Subtract</div>
-                <div className="col-span-1">New Total</div>
+                <div className="col-span-3">Add/Subtract</div>
+                <div className="col-span-2">New Total</div>
               </div>
 
               {/* Customer Rows */}
@@ -319,21 +317,16 @@ export function SetPointsModal({
                     className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
                   >
                     <div
-                      className="col-span-4 text-sm font-medium text-foreground"
+                      className="col-span-5 text-sm font-medium text-foreground"
                     >
                       {customer.name}
-                    </div>
-                    <div
-                      className="col-span-3 text-sm text-muted-foreground"
-                    >
-                      {customer.location}
                     </div>
                     <div
                       className="col-span-2 text-sm text-muted-foreground"
                     >
                       {currentPoints.toLocaleString()}
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-3">
                       <input
                         type="number"
                         value={delta === 0 ? "" : delta}
@@ -346,7 +339,7 @@ export function SetPointsModal({
                       />
                     </div>
                     <div
-                      className={`col-span-1 text-sm font-semibold ${
+                      className={`col-span-2 text-sm font-semibold ${
                         delta > 0
                           ? "text-green-500"
                           : delta < 0

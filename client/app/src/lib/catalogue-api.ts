@@ -9,11 +9,11 @@ export interface Product {
   description: string;
   purpose: string;
   specifications: string;
-  legend: string;
+  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "ASSET" | "OTHERS";
   category: string;
   points: string;
   price: string;
-  pricing_type: string;
+  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
   min_order_qty: number;
   max_order_qty: number | null;
   has_stock: boolean;

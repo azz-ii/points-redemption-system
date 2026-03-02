@@ -616,14 +616,6 @@ function Accounts() {
             setError("");
           }}
           onEditAccount={handleEditClick}
-          onBanAccount={(account) => {
-            setBanTarget(account);
-            setBanReason("");
-            setBanMessage("");
-            setBanDuration("1");
-            setShowBanModal(true);
-            setError("");
-          }}
           onArchiveAccount={(account) => {
             setArchiveTarget(account);
             setShowArchiveModal(true);

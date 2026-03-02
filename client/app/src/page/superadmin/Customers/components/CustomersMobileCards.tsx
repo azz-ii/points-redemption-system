@@ -87,18 +87,6 @@ export function CustomersMobileCards({
 
               <div className="space-y-2 mb-3">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Email:</span>
-                  <span className="font-medium">{customer.contact_email}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Phone:</span>
-                  <span className="font-medium">{customer.phone}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Location:</span>
-                  <span className="font-medium">{customer.location}</span>
-                </div>
-                <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Created:</span>
                   <span className="font-medium">
                     {formatDate(customer.date_added)}

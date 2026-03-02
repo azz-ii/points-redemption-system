@@ -564,6 +564,7 @@ function Customers() {
             page={tablePage + 1}
             totalPages={pageCount}
             onPageChange={(p) => setTablePage(p - 1)}
+            onView={handleViewClick}
             onEdit={handleEditClick}
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}
