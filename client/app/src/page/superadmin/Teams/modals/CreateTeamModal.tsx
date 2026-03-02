@@ -1,7 +1,7 @@
 import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { API_URL } from "@/lib/config";
-import type { ModalBaseProps, NewTeamData, Team, SalesAgentOption } from "./types";
+import type { ModalBaseProps, NewTeamData, Team, SalesAgentOption, ApproverOption } from "./types";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface CreateTeamModalProps extends ModalBaseProps {
@@ -30,6 +30,7 @@ export function CreateTeamModal({
   const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const [allUsers, setAllUsers] = useState<Array<{ id: number; team: number | null }>>([]);
+  const [availableApprovers, setAvailableApprovers] = useState<ApproverOption[]>([]);
   const [errorDialog, setErrorDialog] = useState<{
     show: boolean;
     title: string;
@@ -79,10 +80,36 @@ export function CreateTeamModal({
     }
   };
 
+  const fetchAvailableApprovers = async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/?position=Approver`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      if (response.ok && data.results) {
+        const approvers = data.results
+          .filter((user: { is_archived: boolean }) => !user.is_archived)
+          .map((user: { id: number; full_name: string; email: string }) => ({
+            id: user.id,
+            full_name: user.full_name,
+            email: user.email,
+          }));
+        setAvailableApprovers(approvers);
+      }
+    } catch (err) {
+      console.error("DEBUG CreateTeamModal: Error fetching approvers", err);
+    }
+  };
+
   // Fetch available sales agents when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchAvailableSalesAgents();
+      fetchAvailableApprovers();
     } else {
       // Reset state when modal closes
       setSelectedMembers([]);
@@ -212,6 +239,28 @@ export function CreateTeamModal({
               className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
               placeholder="Enter team name"
             />
+          </div>
+
+          {/* Approver Selection */}
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Approver *
+            </label>
+            <select
+              value={newTeam.approver ?? ""}
+              onChange={(e) => {
+                const val = e.target.value ? Number(e.target.value) : null;
+                setNewTeam({ ...newTeam, approver: val });
+              }}
+              className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Select an approver...</option>
+              {availableApprovers.map((approver) => (
+                <option key={approver.id} value={approver.id}>
+                  {approver.full_name} ({approver.email})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Members Section */}

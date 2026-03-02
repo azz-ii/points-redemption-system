@@ -6,6 +6,7 @@ from .views import (
     DashboardRedemptionRequestsView, 
     ResetAllPointsView,
     AgentDashboardStatsView,
+    ApproverDashboardStatsView,
     ProcessedRequestHistoryView,
     MarketingHistoryView
 )
@@ -32,6 +33,7 @@ urlpatterns = [
     path('dashboard/redemption-requests/', DashboardRedemptionRequestsView.as_view(), name='dashboard-redemption-requests'),
     path('dashboard/reset-all-points/', ResetAllPointsView.as_view(), name='dashboard-reset-all-points'),
     path('agent/dashboard/stats/', AgentDashboardStatsView.as_view(), name='agent-dashboard-stats'),
+    path('approver/dashboard/stats/', ApproverDashboardStatsView.as_view(), name='approver-dashboard-stats'),
     # Analytics endpoints
     path('dashboard/analytics/overview/', AnalyticsOverviewView.as_view(), name='analytics-overview'),
     path('dashboard/analytics/time-series/', AnalyticsTimeSeriesView.as_view(), name='analytics-time-series'),

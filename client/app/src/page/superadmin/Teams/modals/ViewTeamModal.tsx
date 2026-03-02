@@ -316,6 +316,19 @@ export function ViewTeamModal({
                       className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Approver</label>
+                    <input
+                      type="text"
+                      value={
+                        teamDetails.approver_details
+                          ? `${teamDetails.approver_details.full_name} (${teamDetails.approver_details.email})`
+                          : "No approver assigned"
+                      }
+                      disabled
+                      className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 

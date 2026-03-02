@@ -73,9 +73,9 @@ class TeamViewSet(viewsets.ModelViewSet):
                 return Team.objects.filter(id=membership.team.id)
             return Team.objects.none()
         
-        # Approver - can see all teams
+        # Approver - can see teams they manage
         elif position == 'Approver':
-            return Team.objects.all()
+            return Team.objects.filter(approver=user)
         
         # Administrative support positions - global access
         elif position in ['Marketing', 'Reception', 'Executive Assistant']:

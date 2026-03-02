@@ -427,3 +427,27 @@ export const agentDashboardApi = {
     return response.json();
   },
 };
+
+export interface ApproverDashboardStats {
+  pending_count: number;
+  approved_count: number;
+  rejected_count: number;
+  processed_count: number;
+  team_count: number;
+  team_names: string[];
+  approver_name: string;
+}
+
+export const approverDashboardApi = {
+  getStats: async (): Promise<ApproverDashboardStats> => {
+    const response = await fetch(`${API_BASE_URL}/approver/dashboard/stats/`, {
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error("Approver dashboard stats error response:", response.status, error);
+      throw new Error('Failed to fetch approver dashboard statistics');
+    }
+    return response.json();
+  },
+};

@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button"
 export interface Team {
   id: number;
   name: string;
+  approver: number | null;
+  approver_details?: {
+    id: number;
+    username: string;
+    full_name: string;
+    email: string;
+    position: string;
+  };
   member_count?: number;
   created_at: string;
   updated_at: string;
@@ -66,6 +74,18 @@ export const createColumns = (context: ColumnContext): ColumnDef<Team>[] => [
       )
     },
     cell: ({ row }) => <div className="font-semibold">{row.getValue("name") || "N/A"}</div>,
+  },
+  {
+    accessorKey: "approver_details",
+    header: "Approver",
+    cell: ({ row }) => {
+      const approver = row.original.approver_details
+      return approver ? (
+        <div className="text-sm">{approver.full_name}</div>
+      ) : (
+        <span className="text-xs text-muted-foreground italic">No approver</span>
+      )
+    },
   },
   {
     accessorKey: "member_count",

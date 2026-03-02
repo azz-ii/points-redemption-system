@@ -2,9 +2,25 @@
 
 export type { ModalBaseProps } from "@/components/modals";
 
+export interface ApproverDetails {
+  id: number;
+  username: string;
+  full_name: string;
+  email: string;
+  position: string;
+}
+
+export interface ApproverOption {
+  id: number;
+  full_name: string;
+  email: string;
+}
+
 export interface Team {
   id: number;
   name: string;
+  approver: number | null;
+  approver_details?: ApproverDetails;
   member_count?: number;
   created_at: string;
   updated_at: string;
@@ -34,10 +50,12 @@ export interface TeamDetail extends Team {
 
 export interface NewTeamData {
   name: string;
+  approver: number | null;
 }
 
 export interface EditTeamData {
   name: string;
+  approver: number | null;
 }
 
 // Marketing admin option for team assignment

@@ -13,4 +13,6 @@ export type {
   MarketingAdminOption,
   SalesAgentOption,
   UserDetails,
+  ApproverOption,
+  ApproverDetails,
 } from "./types";

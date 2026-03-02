@@ -20,6 +20,7 @@ import ExecutiveAssistantHistory from "../page/executive_assistant/History";
 import RequestHistory from "../page/superadmin/RequestHistory/RequestHistory";
 
 // Approver pages
+import ApproverDashboard from "../page/approver/Dashboard/Dashboard";
 import ApproverRequests from "../page/approver/Requests/Requests";
 
 // Marketing pages
@@ -50,7 +51,7 @@ function DashboardRouter() {
     case "Sales Agent":
       return <Navigate to="/sales/dashboard" replace />;
     case "Approver":
-      return <Navigate to="/approver/requests" replace />;
+      return <Navigate to="/approver/dashboard" replace />;
     case "Marketing":
       return <Navigate to="/marketing/dashboard" replace />;
     case "Reception":
@@ -123,6 +124,7 @@ export function AppRoutes() {
 
           {/* Approver routes */}
           <Route element={<ProtectedRoute allowedRoles={["Approver"]} />}>
+            <Route path="/approver/dashboard" element={<ApproverDashboard />} />
             <Route path="/approver/requests" element={<ApproverRequests />} />
             <Route path="/approver/history" element={<ApproverHistory />} />
           </Route>

@@ -4,9 +4,18 @@ from django.conf import settings
 
 class Team(models.Model):
     """
-    Represents a team with multiple sales agents.
+    Represents a team with multiple sales agents and one approver.
     """
     name = models.CharField(max_length=255, unique=True, help_text='Team name')
+    approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='managed_teams',
+        limit_choices_to={'profile__position': 'Approver'},
+        help_text='Approver who manages this team'
+    )
     is_archived = models.BooleanField(default=False, help_text='Whether this team is archived')
     date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the team was archived')
     archived_by = models.ForeignKey(

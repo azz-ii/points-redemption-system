@@ -54,6 +54,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { id: "redeem-items", label: "Redeem Items", icon: Gift, path: "/sales/redeem-items" },
   ],
   approver: [
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/approver/dashboard" },
     { id: "requests", label: "Requests", icon: FileBox, path: "/approver/requests" },
     { id: "history", label: "History", icon: History, path: "/approver/history" },
   ],

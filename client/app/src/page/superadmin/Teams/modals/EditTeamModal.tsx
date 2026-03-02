@@ -13,6 +13,7 @@ import type {
   EditTeamData,
   TeamDetail,
   SalesAgentOption,
+  ApproverOption,
 } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -53,6 +54,7 @@ export function EditTeamModal({
   const [memberLoading, setMemberLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [availableApprovers, setAvailableApprovers] = useState<ApproverOption[]>([]);
   const [errorDialog, setErrorDialog] = useState<{
     show: boolean;
     title: string;
@@ -138,6 +140,31 @@ export function EditTeamModal({
       console.error("DEBUG EditTeamModal: Error fetching sales agents", err);
     }
   }, [team?.id]);
+
+  const fetchAvailableApprovers = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/?position=Approver`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      if (response.ok && data.results) {
+        const approvers = data.results
+          .filter((user: { is_archived: boolean }) => !user.is_archived)
+          .map((user: { id: number; full_name: string; email: string }) => ({
+            id: user.id,
+            full_name: user.full_name,
+            email: user.email,
+          }));
+        setAvailableApprovers(approvers);
+      }
+    } catch (err) {
+      console.error("DEBUG EditTeamModal: Error fetching approvers", err);
+    }
+  }, []);
 
   const handleAddMember = async () => {
     if (!team || !selectedSalesAgent) {
@@ -269,6 +296,7 @@ export function EditTeamModal({
       );
       fetchTeamDetails();
       fetchAvailableSalesAgents();
+      fetchAvailableApprovers();
     } else if (!isOpen) {
       // Reset state when modal closes
       setTeamDetails(null);
@@ -276,7 +304,7 @@ export function EditTeamModal({
       setSelectedSalesAgent(null);
       setErrorDialog({ show: false, title: "", message: "" });
     }
-  }, [isOpen, team, fetchTeamDetails, fetchAvailableSalesAgents]);
+  }, [isOpen, team, fetchTeamDetails, fetchAvailableSalesAgents, fetchAvailableApprovers]);
 
   if (!isOpen || !team) return null;
 
@@ -347,6 +375,28 @@ export function EditTeamModal({
               className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
               placeholder="Enter team name"
             />
+          </div>
+
+          {/* Approver Selection */}
+          <div>
+            <label className="text-xs text-gray-500 mb-2 block">
+              Approver *
+            </label>
+            <select
+              value={editTeam.approver ?? ""}
+              onChange={(e) => {
+                const val = e.target.value ? Number(e.target.value) : null;
+                setEditTeam({ ...editTeam, approver: val });
+              }}
+              className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Select an approver...</option>
+              {availableApprovers.map((approver) => (
+                <option key={approver.id} value={approver.id}>
+                  {approver.full_name} ({approver.email})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Members Section */}

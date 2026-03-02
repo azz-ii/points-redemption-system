@@ -51,26 +51,34 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     """Basic serializer for Team model"""
     member_count = serializers.SerializerMethodField()
+    approver_details = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
-        fields = ['id', 'name', 'member_count', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'approver', 'approver_details', 'member_count', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
     
     def get_member_count(self, obj):
         """Get the count of team members"""
         return obj.member_count  # Uses the property from the model
+    
+    def get_approver_details(self, obj):
+        """Get approver user details"""
+        if obj.approver:
+            return TeamMemberSerializer(obj.approver).data
+        return None
 
 
 class TeamDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for Team with members list"""
     members = serializers.SerializerMethodField()
     member_count = serializers.IntegerField(read_only=True)
+    approver_details = serializers.SerializerMethodField()
     
     class Meta:
         model = Team
         fields = [
-            'id', 'name',
+            'id', 'name', 'approver', 'approver_details',
             'members', 'member_count',
             'created_at', 'updated_at'
         ]
@@ -80,6 +88,12 @@ class TeamDetailSerializer(serializers.ModelSerializer):
         """Get all team members with details"""
         memberships = obj.memberships.all()
         return TeamMembershipSerializer(memberships, many=True).data
+    
+    def get_approver_details(self, obj):
+        """Get approver user details"""
+        if obj.approver:
+            return TeamMemberSerializer(obj.approver).data
+        return None
 
 
 class AssignMemberSerializer(serializers.Serializer):

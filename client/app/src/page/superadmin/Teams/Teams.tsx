@@ -22,7 +22,6 @@ import {
   DeleteTeamModal,
   type NewTeamData,
   type EditTeamData,
-  type MarketingAdminOption,
 } from "./modals";
 import { TeamsTable } from "./components";
 import type { Team } from "./components/columns";
@@ -46,14 +45,13 @@ function Teams() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [createError, setCreateError] = useState("");
   const [editError, setEditError] = useState("");
-  const [marketingAdmins, setMarketingAdmins] = useState<
-    MarketingAdminOption[]
-  >([]);
   const [newTeam, setNewTeam] = useState<NewTeamData>({
     name: "",
+    approver: null,
   });
   const [editTeam, setEditTeam] = useState<EditTeamData>({
     name: "",
+    approver: null,
   });
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
@@ -91,46 +89,12 @@ function Teams() {
 
   // Fetch marketing admins for dropdown
   const fetchMarketingAdmins = async () => {
-    try {
-      console.log("DEBUG Teams: Fetching marketing admins...");
-      const response = await fetch(`${API_URL}/users/`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-
-      console.log("DEBUG Teams: Users fetched for marketing admins", {
-        status: response.status,
-        totalUsers: data.results?.length || 0,
-      });
-
-      if (response.ok && data.results) {
-        const marketingAdminsList = data.results
-          .filter((user: { position: string }) => user.position === "Marketing")
-          .map((user: { id: number; full_name: string; email: string }) => ({
-            id: user.id,
-            full_name: user.full_name,
-            email: user.email,
-          }));
-
-        console.log("DEBUG Teams: Marketing admins filtered", {
-          count: marketingAdminsList.length,
-        });
-
-        setMarketingAdmins(marketingAdminsList);
-      }
-    } catch (err) {
-      console.error("DEBUG Teams: Error fetching marketing admins", err);
-    }
+    // No longer needed - approver fetching is handled in modals
   };
 
   // Load teams on mount
   useEffect(() => {
     fetchTeams();
-    fetchMarketingAdmins();
   }, []);
 
   // Filter teams based on search query
@@ -229,7 +193,7 @@ function Teams() {
 
         toast.success(`Team "${newTeam.name}" created successfully!`);
         setIsCreateModalOpen(false);
-        setNewTeam({ name: "" });
+        setNewTeam({ name: "", approver: null });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
@@ -263,6 +227,7 @@ function Teams() {
     setTeamToEdit(team);
     setEditTeam({
       name: team.name,
+      approver: team.approver ?? null,
     });
     setEditError("");
     setIsEditModalOpen(true);
@@ -308,7 +273,7 @@ function Teams() {
         toast.success(`Team "${editTeam.name}" updated successfully!`);
         setIsEditModalOpen(false);
         setTeamToEdit(null);
-        setEditTeam({ name: "" });
+        setEditTeam({ name: "", approver: null });
         fetchTeams(); // Refresh teams list
       } else {
         const errorMessage =
@@ -589,7 +554,7 @@ function Teams() {
         onClose={() => {
           console.log("DEBUG Teams: Closing create modal");
           setIsCreateModalOpen(false);
-          setNewTeam({ name: "" });
+          setNewTeam({ name: "", approver: null });
           setCreateError("");
         }}
         newTeam={newTeam}
@@ -618,7 +583,7 @@ function Teams() {
           console.log("DEBUG Teams: Closing edit modal");
           setIsEditModalOpen(false);
           setTeamToEdit(null);
-          setEditTeam({ name: "" });
+          setEditTeam({ name: "", approver: null });
           setEditError("");
         }}
         team={teamToEdit}

@@ -64,9 +64,11 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             # If not in a team, only see own requests
             return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__product')
         
-        # Approver - see all requests that require sales approval
+        # Approver - see only requests from teams they manage
         elif profile.position == 'Approver':
             return RedemptionRequest.objects.filter(
+                team__isnull=False,
+                team__approver=user,
                 requires_sales_approval=True
             ).distinct().prefetch_related('items', 'items__product')
         
@@ -125,9 +127,17 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         logger.info(f"✅ [CREATE DEBUG] Request #{redemption_request.id} created with team_id={redemption_request.team_id}")
         
-        # Notify all approvers of the new request
-        approvers = UserProfile.objects.filter(position='Approver').exclude(email__isnull=True).exclude(email='')
-        approvers_emails = list(approvers.values_list('email', flat=True))
+        # Notify the team's approver of the new request
+        approvers_emails = []
+        if redemption_request.team and redemption_request.team.approver:
+            approver_profile = getattr(redemption_request.team.approver, 'profile', None)
+            if approver_profile and approver_profile.email:
+                approvers_emails = [approver_profile.email]
+        
+        if not approvers_emails:
+            logger.warning(f"⚠ No team approver email found for request #{redemption_request.id}, falling back to all approvers")
+            approvers = UserProfile.objects.filter(position='Approver').exclude(email__isnull=True).exclude(email='')
+            approvers_emails = list(approvers.values_list('email', flat=True))
 
         if approvers_emails:
             logger.info(f"New request #{redemption_request.id} created, sending notification to approvers...")
@@ -163,6 +173,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             return Response(
                 {'error': 'This request does not require sales approval and has been auto-approved'},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check team-approver permission
+        if not redemption_request.team or redemption_request.team.approver != user:
+            return Response(
+                {'error': 'Permission denied: You can only approve requests from your team'},
+                status=status.HTTP_403_FORBIDDEN
             )
         
         if redemption_request.status != 'PENDING':
@@ -262,6 +279,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             return Response(
                 {'error': 'This request does not require sales approval and has been auto-approved'},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check team-approver permission
+        if not redemption_request.team or redemption_request.team.approver != user:
+            return Response(
+                {'error': 'Permission denied: You can only reject requests from your team'},
+                status=status.HTTP_403_FORBIDDEN
             )
         
         if redemption_request.status != 'PENDING':
@@ -617,168 +641,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             product = item.product
             product.uncommit_stock(item.quantity)
             logger.info(f"Uncommitted {item.quantity} units of {product.item_code}")
-
-    @action(detail=True, methods=['post'])
-    def sales_approve(self, request, pk=None):
-        """Approve a redemption request from the sales approver track"""
-        redemption_request = self.get_object()
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Permission check: Only Approvers can use this endpoint
-        if not profile or profile.position != 'Approver':
-            return Response(
-                {'error': 'Permission denied: Only Approvers can approve via sales track'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Check if this request requires sales approval
-        if not redemption_request.requires_sales_approval:
-            return Response(
-                {'error': 'This request does not require sales approval'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check if already actioned
-        if redemption_request.sales_approval_status != ApprovalStatusChoice.PENDING:
-            return Response(
-                {'error': f'Sales approval is already {redemption_request.sales_approval_status}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check team permission
-        if redemption_request.team and redemption_request.team.approver != user:
-            return Response(
-                {'error': 'Permission denied: You can only approve requests from your team'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        try:
-            with transaction.atomic():
-                # Update sales approval track
-                redemption_request.sales_approval_status = ApprovalStatusChoice.APPROVED
-                redemption_request.sales_approved_by = user
-                redemption_request.sales_approval_date = timezone.now()
-                
-                if 'remarks' in request.data:
-                    redemption_request.remarks = request.data['remarks']
-                
-                redemption_request.save()
-                
-                # Update overall status
-                redemption_request.update_overall_status()
-                
-                # If fully approved now, deduct points and stock
-                if redemption_request.is_fully_approved():
-                    redemption_request.deduct_points()  # Raises ValueError if insufficient points
-                    
-                    redemption_request.reviewed_by = user
-                    redemption_request.date_reviewed = timezone.now()
-                    redemption_request.save()
-                    
-                    # Send approval emails
-                    logger.info(f"Request #{redemption_request.id} fully approved, sending notifications...")
-                    send_request_approved_email(
-                        request_obj=redemption_request,
-                        distributor=redemption_request.get_requested_for_entity(),
-                        approved_by=user
-                    )
-                    send_approved_request_notification_to_admin(
-                        request_obj=redemption_request,
-                        distributor=redemption_request.get_requested_for_entity(),
-                        approved_by=user
-                    )
-                else:
-                    logger.info(f"Request #{redemption_request.id} sales approved, awaiting marketing approval")
-        
-        except Exception as e:
-            logger.error(f"Failed to process sales approval for request #{redemption_request.id}: {str(e)}")
-            return Response(
-                {'error': 'Failed to process approval', 'detail': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-        serializer = self.get_serializer(redemption_request)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def sales_reject(self, request, pk=None):
-        """Reject a redemption request from the sales approver track"""
-        redemption_request = self.get_object()
-        user = request.user
-        profile = getattr(user, 'profile', None)
-        
-        # Permission check
-        if not profile or profile.position != 'Approver':
-            return Response(
-                {'error': 'Permission denied: Only Approvers can reject via sales track'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Check if this request requires sales approval
-        if not redemption_request.requires_sales_approval:
-            return Response(
-                {'error': 'This request does not require sales approval'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check if already actioned
-        if redemption_request.sales_approval_status != ApprovalStatusChoice.PENDING:
-            return Response(
-                {'error': f'Sales approval is already {redemption_request.sales_approval_status}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check team permission
-        if redemption_request.team and redemption_request.team.approver != user:
-            return Response(
-                {'error': 'Permission denied: You can only reject requests from your team'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Rejection reason required
-        rejection_reason = request.data.get('rejection_reason')
-        if not rejection_reason:
-            return Response(
-                {'error': 'Rejection reason is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Use transaction to ensure atomicity when uncommitting stock
-        try:
-            with transaction.atomic():
-                # Update sales rejection
-                redemption_request.sales_approval_status = ApprovalStatusChoice.REJECTED
-                redemption_request.sales_approved_by = user
-                redemption_request.sales_approval_date = timezone.now()
-                redemption_request.sales_rejection_reason = rejection_reason
-                
-                if 'remarks' in request.data:
-                    redemption_request.remarks = request.data['remarks']
-                
-                redemption_request.save()
-                redemption_request.update_overall_status()
-                
-                # Release committed stock
-                self._uncommit_stock(redemption_request)
-                
-        except Exception as e:
-            logger.error(f"Failed to process sales rejection for request #{redemption_request.id}: {str(e)}")
-            return Response(
-                {'error': 'Failed to process rejection', 'detail': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-        # Send rejection email
-        logger.info(f"Request #{redemption_request.id} sales rejected, sending notification...")
-        send_request_rejected_email(
-            request_obj=redemption_request,
-            distributor=redemption_request.get_requested_for_entity(),
-            rejected_by=user
-        )
-        
-        serializer = self.get_serializer(redemption_request)
-        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def mark_items_processed(self, request, pk=None):
@@ -1142,6 +1004,52 @@ class AgentDashboardStatsView(APIView):
                 {'error': 'Failed to fetch agent dashboard statistics', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class ApproverDashboardStatsView(APIView):
+    """
+    API endpoint for approver dashboard statistics.
+    Returns counts scoped to teams managed by the logged-in approver.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from teams.models import Team
+
+        user = request.user
+        profile = getattr(user, 'profile', None)
+
+        if not profile or profile.position != 'Approver':
+            return Response(
+                {'error': 'Access denied. Approver role required.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Requests from all teams this approver manages
+        team_requests = RedemptionRequest.objects.filter(
+            team__isnull=False,
+            team__approver=user,
+            requires_sales_approval=True,
+        )
+
+        pending_count = team_requests.filter(status='PENDING').count()
+        approved_count = team_requests.filter(status='APPROVED').count()
+        rejected_count = team_requests.filter(status='REJECTED').count()
+        processed_count = team_requests.filter(processing_status='PROCESSED').count()
+
+        managed_teams = Team.objects.filter(approver=user)
+        team_count = managed_teams.count()
+        team_names = list(managed_teams.values_list('name', flat=True))
+
+        return Response({
+            'pending_count': pending_count,
+            'approved_count': approved_count,
+            'rejected_count': rejected_count,
+            'processed_count': processed_count,
+            'team_count': team_count,
+            'team_names': team_names,
+            'approver_name': user.get_full_name() or user.username,
+        })
 
 
 class ProcessedRequestHistoryView(APIView):
