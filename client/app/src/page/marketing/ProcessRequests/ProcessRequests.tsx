@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
   ViewRequestModal,
   MarkItemsProcessedModal,
+  CancelRequestModal,
   type RequestItem,
   type MyProcessingStatus,
   type FlattenedRequestItem,
@@ -33,6 +34,8 @@ function ProcessRequests() {
   const [bulkProcessTargets, setBulkProcessTargets] = useState<FlattenedRequestItem[]>([]);
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
 
   const fetchRequests = useCallback(async (isRefresh = false) => {
     try {
@@ -159,6 +162,26 @@ function ProcessRequests() {
     setShowBulkProcessModal(true);
   };
 
+  const handleCancelClick = (item: FlattenedRequestItem) => {
+    setSelectedCancelRequest(item.request);
+    setShowCancelModal(true);
+  };
+
+  const handleCancelConfirm = async (reason: string, remarks: string) => {
+    if (!selectedCancelRequest) return;
+
+    try {
+      await marketingRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      toast.success("Request cancelled successfully");
+      setShowCancelModal(false);
+      setSelectedCancelRequest(null);
+      fetchRequests(true);
+    } catch (err) {
+      console.error("Error cancelling request:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to cancel request");
+    }
+  };
+
   const handleBulkMarkProcessedConfirm = async () => {
     setIsSubmitting(true);
     try {
@@ -231,6 +254,7 @@ function ProcessRequests() {
           loading={loading}
           onViewRequest={handleViewClick}
           onMarkItemProcessed={handleMarkItemProcessedClick}
+          onCancelRequest={handleCancelClick}
         />
 
         {/* Mobile Pagination */}
@@ -279,6 +303,7 @@ function ProcessRequests() {
             loading={loading}
             onViewRequest={handleViewClick}
             onMarkItemProcessed={handleMarkItemProcessedClick}
+            onCancelRequest={handleCancelClick}
             onBulkMarkProcessed={handleBulkMarkProcessed}
             onRefresh={() => fetchRequests(true)}
             refreshing={refreshing}
@@ -310,6 +335,16 @@ function ProcessRequests() {
         myItems={myProcessingStatus?.items || []}
         pendingCount={myProcessingStatus?.pending_items || 0}
         onConfirm={handleMarkProcessedConfirm}
+      />
+
+      <CancelRequestModal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSelectedCancelRequest(null);
+        }}
+        item={selectedCancelRequest}
+        onConfirm={handleCancelConfirm}
       />
 
       {showBulkProcessModal && (

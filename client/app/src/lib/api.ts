@@ -569,6 +569,25 @@ export const marketingRequestsApi = {
   },
 
   /**
+   * Cancel a redemption request. Refunds points and restores stock.
+   */
+  async cancelRequest(requestId: number, cancellation_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/cancel_request/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      credentials: 'include',
+      body: JSON.stringify({ cancellation_reason, ...(remarks ? { remarks } : {}) }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to cancel request');
+    }
+
+    return response.json();
+  },
+
+  /**
    * Get the marketing user's history of processed requests.
    * Shows all requests where the current user has processed items.
    */

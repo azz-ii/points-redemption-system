@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, CheckCircle, ArrowUpDown } from "lucide-react";
+import { Eye, CheckCircle, ArrowUpDown, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { FlattenedRequestItem } from "../modals/types";
@@ -9,6 +9,7 @@ import type { FlattenedRequestItem } from "../modals/types";
 interface ColumnContext {
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
+  onCancelRequest: (item: FlattenedRequestItem) => void;
 }
 
 export const createColumns = (
@@ -240,6 +241,10 @@ export const createColumns = (
         item.request_status === "APPROVED" &&
         item.request_processing_status !== "CANCELLED" &&
         !isProcessed;
+      const canCancel =
+        item.request_status === "APPROVED" &&
+        item.request_processing_status !== "CANCELLED" &&
+        item.request_processing_status !== "PROCESSED";
 
       return (
         <div className="flex justify-end gap-2">
@@ -261,6 +266,17 @@ export const createColumns = (
               title="Mark as Processed"
             >
               <CheckCircle className="h-4 w-4" />
+            </Button>
+          )}
+          {canCancel && (
+            <Button
+              onClick={() => context.onCancelRequest(item)}
+              variant="default"
+              size="sm"
+              className="bg-red-500 hover:bg-red-600 text-white"
+              title="Cancel Request"
+            >
+              <XCircle className="h-4 w-4" />
             </Button>
           )}
         </div>

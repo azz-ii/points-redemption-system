@@ -8,6 +8,7 @@ interface ProcessRequestsTableProps {
   loading: boolean;
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
+  onCancelRequest: (item: FlattenedRequestItem) => void;
   onBulkMarkProcessed?: (items: FlattenedRequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -18,6 +19,7 @@ export function ProcessRequestsTable({
   loading,
   onViewRequest,
   onMarkItemProcessed,
+  onCancelRequest,
   onBulkMarkProcessed,
   onRefresh,
   refreshing = false,
@@ -27,8 +29,9 @@ export function ProcessRequestsTable({
       createColumns({
         onViewRequest,
         onMarkItemProcessed,
+        onCancelRequest,
       }),
-    [onViewRequest, onMarkItemProcessed]
+    [onViewRequest, onMarkItemProcessed, onCancelRequest]
   );
 
   // Custom global filter function that searches across multiple fields

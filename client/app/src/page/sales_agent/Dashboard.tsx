@@ -389,7 +389,7 @@ function SalesAgentDashboard() {
           <div
             className="rounded-lg border overflow-hidden border-border"
           >
-            <Table>
+            <Table className="w-full">
               <TableHeader className="bg-muted">
                 <TableRow
                   className="border-b border-border"
