@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, Clock, ArrowUpRight, ArrowDownRight, RotateCcw, Layers, Minus } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Clock, ArrowUpRight, ArrowDownRight, RotateCcw, Layers, Minus, ShoppingCart, Undo2 } from "lucide-react";
 import { pointsAuditApi, type PointsAuditLog } from "@/lib/points-audit-api";
 import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
 
@@ -32,6 +32,20 @@ function ActionBadge({ actionType }: { actionType: string }) {
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300`}>
           <RotateCcw className="h-3 w-3" />
           Reset
+        </span>
+      );
+    case "REDEMPTION_DEDUCT":
+      return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300`}>
+          <ShoppingCart className="h-3 w-3" />
+          Redemption
+        </span>
+      );
+    case "REDEMPTION_REFUND":
+      return (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300`}>
+          <Undo2 className="h-3 w-3" />
+          Refund
         </span>
       );
     default:

@@ -11,7 +11,7 @@ export interface PointsAuditLog {
   previous_points: number;
   new_points: number;
   points_delta: number;
-  action_type: 'INDIVIDUAL_SET' | 'BULK_DELTA' | 'BULK_RESET';
+  action_type: 'INDIVIDUAL_SET' | 'BULK_DELTA' | 'BULK_RESET' | 'REDEMPTION_DEDUCT' | 'REDEMPTION_REFUND';
   action_type_display: string;
   changed_by: number | null;
   changed_by_username: string;
