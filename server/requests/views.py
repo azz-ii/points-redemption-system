@@ -23,7 +23,8 @@ from utils.email_service import (
 from users.models import UserProfile
 from distributers.models import Distributor
 from customers.models import Customer
-from points_audit.utils import log_points_change
+from points_audit.utils import log_points_change, bulk_log_points_changes, generate_batch_id
+from points_audit.models import PointsAuditLog
 
 # Configure logger for request operations
 logger = logging.getLogger('email')
@@ -422,9 +423,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
         
-        if not profile or profile.position != 'Admin':
+        if not profile or profile.position not in ['Admin', 'Marketing']:
             return Response(
-                {'error': 'Permission denied: Only superadmins can cancel requests'},
+                {'error': 'Permission denied: Only superadmins and marketing users can cancel requests'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
@@ -914,6 +915,52 @@ class ResetAllPointsView(APIView):
             
             # Reset all points using transaction for data consistency
             with transaction.atomic():
+                batch_id = generate_batch_id()
+                audit_entries = []
+
+                # Snapshot entities with non-zero points before resetting
+                for dist in Distributor.objects.filter(points__gt=0).only('id', 'name', 'points'):
+                    audit_entries.append({
+                        'entity_type': 'DISTRIBUTOR',
+                        'entity_id': dist.id,
+                        'entity_name': dist.name,
+                        'previous_points': dist.points,
+                        'new_points': 0,
+                        'action_type': PointsAuditLog.ActionType.BULK_RESET,
+                        'changed_by': request.user,
+                        'reason': 'Reset all points to zero',
+                        'batch_id': batch_id,
+                    })
+
+                for up in UserProfile.objects.filter(points__gt=0).select_related('user').only('user_id', 'full_name', 'points'):
+                    audit_entries.append({
+                        'entity_type': 'USER',
+                        'entity_id': up.user_id,
+                        'entity_name': up.full_name or up.user.username,
+                        'previous_points': up.points,
+                        'new_points': 0,
+                        'action_type': PointsAuditLog.ActionType.BULK_RESET,
+                        'changed_by': request.user,
+                        'reason': 'Reset all points to zero',
+                        'batch_id': batch_id,
+                    })
+
+                for cust in Customer.objects.filter(points__gt=0).only('id', 'name', 'points'):
+                    audit_entries.append({
+                        'entity_type': 'CUSTOMER',
+                        'entity_id': cust.id,
+                        'entity_name': cust.name,
+                        'previous_points': cust.points,
+                        'new_points': 0,
+                        'action_type': PointsAuditLog.ActionType.BULK_RESET,
+                        'changed_by': request.user,
+                        'reason': 'Reset all points to zero',
+                        'batch_id': batch_id,
+                    })
+
+                if audit_entries:
+                    bulk_log_points_changes(audit_entries)
+
                 # Reset all distributor points
                 Distributor.objects.all().update(points=0)
                 

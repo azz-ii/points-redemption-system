@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, LoginAttempt
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for UserProfile model"""
@@ -155,6 +155,9 @@ class UserListSerializer(serializers.ModelSerializer):
     archived_by = serializers.IntegerField(source='profile.archived_by_id', read_only=True)
     archived_by_username = serializers.SerializerMethodField()
     
+    # Lockout status
+    is_locked = serializers.SerializerMethodField()
+
     # Team information
     team_id = serializers.SerializerMethodField()
     team_name = serializers.SerializerMethodField()
@@ -167,7 +170,8 @@ class UserListSerializer(serializers.ModelSerializer):
             'uses_points', 'points',
             'is_archived', 'date_archived', 'archived_by', 'archived_by_username',
             'is_active', 'date_joined',
-            'team_id', 'team_name', 'is_team_approver'
+            'team_id', 'team_name', 'is_team_approver',
+            'is_locked',
         ]
     
     def get_team_id(self, obj):
@@ -195,3 +199,7 @@ class UserListSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'profile') and obj.profile.archived_by:
             return obj.profile.archived_by.get_username()
         return None
+
+    def get_is_locked(self, obj):
+        """Check whether this user is currently locked out due to failed login attempts"""
+        return LoginAttempt.is_locked_out(obj.username)

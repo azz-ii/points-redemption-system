@@ -12,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 import logging
 import io
 from datetime import datetime
-from utils.email_service import send_account_created_email, send_password_reset_link_email
+from utils.email_service import send_account_created_email, send_password_reset_link_email, send_password_changed_email
 from points_audit.utils import log_points_change, bulk_log_points_changes, generate_batch_id
 from points_audit.models import PointsAuditLog
 
@@ -247,6 +247,164 @@ class UserViewSet(viewsets.ModelViewSet):
                 "error": "Failed to unarchive user",
                 "details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='change_password')
+    def change_password(self, request):
+        """Change the logged-in user's own password (requires current password verification)"""
+        if not request.user.is_authenticated:
+            logger.warning("change_password: unauthenticated request")
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        logger.info(f"change_password called by user {request.user.username}")
+        try:
+            data = request.data
+            current_password = data.get("current_password", "").strip()
+            new_password = data.get("new_password", "").strip()
+            confirm_password = data.get("confirm_password", "").strip()
+
+            # Field presence validation
+            if not current_password or not new_password or not confirm_password:
+                logger.debug("change_password: missing one or more required fields")
+                return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Minimum length
+            if len(new_password) < 6:
+                logger.debug("change_password: new password too short")
+                return Response({"error": "New password must be at least 6 characters"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Confirmation match
+            if new_password != confirm_password:
+                logger.debug("change_password: new passwords do not match")
+                return Response({"error": "New passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Verify current password
+            if not request.user.check_password(current_password):
+                logger.warning(f"change_password: incorrect current password for user {request.user.username}")
+                return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Apply new password and keep session alive
+            from django.contrib.auth import update_session_auth_hash
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            logger.info(f"✓ Password changed successfully for user {request.user.username}")
+
+            # Send security notification email
+            try:
+                email = getattr(request.user, 'profile', None) and request.user.profile.email
+                full_name = (getattr(request.user, 'profile', None) and request.user.profile.full_name) or request.user.username
+                if email:
+                    send_password_changed_email(email=email, full_name=full_name, username=request.user.username)
+                    logger.info(f"✓ Password changed notification email sent to {email}")
+                else:
+                    logger.warning(f"change_password: no email on profile for user {request.user.username}, skipping notification")
+            except Exception as email_err:
+                logger.error(f"Error sending password changed notification: {str(email_err)}")
+                # Don't fail the request if email fails
+
+            return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in change_password for user {request.user.username}: {str(e)}")
+            logger.exception("Full traceback:")
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'], url_path='change_password')
+    def change_password(self, request):
+        """Change the logged-in user's own password (requires current password verification)"""
+        if not request.user.is_authenticated:
+            logger.warning("change_password: unauthenticated request")
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        logger.info(f"change_password called by user {request.user.username}")
+        try:
+            data = request.data
+            current_password = data.get("current_password", "").strip()
+            new_password = data.get("new_password", "").strip()
+            confirm_password = data.get("confirm_password", "").strip()
+
+            # Field presence validation
+            if not current_password or not new_password or not confirm_password:
+                logger.debug("change_password: missing one or more required fields")
+                return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Minimum length
+            if len(new_password) < 6:
+                logger.debug("change_password: new password too short")
+                return Response({"error": "New password must be at least 6 characters"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Confirmation match
+            if new_password != confirm_password:
+                logger.debug("change_password: new passwords do not match")
+                return Response({"error": "New passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Verify current password
+            if not request.user.check_password(current_password):
+                logger.warning(f"change_password: incorrect current password for user {request.user.username}")
+                return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Apply new password and keep session alive
+            from django.contrib.auth import update_session_auth_hash
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            logger.info(f"✓ Password changed successfully for user {request.user.username}")
+
+            # Send security notification email
+            try:
+                email = getattr(request.user, 'profile', None) and request.user.profile.email
+                full_name = (getattr(request.user, 'profile', None) and request.user.profile.full_name) or request.user.username
+                if email:
+                    send_password_changed_email(email=email, full_name=full_name, username=request.user.username)
+                    logger.info(f"✓ Password changed notification email sent to {email}")
+                else:
+                    logger.warning(f"change_password: no email on profile for user {request.user.username}, skipping notification")
+            except Exception as email_err:
+                logger.error(f"Error sending password changed notification: {str(email_err)}")
+                # Don't fail the request if email fails
+
+            return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in change_password for user {request.user.username}: {str(e)}")
+            logger.exception("Full traceback:")
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'], url_path='unlock_account')
+    def unlock_account(self, request, pk=None):
+        """Unlock a locked-out account by clearing its failed login attempts (admin action)"""
+        if not request.user.is_authenticated:
+            logger.warning("unlock_account: unauthenticated request")
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        logger.info(f"unlock_account called by {request.user.username} for pk={pk}")
+        try:
+            password = request.data.get("password", "").strip()
+            if not password:
+                logger.debug("unlock_account: no admin password provided")
+                return Response({"error": "Your password is required to confirm this action"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Verify the requesting admin's own password
+            if not request.user.check_password(password):
+                logger.warning(f"unlock_account: invalid admin password from {request.user.username}")
+                return Response({"error": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+
+            target_user = self.get_object()
+            logger.info(f"unlock_account: target user is {target_user.username}")
+
+            from .models import LoginAttempt
+            if not LoginAttempt.is_locked_out(target_user.username):
+                logger.info(f"unlock_account: {target_user.username} is not currently locked out")
+                return Response({"error": "This account is not currently locked out"}, status=status.HTTP_400_BAD_REQUEST)
+
+            LoginAttempt.clear_failures(target_user.username)
+            logger.info(f"✓ unlock_account: cleared lockout for {target_user.username}")
+            return Response({"message": f"{target_user.username} has been unlocked successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in unlock_account for pk={pk}: {str(e)}")
+            logger.exception("Full traceback:")
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['post'], url_path='send_password_reset_email')
     def send_password_reset_email(self, request, pk=None):
