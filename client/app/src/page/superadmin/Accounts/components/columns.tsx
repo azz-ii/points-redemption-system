@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock, Mail } from "lucide-react"
+import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock, Mail, LockOpen } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
@@ -21,6 +21,7 @@ interface ColumnContext {
   onSaveInlineEdit?: (accountId: number) => void
   onCancelInlineEdit?: () => void
   onSendPasswordResetEmail?: (account: Account) => void
+  onUnlockAccount?: (account: Account) => void
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
@@ -348,6 +349,18 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
           >
             <Mail className="h-4 w-4" />
           </Button>
+          {account.is_locked && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => context.onUnlockAccount?.(account)}
+              className="bg-red-500 hover:bg-red-600 text-white"
+              title="Unlock Account"
+              disabled={isAnyRowEditing}
+            >
+              <LockOpen className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )
     },

@@ -1,6 +1,8 @@
 ﻿import { useState, useEffect } from "react";
-import { X, User } from "lucide-react";
+import { X, Eye, EyeOff, KeyRound } from "lucide-react";
+import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
 import type { ModalBaseProps } from "./types";
 import { FormSkeleton } from "@/components/shared/form-skeleton";
 
@@ -21,6 +23,17 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Change password state
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [changeError, setChangeError] = useState("");
 
   // Fetch current user data
   useEffect(() => {
@@ -48,9 +61,63 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
     }
   };
 
+  const resetChangePasswordForm = () => {
+    setShowChangePassword(false);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowCurrentPw(false);
+    setShowNewPw(false);
+    setShowConfirmPw(false);
+    setSaving(false);
+    setChangeError("");
+  };
+
   const handleClose = () => {
     setError("");
+    resetChangePasswordForm();
     onClose();
+  };
+
+  const handleChangePassword = async () => {
+    setChangeError("");
+
+    // Client-side validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setChangeError("All fields are required");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setChangeError("New password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setChangeError("New passwords do not match");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      console.debug("[ViewAccountModal] Submitting change_password request");
+      const response = await fetchWithCsrf(`${API_URL}/users/change_password/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword, confirm_password: confirmPassword }),
+      });
+      const data = await response.json();
+      console.debug("[ViewAccountModal] change_password response:", response.status, data);
+      if (response.ok) {
+        toast.success("Password changed successfully");
+        resetChangePasswordForm();
+      } else {
+        setChangeError(data.error || "Failed to change password");
+      }
+    } catch (err) {
+      console.error("[ViewAccountModal] change_password error:", err);
+      setChangeError("Error connecting to server");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -84,10 +151,6 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {loading ? (
             <div className="space-y-6">
-              {/* Avatar skeleton */}
-              <div className="flex justify-center">
-                <div className="w-24 h-24 rounded-full bg-muted animate-pulse" />
-              </div>
               {/* Credentials skeleton */}
               <div className="space-y-4">
                 <div className="h-4 w-24 rounded bg-muted animate-pulse" />
@@ -116,18 +179,23 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
             </div>
           ) : account ? (
             <>
-              {/* Avatar Section */}
-              <div className="flex justify-center">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center bg-muted">
-                  <User className="w-10 h-10 text-muted-foreground" />
-                </div>
-              </div>
-
               {/* Credentials Section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                  Credentials
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                    Credentials
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setChangeError("");
+                      setShowChangePassword((v) => !v);
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline focus:outline-none"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    {showChangePassword ? "Cancel" : "Change Password"}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
@@ -152,6 +220,105 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                     />
                   </div>
                 </div>
+
+                {/* Inline Change Password Form */}
+                {showChangePassword && (
+                  <div className="mt-4 p-4 rounded-lg border border-border bg-muted/40 space-y-3">
+                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Change Password</p>
+
+                    {/* Current Password */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Current Password</label>
+                      <div className="relative">
+                        <input
+                          type={showCurrentPw ? "text" : "password"}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder="Enter current password"
+                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPw((v) => !v)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                          aria-label={showCurrentPw ? "Hide password" : "Show password"}
+                        >
+                          {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* New Password */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">New Password</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPw ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="At least 6 characters"
+                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPw((v) => !v)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                          aria-label={showNewPw ? "Hide password" : "Show password"}
+                        >
+                          {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Confirm New Password</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPw ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter new password"
+                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPw((v) => !v)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                          aria-label={showConfirmPw ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Inline error */}
+                    {changeError && (
+                      <p className="text-sm text-red-500">{changeError}</p>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={saving}
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-colors"
+                      >
+                        {saving ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={resetChangePasswordForm}
+                        disabled={saving}
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-muted hover:bg-accent text-foreground border border-border transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Personal Information Section */}

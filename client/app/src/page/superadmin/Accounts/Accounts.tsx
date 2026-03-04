@@ -15,6 +15,7 @@ import {
   ExportModal,
   SetPointsModal,
   SendPasswordResetEmailModal,
+  UnlockAccountModal,
   type Account,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
@@ -71,6 +72,11 @@ function Accounts() {
   const [showArchived, setShowArchived] = useState(false);
   const [showSendResetEmailModal, setShowSendResetEmailModal] = useState(false);
   const [sendResetEmailTarget, setSendResetEmailTarget] = useState<Account | null>(null);
+
+  // Unlock account state
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [unlockTarget, setUnlockTarget] = useState<Account | null>(null);
+  const [unlockLoading, setUnlockLoading] = useState(false);
 
   // Inline edit state
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
@@ -322,6 +328,34 @@ function Accounts() {
       toast.error("Error connecting to server");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Unlock locked-out account
+  const handleUnlockAccount = async (id: number, password: string) => {
+    setUnlockLoading(true);
+    try {
+      console.debug(`[Accounts] unlock_account request for id=${id}`);
+      const response = await fetchWithCsrf(`${API_URL}/users/${id}/unlock_account/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await response.json();
+      console.debug(`[Accounts] unlock_account response:`, response.status, data);
+      if (response.ok) {
+        toast.success(data.message || "Account unlocked successfully");
+        setShowUnlockModal(false);
+        setUnlockTarget(null);
+        fetchAccounts();
+      } else {
+        toast.error(data.error || "Failed to unlock account");
+      }
+    } catch (err) {
+      console.error("[Accounts] unlock_account error:", err);
+      toast.error("Error connecting to server");
+    } finally {
+      setUnlockLoading(false);
     }
   };
 
@@ -641,6 +675,10 @@ function Accounts() {
             setSendResetEmailTarget(account);
             setShowSendResetEmailModal(true);
           }}
+          onUnlockAccount={(account) => {
+            setUnlockTarget(account);
+            setShowUnlockModal(true);
+          }}
           editingRowId={editingRowId}
           editedData={editedData}
           onToggleInlineEdit={handleToggleInlineEdit}
@@ -699,6 +737,10 @@ function Accounts() {
           onSendPasswordResetEmail={(account) => {
             setSendResetEmailTarget(account);
             setShowSendResetEmailModal(true);
+          }}
+          onUnlockAccount={(account) => {
+            setUnlockTarget(account);
+            setShowUnlockModal(true);
           }}
         />
       </div>
@@ -809,6 +851,17 @@ function Accounts() {
           setSendResetEmailTarget(null);
         }}
         account={sendResetEmailTarget}
+      />
+
+      <UnlockAccountModal
+        isOpen={showUnlockModal}
+        onClose={() => {
+          setShowUnlockModal(false);
+          setUnlockTarget(null);
+        }}
+        account={unlockTarget}
+        loading={unlockLoading}
+        onConfirm={(id, password) => handleUnlockAccount(id, password)}
       />
 
     </>

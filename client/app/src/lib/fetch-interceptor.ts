@@ -15,6 +15,8 @@ const AUTH_ENDPOINTS = [
   '/otp/',
   '/activate-account',
   '/change-password',
+  '/users/change_password',
+  '/users/unlock_account',
 ];
 
 let forceLogoutDispatched = false;

@@ -14,6 +14,7 @@ export interface Account {
   date_archived?: string | null;
   archived_by?: number | null;
   archived_by_username?: string | null;
+  is_locked?: boolean;
 }
 
 export const POSITION_OPTIONS = [

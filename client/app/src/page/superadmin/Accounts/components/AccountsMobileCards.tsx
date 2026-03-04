@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
-import { Eye, Pencil, Archive, ChevronLeft, ChevronRight, Mail } from "lucide-react";
+import { Eye, Pencil, Archive, ChevronLeft, ChevronRight, Mail, LockOpen } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { Account } from "../modals";
 
@@ -17,6 +17,7 @@ interface AccountsMobileCardsProps {
   onEditAccount: (account: Account) => void;
   onArchiveAccount: (account: Account) => void;
   onSendPasswordResetEmail?: (account: Account) => void;
+  onUnlockAccount?: (account: Account) => void;
 }
 
 export function AccountsMobileCards({
@@ -32,6 +33,7 @@ export function AccountsMobileCards({
   onEditAccount,
   onArchiveAccount,
   onSendPasswordResetEmail,
+  onUnlockAccount,
 }: AccountsMobileCardsProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const itemsPerPage = 7;
@@ -177,6 +179,19 @@ export function AccountsMobileCards({
                           >
                             <Mail className="h-4 w-4" />
                             Reset Password
+                          </button>
+                        )}
+                        {onUnlockAccount && !account.is_archived && account.is_locked && (
+                          <button
+                            onClick={() => {
+                              onUnlockAccount(account);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-accent"
+                            disabled={loading}
+                          >
+                            <LockOpen className="h-4 w-4" />
+                            Unlock Account
                           </button>
                         )}
                       </div>
