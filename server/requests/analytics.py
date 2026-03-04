@@ -1,4 +1,4 @@
-"""
+﻿"""
 Analytics views for the SuperAdmin dashboard.
 Provides aggregated data for reports: time-series, item popularity,
 agent performance, team performance, turnaround times, and entity analytics.
@@ -19,7 +19,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from .models import RedemptionRequest, RedemptionRequestItem
-from .views import CsrfExemptSessionAuthentication
 
 logger = logging.getLogger('analytics')
 
@@ -62,12 +61,12 @@ def _base_qs(start_date):
     return qs
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 1. Enhanced Overview
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsOverviewView(APIView):
     """Extended overview stats including points totals and basic KPIs."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -109,12 +108,12 @@ class AnalyticsOverviewView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 2. Time-Series Trends
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsTimeSeriesView(APIView):
     """Request counts and points over time, grouped by day/week/month."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -176,12 +175,12 @@ class AnalyticsTimeSeriesView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 3. Item Popularity
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsItemsView(APIView):
     """Most redeemed items by quantity and points."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -240,12 +239,12 @@ class AnalyticsItemsView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 4. Agent Performance
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsAgentsView(APIView):
     """Per-agent request counts, approval rates, and points totals."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -318,12 +317,12 @@ class AnalyticsAgentsView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 5. Team Performance
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsTeamsView(APIView):
     """Per-team aggregate statistics."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -374,12 +373,12 @@ class AnalyticsTeamsView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 6. Turnaround Time
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsTurnaroundView(APIView):
     """Average processing turnaround times."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -389,7 +388,7 @@ class AnalyticsTurnaroundView(APIView):
         try:
             start_date, _ = _parse_date_range(request)
 
-            # Overall averages — only consider requests that have progressed
+            # Overall averages â€” only consider requests that have progressed
             qs_reviewed = _base_qs(start_date).filter(
                 date_reviewed__isnull=False,
             )
@@ -464,12 +463,12 @@ class AnalyticsTurnaroundView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 7a. Item Requests Detail (for export)
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsItemRequestsView(APIView):
     """Detailed request-level rows for a specific product (for export)."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -540,12 +539,12 @@ class AnalyticsItemRequestsView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 7b. Agent Requests Detail (for export)
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsAgentRequestsView(APIView):
     """Detailed request-level rows for a specific agent (for export)."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -610,12 +609,12 @@ class AnalyticsAgentRequestsView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 8. Distributor / Customer Analytics
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class AnalyticsEntitiesView(APIView):
     """Top distributors or customers by redemption volume."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -685,12 +684,12 @@ class AnalyticsEntitiesView(APIView):
             )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # 9. Per-User Analytics (for ViewAccountModal)
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class UserAnalyticsView(APIView):
     """Per-user analytics stats, tailored by position (Sales Agent, Approver, Marketing)."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -758,7 +757,7 @@ class UserAnalyticsView(APIView):
 
         approval_rate = round((agg['approved_count'] / total) * 100, 1) if total > 0 else 0
 
-        # Average turnaround: date_requested → date_reviewed for reviewed requests
+        # Average turnaround: date_requested â†’ date_reviewed for reviewed requests
         reviewed_qs = qs.filter(date_reviewed__isnull=False)
         avg_turnaround = reviewed_qs.annotate(
             dur=ExpressionWrapper(
@@ -821,7 +820,7 @@ class UserAnalyticsView(APIView):
 
         approval_rate = round((agg['approved_count'] / total) * 100, 1) if total > 0 else 0
 
-        # Average review time: date_requested → date_reviewed
+        # Average review time: date_requested â†’ date_reviewed
         avg_review = qs.filter(date_reviewed__isnull=False).annotate(
             dur=ExpressionWrapper(
                 F('date_reviewed') - F('date_requested'),
@@ -879,7 +878,7 @@ class UserAnalyticsView(APIView):
         # Distinct requests touched
         requests_touched = items_qs.values('request').distinct().count()
 
-        # Average processing time: request.date_reviewed → item.item_processed_at
+        # Average processing time: request.date_reviewed â†’ item.item_processed_at
         avg_proc = items_qs.filter(
             item_processed_at__isnull=False,
             request__date_reviewed__isnull=False,
@@ -893,7 +892,7 @@ class UserAnalyticsView(APIView):
         if avg_proc['avg']:
             avg_hours = round(avg_proc['avg'].total_seconds() / 3600, 1)
 
-        # Requests where this user processed items — check processed vs cancelled
+        # Requests where this user processed items â€” check processed vs cancelled
         touched_request_ids = items_qs.values_list('request_id', flat=True).distinct()
         touched_requests = RedemptionRequest.objects.filter(id__in=touched_request_ids)
         proc_agg = touched_requests.aggregate(
@@ -931,10 +930,10 @@ class UserAnalyticsView(APIView):
         })
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class TeamAnalyticsView(APIView):
     """Per-team analytics: aggregate stats, member breakdown, top items, recent activity."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -955,7 +954,7 @@ class TeamAnalyticsView(APIView):
             qs = RedemptionRequest.objects.filter(team=team)
             total = qs.count()
 
-            # ── Aggregate stats ─────────────────────
+            # â”€â”€ Aggregate stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             agg = qs.aggregate(
                 pending_count=Count('id', filter=Q(status='PENDING')),
                 approved_count=Count('id', filter=Q(status='APPROVED')),
@@ -969,13 +968,13 @@ class TeamAnalyticsView(APIView):
             reviewed_total = agg['approved_count'] + agg['rejected_count']
             approval_rate = round((agg['approved_count'] / reviewed_total) * 100, 1) if reviewed_total > 0 else 0
 
-            # Avg turnaround: date_requested → date_reviewed
+            # Avg turnaround: date_requested â†’ date_reviewed
             avg_turn = qs.filter(date_reviewed__isnull=False).annotate(
                 dur=ExpressionWrapper(F('date_reviewed') - F('date_requested'), output_field=DurationField())
             ).aggregate(avg=Avg('dur'))
             avg_turnaround_hours = round(avg_turn['avg'].total_seconds() / 3600, 1) if avg_turn['avg'] else None
 
-            # Avg processing: date_reviewed → date_processed
+            # Avg processing: date_reviewed â†’ date_processed
             avg_proc = qs.filter(date_processed__isnull=False, date_reviewed__isnull=False).annotate(
                 dur=ExpressionWrapper(F('date_processed') - F('date_reviewed'), output_field=DurationField())
             ).aggregate(avg=Avg('dur'))
@@ -983,7 +982,7 @@ class TeamAnalyticsView(APIView):
 
             member_count = team.memberships.count()
 
-            # ── Top 5 items ─────────────────────────
+            # â”€â”€ Top 5 items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             top_items_qs = (
                 RedemptionRequestItem.objects
                 .filter(request__team=team)
@@ -1004,7 +1003,7 @@ class TeamAnalyticsView(APIView):
                 for row in top_items_qs
             ]
 
-            # ── Member breakdown ────────────────────
+            # â”€â”€ Member breakdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             member_breakdown = []
             for membership in team.memberships.select_related('user', 'user__profile').all():
                 u = membership.user
@@ -1034,7 +1033,7 @@ class TeamAnalyticsView(APIView):
             # Sort by total_requests descending
             member_breakdown.sort(key=lambda x: x['total_requests'], reverse=True)
 
-            # ── Recent activity (up to 50) ──────────
+            # â”€â”€ Recent activity (up to 50) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             recent = (
                 qs.select_related(
                     'requested_by', 'requested_by__profile',

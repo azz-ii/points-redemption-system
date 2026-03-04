@@ -33,7 +33,6 @@ class TeamViewSet(viewsets.ModelViewSet):
     - Super Admin / Others: Full access to all teams
     """
     queryset = Team.objects.all()
-    permission_classes = []  # Override with custom permission logic
     
     def get_serializer_class(self):
         """Return detailed serializer for retrieve action"""
@@ -199,7 +198,6 @@ class TeamMembershipViewSet(viewsets.ModelViewSet):
     """
     queryset = TeamMembership.objects.all()
     serializer_class = TeamMembershipSerializer
-    permission_classes = []
     
     def get_queryset(self):
         """Filter memberships based on user position"""

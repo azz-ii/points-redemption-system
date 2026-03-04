@@ -20,16 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from views import (
     LoginView,
-    DashboardView,
-    HistoryView,
-    AccountsView,
-    ApproveRequestView,
-    RejectRequestView,
-    ChangePasswordView,
-    ActivateAccountView,
-)
-from views import (
-    LoginView,
+    LogoutView,
     DashboardView,
     HistoryView,
     AccountsView,
@@ -43,6 +34,7 @@ from items_catalogue.views import ProductListCreateView, ProductDetailView, Inve
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/login/', LoginView.as_view(), name='login'),
+    path('api/logout/', LogoutView.as_view(), name='logout'),
     path('api/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('api/activate-account/', ActivateAccountView.as_view(), name='activate_account'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),

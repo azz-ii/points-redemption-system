@@ -72,6 +72,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'utils.middleware.SessionInterruptedMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -183,19 +184,24 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Session settings for cross-origin (local development)
-SESSION_COOKIE_HTTPONLY = False  # Allow JavaScript to read for debugging
-SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+# Session settings
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_PATH = '/'
-CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=28800, cast=int)  # 8 hours
+SESSION_SAVE_EVERY_REQUEST = True  # sliding window: reset expiry on every request
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'utils.authentication.CsrfExemptSessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 

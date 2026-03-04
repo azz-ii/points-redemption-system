@@ -8,8 +8,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
 import logging
 import io
@@ -20,11 +18,6 @@ from points_audit.models import PointsAuditLog
 
 # Configure logger for user operations
 logger = logging.getLogger('email')
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session authentication without CSRF checks for API endpoints"""
-    def enforce_csrf(self, request):
-        return  # Skip CSRF check
 
 from .models import UserProfile
 from .serializers import UserSerializer, UserListSerializer, SalesAgentOptionSerializer
@@ -46,8 +39,6 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.filter(is_superuser=False).select_related('profile')
     serializer_class = UserListSerializer
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     pagination_class = UserPagination
     
     def get_queryset(self):
@@ -325,8 +316,6 @@ class UserViewSet(viewsets.ModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class UnarchiveUserView(APIView):
     """Unarchive (restore) an archived user account"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request, pk=None):
         """Restore an archived user account"""
@@ -363,8 +352,6 @@ class UnarchiveUserView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class SalesAgentsListView(APIView):
     """Lightweight endpoint to get all non-archived sales agents for dropdown selections"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def get(self, request):
         """Return all non-archived sales agents without pagination"""
@@ -388,8 +375,6 @@ class SalesAgentsListView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CurrentUserView(APIView):
     """Get current authenticated user's profile"""
-    authentication_classes = [CsrfExemptSessionAuthentication]  # Use session auth to load user
-    permission_classes = []  # No permission checks - we'll check manually
     
     def get(self, request):
         """Get current user's profile details"""
@@ -419,8 +404,6 @@ class CurrentUserView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class UserExportView(APIView):
     """Export users to PDF or Excel format"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     # Available columns for export
     AVAILABLE_COLUMNS = {
@@ -672,8 +655,6 @@ class UserExportView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class BulkUpdatePointsView(APIView):
     """Bulk update points for all active accounts with password verification"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request):
         """Apply points delta to all active accounts"""
@@ -818,8 +799,6 @@ class BulkUpdatePointsView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class BatchUpdatePointsView(APIView):
     """Batch update points for specific accounts (optimized single request)"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request):
         """Update points for multiple specific accounts in a single request"""

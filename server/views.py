@@ -1,13 +1,15 @@
 # server/views.py
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout as auth_logout
+from django.contrib.sessions.models import Session
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.middleware.csrf import get_token
 from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 # Serializer defined here
 class LoginSerializer(serializers.Serializer):
@@ -17,7 +19,7 @@ class LoginSerializer(serializers.Serializer):
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):
     authentication_classes = []
-    permission_classes = []
+    permission_classes = [AllowAny]
     
     # Allow GET requests for testing or API info
     def get(self, request):
@@ -26,12 +28,44 @@ class LoginView(APIView):
             status=status.HTTP_200_OK
         )
 
+    def _get_client_ip(self, request):
+        x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded:
+            return x_forwarded.split(',')[0].strip()
+        return request.META.get('REMOTE_ADDR')
+
+    def _kill_other_sessions(self, user):
+        """Delete every other Django session that belongs to *user*.
+
+        Django stores session data as a pickled dict. We decode each
+        active session and check whether its ``_auth_user_id`` matches.
+        """
+        from django.contrib.sessions.models import Session as SessionModel
+        user_id_str = str(user.pk)
+        for session in SessionModel.objects.filter(expire_date__gte=timezone.now()):
+            data = session.get_decoded()
+            if data.get('_auth_user_id') == user_id_str:
+                session.delete()
+
     # Handle login POST requests
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
+            client_ip = self._get_client_ip(request)
+
+            # --- rate-limit / lockout check ----------------------------------
+            from users.models import LoginAttempt
+            if LoginAttempt.is_locked_out(username):
+                remaining = LoginAttempt.lockout_seconds_remaining(username)
+                return Response({
+                    "error": "Account temporarily locked",
+                    "detail": f"Too many failed login attempts. Try again in {remaining // 60} min {remaining % 60} sec.",
+                    "lockout": True,
+                    "retry_after": remaining,
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
             user = authenticate(username=username, password=password)
 
             # authenticate() returns None for inactive users; check manually for archived accounts
@@ -78,7 +112,13 @@ class LoginView(APIView):
                 except UserProfile.DoesNotExist:
                     position = "Admin"  # Default position if profile doesn't exist
                     profile = None
-                
+
+                # --- single active session enforcement -----------------------
+                self._kill_other_sessions(user)
+
+                # Clear failed-login counter on success
+                LoginAttempt.clear_failures(username)
+
                 # Log the user in to create a session so `request.user` is populated
                 login(request, user)
 
@@ -93,18 +133,50 @@ class LoginView(APIView):
                 
                 # Manually set the session cookie in the response
                 if request.session.session_key:
+                    from django.conf import settings as django_settings
                     response.set_cookie(
                         key='sessionid',
                         value=request.session.session_key,
-                        max_age=1209600,  # 2 weeks
-                        httponly=True,  # Secure: prevent JavaScript access
-                        secure=False,  # Set to True in production with HTTPS
-                        samesite='Lax'
+                        max_age=django_settings.SESSION_COOKIE_AGE,
+                        httponly=django_settings.SESSION_COOKIE_HTTPONLY,
+                        secure=django_settings.SESSION_COOKIE_SECURE,
+                        samesite=django_settings.SESSION_COOKIE_SAMESITE,
                     )
                 
                 return response
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # --- bad credentials: record failure -----------------------------
+            LoginAttempt.record_failure(username, ip_address=client_ip)
+            failures = LoginAttempt.recent_failures(username)
+            remaining_attempts = max(LoginAttempt.LOCKOUT_THRESHOLD - failures, 0)
+
+            if remaining_attempts == 0:
+                remaining_secs = LoginAttempt.lockout_seconds_remaining(username)
+                return Response({
+                    "error": "Account temporarily locked",
+                    "detail": f"Too many failed login attempts. Try again in {remaining_secs // 60} min {remaining_secs % 60} sec.",
+                    "lockout": True,
+                    "retry_after": remaining_secs,
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+            return Response({
+                "error": "Invalid credentials",
+                "remaining_attempts": remaining_attempts,
+            }, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LogoutView(APIView):
+    """Server-side logout: flush session from DB and clear cookie."""
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        auth_logout(request)          # flush session
+        response = Response({"message": "Logged out"}, status=status.HTTP_200_OK)
+        response.delete_cookie('sessionid')
+        return response
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DashboardView(APIView):
@@ -226,6 +298,8 @@ class RejectRequestView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class ChangePasswordView(APIView):
     """Change password for a user"""
+    authentication_classes = []
+    permission_classes = [AllowAny]
     
     def post(self, request):
         """Change user password by username"""
@@ -262,6 +336,8 @@ class ChangePasswordView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class ActivateAccountView(APIView):
     """Activate user account by changing password"""
+    authentication_classes = []
+    permission_classes = [AllowAny]
     
     def post(self, request):
         """Activate account and set new password"""

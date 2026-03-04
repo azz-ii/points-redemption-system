@@ -25,6 +25,9 @@ export function getCsrfToken(): string | null {
  * Fetch wrapper that automatically includes CSRF token for unsafe methods.
  * Resolves relative URLs (e.g. /api/users/1/) against API_BASE_URL so
  * requests are routed to the Django backend in production.
+ *
+ * Automatically handles 401 responses by clearing auth state and redirecting
+ * to the login page (session expired / kicked by new login).
  */
 export async function fetchWithCsrf(url: string, options: RequestInit = {}): Promise<Response> {
   // Resolve relative URLs against the configured API base URL
@@ -47,5 +50,8 @@ export async function fetchWithCsrf(url: string, options: RequestInit = {}): Pro
   // Ensure credentials are included
   options.credentials = options.credentials || 'include';
   
-  return fetch(url, options);
+  const response = await fetch(url, options);
+  // 401/403 handling is done globally by the fetch interceptor in
+  // lib/fetch-interceptor.ts so it covers all raw fetch() calls app-wide.
+  return response;
 }

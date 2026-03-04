@@ -2,6 +2,62 @@ from django.db import models
 from django.utils import timezone
 from django.conf import settings
 
+
+class LoginAttempt(models.Model):
+    """Tracks failed login attempts per username for rate-limiting / lockout."""
+
+    username = models.CharField(max_length=150, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    attempted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'login_attempts'
+        ordering = ['-attempted_at']
+
+    def __str__(self):
+        return f"{self.username} @ {self.attempted_at}"
+
+    # ---- helpers --------------------------------------------------------
+
+    LOCKOUT_THRESHOLD = 5          # max failures before lockout
+    LOCKOUT_WINDOW_MINUTES = 15    # rolling window for counting failures
+
+    @classmethod
+    def recent_failures(cls, username):
+        """Return the number of failed attempts within the lockout window."""
+        cutoff = timezone.now() - timezone.timedelta(minutes=cls.LOCKOUT_WINDOW_MINUTES)
+        return cls.objects.filter(username=username, attempted_at__gte=cutoff).count()
+
+    @classmethod
+    def is_locked_out(cls, username):
+        return cls.recent_failures(username) >= cls.LOCKOUT_THRESHOLD
+
+    @classmethod
+    def record_failure(cls, username, ip_address=None):
+        cls.objects.create(username=username, ip_address=ip_address)
+
+    @classmethod
+    def clear_failures(cls, username):
+        """Remove all failure records for this username (called on successful login)."""
+        cls.objects.filter(username=username).delete()
+
+    @classmethod
+    def lockout_seconds_remaining(cls, username):
+        """Seconds until the oldest relevant failure falls outside the window."""
+        cutoff = timezone.now() - timezone.timedelta(minutes=cls.LOCKOUT_WINDOW_MINUTES)
+        oldest = (
+            cls.objects
+            .filter(username=username, attempted_at__gte=cutoff)
+            .order_by('attempted_at')
+            .first()
+        )
+        if oldest is None:
+            return 0
+        unlock_at = oldest.attempted_at + timezone.timedelta(minutes=cls.LOCKOUT_WINDOW_MINUTES)
+        remaining = (unlock_at - timezone.now()).total_seconds()
+        return max(int(remaining), 0)
+
+
 class UserProfile(models.Model):
     POSITION_CHOICES = [
         ('Admin', 'Admin'),

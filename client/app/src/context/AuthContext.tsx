@@ -6,6 +6,18 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchWithCsrf } from "@/lib/csrf";
+import { API_URL } from "@/lib/config";
+import { resetForceLogoutFlag } from "@/lib/fetch-interceptor";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -18,6 +30,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     try {
       return localStorage.getItem("isLoggedIn") === "true";
@@ -42,7 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
+  const [showForceLogoutModal, setShowForceLogoutModal] = useState(false);
+
   const login = (position: string, newUsername: string) => {
+    resetForceLogoutFlag();
     setIsLoggedIn(true);
     setUserPosition(position);
     setUsername(newUsername);
@@ -86,11 +102,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
+  // Listen for force-logout events dispatched by fetchWithCsrf on 401 responses.
+  useEffect(() => {
+    const handleForceLogout = () => setShowForceLogoutModal(true);
+    window.addEventListener("force-logout", handleForceLogout);
+    return () => window.removeEventListener("force-logout", handleForceLogout);
+  }, []);
+
+  const handleForceLogoutConfirm = () => {
+    setShowForceLogoutModal(false);
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <AuthContext.Provider
       value={{ isLoggedIn, userPosition, username, login, logout }}
     >
       {children}
+      <AlertDialog open={showForceLogoutModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>New Login Detected</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your account was signed in from another device or location. You
+              have been logged out of this session.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleForceLogoutConfirm}>
+              Log In Again
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AuthContext.Provider>
   );
 }
@@ -108,7 +153,16 @@ export function useLogout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  return () => {
+  return async () => {
+    // Call server-side logout to flush the session
+    try {
+      await fetchWithCsrf(`${API_URL}/logout/`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // Server unreachable — still clear local state
+    }
     logout();
     navigate("/login", { replace: true });
   };

@@ -3,7 +3,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication
 from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.hashers import check_password
@@ -28,12 +27,6 @@ from points_audit.utils import log_points_change
 
 # Configure logger for request operations
 logger = logging.getLogger('email')
-
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session authentication without CSRF checks for API endpoints"""
-    def enforce_csrf(self, request):
-        return  # Skip CSRF check
 
 
 class RedemptionRequestViewSet(viewsets.ModelViewSet):
@@ -784,7 +777,6 @@ class DashboardStatsView(APIView):
     Returns counts of all requests by status and processing status.
     No role-based filtering - returns all system data.
     """
-    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -831,7 +823,6 @@ class DashboardRedemptionRequestsView(APIView):
     Returns all RedemptionRequest records with pagination.
     No role-based filtering - returns all system data.
     """
-    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

@@ -8,9 +8,7 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from .models import Distributor
 from .serializers import DistributorSerializer
@@ -22,11 +20,6 @@ from points_audit.models import PointsAuditLog
 
 # Configure logger for distributor operations
 logger = logging.getLogger('distributors')
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session authentication without CSRF checks for API endpoints"""
-    def enforce_csrf(self, request):
-        return  # Skip CSRF check
 
 class DistributorPagination(PageNumberPagination):
     """
@@ -43,8 +36,6 @@ class DistributorViewSet(viewsets.ModelViewSet):
     """
     queryset = Distributor.objects.all()
     serializer_class = DistributorSerializer
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     pagination_class = DistributorPagination
     
     def get_queryset(self):
@@ -122,8 +113,6 @@ class DistributorViewSet(viewsets.ModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class DistributorExportView(APIView):
     """Export distributors to PDF or Excel format"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]
     
     # Available columns for export
     AVAILABLE_COLUMNS = {
@@ -362,8 +351,6 @@ class DistributorExportView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class DistributorBulkUpdatePointsView(APIView):
     """Bulk update points for all distributors with password verification (optimized with single query)"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request):
         """Apply points delta to all distributors using optimized bulk operations"""
@@ -483,8 +470,6 @@ class DistributorBulkUpdatePointsView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class DistributorBatchUpdatePointsView(APIView):
     """Batch update points for specific distributors (optimized with bulk_update)"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request):
         """Update points for multiple specific distributors using bulk_update for performance"""
@@ -595,8 +580,6 @@ class DistributorBatchUpdatePointsView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class UnarchiveDistributorView(APIView):
     """Unarchive (restore) an archived distributor"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]
     
     def post(self, request, pk=None):
         """Restore an archived distributor"""

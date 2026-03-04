@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
@@ -29,6 +29,18 @@ function Login() {
     login(position, username);
     navigate("/dashboard", { replace: true });
   };
+
+  // Show session-expired toast on redirect from 401 interceptor
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("session_expired") === "true") {
+      toast.info("Session Expired", {
+        description: "Your session has ended. Please log in again.",
+      });
+      // Clean the URL
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,8 +75,16 @@ function Login() {
       } else {
         console.error("Login failed:", data);
         
+        // Rate-limit / lockout
+        if (response.status === 429) {
+          const retryAfter = data.retry_after || 0;
+          const mins = Math.floor(retryAfter / 60);
+          const secs = retryAfter % 60;
+          toast.error("Account Temporarily Locked", {
+            description: `Too many failed attempts. Try again in ${mins}m ${secs}s.`,
+          });
         // Check if account is archived
-        if (response.status === 403 && data.error === "Account archived") {
+        } else if (response.status === 403 && data.error === "Account archived") {
           toast.error("Account Archived", {
             description: data.detail || "This account has been archived and cannot access the system."
           });
@@ -73,8 +93,10 @@ function Login() {
           const description = data.detail || "Your account has not been activated.";
           toast.error("Account Not Activated", { description });
         } else {
+          const remaining = data.remaining_attempts;
+          const suffix = remaining != null ? ` (${remaining} attempt${remaining === 1 ? '' : 's'} remaining)` : '';
           toast.error("Access Denied", {
-            description: data.error || data.detail || "Invalid credentials"
+            description: (data.error || data.detail || "Invalid credentials") + suffix
           });
         }
       }

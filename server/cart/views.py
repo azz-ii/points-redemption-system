@@ -2,17 +2,11 @@ from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
 from .models import Cart, CartItem
 from .serializers import CartItemSerializer
-
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    def enforce_csrf(self, request):
-        return
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -22,7 +16,6 @@ class CartView(APIView):
     PUT  /api/cart/  — fully replace the cart with the submitted items list
     DELETE /api/cart/ — clear all items from the cart
     """
-    authentication_classes = [CsrfExemptSessionAuthentication]
 
     def _require_auth(self, request):
         if not request.user.is_authenticated:

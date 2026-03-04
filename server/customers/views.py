@@ -5,9 +5,7 @@ from django.db.models import F
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -22,11 +20,6 @@ from points_audit.models import PointsAuditLog
 
 # Configure logger for customer operations
 logger = logging.getLogger('customers')
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session authentication without CSRF checks for API endpoints"""
-    def enforce_csrf(self, request):
-        return  # Skip CSRF check
 
 class CustomerPagination(PageNumberPagination):
     """
@@ -43,8 +36,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
     """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     pagination_class = CustomerPagination
     
     def get_queryset(self):
@@ -122,8 +113,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
 @method_decorator(csrf_exempt, name='dispatch')
 class CustomerExportView(APIView):
     """Export customers to PDF or Excel format"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]
     
     # Available columns for export
     AVAILABLE_COLUMNS = {
@@ -367,8 +356,6 @@ class CustomerExportView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CustomerBulkUpdatePointsView(APIView):
     """Bulk update points for all customers with password verification (optimized with single query)"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request):
         """Apply points delta to all customers using optimized bulk operations"""
@@ -488,8 +475,6 @@ class CustomerBulkUpdatePointsView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class CustomerBatchUpdatePointsView(APIView):
     """Batch update points for specific customers (optimized with bulk_update)"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
     
     def post(self, request):
         """Update points for multiple specific customers using bulk_update for performance"""
@@ -600,8 +585,6 @@ class CustomerBatchUpdatePointsView(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class UnarchiveCustomerView(APIView):
     """Unarchive (restore) an archived customer"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]
     
     def post(self, request, pk=None):
         """Restore an archived customer"""

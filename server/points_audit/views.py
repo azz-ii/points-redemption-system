@@ -1,23 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import PointsAuditLog
 from .serializers import PointsAuditLogSerializer
 
 
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    def enforce_csrf(self, request):
-        return
-
-
 @method_decorator(csrf_exempt, name='dispatch')
 class PointsAuditLogListView(APIView):
     """List points audit logs with filtering and pagination."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
 
     def get(self, request):
         # Check authentication

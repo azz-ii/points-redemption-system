@@ -7,8 +7,6 @@ from django.db.models import Q, Case, When, Value, CharField, F, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Product, StockAuditLog, log_stock_change, bulk_log_stock_changes, generate_stock_batch_id
@@ -27,16 +25,8 @@ class CataloguePagination(PageNumberPagination):
     max_page_size = 1000
 
 
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session authentication without CSRF checks for API endpoints"""
-    def enforce_csrf(self, request):
-        return  # Skip CSRF check
-
-
 class ProductListCreateView(APIView):
     """List all products or create a new product"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request):
@@ -112,8 +102,6 @@ class ProductListCreateView(APIView):
 
 class ProductDetailView(APIView):
     """Retrieve, update or delete a product"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request, product_id):
@@ -232,8 +220,6 @@ class InventoryPagination(PageNumberPagination):
 
 class InventoryListView(APIView):
     """List all inventory items (products with stock info) or filter by status"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def get(self, request):
         """Get paginated list of inventory items with stock status (only items that track stock)"""
@@ -279,8 +265,6 @@ class InventoryListView(APIView):
 
 class InventoryDetailView(APIView):
     """Update stock for a specific product"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def get(self, request, product_id):
         """Get a specific product's inventory details"""
@@ -365,8 +349,6 @@ class InventoryDetailView(APIView):
 
 class BulkAssignMarketingView(APIView):
     """Bulk assign mktg_admin (Marketing user) to products by legend"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Allow unauthenticated access for testing
     
     def post(self, request):
         """
@@ -447,8 +429,6 @@ class BulkAssignMarketingView(APIView):
 
 class BulkUpdateStockView(APIView):
     """Bulk update stock for all inventory-tracked items with password verification"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Will add proper auth
     
     def post(self, request):
         """Apply stock delta to all items with inventory tracking"""
@@ -595,8 +575,6 @@ class BulkUpdateStockView(APIView):
 
 class BatchUpdateStockView(APIView):
     """Batch update stock for specific inventory items (optimized single request)"""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [AllowAny]  # TEMP: Will add proper auth
     
     def post(self, request):
         """Update stock for multiple specific items in a single request"""
@@ -691,8 +669,6 @@ CatalogueItemUpdateView = ProductDetailView  # PUT to /catalogue/<id>/ now handl
 @method_decorator(csrf_exempt, name='dispatch')
 class StockAuditLogListView(APIView):
     """List stock audit logs for a specific product with pagination."""
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = []
 
     def get(self, request, product_id):
         if not request.user.is_authenticated:
