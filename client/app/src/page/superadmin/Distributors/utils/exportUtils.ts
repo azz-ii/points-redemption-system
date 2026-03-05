@@ -193,14 +193,6 @@ export function generateExcel(distributors: Distributor[], options: ExportOption
         return { wch: 8 };
       case "name":
         return { wch: 25 };
-      case "contact_email":
-        return { wch: 30 };
-      case "phone":
-        return { wch: 15 };
-      case "location":
-        return { wch: 25 };
-      case "region":
-        return { wch: 20 };
       case "points":
         return { wch: 10 };
       case "formatted_date":

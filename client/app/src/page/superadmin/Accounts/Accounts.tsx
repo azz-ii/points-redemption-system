@@ -90,11 +90,6 @@ function Accounts() {
   const [unlockTarget, setUnlockTarget] = useState<Account | null>(null);
   const [unlockLoading, setUnlockLoading] = useState(false);
 
-  // Inline edit state
-  const [editingRowId, setEditingRowId] = useState<number | null>(null);
-  const [editedData, setEditedData] = useState<Partial<Account>>({});
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
   // Fetch accounts on component mount
   const fetchAccounts = useCallback(async () => {
     try {
@@ -595,111 +590,6 @@ function Accounts() {
     }
   };
 
-  // Inline edit handlers
-  const handleToggleInlineEdit = useCallback((account: Account) => {
-    setEditingRowId(account.id);
-    setEditedData({
-      username: account.username,
-      full_name: account.full_name,
-      email: account.email,
-      position: account.position,
-      points: account.points,
-    });
-    setFieldErrors({});
-  }, []);
-
-  const handleFieldChange = useCallback((field: string, value: any) => {
-    setEditedData((prev) => {
-      // Only update if value actually changed
-      if ((prev as Record<string, any>)[field] === value) {
-        return prev;
-      }
-      return { ...prev, [field]: value };
-    });
-    // Clear field error when user starts typing
-    setFieldErrors((prev) => {
-      if (prev[field]) {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      }
-      return prev;
-    });
-  }, []); // No dependencies needed since we use functional setState
-
-  const handleCancelInlineEdit = useCallback(() => {
-    setEditingRowId(null);
-    setEditedData({});
-    setFieldErrors({});
-  }, []);
-
-  const handleSaveInlineEdit = useCallback(
-    async (accountId: number) => {
-      if (!editingRowId) return;
-
-      // Validate fields
-      const errors: Record<string, string> = {};
-
-      if (!editedData.username?.trim()) {
-        errors.username = "Username is required";
-      }
-      if (!editedData.full_name?.trim()) {
-        errors.full_name = "Full name is required";
-      }
-      if (!editedData.email?.trim()) {
-        errors.email = "Email is required";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editedData.email)) {
-        errors.email = "Invalid email format";
-      }
-      if (!editedData.position?.trim()) {
-        errors.position = "Position is required";
-      }
-
-      if (Object.keys(errors).length > 0) {
-        setFieldErrors(errors);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await fetchWithCsrf(`/api/users/${accountId}/`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editedData),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          toast.success("Account updated successfully");
-          setEditingRowId(null);
-          setEditedData({});
-          setFieldErrors({});
-          // Refresh accounts list
-          fetchAccounts();
-        } else {
-          // Handle server-side validation errors
-          const serverErrors: Record<string, string> = {};
-          if (data.details) {
-            Object.keys(data.details).forEach((key) => {
-              serverErrors[key] = data.details[key][0];
-            });
-          }
-          setFieldErrors(serverErrors);
-          toast.error(data.error || "Failed to update account");
-        }
-      } catch (err) {
-        console.error("Error updating account:", err);
-        toast.error("Error connecting to server");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [editingRowId, editedData, fetchAccounts],
-  );
-
   // Handle set points submission - batch updates (only changed accounts)
   const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
@@ -870,13 +760,6 @@ function Accounts() {
             setUnlockTarget(account);
             setShowUnlockModal(true);
           }}
-          editingRowId={editingRowId}
-          editedData={editedData}
-          onToggleInlineEdit={handleToggleInlineEdit}
-          onSaveInlineEdit={handleSaveInlineEdit}
-          onCancelInlineEdit={handleCancelInlineEdit}
-          onFieldChange={handleFieldChange}
-          fieldErrors={fieldErrors}
           manualPagination
           pageCount={pageCount}
           totalResults={totalCount}
