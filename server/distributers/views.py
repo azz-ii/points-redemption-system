@@ -64,9 +64,9 @@ class DistributorViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 name__icontains=search
             ) | queryset.filter(
-                contact_email__icontains=search
+                brand__icontains=search
             ) | queryset.filter(
-                location__icontains=search
+                sales_channel__icontains=search
             )
             logger.info(f"Filtering distributors by search: '{search}' - Found {queryset.count()} distributors")
         
@@ -106,7 +106,7 @@ class DistributorViewSet(viewsets.ModelViewSet):
         Lightweight endpoint for dropdown use - returns id, name, and location only.
         No pagination for efficient single-request loading.
         """
-        queryset = Distributor.objects.filter(is_archived=False).values('id', 'name', 'location').order_by('name')
+        queryset = Distributor.objects.filter(is_archived=False).values('id', 'name', 'brand', 'sales_channel').order_by('name')
         return Response(list(queryset))
 
 
@@ -118,9 +118,8 @@ class DistributorExportView(APIView):
     AVAILABLE_COLUMNS = {
         'id': 'ID',
         'name': 'Name',
-        'contact_email': 'Contact Email',
-        'phone': 'Phone',
-        'location': 'Location',
+        'brand': 'Brand',
+        'sales_channel': 'Sales Channel',
         'points': 'Points',
         'date_added': 'Date Added',
         'status': 'Status',
@@ -132,12 +131,10 @@ class DistributorExportView(APIView):
             return distributor.id
         elif column == 'name':
             return distributor.name
-        elif column == 'contact_email':
-            return distributor.contact_email or ''
-        elif column == 'phone':
-            return distributor.phone or ''
-        elif column == 'location':
-            return distributor.location or ''
+        elif column == 'brand':
+            return distributor.brand or ''
+        elif column == 'sales_channel':
+            return distributor.sales_channel or ''
         elif column == 'points':
             return distributor.points or 0
         elif column == 'date_added':
@@ -154,7 +151,7 @@ class DistributorExportView(APIView):
             return sorted(distributors, key=lambda d: d.date_added or datetime.min.date(), reverse=reverse)
         elif sort_field in ['id', 'points']:
             return sorted(distributors, key=lambda d: getattr(d, sort_field, 0), reverse=reverse)
-        elif sort_field in ['name', 'contact_email', 'phone', 'location']:
+        elif sort_field in ['name', 'brand', 'sales_channel']:
             return sorted(distributors, key=lambda d: getattr(d, sort_field, '').lower(), reverse=reverse)
         return distributors
     
@@ -226,9 +223,8 @@ class DistributorExportView(APIView):
             column_widths = {
                 'id': 8,
                 'name': 25,
-                'contact_email': 30,
-                'phone': 15,
-                'location': 25,
+                'brand': 25,
+                'sales_channel': 25,
                 'points': 10,
                 'date_added': 15,
                 'status': 12,

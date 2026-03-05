@@ -66,36 +66,23 @@ export function ViewDistributorModal({
               />
             </div>
 
-            {/* Contact Email */}
+            {/* Brand */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Contact Email
-              </label>
-              <input
-                type="email"
-                value={distributor.contact_email}
-                disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Phone</label>
-              <input
-                type="tel"
-                value={distributor.phone}
-                disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
-              />
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Location</label>
+              <label className="block text-sm font-medium mb-2">Brand</label>
               <input
                 type="text"
-                value={distributor.location}
+                value={distributor.brand ?? ""}
+                disabled
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+              />
+            </div>
+
+            {/* Sales Channel */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Sales Channel</label>
+              <input
+                type="text"
+                value={distributor.sales_channel ?? ""}
                 disabled
                 className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
               />

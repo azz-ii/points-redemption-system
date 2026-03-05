@@ -5,10 +5,8 @@ const API_BASE_URL = API_URL;
 export interface Distributor {
   id: number;
   name: string;
-  contact_email?: string;
-  phone?: string;
-  location?: string;
-  region?: string;
+  brand?: string;
+  sales_channel?: string;
   points?: number;
   team?: string;
   date_added?: string;

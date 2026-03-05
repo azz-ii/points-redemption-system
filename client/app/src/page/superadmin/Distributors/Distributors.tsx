@@ -100,18 +100,14 @@ function Distributors() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [newDistributor, setNewDistributor] = useState({
     name: "",
-    contact_email: "",
-    phone: "",
-    location: "",
-    region: "",
+    brand: "",
+    sales_channel: "",
   });
 
   const [editDistributor, setEditDistributor] = useState({
     name: "",
-    contact_email: "",
-    phone: "",
-    location: "",
-    region: "",
+    brand: "",
+    sales_channel: "",
   });
 
   // Modal state for edit/view/delete
@@ -145,20 +141,12 @@ function Distributors() {
       setCreateError("Name is required");
       return;
     }
-    if (!newDistributor.contact_email.trim()) {
-      setCreateError("Contact email is required");
+    if (!newDistributor.brand.trim()) {
+      setCreateError("Brand is required");
       return;
     }
-    if (!newDistributor.phone.trim()) {
-      setCreateError("Phone is required");
-      return;
-    }
-    if (!newDistributor.location.trim()) {
-      setCreateError("Location is required");
-      return;
-    }
-    if (!newDistributor.region.trim()) {
-      setCreateError("Region is required");
+    if (!newDistributor.sales_channel.trim()) {
+      setCreateError("Sales Channel is required");
       return;
     }
 
@@ -169,10 +157,8 @@ function Distributors() {
       setDistributors((prev) => [...prev, createdDistributor]);
       setNewDistributor({
         name: "",
-        contact_email: "",
-        phone: "",
-        location: "",
-        region: "",
+        brand: "",
+        sales_channel: "",
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -189,10 +175,8 @@ function Distributors() {
     setEditingDistributorId(distributor.id);
     setEditDistributor({
       name: distributor.name,
-      contact_email: distributor.contact_email ?? "",
-      phone: distributor.phone ?? "",
-      location: distributor.location ?? "",
-      region: distributor.region ?? "",
+      brand: distributor.brand ?? "",
+      sales_channel: distributor.sales_channel ?? "",
     });
     setShowEditModal(true);
     setEditError(null);
@@ -209,20 +193,12 @@ function Distributors() {
       setEditError("Name is required");
       return;
     }
-    if (!editDistributor.contact_email.trim()) {
-      setEditError("Contact email is required");
+    if (!editDistributor.brand.trim()) {
+      setEditError("Brand is required");
       return;
     }
-    if (!editDistributor.phone.trim()) {
-      setEditError("Phone is required");
-      return;
-    }
-    if (!editDistributor.location.trim()) {
-      setEditError("Location is required");
-      return;
-    }
-    if (!editDistributor.region.trim()) {
-      setEditError("Region is required");
+    if (!editDistributor.sales_channel.trim()) {
+      setEditError("Sales Channel is required");
       return;
     }
 

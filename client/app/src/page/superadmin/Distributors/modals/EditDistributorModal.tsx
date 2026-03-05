@@ -76,58 +76,37 @@ export function EditDistributorModal({
               />
             </div>
 
-            {/* Contact Email */}
+            {/* Brand */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Contact Email *
-              </label>
-              <input
-                type="email"
-                value={editDistributor.contact_email}
-                onChange={(e) =>
-                  setEditDistributor({
-                    ...editDistributor,
-                    contact_email: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="email@example.com"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Phone *</label>
-              <input
-                type="tel"
-                value={editDistributor.phone}
-                onChange={(e) =>
-                  setEditDistributor({
-                    ...editDistributor,
-                    phone: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="+63 XXX XXX XXXX"
-              />
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Location *
-              </label>
+              <label className="block text-sm font-medium mb-2">Brand *</label>
               <input
                 type="text"
-                value={editDistributor.location}
+                value={editDistributor.brand}
                 onChange={(e) =>
                   setEditDistributor({
                     ...editDistributor,
-                    location: e.target.value,
+                    brand: e.target.value,
                   })
                 }
                 className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
-                placeholder="City, Province"
+                placeholder="Enter brand name"
+              />
+            </div>
+
+            {/* Sales Channel */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Sales Channel *</label>
+              <input
+                type="text"
+                value={editDistributor.sales_channel}
+                onChange={(e) =>
+                  setEditDistributor({
+                    ...editDistributor,
+                    sales_channel: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+                placeholder="Enter sales channel"
               />
             </div>
           </div>

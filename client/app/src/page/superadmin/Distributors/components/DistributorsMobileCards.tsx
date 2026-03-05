@@ -87,20 +87,12 @@ export function DistributorsMobileCards({
 
               <div className="space-y-2 mb-3">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Email:</span>
-                  <span className="font-medium">{distributor.contact_email}</span>
+                  <span className="text-gray-500">Brand:</span>
+                  <span className="font-medium">{distributor.brand || "N/A"}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Phone:</span>
-                  <span className="font-medium">{distributor.phone}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Location:</span>
-                  <span className="font-medium">{distributor.location}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Region:</span>
-                  <span className="font-medium">{distributor.region}</span>
+                  <span className="text-gray-500">Sales Channel:</span>
+                  <span className="font-medium">{distributor.sales_channel || "N/A"}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Created:</span>

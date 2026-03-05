@@ -6,9 +6,8 @@ from datetime import date
 class Distributor(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, help_text="Name of the distributor")
-    contact_email = models.EmailField(max_length=254, help_text="Contact email address")
-    phone = models.CharField(max_length=20, help_text="Contact phone number")
-    location = models.CharField(max_length=255, help_text="Location of the distributor")
+    brand = models.CharField(max_length=255, blank=True, default='', help_text="Brand associated with the distributor")
+    sales_channel = models.CharField(max_length=255, blank=True, default='', help_text="Sales channel for the distributor")
     points = models.IntegerField(default=0, help_text='Current points balance for the distributor (can be negative)')
     date_added = models.DateField(auto_now_add=True, help_text="Date the distributor was added")
     added_by = models.ForeignKey(

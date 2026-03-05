@@ -8,7 +8,7 @@ class DistributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Distributor
         fields = [
-            'id', 'name', 'contact_email', 'phone', 'location',
+            'id', 'name', 'brand', 'sales_channel',
             'points', 'date_added', 
             'added_by', 'added_by_name',
             'is_archived', 'date_archived', 'archived_by', 'archived_by_username'

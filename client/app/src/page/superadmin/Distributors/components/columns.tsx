@@ -63,7 +63,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
     cell: ({ row }) => <div className="font-medium">{row.getValue("name") || "N/A"}</div>,
   },
   {
-    accessorKey: "contact_email",
+    accessorKey: "brand",
     header: ({ column }) => {
       return (
         <Button
@@ -71,20 +71,15 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="px-0 hover:bg-transparent"
         >
-          Email
+          Brand
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("contact_email") || "N/A"}</div>,
+    cell: ({ row }) => <div>{row.getValue("brand") || "N/A"}</div>,
   },
   {
-    accessorKey: "phone",
-    header: "Phone",
-    cell: ({ row }) => <div>{row.getValue("phone") || "N/A"}</div>,
-  },
-  {
-    accessorKey: "location",
+    accessorKey: "sales_channel",
     header: ({ column }) => {
       return (
         <Button
@@ -92,12 +87,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="px-0 hover:bg-transparent"
         >
-          Location
+          Sales Channel
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("location") || "N/A"}</div>,
+    cell: ({ row }) => <div>{row.getValue("sales_channel") || "N/A"}</div>,
   },
 
   {

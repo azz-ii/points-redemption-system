@@ -83,8 +83,8 @@ export function DistributorsTable({
         const s = String(filterValue).toLowerCase()
         return (
           String(row.getValue("name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("contact_email") || "").toLowerCase().includes(s) ||
-          String(row.getValue("location") || "").toLowerCase().includes(s)
+          String(row.getValue("brand") || "").toLowerCase().includes(s) ||
+          String(row.getValue("sales_channel") || "").toLowerCase().includes(s)
         )
       }}
       loadingMessage="Loading distributors..."
