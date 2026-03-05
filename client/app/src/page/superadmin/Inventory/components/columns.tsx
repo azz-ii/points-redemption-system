@@ -1,7 +1,13 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit, ArrowUpDown, Clock } from "lucide-react";
+import { Eye, Edit, ArrowUpDown, Clock, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { InventoryItem, StockStatus } from "../modals/types";
 import { getStatusColor, getLegendColor } from "../modals/types";
@@ -15,12 +21,6 @@ interface ColumnContext {
 export const createColumns = (
   context: ColumnContext
 ): ColumnDef<InventoryItem>[] => [
-  {
-    accessorKey: "id",
-    header: "ID",
-    enableResizing: false,
-    size: 60,
-  },
   {
     accessorKey: "item_name",
     header: ({ column }) => {
@@ -214,38 +214,34 @@ export const createColumns = (
       const item = row.original;
 
       return (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onViewItem(item)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => context.onEditItem(item)}
-            title="Edit Stock"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => context.onViewHistory(item)}
-            title="Stock History"
-          >
-            <Clock className="h-4 w-4" />
-          </Button>
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onViewItem(item)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onEditItem(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Stock
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onViewHistory(item)}>
+                <Clock className="mr-2 h-4 w-4" />
+                Stock History
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 120,
+    size: 50,
   },
 ];

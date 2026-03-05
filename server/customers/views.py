@@ -1,7 +1,5 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db import transaction
-from django.db.models import F
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,8 +13,6 @@ from datetime import datetime
 from django.utils import timezone
 from .models import Customer
 from .serializers import CustomerSerializer
-from points_audit.utils import bulk_log_points_changes, generate_batch_id
-from points_audit.models import PointsAuditLog
 
 # Configure logger for customer operations
 logger = logging.getLogger('customers')
@@ -120,7 +116,6 @@ class CustomerExportView(APIView):
         'name': 'Name',
         'brand': 'Brand',
         'sales_channel': 'Sales Channel',
-        'points': 'Points',
         'date_added': 'Date Added',
         'added_by_name': 'Added By',
     }
@@ -135,8 +130,6 @@ class CustomerExportView(APIView):
             return customer.brand or ''
         elif column == 'sales_channel':
             return customer.sales_channel or ''
-        elif column == 'points':
-            return customer.points or 0
         elif column == 'date_added':
             return customer.date_added.strftime('%Y-%m-%d') if customer.date_added else ''
         elif column == 'added_by_name':
@@ -157,7 +150,7 @@ class CustomerExportView(APIView):
             return sorted(customers, key=lambda c: 
                 (c.added_by.profile.full_name if c.added_by and hasattr(c.added_by, 'profile') and c.added_by.profile 
                  else c.added_by.username if c.added_by else ''), reverse=reverse)
-        elif sort_field in ['id', 'points']:
+        elif sort_field in ['id']:
             return sorted(customers, key=lambda c: getattr(c, sort_field, 0), reverse=reverse)
         elif sort_field in ['name', 'brand', 'sales_channel']:
             return sorted(customers, key=lambda c: getattr(c, sort_field, '').lower(), reverse=reverse)
@@ -234,7 +227,6 @@ class CustomerExportView(APIView):
                 'contact_email': 30,
                 'phone': 15,
                 'location': 25,
-                'points': 10,
                 'date_added': 15,
                 'added_by_name': 20,
             }
@@ -351,235 +343,6 @@ class CustomerExportView(APIView):
             return Response({
                 "error": "PDF export not available. Please install reportlab."
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CustomerBulkUpdatePointsView(APIView):
-    """Bulk update points for all customers with password verification (optimized with single query)"""
-    
-    def post(self, request):
-        """Apply points delta to all customers using optimized bulk operations"""
-        # Check authentication
-        if not request.user.is_authenticated:
-            return Response({
-                "error": "Authentication required"
-            }, status=status.HTTP_401_UNAUTHORIZED)
-        
-        # Check if user is superadmin or admin
-        if not request.user.is_superuser:
-            profile = getattr(request.user, 'profile', None)
-            is_admin = profile and profile.position == 'Admin'
-            if not is_admin:
-                return Response({
-                    "error": "Only superadmins can perform bulk points update"
-                }, status=status.HTTP_403_FORBIDDEN)
-        
-        # Get password from request
-        password = request.data.get('password', '')
-        if not password:
-            return Response({
-                "error": "Password is required for verification"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Verify password
-        if not request.user.check_password(password):
-            return Response({
-                "error": "Invalid password"
-            }, status=status.HTTP_401_UNAUTHORIZED)
-        
-        # Check if this is a reset operation
-        reset_to_zero = request.data.get('reset_to_zero', False)
-        
-        if reset_to_zero:
-            points_delta = None
-            operation = "reset"
-        else:
-            # Get points delta
-            points_delta = request.data.get('points_delta')
-            if points_delta is None:
-                return Response({
-                    "error": "Points delta is required when not resetting"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            try:
-                points_delta = int(points_delta)
-            except (ValueError, TypeError):
-                return Response({
-                    "error": "Points delta must be a valid integer"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            operation = "update"
-        
-        try:
-            # Use atomic transaction for data consistency
-            with transaction.atomic():
-                # Snapshot current points for audit logging (exclude archived)
-                all_customers = list(Customer.objects.filter(is_archived=False).values('id', 'name', 'points'))
-                
-                if reset_to_zero:
-                    # Single SQL UPDATE query to reset all customers to 0 (exclude archived)
-                    updated_count = Customer.objects.filter(is_archived=False).update(points=0)
-                    message = f"Successfully reset points to 0 for {updated_count} customer(s)"
-                    log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} customers to 0"
-                else:
-                    # Single SQL UPDATE query using F() expression for atomic increment (exclude archived)
-                    updated_count = Customer.objects.filter(is_archived=False).update(points=F('points') + points_delta)
-                    message = f"Successfully updated points for {updated_count} customer(s)"
-                    log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} customers"
-            
-            # Create audit log entries from snapshot
-            batch_id = generate_batch_id()
-            audit_entries = []
-            for c in all_customers:
-                old_pts = c['points'] or 0
-                new_pts = 0 if reset_to_zero else old_pts + points_delta
-                audit_entries.append({
-                    'entity_type': PointsAuditLog.EntityType.CUSTOMER,
-                    'entity_id': c['id'],
-                    'entity_name': c['name'],
-                    'previous_points': old_pts,
-                    'new_points': new_pts,
-                    'action_type': PointsAuditLog.ActionType.BULK_RESET if reset_to_zero else PointsAuditLog.ActionType.BULK_DELTA,
-                    'changed_by': request.user,
-                    'reason': 'Bulk reset to 0' if reset_to_zero else f'Bulk delta {points_delta:+d}',
-                    'batch_id': batch_id,
-                })
-            if audit_entries:
-                try:
-                    bulk_log_points_changes(audit_entries)
-                except Exception as e:
-                    logger.error(f"Failed to create audit log entries: {str(e)}")
-            
-            response_data = {
-                "message": message,
-                "updated_count": updated_count,
-                "failed_count": 0,
-                "total_affected": updated_count,
-                "operation": operation
-            }
-            
-            if not reset_to_zero:
-                response_data["points_delta"] = points_delta
-            
-            logger.info(log_message)
-            
-            return Response(response_data, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            logger.error(f"Error in bulk points update: {str(e)}")
-            return Response({
-                "error": "Failed to update points",
-                "details": str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class CustomerBatchUpdatePointsView(APIView):
-    """Batch update points for specific customers (optimized with bulk_update)"""
-    
-    def post(self, request):
-        """Update points for multiple specific customers using bulk_update for performance"""
-        # Check authentication
-        if not request.user.is_authenticated:
-            return Response({
-                "error": "Authentication required"
-            }, status=status.HTTP_401_UNAUTHORIZED)
-        
-        updates = request.data.get('updates', [])
-        reason = request.data.get('reason', '')
-        
-        if not updates:
-            return Response({
-                "error": "No updates provided"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate and prepare updates
-        update_map = {}
-        failed = []
-        
-        for update in updates:
-            try:
-                customer_id = update.get('id')
-                new_points = update.get('points')
-                
-                if customer_id is None or new_points is None:
-                    failed.append({'id': customer_id, 'error': 'Missing id or points'})
-                    continue
-                
-                # Convert and validate points value
-                try:
-                    new_points = int(new_points)
-                except (ValueError, TypeError) as e:
-                    failed.append({'id': customer_id, 'error': f'Invalid points value: {str(e)}'})
-                    continue
-                
-                update_map[customer_id] = new_points
-                
-            except Exception as e:
-                logger.error(f"Error preparing update for customer {customer_id}: {str(e)}")
-                failed.append({'id': customer_id, 'error': str(e)})
-        
-        # Fetch all customers that need updating (exclude archived)
-        customer_ids = list(update_map.keys())
-        customers_to_update = Customer.objects.filter(id__in=customer_ids, is_archived=False)
-        
-        # Check for missing customers
-        found_ids = set(customers_to_update.values_list('id', flat=True))
-        missing_ids = set(customer_ids) - found_ids
-        for missing_id in missing_ids:
-            failed.append({'id': missing_id, 'error': 'Customer not found'})
-        
-        # Snapshot old points and apply updates to customer objects
-        old_points_map = {}
-        updated_customers = []
-        for customer in customers_to_update:
-            old_points_map[customer.id] = customer.points or 0
-            customer.points = update_map[customer.id]
-            updated_customers.append(customer)
-        
-        # Perform bulk update in a transaction
-        updated_ids = []
-        try:
-            with transaction.atomic():
-                if updated_customers:
-                    Customer.objects.bulk_update(updated_customers, ['points'])
-                    updated_ids = [c.id for c in updated_customers]
-        except Exception as e:
-            logger.error(f"Failed to bulk update customers: {str(e)}")
-            return Response({
-                "error": "Failed to update customers",
-                "details": str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        # Create audit log entries
-        if updated_ids:
-            batch_id = generate_batch_id()
-            audit_entries = []
-            for c in updated_customers:
-                if c.id in updated_ids:
-                    audit_entries.append({
-                        'entity_type': PointsAuditLog.EntityType.CUSTOMER,
-                        'entity_id': c.id,
-                        'entity_name': c.name,
-                        'previous_points': old_points_map.get(c.id, 0),
-                        'new_points': c.points,
-                        'action_type': PointsAuditLog.ActionType.INDIVIDUAL_SET,
-                        'changed_by': request.user,
-                        'reason': reason,
-                        'batch_id': batch_id,
-                    })
-            if audit_entries:
-                try:
-                    bulk_log_points_changes(audit_entries)
-                except Exception as e:
-                    logger.error(f"Failed to create audit log entries: {str(e)}")
-        
-        return Response({
-            "message": f"Updated {len(updated_ids)} customer(s)",
-            "updated_count": len(updated_ids),
-            "failed_count": len(failed),
-            "updated_ids": updated_ids,
-            "failed": failed if failed else None
-        }, status=status.HTTP_200_OK)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

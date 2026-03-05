@@ -90,7 +90,7 @@ export function DistributorsTable({
       loadingMessage="Loading distributors..."
       emptyMessage="No distributors found"
       manualPagination={manualPagination}
-      initialSorting={[{ id: "id", desc: false }]}
+      initialSorting={[{ id: "name", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}

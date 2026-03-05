@@ -59,7 +59,7 @@ export function RedemptionTable({
       loadingMessage="Loading redemption requests..."
       emptyMessage="No redemption requests found"
       pageSizeOptions={[15, 50, 100]}
-      initialSorting={[{ id: "id", desc: false }]}
+      initialSorting={[{ id: "requested_by_name", desc: false }]}
     />
   );
 }

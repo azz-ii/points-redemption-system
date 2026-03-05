@@ -5,5 +5,4 @@ export { ArchiveCustomerModal } from "./DeleteCustomerModal";
 export { UnarchiveCustomerModal } from "./UnarchiveCustomerModal";
 export { BulkArchiveCustomerModal } from "./BulkArchiveCustomerModal";
 export { ExportModal } from "./ExportModal";
-export { SetPointsModal } from "./SetPointsModal";
 export type { Customer, CustomerFormData } from "./types";

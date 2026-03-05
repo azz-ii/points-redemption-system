@@ -1,7 +1,13 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Pencil, ArrowUpDown, Clock, Archive, ArchiveRestore } from "lucide-react"
+import { Pencil, ArrowUpDown, Archive, ArchiveRestore, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Customer } from "../modals/types"
@@ -10,7 +16,6 @@ interface ColumnContext {
   onEdit: (customer: Customer) => void
   onArchive: (customer: Customer) => void
   onUnarchive: (customer: Customer) => void
-  onViewPointsHistory?: (customer: Customer) => void
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => [
@@ -39,11 +44,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>,
   },
   {
     accessorKey: "name",
@@ -94,29 +94,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
     cell: ({ row }) => <div>{row.getValue("sales_channel") || "N/A"}</div>,
   },
   {
-    accessorKey: "points",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Points
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const points = row.getValue("points") as number
-      return (
-        <div className="font-medium">
-          {points?.toLocaleString() ?? 0}
-        </div>
-      )
-    },
-  },
-  {
     accessorKey: "is_archived",
     header: "Status",
     cell: ({ row }) => {
@@ -150,55 +127,49 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
 
       if (isArchived) {
         return (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onUnarchive(customer)}
-              className="bg-green-500 hover:bg-green-600 text-white"
-              title="Restore"
-            >
-              <ArchiveRestore className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => context.onUnarchive(customer)}>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Restore
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )
       }
 
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onEdit(customer)}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onArchive(customer)}
-            className="bg-slate-600 hover:bg-slate-700 text-white"
-            title="Archive"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onViewPointsHistory?.(customer)}
-            className="bg-purple-500 hover:bg-purple-600 text-white"
-            title="Points History"
-          >
-            <Clock className="h-4 w-4" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onEdit(customer)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onArchive(customer)} className="text-destructive">
+                <Archive className="mr-2 h-4 w-4" />
+                Archive
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ]

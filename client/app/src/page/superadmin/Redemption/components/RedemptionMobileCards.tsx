@@ -67,8 +67,7 @@ export function RedemptionMobileCards({
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <p className="font-semibold text-sm">#{item.id}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-semibold text-sm">
                     {item.requested_by_name}
                   </p>
                 </div>

@@ -1,7 +1,13 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, ArrowUpDown } from "lucide-react";
+import { Eye, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import type { RequestItem } from "../../ProcessRequests/modals/types";
@@ -38,24 +44,6 @@ export const createColumns = (
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="font-medium">#{row.getValue("id") ?? "N/A"}</div>
-    ),
   },
   {
     accessorKey: "requested_by_name",
@@ -216,21 +204,25 @@ export const createColumns = (
 
       return (
         <div className="flex justify-end">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onView(request)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onView(request)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ];

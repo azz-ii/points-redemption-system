@@ -1,7 +1,14 @@
 ﻿"use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, ArrowUpDown, XCircle } from "lucide-react"
+import { Eye, ArrowUpDown, XCircle, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { RedemptionRequest } from "../modals/types"
@@ -38,24 +45,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionReque
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Request ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => (
-      <div className="font-medium">#{row.getValue("id")}</div>
-    ),
   },
   {
     accessorKey: "requested_for_name",
@@ -160,33 +149,35 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionReque
         request.sales_approval_status !== "APPROVED"
       
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => context.onViewRequest(request)}
-            variant="default"
-            size="sm"
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          {canCancel && (
-            <Button
-              onClick={() => context.onCancelRequest(request)}
-              variant="default"
-              size="sm"
-              className="bg-red-500 hover:bg-red-600 text-white"
-              title="Cancel"
-            >
-              <XCircle className="h-4 w-4" />
-            </Button>
-          )}
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onViewRequest(request)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              {canCancel && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => context.onCancelRequest(request)} className="text-destructive">
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Cancel
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ]

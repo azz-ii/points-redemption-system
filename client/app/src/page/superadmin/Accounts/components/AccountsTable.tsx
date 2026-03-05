@@ -126,7 +126,7 @@ export function AccountsTable({
           String(row.getValue("full_name") || "").toLowerCase().includes(s)
         )
       }}
-      initialSorting={[{ id: "id", desc: false }]}
+      initialSorting={[{ id: "username", desc: false }]}
       loadingMessage="Loading accounts..."
       emptyMessage="No accounts found"
       editingRowId={editingRowId}

@@ -1,7 +1,14 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock, Mail, LockOpen } from "lucide-react"
+import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock, Mail, LockOpen, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
@@ -56,11 +63,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>,
   },
   {
     accessorKey: "username",
@@ -272,101 +274,72 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
 
       if (isArchived) {
         return (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onViewAccount(account)}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              title="View"
-              disabled={isAnyRowEditing}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onUnarchiveAccount(account)}
-              className="bg-green-500 hover:bg-green-600 text-white"
-              title="Restore"
-              disabled={isAnyRowEditing}
-            >
-              <ArchiveRestore className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" disabled={isAnyRowEditing}>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => context.onViewAccount(account)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => context.onUnarchiveAccount(account)}>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Restore
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )
       }
 
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onViewAccount(account)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View"
-            disabled={isAnyRowEditing}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onToggleInlineEdit?.(account)}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-            title="Edit"
-            disabled={isAnyRowEditing}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onArchiveAccount(account)}
-            className="bg-slate-600 hover:bg-slate-700 text-white"
-            title="Archive"
-            disabled={isAnyRowEditing}
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onViewPointsHistory?.(account)}
-            className="bg-purple-500 hover:bg-purple-600 text-white"
-            title="Points History"
-            disabled={isAnyRowEditing}
-          >
-            <Clock className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onSendPasswordResetEmail?.(account)}
-            className="bg-amber-500 hover:bg-amber-600 text-white"
-            title="Send Password Reset Email"
-            disabled={isAnyRowEditing}
-          >
-            <Mail className="h-4 w-4" />
-          </Button>
-          {account.is_locked && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onUnlockAccount?.(account)}
-              className="bg-red-500 hover:bg-red-600 text-white"
-              title="Unlock Account"
-              disabled={isAnyRowEditing}
-            >
-              <LockOpen className="h-4 w-4" />
-            </Button>
-          )}
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={isAnyRowEditing}>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onViewAccount(account)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onToggleInlineEdit?.(account)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onArchiveAccount(account)}>
+                <Archive className="mr-2 h-4 w-4" />
+                Archive
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => context.onViewPointsHistory?.(account)}>
+                <Clock className="mr-2 h-4 w-4" />
+                Points History
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onSendPasswordResetEmail?.(account)}>
+                <Mail className="mr-2 h-4 w-4" />
+                Send Password Reset
+              </DropdownMenuItem>
+              {account.is_locked && (
+                <DropdownMenuItem onClick={() => context.onUnlockAccount?.(account)}>
+                  <LockOpen className="mr-2 h-4 w-4" />
+                  Unlock Account
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ]

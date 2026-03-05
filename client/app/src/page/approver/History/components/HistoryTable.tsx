@@ -1,4 +1,11 @@
-import { Eye } from "lucide-react";
+import { Eye, MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { HistoryItem } from "../types.js";
 
 interface HistoryTableProps {
@@ -33,7 +40,6 @@ export function HistoryTable({
             className="bg-muted text-foreground"
           >
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold">ID</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">
                 Team
               </th>
@@ -64,7 +70,6 @@ export function HistoryTable({
             {loading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <tr key={i}>
-                  <td className="px-6 py-4"><div className="h-4 w-10 rounded bg-muted animate-pulse" /></td>
                   <td className="px-6 py-4"><div className="h-4 w-20 rounded bg-muted animate-pulse" /></td>
                   <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-muted animate-pulse" /></td>
                   <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-muted animate-pulse" /></td>
@@ -72,12 +77,12 @@ export function HistoryTable({
                   <td className="px-6 py-4"><div className="h-6 w-20 rounded-full bg-muted animate-pulse" /></td>
                   <td className="px-6 py-4"><div className="h-4 w-24 rounded bg-muted animate-pulse" /></td>
                   <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-muted animate-pulse" /></td>
-                  <td className="px-6 py-4"><div className="flex justify-end gap-2"><div className="h-8 w-8 rounded-md bg-muted animate-pulse" /></div></td>
+                  <td className="px-6 py-4"><div className="flex justify-end"><div className="h-8 w-8 rounded-md bg-muted animate-pulse" /></div></td>
                 </tr>
               ))
             ) : historyItems.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center">
+                <td colSpan={8} className="px-6 py-12 text-center">
                   <p className="text-sm text-gray-500">No processed requests found</p>
                 </td>
               </tr>
@@ -87,7 +92,6 @@ export function HistoryTable({
                   key={item.id}
                   className="hover:bg-accent transition-colors"
                 >
-                  <td className="px-6 py-4 text-sm">#{item.id}</td>
                   <td className="px-6 py-4 text-sm">
                     {item.team_name || <span className="text-gray-400 italic">No Team</span>}
                   </td>
@@ -118,14 +122,20 @@ export function HistoryTable({
                     {item.processed_by_name || "-"}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => onView(item)}
-                        className="px-4 py-2 rounded flex items-center gap-1 bg-primary hover:bg-primary/90 text-white font-semibold transition-colors text-sm"
-                        title="View"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
+                    <div className="flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onView(item)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </td>
                 </tr>

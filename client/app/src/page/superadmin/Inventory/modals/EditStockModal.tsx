@@ -213,31 +213,31 @@ export function EditStockModal({
               )}
             </div>
 
-            {/* Reason Input (required for decrease) */}
-            {data.action === "decrease" && (
-              <div>
-                <label
-                  htmlFor="stock-reason-input"
-                  className="text-xs text-gray-500 mb-2 block"
-                >
-                  Reason *
-                </label>
-                <textarea
-                  id="stock-reason-input"
-                  value={data.reason}
-                  onChange={(e) => setData({ ...data, reason: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 resize-none"
-                  placeholder="Enter reason for stock decrease (e.g., damaged goods, inventory correction, expired items)"
-                  aria-required="true"
-                />
-                {isDecreaseWithoutReason && (
-                  <p className="text-xs mt-1 text-orange-400">
-                    Reason is required when decreasing stock
-                  </p>
-                )}
-              </div>
-            )}
+            {/* Reason Input (required for decrease, optional for add) */}
+            <div>
+              <label
+                htmlFor="stock-reason-input"
+                className="text-xs text-gray-500 mb-2 block"
+              >
+                {data.action === "decrease" ? "Reason *" : "Reason (optional)"}
+              </label>
+              <textarea
+                id="stock-reason-input"
+                value={data.reason}
+                onChange={(e) => setData({ ...data, reason: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 resize-none"
+                placeholder={data.action === "decrease"
+                  ? "Enter reason for stock decrease (e.g., damaged goods, inventory correction, expired items)"
+                  : "Enter reason for stock addition (optional)"}
+                aria-required={data.action === "decrease"}
+              />
+              {isDecreaseWithoutReason && (
+                <p className="text-xs mt-1 text-orange-400">
+                  Reason is required when decreasing stock
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

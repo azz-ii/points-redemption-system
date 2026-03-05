@@ -8,7 +8,7 @@ class Distributor(models.Model):
     name = models.CharField(max_length=255, help_text="Name of the distributor")
     brand = models.CharField(max_length=255, blank=True, default='', help_text="Brand associated with the distributor")
     sales_channel = models.CharField(max_length=255, blank=True, default='', help_text="Sales channel for the distributor")
-    points = models.IntegerField(default=0, help_text='Current points balance for the distributor (can be negative)')
+    points = models.IntegerField(default=0, help_text='Current points balance for the distributor (minimum 0)')
     date_added = models.DateField(auto_now_add=True, help_text="Date the distributor was added")
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

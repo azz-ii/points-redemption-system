@@ -10,7 +10,6 @@ from points_audit.utils import log_points_change
 class PointsDeductionChoice(models.TextChoices):
     SELF = 'SELF', 'Self (Sales Agent)'
     DISTRIBUTOR = 'DISTRIBUTOR', 'Distributor'
-    CUSTOMER = 'CUSTOMER', 'Customer'
 
 class RequestedForType(models.TextChoices):
     DISTRIBUTOR = 'DISTRIBUTOR', 'Distributor'
@@ -314,28 +313,6 @@ class RedemptionRequest(models.Model):
                 entity_name=distributor.name,
                 previous_points=previous_points,
                 new_points=distributor.points,
-                action_type='REDEMPTION_DEDUCT',
-                changed_by=self.requested_by,
-                reason=f'Redemption request #{self.id}',
-            )
-            
-        elif self.points_deducted_from == 'CUSTOMER':
-            customer = self.requested_for_customer
-            if not customer:
-                raise ValueError('No customer assigned to this request')
-            if customer.points < self.total_points:
-                raise ValueError(
-                    f'Insufficient points: Customer has {customer.points} points but needs {self.total_points} points'
-                )
-            previous_points = customer.points
-            customer.points -= self.total_points
-            customer.save()
-            log_points_change(
-                entity_type='CUSTOMER',
-                entity_id=customer.id,
-                entity_name=customer.name,
-                previous_points=previous_points,
-                new_points=customer.points,
                 action_type='REDEMPTION_DEDUCT',
                 changed_by=self.requested_by,
                 reason=f'Redemption request #{self.id}',

@@ -1,7 +1,14 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown, Clock, Archive, ArchiveRestore } from "lucide-react"
+import { Eye, Pencil, Trash2, ArrowUpDown, Clock, Archive, ArchiveRestore, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Distributor } from "../modals/types"
@@ -40,11 +47,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>,
   },
   {
     accessorKey: "name",
@@ -152,73 +154,62 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
 
       if (isArchived) {
         return (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onView(distributor)}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              title="View"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onUnarchive(distributor)}
-              className="bg-green-500 hover:bg-green-600 text-white"
-              title="Restore"
-            >
-              <ArchiveRestore className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => context.onView(distributor)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => context.onUnarchive(distributor)}>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Restore
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )
       }
 
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onView(distributor)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onEdit(distributor)}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onArchive(distributor)}
-            className="bg-slate-600 hover:bg-slate-700 text-white"
-            title="Archive"
-          >
-            <Archive className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onViewPointsHistory?.(distributor)}
-            className="bg-purple-500 hover:bg-purple-600 text-white"
-            title="Points History"
-          >
-            <Clock className="h-4 w-4" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onView(distributor)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onEdit(distributor)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onArchive(distributor)} className="text-destructive">
+                <Archive className="mr-2 h-4 w-4" />
+                Archive
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => context.onViewPointsHistory?.(distributor)}>
+                <Clock className="mr-2 h-4 w-4" />
+                Points History
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ]

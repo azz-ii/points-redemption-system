@@ -62,9 +62,6 @@ export function ProcessRequestsMobileCards({
           >
             <div className="flex justify-between items-start mb-3">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">
-                  Request #{item.requestId}
-                </p>
                 <p className="font-semibold text-sm">
                   {item.product_code}
                 </p>

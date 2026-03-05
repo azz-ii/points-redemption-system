@@ -1,7 +1,14 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown, Package } from "lucide-react"
+import { Eye, Pencil, Trash2, ArrowUpDown, Package, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Product } from "../modals/types"
@@ -40,12 +47,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    enableResizing: false,
-    size: 60,
   },
   {
     accessorKey: "item_code",
@@ -204,40 +205,35 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
       const product = row.original
 
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onView(product)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onEdit(product)}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-            title="Edit"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onArchive(product)}
-            className="bg-red-500 hover:bg-red-600 text-white"
-            title="Archive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onView(product)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onEdit(product)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => context.onArchive(product)} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Archive
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ]

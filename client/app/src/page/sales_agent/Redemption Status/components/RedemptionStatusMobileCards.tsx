@@ -61,9 +61,6 @@ export function RedemptionStatusMobileCards({
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Request #{request.id}
-                    </p>
                     <h3 className="text-base font-semibold">{request.requested_for_name}</h3>
                   </div>
                   <StatusChip 

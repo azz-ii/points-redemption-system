@@ -21,7 +21,6 @@ export interface ExportOptions {
 }
 
 export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
-  { key: "id", label: "ID", enabled: true },
   { key: "item_name", label: "Item Name", enabled: true },
   { key: "item_code", label: "Item Code", enabled: true },
   { key: "legend", label: "Legend", enabled: true },

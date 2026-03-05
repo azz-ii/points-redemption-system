@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Value
+from django.db.models.functions import Greatest
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils import timezone
@@ -412,8 +413,10 @@ class DistributorBulkUpdatePointsView(APIView):
                     message = f"Successfully reset points to 0 for {updated_count} distributor(s)"
                     log_message = f"Bulk points reset by {request.user.username}: Reset {updated_count} distributors to 0"
                 else:
-                    # Single SQL UPDATE query using F() expression for atomic increment (exclude archived)
-                    updated_count = Distributor.objects.filter(is_archived=False).update(points=F('points') + points_delta)
+                    # Single SQL UPDATE query using Greatest to enforce minimum 0 (exclude archived)
+                    updated_count = Distributor.objects.filter(is_archived=False).update(
+                        points=Greatest(F('points') + points_delta, Value(0))
+                    )
                     message = f"Successfully updated points for {updated_count} distributor(s)"
                     log_message = f"Bulk points update by {request.user.username}: {points_delta:+d} points to {updated_count} distributors"
             
@@ -422,7 +425,7 @@ class DistributorBulkUpdatePointsView(APIView):
             audit_entries = []
             for d in all_distributors:
                 old_pts = d['points'] or 0
-                new_pts = 0 if reset_to_zero else old_pts + points_delta
+                new_pts = 0 if reset_to_zero else max(0, old_pts + points_delta)
                 audit_entries.append({
                     'entity_type': PointsAuditLog.EntityType.DISTRIBUTOR,
                     'entity_id': d['id'],
@@ -503,6 +506,8 @@ class DistributorBatchUpdatePointsView(APIView):
                     failed.append({'id': distributor_id, 'error': f'Invalid points value: {str(e)}'})
                     continue
                 
+                # Enforce minimum 0
+                new_points = max(0, new_points)
                 update_map[distributor_id] = new_points
                 
             except Exception as e:

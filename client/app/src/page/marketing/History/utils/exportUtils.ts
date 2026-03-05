@@ -11,7 +11,6 @@ export function exportToCSV(requests: RequestItem[], filename: string = "history
 
   // Define CSV headers
   const headers = [
-    "Request ID",
     "Requested By",
     "Requested For",
     "Total Points",
@@ -23,7 +22,6 @@ export function exportToCSV(requests: RequestItem[], filename: string = "history
 
   // Convert data to CSV rows
   const rows = requests.map((request) => [
-    request.id,
     request.requested_by_name,
     request.requested_for_name,
     request.total_points,
@@ -62,7 +60,6 @@ export function exportToExcel(requests: RequestItem[], filename: string = "histo
 
   // Prepare data with headers
   const headers = [
-    "Request ID",
     "Requested By",
     "Requested For",
     "Total Points",
@@ -73,7 +70,6 @@ export function exportToExcel(requests: RequestItem[], filename: string = "histo
   ];
 
   const rows = requests.map((request) => [
-    request.id,
     request.requested_by_name,
     request.requested_for_name,
     request.total_points,
@@ -89,7 +85,6 @@ export function exportToExcel(requests: RequestItem[], filename: string = "histo
 
   // Set column widths
   worksheet["!cols"] = [
-    { wch: 12 }, // Request ID
     { wch: 25 }, // Requested By
     { wch: 25 }, // Requested For
     { wch: 15 }, // Total Points

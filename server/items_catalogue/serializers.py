@@ -18,6 +18,7 @@ class ProductSerializer(serializers.ModelSerializer):
     added_by = UserRelatedField(read_only=True)
     archived_by = UserRelatedField(read_only=True)
     available_stock = serializers.IntegerField(read_only=True)
+    request_count = serializers.IntegerField(read_only=True, default=0)
     
     class Meta:
         model = Product
@@ -29,7 +30,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'has_stock', 'stock', 'committed_stock', 'available_stock',
             'mktg_admin', 'requires_sales_approval',
             'image',
-            'date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by'
+            'date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by',
+            'request_count',
         ]
         extra_kwargs = {
             'item_code': {'required': True},

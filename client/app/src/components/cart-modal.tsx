@@ -51,8 +51,8 @@ export default function CartModal({
   const [entityType, setEntityType] = useState<RequestedForType>('DISTRIBUTOR');
   
   // All entities for dropdown (preloaded)
-  const [allDistributors, setAllDistributors] = useState<{id: number; name: string; location: string}[]>([]);
-  const [allCustomers, setAllCustomers] = useState<{id: number; name: string; location: string}[]>([]);
+  const [allDistributors, setAllDistributors] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
+  const [allCustomers, setAllCustomers] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
   const [loadingEntities, setLoadingEntities] = useState(false);
   
   // Selected entity
@@ -70,7 +70,7 @@ export default function CartModal({
   const customerDropdownRef = useRef<HTMLDivElement>(null);
   
   // Points deduction and submission state
-  const [pointsDeductedFrom, setPointsDeductedFrom] = useState<'SELF' | 'DISTRIBUTOR' | 'CUSTOMER'>('SELF');
+  const [pointsDeductedFrom, setPointsDeductedFrom] = useState<'SELF' | 'DISTRIBUTOR'>('SELF');
   
   // Validation state for dynamic inputs
   const [inputErrors, setInputErrors] = useState<Record<string, string>>({});
@@ -110,11 +110,11 @@ export default function CartModal({
   // Filtered lists for combobox search
   const filteredDistributors = allDistributors.filter(d => 
     d.name.toLowerCase().includes(distributorSearch.toLowerCase()) ||
-    d.location.toLowerCase().includes(distributorSearch.toLowerCase())
+    (d.brand || '').toLowerCase().includes(distributorSearch.toLowerCase())
   );
   const filteredCustomers = allCustomers.filter(c => 
     c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    c.location.toLowerCase().includes(customerSearch.toLowerCase())
+    (c.brand || '').toLowerCase().includes(customerSearch.toLowerCase())
   );
   
   // Click-outside handler for dropdowns
@@ -662,7 +662,7 @@ export default function CartModal({
                           <div className="relative">
                             <input
                               type="text"
-                              value={selectedDistributor ? `${selectedDistributor.name} - ${selectedDistributor.location}` : distributorSearch}
+                              value={selectedDistributor ? `${selectedDistributor.name} - ${selectedDistributor.brand}` : distributorSearch}
                               onChange={(e) => {
                                 setDistributorSearch(e.target.value);
                                 setSelectedDistributorId(null);
@@ -702,7 +702,7 @@ export default function CartModal({
                                   >
                                     <div className="font-medium">{distributor.name}</div>
                                     <div className={`text-xs mt-0.5 text-muted-foreground`}>
-                                      {distributor.location}
+                                      {distributor.brand}
                                     </div>
                                   </button>
                                 ))
@@ -723,7 +723,7 @@ export default function CartModal({
                           <div className="relative">
                             <input
                               type="text"
-                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.location}` : customerSearch}
+                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.brand}` : customerSearch}
                               onChange={(e) => {
                                 setCustomerSearch(e.target.value);
                                 setSelectedCustomerId(null);
@@ -763,7 +763,7 @@ export default function CartModal({
                                   >
                                     <div className="font-medium">{customer.name}</div>
                                     <div className={`text-xs mt-0.5 text-muted-foreground`}>
-                                      {customer.location}
+                                      {customer.brand}
                                     </div>
                                   </button>
                                 ))
@@ -813,6 +813,7 @@ export default function CartModal({
                         Deduct from my points
                       </span>
                     </label>
+                    {entityType === 'DISTRIBUTOR' && (
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="radio"
@@ -823,9 +824,10 @@ export default function CartModal({
                         className="w-4 h-4"
                       />
                       <span className="text-foreground">
-                        Deduct from {entityType === 'DISTRIBUTOR' ? "distributor's" : "customer's"} points
+                        Deduct from distributor's points
                       </span>
                     </label>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1202,7 +1204,7 @@ export default function CartModal({
                           <div className="relative">
                             <input
                               type="text"
-                              value={selectedDistributor ? `${selectedDistributor.name} - ${selectedDistributor.location}` : distributorSearch}
+                              value={selectedDistributor ? `${selectedDistributor.name} - ${selectedDistributor.brand}` : distributorSearch}
                               onChange={(e) => {
                                 setDistributorSearch(e.target.value);
                                 setSelectedDistributorId(null);
@@ -1242,7 +1244,7 @@ export default function CartModal({
                                   >
                                     <div className="font-medium">{distributor.name}</div>
                                     <div className={`text-xs mt-0.5 text-muted-foreground`}>
-                                      {distributor.location}
+                                      {distributor.brand}
                                     </div>
                                   </button>
                                 ))
@@ -1269,7 +1271,7 @@ export default function CartModal({
                           <div className="relative">
                             <input
                               type="text"
-                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.location}` : customerSearch}
+                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.brand}` : customerSearch}
                               onChange={(e) => {
                                 setCustomerSearch(e.target.value);
                                 setSelectedCustomerId(null);
@@ -1309,7 +1311,7 @@ export default function CartModal({
                                   >
                                     <div className="font-medium">{customer.name}</div>
                                     <div className={`text-xs mt-0.5 text-muted-foreground`}>
-                                      {customer.location}
+                                      {customer.brand}
                                     </div>
                                   </button>
                                 ))
@@ -1365,6 +1367,7 @@ export default function CartModal({
                         Deduct from my points
                       </span>
                     </label>
+                    {entityType === 'DISTRIBUTOR' && (
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
@@ -1375,9 +1378,10 @@ export default function CartModal({
                         className="w-4 h-4"
                       />
                       <span className={`text-xs text-foreground`}>
-                        Deduct from {entityType === 'DISTRIBUTOR' ? "distributor's" : "customer's"} points
+                        Deduct from distributor's points
                       </span>
                     </label>
+                    )}
                   </div>
                 </div>
               </div>

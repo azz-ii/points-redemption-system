@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { API_URL } from "@/lib/config";
 import { Search, Plus } from "lucide-react";
 
-import { customersApi, type Customer, type ChunkedUpdateProgress } from "@/lib/customers-api";
+import { customersApi, type Customer } from "@/lib/customers-api";
 import {
   CreateCustomerModal,
   EditCustomerModal,
@@ -12,10 +12,8 @@ import {
   UnarchiveCustomerModal,
   BulkArchiveCustomerModal,
   ExportModal,
-  SetPointsModal,
 } from "./modals";
 import { CustomersTable, CustomersMobileCards } from "./components";
-import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Customers() {
   const currentPage = "customers";  const [loading, setLoading] = useState(false);
@@ -125,11 +123,6 @@ function Customers() {
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [showSetPointsModal, setShowSetPointsModal] = useState(false);
-  const [showPointsHistory, setShowPointsHistory] = useState(false);
-  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Customer | null>(null);
-  const [settingPoints, setSettingPoints] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
 
   // Handle create customer submission
   const handleCreateCustomer = async () => {
@@ -316,149 +309,6 @@ function Customers() {
     }
   };
 
-  // Handle set points submission - batch updates with chunking for large datasets
-  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
-    try {
-      setSettingPoints(true);
-      setUpdateProgress(null);
-
-      // Use chunked API for large batches (>100 records), regular API for small batches
-      if (updates.length > 100) {
-        const result = await customersApi.batchUpdatePointsChunked(
-          updates,
-          (progress) => {
-            setUpdateProgress(progress);
-          },
-          150, // Chunk size
-          reason
-        );
-
-        setShowSetPointsModal(false);
-        setUpdateProgress(null);
-
-        if (result.success) {
-          alert(
-            `Successfully updated points for ${result.totalUpdated} customer(s)`,
-          );
-        } else if (result.partialSuccess) {
-          alert(
-            `Updated ${result.totalUpdated} of ${updates.length} customer(s). ${result.totalFailed} failed.`,
-          );
-        } else {
-          alert(
-            `Failed to update points. ${result.totalFailed} customer(s) failed.`,
-          );
-        }
-      } else {
-        // Use regular batch API for smaller updates
-        const result = await customersApi.batchUpdatePoints(updates, reason);
-
-        setShowSetPointsModal(false);
-
-        if (result.failed_count === 0) {
-          alert(
-            `Successfully updated points for ${result.updated_count} customer(s)`,
-          );
-        } else {
-          alert(
-            `Updated ${result.updated_count} of ${updates.length} customer(s). ${result.failed_count} failed.`,
-          );
-        }
-      }
-
-      // Refresh customers list
-      fetchCustomers();
-    } catch (err) {
-      console.error("Error updating points:", err);
-      alert("Error updating points");
-    } finally {
-      setSettingPoints(false);
-      setUpdateProgress(null);
-    }
-  };
-
-  // Handle bulk set points (add/subtract to all customers)
-  const handleBulkSetPoints = async (pointsDelta: number, password: string) => {
-    console.log("[DEBUG] handleBulkSetPoints called with delta:", pointsDelta);
-    try {
-      setSettingPoints(true);
-
-      console.log("[DEBUG] Sending POST to /api/customers/bulk_update_points/");
-      const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          points_delta: pointsDelta,
-          password: password,
-        }),
-      });
-
-      console.log("[DEBUG] Response received:", response.status);
-      const data = await response.json();
-      console.log("[DEBUG] Response data:", data);
-
-      if (!response.ok) {
-        alert(data.error || "Failed to update points");
-        return;
-      }
-
-      setShowSetPointsModal(false);
-      alert(
-        `Successfully updated points for ${data.updated_count} customer(s)`,
-      );
-      fetchCustomers();
-    } catch (err) {
-      console.error("[DEBUG] Error bulk updating points:", err);
-      alert("Error updating points. Please try again.");
-    } finally {
-      setSettingPoints(false);
-    }
-  };
-
-  // Handle reset all points to zero
-  const handleResetAllPoints = async (password: string) => {
-    console.log("[DEBUG] handleResetAllPoints called");
-    try {
-      setSettingPoints(true);
-
-      console.log(
-        "[DEBUG] Sending POST for reset to /api/customers/bulk_update_points/",
-      );
-      const response = await fetch(`${API_URL}/customers/bulk_update_points/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          reset_to_zero: true,
-          password: password,
-        }),
-      });
-
-      console.log("[DEBUG] Reset response received:", response.status);
-      const data = await response.json();
-      console.log("[DEBUG] Reset response data:", data);
-
-      if (!response.ok) {
-        alert(data.error || "Failed to reset points");
-        return;
-      }
-
-      setShowSetPointsModal(false);
-      alert(`Successfully reset points for ${data.updated_count} customer(s)`);
-      fetchCustomers();
-    } catch (err) {
-      console.error("[DEBUG] Error resetting points:", err);
-      alert("Error resetting points. Please try again.");
-    } finally {
-      setSettingPoints(false);
-    }
-  };
-
   return (
     <>
 
@@ -499,11 +349,6 @@ function Customers() {
             onRefresh={fetchCustomers}
             refreshing={loading}
             onExport={() => setShowExportModal(true)}
-            onSetPoints={() => setShowSetPointsModal(true)}
-            onViewPointsHistory={(customer) => {
-              setPointsHistoryTarget(customer);
-              setShowPointsHistory(true);
-            }}
             manualPagination
             pageCount={pageCount}
             totalResults={totalCount}
@@ -633,31 +478,6 @@ function Customers() {
         searchQuery={searchQuery}
         showArchived={showArchived}
       />
-
-      {/* Set Points Modal */}
-      <SetPointsModal
-        isOpen={showSetPointsModal}
-        onClose={() => setShowSetPointsModal(false)}
-        onFetchPage={customersApi.getCustomersPage}
-        loading={settingPoints}
-        onSubmit={handleSetPoints}
-        onBulkSubmit={handleBulkSetPoints}
-        onResetAll={handleResetAllPoints}
-        progress={updateProgress}
-      />
-
-      {pointsHistoryTarget && (
-        <PointsHistoryModal
-          isOpen={showPointsHistory}
-          onClose={() => {
-            setShowPointsHistory(false);
-            setPointsHistoryTarget(null);
-          }}
-          entityType="CUSTOMER"
-          entityId={pointsHistoryTarget.id}
-          entityName={pointsHistoryTarget.name}
-        />
-      )}
     </>
   );
 }

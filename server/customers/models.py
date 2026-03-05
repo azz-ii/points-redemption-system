@@ -8,7 +8,6 @@ class Customer(models.Model):
     name = models.CharField(max_length=255, help_text="Name of the customer")
     brand = models.CharField(max_length=255, blank=True, default='', help_text="Brand associated with the customer")
     sales_channel = models.CharField(max_length=255, blank=True, default='', help_text="Sales channel for the customer")
-    points = models.IntegerField(default=0, help_text='Current points balance for the customer (can be negative)')
     date_added = models.DateField(auto_now_add=True, help_text="Date the customer was added")
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

@@ -34,6 +34,7 @@ export interface Product {
   added_by: number | null;
   date_archived: string | null;
   archived_by: number | null;
+  request_count?: number;
 }
 
 // Backward compatibility aliases
@@ -93,6 +94,7 @@ export interface RedeemItemData {
   available_stock: number; // Available stock (stock - committed)
   min_order_qty: number; // Minimum quantity per order
   max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
+  request_count: number; // Number of approved requests containing this item
   // Additional fields for cart functionality
   image?: string;
   needs_driver?: boolean;
@@ -163,6 +165,7 @@ export function transformProductToRedeemItem(product: Product): RedeemItemData {
     available_stock: product.available_stock || 0,
     min_order_qty: product.min_order_qty ?? 1,
     max_order_qty: product.max_order_qty ?? null,
+    request_count: product.request_count ?? 0,
     image: product.image || undefined,
   };
 
@@ -180,7 +183,7 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
   
   try {
     // Fetch all items with a large page_size to get everything at once
-    const response = await fetch(`${API_BASE_URL}/catalogue/?page_size=1000`, {
+    const response = await fetch(`${API_BASE_URL}/catalogue/?page_size=1000&ordering=popularity`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -307,7 +310,7 @@ export interface CreateRedemptionRequestData {
   requested_for?: number; // Distributor ID (optional when type is CUSTOMER)
   requested_for_customer?: number; // Customer ID (optional when type is DISTRIBUTOR)
   requested_for_type: RequestedForType;
-  points_deducted_from: 'SELF' | 'DISTRIBUTOR' | 'CUSTOMER';
+  points_deducted_from: 'SELF' | 'DISTRIBUTOR';
   remarks?: string;
   items: RedemptionRequestItem[];
   // Service Vehicle Use fields (optional)

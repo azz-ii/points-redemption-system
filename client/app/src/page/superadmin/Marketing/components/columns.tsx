@@ -1,7 +1,13 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, ArrowUpDown } from "lucide-react"
+import { Eye, Pencil, ArrowUpDown, MoreHorizontal } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { MarketingUser } from "./types"
@@ -52,11 +58,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <div className="font-medium">{row.getValue("id") ?? "N/A"}</div>,
   },
   {
     accessorKey: "username",
@@ -164,31 +165,30 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
       const account = row.original
 
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onViewAccount(account)}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => context.onEditAccount(account)}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-            title="Edit Assignments"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onViewAccount(account)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => context.onEditAccount(account)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Assignments
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ]

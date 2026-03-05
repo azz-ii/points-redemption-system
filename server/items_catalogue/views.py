@@ -56,7 +56,19 @@ class ProductListCreateView(APIView):
             )
             logger.info(f"Filtering products by search: '{search}' - Found {products.count()} products")
 
-        products = products.order_by('item_name', 'id')
+        # Annotate with request frequency (count of approved redemption request items)
+        products = products.annotate(
+            request_count=Count(
+                'redemption_items',
+                filter=Q(redemption_items__request__status='APPROVED'),
+            )
+        )
+
+        ordering = request.query_params.get('ordering', '').strip()
+        if ordering == 'popularity':
+            products = products.order_by('-request_count', 'item_name', 'id')
+        else:
+            products = products.order_by('item_name', 'id')
 
         paginator = CataloguePagination()
         paginated_products = paginator.paginate_queryset(products, request)

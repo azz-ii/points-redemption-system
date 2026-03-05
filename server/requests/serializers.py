@@ -180,7 +180,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         choices=['DISTRIBUTOR', 'CUSTOMER'],
         default='DISTRIBUTOR'
     )
-    points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR', 'CUSTOMER'])
+    points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR'])
     remarks = serializers.CharField(required=False, allow_blank=True)
     items = serializers.ListField(
         child=serializers.DictField(),
@@ -233,10 +233,6 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         if points_deducted_from == 'DISTRIBUTOR' and requested_for_type != 'DISTRIBUTOR':
             raise serializers.ValidationError({
                 'points_deducted_from': 'Cannot deduct from distributor when request is for a customer'
-            })
-        if points_deducted_from == 'CUSTOMER' and requested_for_type != 'CUSTOMER':
-            raise serializers.ValidationError({
-                'points_deducted_from': 'Cannot deduct from customer when request is for a distributor'
             })
         
         return data

@@ -8,7 +8,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = [
             'id', 'name', 'brand', 'sales_channel',
-            'points', 'date_added', 
+            'date_added', 
             'added_by', 'added_by_name',
             'is_archived', 'date_archived', 'archived_by'
         ]

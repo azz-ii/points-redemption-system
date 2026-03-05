@@ -5,7 +5,6 @@ export interface Customer {
   name: string;
   brand?: string;
   sales_channel?: string;
-  points?: number;
   created_at?: string;
   updated_at?: string;
   date_added?: string;

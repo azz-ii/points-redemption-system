@@ -287,7 +287,7 @@ export const distributorsApi = {
     if (!response.ok) throw new Error('Failed to fetch distributors');
     return response.json();
   },
-  getListAll: async (): Promise<{id: number; name: string; location: string}[]> => {
+  getListAll: async (): Promise<{id: number; name: string; brand: string; sales_channel: string}[]> => {
     const response = await fetch(`${API_BASE_URL}/distributors/list_all/`, {
       credentials: 'include',
     });

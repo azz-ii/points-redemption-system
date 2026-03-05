@@ -73,8 +73,7 @@ export function InventoryTable({
       loadingMessage="Loading inventory items..."
       emptyMessage="No inventory items found"
       manualPagination={manualPagination}
-      initialSorting={[{ id: "id", desc: false }]}
-      initialColumnVisibility={{ id: false }}
+      initialSorting={[{ id: "item_name", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}

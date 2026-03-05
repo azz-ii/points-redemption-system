@@ -60,8 +60,7 @@ export function HistoryMobileCards({
         >
           <div className="flex justify-between items-start mb-3">
             <div>
-              <p className="font-semibold text-sm">#{request.id}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="font-semibold text-sm">
                 {request.requested_by_name}
               </p>
             </div>

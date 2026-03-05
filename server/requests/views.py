@@ -492,23 +492,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                             reason=f'Cancellation of request #{redemption_request.id}',
                         )
                         logger.info(f"Refunded {redemption_request.total_points} points to distributor {distributor.name}")
-                elif redemption_request.points_deducted_from == 'CUSTOMER':
-                    customer = redemption_request.requested_for_customer
-                    if customer:
-                        previous_points = customer.points
-                        customer.points += redemption_request.total_points
-                        customer.save()
-                        log_points_change(
-                            entity_type='CUSTOMER',
-                            entity_id=customer.id,
-                            entity_name=customer.name,
-                            previous_points=previous_points,
-                            new_points=customer.points,
-                            action_type='REDEMPTION_REFUND',
-                            changed_by=user,
-                            reason=f'Cancellation of request #{redemption_request.id}',
-                        )
-                        logger.info(f"Refunded {redemption_request.total_points} points to customer {customer.name}")
                 
                 # Release committed stock (stock was not deducted at approval, only committed at creation)
                 self._uncommit_stock(redemption_request)

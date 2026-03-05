@@ -140,7 +140,7 @@ export function SetPointsModal({
         // Find the distributor to get current points
         const distributor = distributors.find(d => d.id === id);
         if (distributor) {
-          const newPoints = (distributor.points || 0) + delta;
+          const newPoints = Math.max(0, (distributor.points || 0) + delta);
           updates.push({ id, points: newPoints });
         }
       }
@@ -311,7 +311,8 @@ export function SetPointsModal({
               {!isLoadingPage && distributors.map((distributor) => {
                 const delta = pointsToAdd[distributor.id] || 0;
                 const currentPoints = distributor.points || 0;
-                const newTotal = currentPoints + delta; // Allow negative values
+                const newTotal = Math.max(0, currentPoints + delta);
+                const isClamped = currentPoints + delta < 0;
                 
                 return (
                   <div
@@ -345,16 +346,22 @@ export function SetPointsModal({
                         disabled={loading}
                       />
                     </div>
-                    <div
-                      className={`col-span-1 text-sm font-semibold ${
-                        delta > 0
-                          ? "text-green-500"
-                          : delta < 0
-                          ? "text-red-500"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {newTotal.toLocaleString()}
+                    <div className="col-span-1">
+                      <span
+                        className={`text-sm font-semibold ${
+                          isClamped
+                            ? "text-amber-500"
+                            : delta > 0
+                            ? "text-green-500"
+                            : delta < 0
+                            ? "text-red-500"
+                            : "text-muted-foreground"
+                        }`}
+                        title={isClamped ? "Cannot go below 0. Will be set to 0." : undefined}
+                      >
+                        {newTotal.toLocaleString()}
+                        {isClamped && <span className="ml-1 text-xs">⚠</span>}
+                      </span>
                     </div>
                   </div>
                 );
@@ -488,6 +495,11 @@ export function SetPointsModal({
                     >
                       Positive numbers add points, negative numbers subtract
                     </p>
+                    {bulkPointsDelta < 0 && (
+                      <p className="text-xs mt-1 text-amber-500">
+                        Distributors at 0 points will not go below 0.
+                      </p>
+                    )}
                   </div>
 
                   {/* Confirmation Checkbox */}

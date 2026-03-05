@@ -15,8 +15,6 @@ interface CustomersTableProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
-  onSetPoints?: () => void;
-  onViewPointsHistory?: (customer: Customer) => void;
   manualPagination?: boolean;
   pageCount?: number;
   totalResults?: number;
@@ -41,8 +39,6 @@ export function CustomersTable({
   onRefresh,
   refreshing,
   onExport,
-  onSetPoints,
-  onViewPointsHistory,
   manualPagination,
   pageCount,
   totalResults,
@@ -57,7 +53,6 @@ export function CustomersTable({
     onEdit,
     onArchive,
     onUnarchive,
-    onViewPointsHistory,
   });
 
   return (
@@ -74,7 +69,6 @@ export function CustomersTable({
       onRefresh={onRefresh}
       refreshing={refreshing}
       onExport={onExport}
-      onSetPoints={onSetPoints}
       searchPlaceholder="Filter by name, brand, or sales channel..."
       globalFilterFn={(row, _columnId, filterValue) => {
         const s = String(filterValue).toLowerCase()
@@ -87,7 +81,7 @@ export function CustomersTable({
       loadingMessage="Loading customers..."
       emptyMessage="No customers found"
       manualPagination={manualPagination}
-      initialSorting={[{ id: "id", desc: false }]}
+      initialSorting={[{ id: "name", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}

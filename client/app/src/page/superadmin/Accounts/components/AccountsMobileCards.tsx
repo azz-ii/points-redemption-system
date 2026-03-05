@@ -69,11 +69,6 @@ export function AccountsMobileCards({
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <p
-                    className="text-xs font-semibold mb-2 text-muted-foreground"
-                  >
-                    ID {account.id ?? "N/A"}
-                  </p>
                   <p className="font-semibold text-sm mb-1">
                     {account.full_name || "N/A"}
                   </p>

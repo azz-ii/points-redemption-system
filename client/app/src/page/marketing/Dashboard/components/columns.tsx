@@ -1,7 +1,13 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, CheckCircle, ArrowUpDown } from "lucide-react";
+import { Eye, CheckCircle, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { FlattenedRequestItem } from "../../ProcessRequests/modals/types";
@@ -40,24 +46,6 @@ export const createColumns = (
     enableHiding: false,
     enableResizing: false,
     size: 40,
-  },
-  {
-    accessorKey: "requestId",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Request ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="font-medium">#{row.getValue("requestId")}</div>
-    ),
   },
   {
     accessorKey: "product_code",
@@ -242,33 +230,32 @@ export const createColumns = (
         !isProcessed;
 
       return (
-        <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => context.onViewRequest(item)}
-            variant="default"
-            size="sm"
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            title="View Request"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          {canProcess && (
-            <Button
-              onClick={() => context.onMarkItemProcessed(item)}
-              variant="default"
-              size="sm"
-              className="bg-green-500 hover:bg-green-600 text-white"
-              title="Mark as Processed"
-            >
-              <CheckCircle className="h-4 w-4" />
-            </Button>
-          )}
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => context.onViewRequest(item)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Request
+              </DropdownMenuItem>
+              {canProcess && (
+                <DropdownMenuItem onClick={() => context.onMarkItemProcessed(item)}>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Mark as Processed
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },
     enableSorting: false,
     enableHiding: false,
     enableResizing: false,
-    size: 100,
+    size: 50,
   },
 ];

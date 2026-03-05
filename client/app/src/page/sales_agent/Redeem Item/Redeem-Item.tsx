@@ -145,10 +145,11 @@ export default function RedeemItem() {
       activeCategory === "All" || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   }).sort((a, b) => {
-    // Sort by available_stock descending (in-stock items first, out-of-stock last)
+    // Sort out-of-stock items to the bottom
     if (a.available_stock === 0 && b.available_stock > 0) return 1;
     if (a.available_stock > 0 && b.available_stock === 0) return -1;
-    return 0;
+    // Within same stock tier, sort by request frequency (most requested first)
+    return (b.request_count ?? 0) - (a.request_count ?? 0);
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);

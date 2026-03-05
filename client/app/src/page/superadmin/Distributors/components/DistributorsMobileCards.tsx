@@ -73,7 +73,6 @@ export function DistributorsMobileCards({
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-semibold text-sm">{distributor.name}</h3>
-                  <p className="text-xs text-gray-500">ID: {distributor.id}</p>
                   {distributor.is_archived && (
                     <span className="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
                       Archived

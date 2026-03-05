@@ -73,16 +73,12 @@ export function CustomersMobileCards({
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-semibold text-sm">{customer.name}</h3>
-                  <p className="text-xs text-gray-500">ID: {customer.id}</p>
                   {customer.is_archived && (
                     <span className="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
                       Archived
                     </span>
                   )}
                 </div>
-                <span className="text-sm font-medium">
-                  {customer.points} pts
-                </span>
               </div>
 
               <div className="space-y-2 mb-3">

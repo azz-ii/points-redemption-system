@@ -21,11 +21,9 @@ export interface ExportOptions {
 }
 
 export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
-  { key: "id", label: "ID", enabled: true },
   { key: "name", label: "Name", enabled: true },
   { key: "brand", label: "Brand", enabled: true },
   { key: "sales_channel", label: "Sales Channel", enabled: true },
-  { key: "points", label: "Points", enabled: true },
   { key: "formatted_date", label: "Date Added", enabled: true },
   { key: "added_by_name", label: "Added By", enabled: true },
 ];
