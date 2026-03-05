@@ -268,6 +268,31 @@ export function ViewAccountModal({
             </div>
           )}
 
+          {/* Team Section — Approvers only (read-only list) */}
+          {localAccount.position === "Approver" && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                Managed Teams
+              </h3>
+              {localAccount.approver_teams && localAccount.approver_teams.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {localAccount.approver_teams.map((team) => (
+                    <span
+                      key={team.id}
+                      className="px-3 py-1 rounded-full text-sm bg-muted border border-border text-foreground"
+                    >
+                      {team.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Not assigned to any team
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Performance Analytics Section */}
           <AccountAnalytics accountId={localAccount.id} position={localAccount.position} />
         </div>

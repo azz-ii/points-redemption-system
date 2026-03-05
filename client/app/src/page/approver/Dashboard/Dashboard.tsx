@@ -211,7 +211,9 @@ function ApproverDashboard() {
             </div>
 
             <RequestsMobileCards
-              requests={requests as unknown as RequestItem[]}
+              requests={[...(requests as unknown as RequestItem[])].sort(
+                (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+              )}
               loading={requestsLoading}
               onView={handleViewClick}
               onApprove={handleApproveClick}
@@ -310,7 +312,9 @@ function ApproverDashboard() {
           </div>
 
           <RequestsTable
-            requests={requests as unknown as RequestItem[]}
+            requests={[...(requests as unknown as RequestItem[])].sort(
+              (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+            )}
             loading={requestsLoading}
             onView={handleViewClick}
             onApprove={handleApproveClick}

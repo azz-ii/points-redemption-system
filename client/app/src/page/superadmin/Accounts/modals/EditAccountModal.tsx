@@ -19,6 +19,10 @@ interface EditAccountModalProps extends ModalBaseProps {
   teams: TeamOption[];
   selectedEditTeamId: number | null | "REMOVE";
   setSelectedEditTeamId: Dispatch<SetStateAction<number | null | "REMOVE">>;
+  approverTeamsToRemove: number[];
+  setApproverTeamsToRemove: Dispatch<SetStateAction<number[]>>;
+  approverTeamToAdd: number | null;
+  setApproverTeamToAdd: Dispatch<SetStateAction<number | null>>;
   loading: boolean;
   error: string;
   setError: Dispatch<SetStateAction<string>>;
@@ -34,6 +38,10 @@ export function EditAccountModal({
   teams,
   selectedEditTeamId,
   setSelectedEditTeamId,
+  approverTeamsToRemove,
+  setApproverTeamsToRemove,
+  approverTeamToAdd,
+  setApproverTeamToAdd,
   loading,
   error,
   setError,
@@ -285,6 +293,83 @@ export function EditAccountModal({
                     )}
                   </div>
                 </>
+              )}
+
+              {editAccount.position === "Approver" && (
+                <div className="space-y-3">
+                  <label className="text-xs text-gray-500 block">
+                    Teams <span className="text-gray-400">(optional)</span>
+                  </label>
+                  {account.approver_teams && account.approver_teams.length > 0 && (
+                    <div className="space-y-2">
+                      {account.approver_teams.map((team) => {
+                        const isPendingRemoval = approverTeamsToRemove.includes(team.id);
+                        return (
+                          <div
+                            key={team.id}
+                            className={`flex items-center gap-3${isPendingRemoval ? " opacity-50" : ""}`}
+                          >
+                            <input
+                              type="text"
+                              value={team.name}
+                              disabled
+                              className={`flex-1 px-4 py-3 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none${isPendingRemoval ? " line-through" : ""}`}
+                            />
+                            {isPendingRemoval ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setApproverTeamsToRemove(
+                                    approverTeamsToRemove.filter((id) => id !== team.id),
+                                  )
+                                }
+                                className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted hover:bg-accent border-border text-foreground"
+                              >
+                                Undo
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setApproverTeamsToRemove([
+                                    ...approverTeamsToRemove,
+                                    team.id,
+                                  ])
+                                }
+                                className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-red-600 hover:bg-red-700 text-white"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <select
+                    id="approver-team-add"
+                    value={approverTeamToAdd ?? ""}
+                    onChange={(e) =>
+                      setApproverTeamToAdd(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                  >
+                    <option value="">No new team</option>
+                    {teams
+                      .filter(
+                        (t) =>
+                          !account.approver_teams?.some((at) => at.id === t.id) ||
+                          approverTeamsToRemove.includes(t.id),
+                      )
+                      .map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               )}
             </div>
           </div>

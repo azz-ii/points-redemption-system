@@ -153,7 +153,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
   },
   {
     id: "team_name",
-    accessorFn: (row) => row.team_name ?? null,
+    accessorFn: (row) => {
+      if (row.position === "Sales Agent") return row.team_name ?? null;
+      if (row.position === "Approver")
+        return row.approver_teams?.map((t) => t.name).join(", ") ?? null;
+      return null;
+    },
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -165,12 +170,24 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
       </Button>
     ),
     cell: ({ row }) => {
-      if (row.original.position !== "Sales Agent") {
-        return <span className="text-muted-foreground">—</span>
+      const { position, team_name, approver_teams } = row.original;
+      if (position === "Sales Agent") {
+        return (
+          <span>{team_name ?? <span className="text-muted-foreground">—</span>}</span>
+        );
       }
-      return (
-        <span>{row.original.team_name ?? <span className="text-muted-foreground">—</span>}</span>
-      )
+      if (position === "Approver") {
+        if (!approver_teams || approver_teams.length === 0) {
+          return <span className="text-muted-foreground">—</span>;
+        }
+        const names = approver_teams.map((t) => t.name);
+        return (
+          <span title={names.join(", ")}>
+            {names.length <= 2 ? names.join(", ") : `${names.length} teams`}
+          </span>
+        );
+      }
+      return <span className="text-muted-foreground">—</span>;
     },
   },
   {

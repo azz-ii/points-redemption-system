@@ -428,7 +428,9 @@ function SalesAgentDashboard() {
               </TableHeader>
               <TableBody>
                 {!requestsLoading && requests.length > 0 ? (
-                  requests.map((request) => (
+                  [...requests].sort(
+                    (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+                  ).map((request) => (
                     <TableRow
                       key={request.id}
                       className="border-b border-border hover:bg-accent/50 transition-colors cursor-pointer"

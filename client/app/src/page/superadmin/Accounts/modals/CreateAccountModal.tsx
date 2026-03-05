@@ -254,6 +254,34 @@ export function CreateAccountModal({
                   </div>
                 </>
               )}
+
+              {newAccount.position === "Approver" && (
+                <div>
+                  <label
+                    htmlFor="approver-team"
+                    className="text-xs text-gray-500 mb-2 block"
+                  >
+                    Team <span className="text-gray-400">(optional)</span>
+                  </label>
+                  <select
+                    id="approver-team"
+                    value={selectedTeamId ?? ""}
+                    onChange={(e) =>
+                      setSelectedTeamId(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                  >
+                    <option value="">No team assigned</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         </div>

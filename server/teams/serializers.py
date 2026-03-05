@@ -68,6 +68,18 @@ class TeamSerializer(serializers.ModelSerializer):
             return TeamMemberSerializer(obj.approver).data
         return None
 
+    def validate_approver(self, value):
+        """Ensure only Approver-position users (or null) can be set as team approver"""
+        if value is None:
+            return value
+        if not hasattr(value, 'profile'):
+            raise serializers.ValidationError('User does not have a profile.')
+        if value.profile.position != 'Approver':
+            raise serializers.ValidationError(
+                'Only Approver-position users can be assigned as team approver.'
+            )
+        return value
+
 
 class TeamDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for Team with members list"""

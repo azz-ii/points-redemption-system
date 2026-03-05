@@ -52,11 +52,14 @@ function ApproverHistory() {
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const sortedItems = [...filteredItems].sort(
+    (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+  );
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+  const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
   return (
     <>

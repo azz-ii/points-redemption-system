@@ -56,6 +56,10 @@ function Accounts() {
   // Team management for edit modal
   const [selectedEditTeamId, setSelectedEditTeamId] = useState<number | null | "REMOVE">(null);
 
+  // Team management for Approver (edit modal)
+  const [approverTeamsToRemove, setApproverTeamsToRemove] = useState<number[]>([]);
+  const [approverTeamToAdd, setApproverTeamToAdd] = useState<number | null>(null);
+
   const [editAccount, setEditAccount] = useState({
     username: "",
     full_name: "",
@@ -236,6 +240,33 @@ function Accounts() {
               toast.warning("Account created but team assignment failed.");
             }
           }
+
+          // Assign team if Approver
+          if (capturedTeamId && positionWas === "Approver" && data.user?.id) {
+            try {
+              const teamRes = await fetchWithCsrf(
+                `${API_URL}/teams/${capturedTeamId}/`,
+                {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ approver: data.user.id }),
+                },
+              );
+              if (!teamRes.ok) {
+                const teamErr = await teamRes.json().catch(() => ({}));
+                toast.warning(
+                  `Account created but team assignment failed: ${
+                    teamErr?.approver?.[0] ||
+                    teamErr?.detail ||
+                    teamErr?.error ||
+                    "Unknown error"
+                  }`,
+                );
+              }
+            } catch {
+              toast.warning("Account created but team assignment failed.");
+            }
+          }
           // Silently refresh accounts list in background
           fetchAccounts();
         } else {
@@ -277,6 +308,8 @@ function Accounts() {
       is_activated: account.is_activated,
     });
     setSelectedEditTeamId(account.team_id ?? null);
+    setApproverTeamsToRemove([]);
+    setApproverTeamToAdd(null);
     setShowEditModal(true);
     setError("");
   };
@@ -298,6 +331,8 @@ function Accounts() {
     // Capture team intent before any async work
     const oldTeamId = editingAccount.team_id ?? null;
     const capturedEditTeamId = selectedEditTeamId;
+    const capturedApproverTeamsToRemove = approverTeamsToRemove;
+    const capturedApproverTeamToAdd = approverTeamToAdd;
 
     try {
       setLoading(true);
@@ -319,6 +354,8 @@ function Accounts() {
         setShowEditModal(false);
         setEditingAccount(null);
         setSelectedEditTeamId(null);
+        setApproverTeamsToRemove([]);
+        setApproverTeamToAdd(null);
         setError("");
 
         // Handle team changes
@@ -360,6 +397,52 @@ function Accounts() {
                 toast.warning(
                   `Account updated but team assignment failed: ${
                     teamErr?.user?.[0] ??
+                    teamErr?.detail ??
+                    teamErr?.error ??
+                    "Unknown error"
+                  }`,
+                );
+              }
+            } catch {
+              toast.warning("Account updated but team assignment failed.");
+            }
+          }
+        }
+
+        // Handle team changes for Approver
+        if (editAccount.position === "Approver") {
+          if (capturedApproverTeamsToRemove.length > 0) {
+            const removalResults = await Promise.allSettled(
+              capturedApproverTeamsToRemove.map((teamId) =>
+                fetchWithCsrf(`${API_URL}/teams/${teamId}/`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ approver: null }),
+                }),
+              ),
+            );
+            removalResults.forEach((result) => {
+              if (result.status === "rejected") {
+                toast.warning("Account updated but failed to remove from a team.");
+              }
+            });
+          }
+
+          if (capturedApproverTeamToAdd !== null) {
+            try {
+              const teamRes = await fetchWithCsrf(
+                `${API_URL}/teams/${capturedApproverTeamToAdd}/`,
+                {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ approver: editingAccount.id }),
+                },
+              );
+              if (!teamRes.ok) {
+                const teamErr = await teamRes.json().catch(() => ({}));
+                toast.warning(
+                  `Account updated but team assignment failed: ${
+                    teamErr?.approver?.[0] ??
                     teamErr?.detail ??
                     teamErr?.error ??
                     "Unknown error"
@@ -873,6 +956,8 @@ function Accounts() {
           setShowEditModal(false);
           setEditingAccount(null);
           setSelectedEditTeamId(null);
+          setApproverTeamsToRemove([]);
+          setApproverTeamToAdd(null);
         }}
         account={editingAccount}
         editAccount={editAccount}
@@ -880,6 +965,10 @@ function Accounts() {
         teams={teams}
         selectedEditTeamId={selectedEditTeamId}
         setSelectedEditTeamId={setSelectedEditTeamId}
+        approverTeamsToRemove={approverTeamsToRemove}
+        setApproverTeamsToRemove={setApproverTeamsToRemove}
+        approverTeamToAdd={approverTeamToAdd}
+        setApproverTeamToAdd={setApproverTeamToAdd}
         loading={loading}
         error={error}
         setError={setError}

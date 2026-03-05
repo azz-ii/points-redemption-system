@@ -66,11 +66,14 @@ function ApproverRequests() {
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const sortedRequests = [...filteredRequests].sort(
+    (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+  );
+  const totalPages = Math.max(1, Math.ceil(sortedRequests.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+  const paginatedRequests = sortedRequests.slice(startIndex, endIndex);
 
   const handleViewClick = (request: RequestItem) => {
     setSelectedRequest(request);

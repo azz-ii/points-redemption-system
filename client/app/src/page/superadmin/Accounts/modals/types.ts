@@ -17,6 +17,7 @@ export interface Account {
   is_locked?: boolean;
   team_id?: number | null;
   team_name?: string | null;
+  approver_teams?: { id: number; name: string }[];
 }
 
 export interface TeamOption {

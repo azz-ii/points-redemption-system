@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile, LoginAttempt
+from teams.models import Team
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for UserProfile model"""
@@ -162,6 +163,7 @@ class UserListSerializer(serializers.ModelSerializer):
     team_id = serializers.SerializerMethodField()
     team_name = serializers.SerializerMethodField()
     is_team_approver = serializers.SerializerMethodField()
+    approver_teams = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -170,7 +172,7 @@ class UserListSerializer(serializers.ModelSerializer):
             'uses_points', 'points',
             'is_archived', 'date_archived', 'archived_by', 'archived_by_username',
             'is_active', 'date_joined',
-            'team_id', 'team_name', 'is_team_approver',
+            'team_id', 'team_name', 'is_team_approver', 'approver_teams',
             'is_locked',
         ]
     
@@ -193,7 +195,13 @@ class UserListSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'profile') and obj.profile.position == 'Approver':
             return True
         return False
-    
+
+    def get_approver_teams(self, obj):
+        """Get list of teams this approver manages"""
+        if hasattr(obj, 'profile') and obj.profile.position == 'Approver':
+            return list(Team.objects.filter(approver=obj).values('id', 'name'))
+        return []
+
     def get_archived_by_username(self, obj):
         """Get username of the user who archived this account"""
         if hasattr(obj, 'profile') and obj.profile.archived_by:
