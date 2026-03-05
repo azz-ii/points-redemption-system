@@ -300,10 +300,9 @@ export function SetPointsModal({
               <div
                 className="grid grid-cols-12 gap-4 font-semibold text-sm pb-2 border-b text-foreground border-border"
               >
-                <div className="col-span-4">Name</div>
-                <div className="col-span-3">Location</div>
-                <div className="col-span-2">Current</div>
-                <div className="col-span-2">Add/Subtract</div>
+                <div className="col-span-5">Name</div>
+                <div className="col-span-3">Current</div>
+                <div className="col-span-3">Add/Subtract</div>
                 <div className="col-span-1">New Total</div>
               </div>
 
@@ -320,21 +319,16 @@ export function SetPointsModal({
                     className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
                   >
                     <div
-                      className="col-span-4 text-sm font-medium text-foreground"
+                      className="col-span-5 text-sm font-medium text-foreground"
                     >
                       {distributor.name}
                     </div>
                     <div
                       className="col-span-3 text-sm text-muted-foreground"
                     >
-                      {distributor.location}
-                    </div>
-                    <div
-                      className="col-span-2 text-sm text-muted-foreground"
-                    >
                       {currentPoints.toLocaleString()}
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-3">
                       <input
                         type="number"
                         value={delta === 0 ? "" : delta}

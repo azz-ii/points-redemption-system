@@ -197,8 +197,6 @@ export function generateExcel(customers: Customer[], options: ExportOptions): vo
         return { wch: 25 };
       case "sales_channel":
         return { wch: 20 };
-      case "points":
-        return { wch: 10 };
       case "formatted_date":
         return { wch: 15 };
       case "added_by_name":
