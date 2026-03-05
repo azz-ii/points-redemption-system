@@ -27,6 +27,8 @@ export interface Product {
   date_archived: string | null;
   archived_by: number | null;
   requires_sales_approval?: boolean;
+  mktg_admin: number | null;
+  mktg_admin_username: string | null;
 }
 
 export interface PaginatedProductsResponse {

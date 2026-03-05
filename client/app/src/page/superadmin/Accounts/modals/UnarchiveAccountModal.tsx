@@ -42,7 +42,7 @@ export function UnarchiveAccountModal({
               <h2 id="unarchive-account-title" className="text-xl font-semibold">
                 Restore User
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Restore this archived account.
               </p>
             </div>

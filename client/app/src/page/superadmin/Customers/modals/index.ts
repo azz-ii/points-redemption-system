@@ -5,4 +5,6 @@ export { ArchiveCustomerModal } from "./DeleteCustomerModal";
 export { UnarchiveCustomerModal } from "./UnarchiveCustomerModal";
 export { BulkArchiveCustomerModal } from "./BulkArchiveCustomerModal";
 export { ExportModal } from "./ExportModal";
+export { PromoteCustomerModal } from "./PromoteCustomerModal";
+export { MergeCustomerModal } from "./MergeCustomerModal";
 export type { Customer, CustomerFormData } from "./types";

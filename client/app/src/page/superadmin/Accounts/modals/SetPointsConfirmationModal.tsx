@@ -127,7 +127,7 @@ export function SetPointsConfirmationModal({
                   handleConfirm();
                 }
               }}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background border-border text-foreground placeholder-muted-foreground"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background border-border text-foreground placeholder-muted-foreground"
               disabled={loading}
             />
           </div>

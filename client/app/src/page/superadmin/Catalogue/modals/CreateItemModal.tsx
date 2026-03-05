@@ -1,7 +1,15 @@
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Loader2 } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { PRICING_TYPE_OPTIONS } from "./types";
 import { CatalogueImageUpload } from "../components/CatalogueImageUpload";
+import { API_URL } from "@/lib/config";
+
+interface MarketingUser {
+  id: number;
+  username: string;
+  full_name: string;
+}
 
 interface NewItem {
   item_code: string;
@@ -21,6 +29,7 @@ interface NewItem {
   requires_sales_approval: boolean;
   points_multiplier: string;
   price_multiplier: string;
+  mktg_admin: string;
 }
 
 interface CreateItemModalProps extends ModalBaseProps {
@@ -48,6 +57,31 @@ export function CreateItemModal({
   onImageSelect,
   onImageRemove,
 }: CreateItemModalProps) {
+  const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchUsers = async () => {
+      try {
+        setLoadingUsers(true);
+        const response = await fetch(
+          `${API_URL}/users/?position=Marketing,Admin&page_size=1000`,
+          { credentials: "include" }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setMarketingUsers(data.results || []);
+        }
+      } catch (err) {
+        console.error("Error fetching marketing users:", err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -64,7 +98,7 @@ export function CreateItemModal({
             <h2 id="create-item-title" className="text-xl font-semibold">
               Add Catalogue Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Create a new product in the catalogue
             </p>
           </div>
@@ -88,7 +122,7 @@ export function CreateItemModal({
 
           {/* Shared Fields */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">PRODUCT INFORMATION</h3>
 
             {/* Product Image Upload */}
             <CatalogueImageUpload
@@ -101,7 +135,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="item-code-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Item Code *
               </label>
@@ -112,7 +146,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, item_code: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder="e.g., MC0001"
                 aria-required="true"
               />
@@ -122,7 +156,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="item-name-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Item Name *
               </label>
@@ -133,7 +167,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, item_name: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder="e.g., Platinum Polo Shirt"
                 aria-required="true"
               />
@@ -143,7 +177,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="category-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Category
               </label>
@@ -154,7 +188,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, category: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder="e.g., Size M, Color Blue"
               />
             </div>
@@ -163,7 +197,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="description-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Description
               </label>
@@ -173,7 +207,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, description: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 resize-none text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none text-base"
                 rows={3}
                 placeholder="Detailed description of the item"
               />
@@ -183,7 +217,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="purpose-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Purpose
               </label>
@@ -193,7 +227,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, purpose: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 resize-none text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none text-base"
                 rows={2}
                 placeholder="Purpose of the item"
               />
@@ -203,7 +237,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="specs-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Specifications
               </label>
@@ -213,7 +247,7 @@ export function CreateItemModal({
                 onChange={(e) =>
                   setNewItem({ ...newItem, specifications: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 resize-none text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none text-base"
                 rows={2}
                 placeholder="Specifications (e.g., 100% cotton, XS-XXL)"
               />
@@ -223,7 +257,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="legend-select"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Legend *
               </label>
@@ -240,7 +274,7 @@ export function CreateItemModal({
                       | "Benefit",
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 aria-required="true"
               >
                 <option value="Collateral">Collateral</option>
@@ -254,7 +288,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="pricing-type-select"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Pricing Type *
               </label>
@@ -267,7 +301,7 @@ export function CreateItemModal({
                     pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 aria-required="true"
               >
                 {PRICING_TYPE_OPTIONS.map((option) => (
@@ -282,7 +316,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="points-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 {newItem.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -298,7 +332,7 @@ export function CreateItemModal({
                     [newItem.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder={
                   newItem.pricing_type === "FIXED"
                     ? "e.g., 500"
@@ -319,7 +353,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="price-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 {newItem.pricing_type === "FIXED"
                   ? "Price *"
@@ -335,7 +369,7 @@ export function CreateItemModal({
                     [newItem.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder={
                   newItem.pricing_type === "FIXED"
                     ? "e.g., ₱130.00"
@@ -350,7 +384,7 @@ export function CreateItemModal({
               <div>
                 <label
                   htmlFor="min-order-qty-input"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Min Order Qty *
                 </label>
@@ -362,7 +396,7 @@ export function CreateItemModal({
                   onChange={(e) =>
                     setNewItem({ ...newItem, min_order_qty: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                   placeholder="1"
                   aria-required="true"
                 />
@@ -370,7 +404,7 @@ export function CreateItemModal({
               <div>
                 <label
                   htmlFor="max-order-qty-input"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Max Order Qty
                 </label>
@@ -382,7 +416,7 @@ export function CreateItemModal({
                   onChange={(e) =>
                     setNewItem({ ...newItem, max_order_qty: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                   placeholder="Leave empty for unlimited"
                 />
                 <p
@@ -397,7 +431,7 @@ export function CreateItemModal({
             <div>
               <label
                 htmlFor="stock-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Initial Stock
               </label>
@@ -410,7 +444,7 @@ export function CreateItemModal({
                   setNewItem({ ...newItem, stock: e.target.value })
                 }
                 disabled={!newItem.has_stock}
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="e.g., 100"
               />
             </div>
@@ -424,7 +458,7 @@ export function CreateItemModal({
                   onChange={(e) =>
                     setNewItem({ ...newItem, has_stock: e.target.checked })
                   }
-                  className="w-5 h-5 rounded border bg-card border-border focus:ring-blue-500 accent-blue-600"
+                  className="w-5 h-5 rounded border bg-card border-border focus:ring-ring accent-blue-600"
                 />
                 <span className="text-sm font-medium">Track Inventory</span>
               </label>
@@ -444,7 +478,7 @@ export function CreateItemModal({
                   onChange={(e) =>
                     setNewItem({ ...newItem, requires_sales_approval: e.target.checked })
                   }
-                  className="w-5 h-5 rounded border bg-card border-border focus:ring-blue-500 accent-blue-600"
+                  className="w-5 h-5 rounded border bg-card border-border focus:ring-ring accent-blue-600"
                 />
                 <span className="text-sm font-medium">Requires Sales Approval</span>
               </label>
@@ -452,6 +486,41 @@ export function CreateItemModal({
                 className="text-xs mt-1 ml-8 text-muted-foreground"
               >
                 If unchecked, requests with this product will skip sales approval and go directly to marketing
+              </p>
+            </div>
+
+            {/* Marketing Handler */}
+            <div>
+              <label
+                htmlFor="create-mktg-admin"
+                className="text-xs text-muted-foreground mb-2 block"
+              >
+                Marketing Handler
+              </label>
+              {loadingUsers ? (
+                <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading users...
+                </div>
+              ) : (
+                <select
+                  id="create-mktg-admin"
+                  value={newItem.mktg_admin}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, mktg_admin: e.target.value })
+                  }
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
+                >
+                  <option value="">No handler (assign later)</option>
+                  {marketingUsers.map((user) => (
+                    <option key={user.id} value={user.id.toString()}>
+                      {user.full_name || user.username}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <p className="text-xs mt-1 text-muted-foreground">
+                Optional. You can assign a marketing handler later.
               </p>
             </div>
           </div>
@@ -469,7 +538,7 @@ export function CreateItemModal({
           <button
             onClick={onConfirm}
             disabled={creating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50"
+            className="px-6 py-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors disabled:opacity-50"
           >
             {creating ? "Creating..." : "Create Product"}
           </button>

@@ -1,4 +1,4 @@
-ï»¿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, User } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
@@ -117,7 +117,7 @@ export function ViewAccountModal({
         <div className="flex justify-between items-center p-8">
           <div>
             <h2 id="view-account-title" className="text-xl font-semibold">View Account</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Details for {localAccount.full_name}
             </p>
           </div>
@@ -140,7 +140,7 @@ export function ViewAccountModal({
 
           {/* Credentials Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Credentials</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Credentials</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Username</label>
@@ -165,7 +165,7 @@ export function ViewAccountModal({
 
           {/* Personal Information Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Personal Information</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Full Name</label>
@@ -190,7 +190,7 @@ export function ViewAccountModal({
 
           {/* Account Details Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Account Details</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Account Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {localAccount.uses_points && (
                 <div>
@@ -215,10 +215,10 @@ export function ViewAccountModal({
             </div>
           </div>
 
-          {/* Team Section â€” Sales Agents only */}
+          {/* Team Section — Sales Agents only */}
           {localAccount.position === "Sales Agent" && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Team</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Team</h3>
               {localAccount.team_id ? (
                 <div className="flex items-center gap-3">
                   <input
@@ -268,10 +268,10 @@ export function ViewAccountModal({
             </div>
           )}
 
-          {/* Team Section â€” Approvers only (read-only list) */}
+          {/* Team Section — Approvers only (read-only list) */}
           {localAccount.position === "Approver" && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Managed Teams
               </h3>
               {localAccount.approver_teams && localAccount.approver_teams.length > 0 ? (

@@ -1,3 +1,4 @@
+import { getStatusClasses } from "@/components/ui/status-badge";
 import { Eye } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { RequestHistoryItem } from "../modals/types";
@@ -18,20 +19,8 @@ export function RequestHistoryMobileCards({
   loading,
   onView,
 }: RequestHistoryMobileCardsProps) {
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-400 text-black";
-      case "APPROVED":
-        return "bg-green-500 text-white";
-      case "REJECTED":
-        return "bg-red-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
 
-  return (
+return (
     <div
       className="border rounded-lg overflow-hidden bg-card border-border transition-colors"
     >
@@ -39,7 +28,7 @@ export function RequestHistoryMobileCards({
         {loading ? (
           <MobileCardsSkeleton count={6} showHeader={false} />
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm">
             No processed requests found
           </div>
         ) : (
@@ -56,7 +45,7 @@ export function RequestHistoryMobileCards({
                 </div>
                 <div className="flex flex-col gap-1 items-end">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+                    className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusClasses(
                       item.status
                     )}`}
                   >
@@ -69,17 +58,17 @@ export function RequestHistoryMobileCards({
               </div>
               <div className="space-y-1 mb-3 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">For:</span>
+                  <span className="text-muted-foreground">For:</span>
                   <span className="font-medium">{item.requested_for_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Points:</span>
+                  <span className="text-muted-foreground">Points:</span>
                   <span className="font-medium">
                     {item.total_points.toLocaleString()} pts
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Date:</span>
+                  <span className="text-muted-foreground">Date:</span>
                   <span className="font-medium">
                     {new Date(item.date_requested).toLocaleDateString()}
                   </span>
@@ -88,7 +77,7 @@ export function RequestHistoryMobileCards({
               <div className="flex gap-2">
                 <button
                   onClick={() => onView(item)}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Eye className="h-4 w-4" />
                   View

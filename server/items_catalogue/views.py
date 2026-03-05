@@ -360,16 +360,22 @@ class InventoryDetailView(APIView):
 
 
 class BulkAssignMarketingView(APIView):
-    """Bulk assign mktg_admin (Marketing user) to products by legend"""
+    """Assign mktg_admin (Marketing user) to products — item-level or bulk by legend"""
     
     def post(self, request):
         """
-        Bulk assign a Marketing user to all products with a specific legend.
+        Assign a Marketing user to specific products (item-level) or all products of a legend (bulk).
         
-        Request body:
+        Item-level (preferred):
         {
-            "legend": "GIVEAWAY",      // Assign to all products with this legend
-            "mktg_admin_id": 5         // User ID of the Marketing user (null to unassign)
+            "product_ids": [1, 2, 3],
+            "mktg_admin_id": 5          // null to unassign
+        }
+        
+        Bulk by legend (convenience):
+        {
+            "legend": "Giveaway",
+            "mktg_admin_id": 5          // null to unassign
         }
         """
         from django.contrib.auth import get_user_model
@@ -377,11 +383,12 @@ class BulkAssignMarketingView(APIView):
         User = get_user_model()
         
         mktg_admin_id = request.data.get('mktg_admin_id')
+        product_ids = request.data.get('product_ids')
         legend = request.data.get('legend')
         
-        if not legend:
+        if not product_ids and not legend:
             return Response({
-                "error": "'legend' must be provided"
+                "error": "Either 'product_ids' or 'legend' must be provided"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         mktg_admin = None
@@ -398,8 +405,17 @@ class BulkAssignMarketingView(APIView):
                     "error": "User not found"
                 }, status=status.HTTP_404_NOT_FOUND)
         
-        # Update all products with the specified legend
-        queryset = Product.objects.filter(legend=legend)
+        if product_ids:
+            # Item-level assignment
+            if not isinstance(product_ids, list):
+                return Response({
+                    "error": "'product_ids' must be a list"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            queryset = Product.objects.filter(id__in=product_ids, is_archived=False)
+        else:
+            # Bulk by legend (backward-compatible)
+            queryset = Product.objects.filter(legend=legend, is_archived=False)
+        
         updated_count = queryset.update(mktg_admin=mktg_admin)
         
         action = "assigned" if mktg_admin else "unassigned"
@@ -410,31 +426,52 @@ class BulkAssignMarketingView(APIView):
         }, status=status.HTTP_200_OK)
     
     def get(self, request):
-        """Get summary of marketing assignments by legend."""
-        summary = Product.objects.values(
-            'legend', 
-            'mktg_admin__id', 
+        """Get per-product marketing assignments with optional legend filter."""
+        legend_filter = request.query_params.get('legend', '').strip()
+        
+        products_qs = Product.objects.filter(is_archived=False).select_related('mktg_admin')
+        if legend_filter:
+            products_qs = products_qs.filter(legend=legend_filter)
+        products_qs = products_qs.order_by('legend', 'item_name')
+        
+        products = []
+        for p in products_qs:
+            products.append({
+                'id': p.id,
+                'item_code': p.item_code,
+                'item_name': p.item_name,
+                'legend': p.legend,
+                'category': p.category,
+                'mktg_admin_id': p.mktg_admin_id,
+                'mktg_admin_username': p.mktg_admin.username if p.mktg_admin else None,
+            })
+        
+        # Summary grouped by legend + user (backward-compatible)
+        summary = Product.objects.filter(is_archived=False).values(
+            'legend',
+            'mktg_admin__id',
             'mktg_admin__username'
         ).annotate(
             count=Count('id')
         ).order_by('legend', 'mktg_admin__username')
         
-        formatted = []
+        assignments = []
         for item in summary:
-            formatted.append({
+            assignments.append({
                 'legend': item['legend'],
                 'mktg_admin_id': item['mktg_admin__id'],
                 'mktg_admin_username': item['mktg_admin__username'] or 'Unassigned',
                 'item_count': item['count']
             })
         
-        legend_totals = Product.objects.values('legend').annotate(
+        legend_totals = Product.objects.filter(is_archived=False).values('legend').annotate(
             total=Count('id'),
             assigned=Count('mktg_admin')
         ).order_by('legend')
         
         return Response({
-            "assignments": formatted,
+            "products": products,
+            "assignments": assignments,
             "legend_totals": list(legend_totals)
         }, status=status.HTTP_200_OK)
 

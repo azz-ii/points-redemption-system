@@ -11,6 +11,8 @@ interface CustomersTableProps {
   onArchive: (customer: Customer) => void;
   onUnarchive: (customer: Customer) => void;
   onArchiveSelected?: (customers: Customer[]) => void;
+  onPromote?: (customer: Customer) => void;
+  onMerge?: (customer: Customer) => void;
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -35,6 +37,8 @@ export function CustomersTable({
   onArchive,
   onUnarchive,
   onArchiveSelected,
+  onPromote,
+  onMerge,
   onCreateNew,
   onRefresh,
   refreshing,
@@ -53,6 +57,8 @@ export function CustomersTable({
     onEdit,
     onArchive,
     onUnarchive,
+    onPromote,
+    onMerge,
   });
 
   return (

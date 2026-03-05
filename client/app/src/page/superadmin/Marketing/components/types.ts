@@ -13,4 +13,5 @@ export interface MarketingUser {
   is_activated: boolean;
   is_banned: boolean;
   assigned_legends: LegendAssignment[];
+  assigned_products?: { id: number; item_code: string; item_name: string; legend: string }[];
 }

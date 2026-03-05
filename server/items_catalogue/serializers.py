@@ -19,6 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
     archived_by = UserRelatedField(read_only=True)
     available_stock = serializers.IntegerField(read_only=True)
     request_count = serializers.IntegerField(read_only=True, default=0)
+    mktg_admin_username = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -28,7 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'points', 'price', 'pricing_type',
             'min_order_qty', 'max_order_qty',
             'has_stock', 'stock', 'committed_stock', 'available_stock',
-            'mktg_admin', 'requires_sales_approval',
+            'mktg_admin', 'mktg_admin_username', 'requires_sales_approval',
             'image',
             'date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by',
             'request_count',
@@ -44,6 +45,12 @@ class ProductSerializer(serializers.ModelSerializer):
         # Prevent direct stock edits via catalogue endpoint — stock is managed via inventory API
         validated_data.pop('stock', None)
         return super().update(instance, validated_data)
+
+    def get_mktg_admin_username(self, obj):
+        if obj.mktg_admin:
+            profile = getattr(obj.mktg_admin, 'profile', None)
+            return (profile.full_name if profile and profile.full_name else None) or obj.mktg_admin.username
+        return None
 
 
 class ProductInventorySerializer(serializers.ModelSerializer):

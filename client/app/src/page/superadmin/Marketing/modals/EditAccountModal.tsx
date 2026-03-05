@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { X, Package, Loader2, Check } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { X, Package, Loader2, Check, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
-import type { Account, ModalBaseProps, LegendAssignment } from "./types";
+import type { Account, ModalBaseProps, ProductAssignment } from "./types";
 import { LEGEND_OPTIONS } from "./types";
 import { toast } from "sonner";
 import {
@@ -21,20 +21,10 @@ interface EditAccountModalProps extends ModalBaseProps {
   onSuccess: () => void;
 }
 
-interface LegendState {
-  legend: string;
-  isAssigned: boolean;
-  currentOwner: string | null;
-  currentOwnerId: number | null;
-  itemCount: number;
-}
-
 interface PendingAction {
-  legend: string;
+  productIds: number[];
   assign: boolean;
-  confirmationType: "reassign" | "multi-assign" | "both" | "unassign";
-  currentOwner: string | null;
-  existingLegends: string[];
+  conflictProducts: { item_name: string; currentOwner: string }[];
 }
 
 export function EditAccountModal({
@@ -43,60 +33,69 @@ export function EditAccountModal({
   account,
   onSuccess,
 }: EditAccountModalProps) {
-  const [legendStates, setLegendStates] = useState<LegendState[]>([]);
+  const [products, setProducts] = useState<ProductAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [expandedLegends, setExpandedLegends] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (isOpen && account) {
-      fetchAssignments();
+      fetchProducts();
+      setExpandedLegends(new Set(LEGEND_OPTIONS.map((l) => l.value)));
+      setSearchQuery("");
     }
   }, [isOpen, account]);
 
-  const fetchAssignments = async () => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`);
+      const response = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, {
+        credentials: "include",
+      });
       const data = await response.json();
 
       if (response.ok) {
-        const assignments: LegendAssignment[] = data.assignments || [];
-        
-        // Build legend states from all legends
-        const states: LegendState[] = LEGEND_OPTIONS.map((legend) => {
-          const assignment = assignments.find((a) => a.legend === legend.value);
-          return {
-            legend: legend.value,
-            isAssigned: assignment?.mktg_admin_id === account?.id,
-            currentOwner: assignment?.mktg_admin_id ? assignment.mktg_admin_username : null,
-            currentOwnerId: assignment?.mktg_admin_id || null,
-            itemCount: assignment?.item_count || 0,
-          };
-        });
-        setLegendStates(states);
+        setProducts(data.products || []);
       }
     } catch (err) {
-      console.error("Error fetching assignments:", err);
-      toast.error("Failed to load assignments");
+      console.error("Error fetching products:", err);
+      toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
   };
 
-  const executeToggle = async (legend: string, assign: boolean) => {
-    if (!account) return;
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    const q = searchQuery.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.item_name.toLowerCase().includes(q) ||
+        p.item_code.toLowerCase().includes(q)
+    );
+  }, [products, searchQuery]);
+
+  const productsByLegend = useMemo(() => {
+    const grouped: Record<string, ProductAssignment[]> = {};
+    for (const legend of LEGEND_OPTIONS) {
+      grouped[legend.value] = filteredProducts.filter((p) => p.legend === legend.value);
+    }
+    return grouped;
+  }, [filteredProducts]);
+
+  const executeAssignment = async (productIds: number[], assign: boolean) => {
+    if (!account || productIds.length === 0) return;
 
     try {
       setSaving(true);
 
       const response = await fetchWithCsrf(`${API_URL}/catalogue/bulk-assign-marketing/`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          legend,
+          product_ids: productIds,
           mktg_admin_id: assign ? account.id : null,
         }),
       });
@@ -106,10 +105,10 @@ export function EditAccountModal({
       if (response.ok) {
         toast.success(
           assign
-            ? `${getLegendLabel(legend)} assigned to ${account.full_name}`
-            : `${getLegendLabel(legend)} unassigned`
+            ? `Assigned ${data.updated_count} product(s) to ${account.full_name}`
+            : `Unassigned ${data.updated_count} product(s)`
         );
-        await fetchAssignments();
+        await fetchProducts();
         onSuccess();
       } else {
         toast.error(data.error || "Failed to update assignment");
@@ -122,48 +121,75 @@ export function EditAccountModal({
     }
   };
 
-  const handleToggleLegend = (legend: string, assign: boolean) => {
+  const handleToggleProduct = (product: ProductAssignment) => {
     if (!account) return;
 
-    if (!assign) {
+    const isAssigned = product.mktg_admin_id === account.id;
+
+    if (isAssigned) {
+      // Unassign — no confirmation needed for single items
+      executeAssignment([product.id], false);
+      return;
+    }
+
+    // Assigning — check if owned by someone else
+    if (product.mktg_admin_id && product.mktg_admin_id !== account.id) {
       setPendingAction({
-        legend,
-        assign,
-        confirmationType: "unassign",
-        currentOwner: null,
-        existingLegends: [],
+        productIds: [product.id],
+        assign: true,
+        conflictProducts: [
+          { item_name: product.item_name, currentOwner: product.mktg_admin_username || "Unknown" },
+        ],
       });
       return;
     }
 
-    const targetState = legendStates.find((s) => s.legend === legend);
-    const isReassign =
-      !!targetState?.currentOwnerId && targetState.currentOwnerId !== account.id;
-    const existingLegends = legendStates
-      .filter((s) => s.isAssigned && s.legend !== legend)
-      .map((s) => getLegendLabel(s.legend));
-    const isMultiAssign = existingLegends.length > 0;
+    executeAssignment([product.id], true);
+  };
 
-    if (!isReassign && !isMultiAssign) {
-      executeToggle(legend, assign);
-      return;
+  const handleToggleAllInLegend = (legend: string, assign: boolean) => {
+    if (!account) return;
+
+    const legendProducts = productsByLegend[legend] || [];
+    if (legendProducts.length === 0) return;
+
+    if (assign) {
+      const toAssign = legendProducts.filter((p) => p.mktg_admin_id !== account.id);
+      if (toAssign.length === 0) return;
+
+      const conflicts = toAssign.filter(
+        (p) => p.mktg_admin_id !== null && p.mktg_admin_id !== account.id
+      );
+
+      if (conflicts.length > 0) {
+        setPendingAction({
+          productIds: toAssign.map((p) => p.id),
+          assign: true,
+          conflictProducts: conflicts.map((p) => ({
+            item_name: p.item_name,
+            currentOwner: p.mktg_admin_username || "Unknown",
+          })),
+        });
+        return;
+      }
+
+      executeAssignment(
+        toAssign.map((p) => p.id),
+        true
+      );
+    } else {
+      const toUnassign = legendProducts.filter((p) => p.mktg_admin_id === account.id);
+      if (toUnassign.length === 0) return;
+      executeAssignment(
+        toUnassign.map((p) => p.id),
+        false
+      );
     }
-
-    const confirmationType =
-      isReassign && isMultiAssign ? "both" : isReassign ? "reassign" : "multi-assign";
-
-    setPendingAction({
-      legend,
-      assign,
-      confirmationType,
-      currentOwner: targetState?.currentOwner ?? null,
-      existingLegends,
-    });
   };
 
   const confirmAction = () => {
     if (!pendingAction) return;
-    executeToggle(pendingAction.legend, pendingAction.assign);
+    executeAssignment(pendingAction.productIds, pendingAction.assign);
     setPendingAction(null);
   };
 
@@ -171,14 +197,19 @@ export function EditAccountModal({
     setPendingAction(null);
   };
 
+  const toggleLegendExpanded = (legend: string) => {
+    setExpandedLegends((prev) => {
+      const next = new Set(prev);
+      if (next.has(legend)) next.delete(legend);
+      else next.add(legend);
+      return next;
+    });
+  };
+
   if (!isOpen || !account) return null;
 
   const handleClose = () => {
     onClose();
-  };
-
-  const getLegendLabel = (legend: string) => {
-    return LEGEND_OPTIONS.find((l) => l.value === legend)?.label || legend;
   };
 
   const getLegendColor = (legend: string) => {
@@ -203,15 +234,15 @@ export function EditAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
             <h2 id="edit-account-title" className="text-xl font-semibold">
-              Assign Item Legends
+              Assign Items
             </h2>
-            <p className="text-sm text-gray-500 mt-1">{account.full_name}</p>
+            <p className="text-sm text-muted-foreground mt-1">{account.full_name}</p>
           </div>
           <button
             onClick={handleClose}
@@ -223,96 +254,165 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* User Info */}
-          <div
-            className="p-4 rounded-lg bg-card"
-          >
+          <div className="p-4 rounded-lg bg-card">
             <div className="space-y-2 text-sm">
               <div>
-                <span className="text-gray-500">Username:</span>
+                <span className="text-muted-foreground">Username:</span>
                 <span className="ml-2 font-medium">{account.username || "N/A"}</span>
               </div>
               <div>
-                <span className="text-gray-500">Email:</span>
+                <span className="text-muted-foreground">Email:</span>
                 <span className="ml-2 font-medium">{account.email}</span>
               </div>
             </div>
           </div>
 
-          {/* Legend Assignment Section */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+
+          {/* Item Assignment Section */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               <Package className="h-4 w-4" />
-              Item Legend Assignments
+              Item Assignments
             </h3>
-            <p className="text-xs text-gray-500">
-              Toggle to assign or unassign item legends to this marketing user.
-              Each legend can only be assigned to one user at a time.
+            <p className="text-xs text-muted-foreground">
+              Select individual products to assign to this marketing user.
+              Use "Select All" to assign all products within a legend.
             </p>
 
             {loading ? (
               <div className="space-y-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
-                    <div className="flex-1 space-y-2">
-                      <div className="h-6 w-24 rounded-full bg-muted animate-pulse" />
-                      <div className="h-3 w-32 rounded bg-muted animate-pulse" />
+                  <div key={i} className="p-4 rounded-lg border border-border">
+                    <div className="h-6 w-32 rounded bg-muted animate-pulse mb-3" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                      <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
                     </div>
-                    <div className="h-8 w-16 rounded-md bg-muted animate-pulse" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="space-y-3">
-                {legendStates.map((state) => (
-                  <div
-                    key={state.legend}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border bg-card"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${getLegendColor(
-                            state.legend
-                          )}`}
+              <div className="space-y-2">
+                {LEGEND_OPTIONS.map((legend) => {
+                  const legendProducts = productsByLegend[legend.value] || [];
+                  const assignedCount = legendProducts.filter(
+                    (p) => p.mktg_admin_id === account.id
+                  ).length;
+                  const isExpanded = expandedLegends.has(legend.value);
+                  const allAssigned =
+                    legendProducts.length > 0 &&
+                    legendProducts.every((p) => p.mktg_admin_id === account.id);
+
+                  return (
+                    <div key={legend.value} className="rounded-lg border border-border overflow-hidden">
+                      {/* Legend Header */}
+                      <div className="flex items-center justify-between p-3 bg-card">
+                        <button
+                          type="button"
+                          onClick={() => toggleLegendExpanded(legend.value)}
+                          className="flex items-center gap-2 flex-1 text-left"
                         >
-                          {getLegendLabel(state.legend)}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {state.itemCount} item{state.itemCount !== 1 ? "s" : ""}
-                        </span>
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getLegendColor(legend.value)}`}>
+                            {legend.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {assignedCount}/{legendProducts.length} assigned
+                          </span>
+                        </button>
+
+                        {legendProducts.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAllInLegend(legend.value, !allAssigned)}
+                            disabled={saving}
+                            className="text-xs px-3 py-1 rounded-md font-medium transition-colors disabled:opacity-50 bg-muted hover:bg-accent text-foreground"
+                          >
+                            {allAssigned ? "Unassign All" : "Select All"}
+                          </button>
+                        )}
                       </div>
-                      {state.currentOwner && !state.isAssigned && (
-                        <p className="text-xs text-amber-500 mt-2">
-                          Currently assigned to: {state.currentOwner}
-                        </p>
+
+                      {/* Product List */}
+                      {isExpanded && (
+                        <div className="divide-y divide-border">
+                          {legendProducts.length === 0 ? (
+                            <div className="p-3 text-center text-xs text-muted-foreground italic">
+                              {searchQuery ? "No matching products" : "No products in this legend"}
+                            </div>
+                          ) : (
+                            legendProducts.map((product) => {
+                              const isAssigned = product.mktg_admin_id === account.id;
+                              const isOwnedByOther =
+                                product.mktg_admin_id !== null &&
+                                product.mktg_admin_id !== account.id;
+
+                              return (
+                                <div
+                                  key={product.id}
+                                  className="flex items-center justify-between px-4 py-2 hover:bg-accent/50 transition-colors"
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium truncate">
+                                        {product.item_name}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground shrink-0">
+                                        {product.item_code}
+                                      </span>
+                                    </div>
+                                    {isOwnedByOther && (
+                                      <p className="text-xs text-amber-500 mt-0.5">
+                                        Assigned to: {product.mktg_admin_username}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleProduct(product)}
+                                    disabled={saving}
+                                    className={`shrink-0 ml-3 px-3 py-1 rounded-md text-xs font-medium transition-colors disabled:opacity-50 ${
+                                      isAssigned
+                                        ? "bg-green-600 hover:bg-green-700 text-white"
+                                        : "bg-muted hover:bg-accent text-foreground"
+                                    }`}
+                                  >
+                                    {saving ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : isAssigned ? (
+                                      <span className="flex items-center gap-1">
+                                        <Check className="h-3 w-3" /> Assigned
+                                      </span>
+                                    ) : (
+                                      "Assign"
+                                    )}
+                                  </button>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
                       )}
                     </div>
-
-                    <button
-                      onClick={() =>
-                        handleToggleLegend(state.legend, !state.isAssigned)
-                      }
-                      disabled={saving}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        state.isAssigned
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-muted hover:bg-gray-600 text-foreground"
-                      } disabled:opacity-50`}
-                    >
-                      {saving ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : state.isAssigned ? (
-                        <span className="flex items-center gap-1">
-                          <Check className="h-4 w-4" /> Assigned
-                        </span>
-                      ) : (
-                        "Assign"
-                      )}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -322,7 +422,7 @@ export function EditAccountModal({
         <div className="p-8">
           <button
             onClick={handleClose}
-            className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="w-full px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
           >
             Done
           </button>
@@ -333,60 +433,23 @@ export function EditAccountModal({
     <AlertDialog open={pendingAction !== null} onOpenChange={(open) => !open && cancelAction()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            {pendingAction?.confirmationType === "unassign"
-              ? "Confirm Unassignment"
-              : "Confirm Assignment"}
-          </AlertDialogTitle>
+          <AlertDialogTitle>Confirm Reassignment</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2">
-              {pendingAction?.confirmationType === "unassign" && (
-                <p>
-                  Are you sure you want to unassign{" "}
-                  <span className="font-medium text-foreground">
-                    {getLegendLabel(pendingAction.legend)}
-                  </span>{" "}
-                  from{" "}
-                  <span className="font-medium text-foreground">
-                    {account.full_name}
-                  </span>
-                  ? This legend will become unassigned.
-                </p>
-              )}
-              {(pendingAction?.confirmationType === "reassign" ||
-                pendingAction?.confirmationType === "both") && (
-                <p>
-                  <span className="font-medium text-foreground">
-                    {getLegendLabel(pendingAction.legend)}
-                  </span>{" "}
-                  is currently assigned to{" "}
-                  <span className="font-medium text-foreground">
-                    {pendingAction.currentOwner}
-                  </span>
-                  . Assigning it to{" "}
-                  <span className="font-medium text-foreground">
-                    {account.full_name}
-                  </span>{" "}
-                  will remove it from the current owner.
-                </p>
-              )}
-              {(pendingAction?.confirmationType === "multi-assign" ||
-                pendingAction?.confirmationType === "both") && (
-                <p>
-                  <span className="font-medium text-foreground">
-                    {account.full_name}
-                  </span>{" "}
-                  is already assigned to{" "}
-                  <span className="font-medium text-foreground">
-                    {pendingAction?.existingLegends.join(", ")}
-                  </span>
-                  . Are you sure you want to also assign{" "}
-                  <span className="font-medium text-foreground">
-                    {pendingAction && getLegendLabel(pendingAction.legend)}
-                  </span>
-                  ?
-                </p>
-              )}
+              <p>
+                The following product(s) are currently assigned to other users. Assigning
+                them to <span className="font-medium text-foreground">{account.full_name}</span>{" "}
+                will remove them from their current owners:
+              </p>
+              <ul className="list-disc pl-5 text-sm space-y-1">
+                {pendingAction?.conflictProducts.map((cp) => (
+                  <li key={cp.item_name}>
+                    <span className="font-medium text-foreground">{cp.item_name}</span>
+                    {" "}— currently assigned to{" "}
+                    <span className="font-medium text-foreground">{cp.currentOwner}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -399,13 +462,9 @@ export function EditAccountModal({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={confirmAction}
-            className={
-              pendingAction?.confirmationType === "unassign"
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-amber-600 hover:bg-amber-700 text-white"
-            }
+            className="bg-amber-600 hover:bg-amber-700 text-white"
           >
-            Confirm
+            Confirm Reassignment
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

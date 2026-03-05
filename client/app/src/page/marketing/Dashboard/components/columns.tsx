@@ -1,4 +1,5 @@
 "use client";
+import { getStatusClasses } from "@/components/ui/status-badge";
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, CheckCircle, ArrowUpDown, MoreHorizontal } from "lucide-react";
@@ -172,16 +173,10 @@ export const createColumns = (
       const status = row.getValue("request_status") as string;
       const statusDisplay = row.original.request_status_display;
 
-      const statusClasses: Record<string, string> = {
-        PENDING: "bg-yellow-400 text-black",
-        APPROVED: "bg-green-500 text-white",
-        REJECTED: "bg-red-500 text-white",
-      };
-
-      return (
+return (
         <span
           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-            statusClasses[status] || "bg-gray-500 text-white"
+            getStatusClasses(status)
           }`}
         >
           {statusDisplay}
@@ -197,20 +192,13 @@ export const createColumns = (
       const processingDisplay = row.original.request_processing_status_display;
       const isProcessed = !!row.original.item_processed_by;
 
-      const processingClasses: Record<string, string> = {
-        NOT_PROCESSED: "bg-orange-400 text-black",
-        PROCESSED: "bg-blue-500 text-white",
-        CANCELLED: "bg-red-500 text-white",
-      };
-
-      return isProcessed ? (
-        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
-          Item Processed
+return isProcessed ? (
+        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Item Processed
         </span>
       ) : (
         <span
           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-            processingClasses[processingStatus] || "bg-gray-500 text-white"
+            getStatusClasses(processingStatus)
           }`}
         >
           {processingDisplay}

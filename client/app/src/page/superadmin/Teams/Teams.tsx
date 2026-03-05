@@ -412,7 +412,7 @@ function Teams() {
               <div
                 className="relative flex items-center rounded-lg border bg-card border-border"
               >
-                <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search....."
                   value={searchQuery}
@@ -440,11 +440,11 @@ function Teams() {
             {/* Mobile Cards */}
             <div className="space-y-3">
               {loading && teams.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-muted-foreground py-8">
                   Loading teams...
                 </div>
               ) : filteredTeams.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-muted-foreground py-8">
                   No teams found
                 </div>
               ) : (
@@ -465,14 +465,14 @@ function Teams() {
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white text-center">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-center">
                           {team.member_count}{" "}
                           {team.member_count === 1 ? "member" : "members"}
                         </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Created:{" "}
                         {new Date(team.created_at).toLocaleDateString()}
                       </div>

@@ -49,7 +49,7 @@ export function CancelRequestModal({
             <h2 id="cancel-request-title" className="text-xl font-semibold">
               Cancel Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               This action will refund points and restore stock.
             </p>
           </div>
@@ -111,7 +111,7 @@ export function CancelRequestModal({
         <div className="p-8 flex justify-end gap-3">
           <button
             onClick={handleClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
           >
             Cancel
           </button>

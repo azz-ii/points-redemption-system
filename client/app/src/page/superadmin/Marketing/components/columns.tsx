@@ -20,15 +20,15 @@ interface ColumnContext {
 const getLegendColor = (legend: string) => {
   switch (legend) {
     case "Collateral":
-      return "bg-red-500 text-white"
+      return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
     case "Giveaway":
-      return "bg-blue-500 text-white"
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
     case "Asset":
       return "bg-yellow-500 text-black"
     case "Benefit":
-      return "bg-green-500 text-white"
+      return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
     default:
-      return "bg-gray-500 text-white"
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
   }
 }
 
@@ -124,7 +124,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
     cell: ({ row }) => {
       const position = row.getValue("position") as string
       return (
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
           {position || "N/A"}
         </span>
       )
@@ -138,7 +138,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
       
       if (legends.length === 0) {
         return (
-          <span className="text-gray-400 text-sm italic">No items assigned</span>
+          <span className="text-muted-foreground text-sm italic">No items assigned</span>
         )
       }
       

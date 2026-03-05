@@ -492,7 +492,7 @@ function Distributors() {
                   type="checkbox"
                   checked={showArchived}
                   onChange={(e) => handleToggleArchived(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-border"
                 />
                 Show Archived
               </label>
@@ -543,7 +543,7 @@ function Distributors() {
             <div
               className="relative flex items-center rounded-lg border bg-card border-border"
             >
-              <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}

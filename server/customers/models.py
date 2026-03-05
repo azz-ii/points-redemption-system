@@ -17,6 +17,7 @@ class Customer(models.Model):
         related_name='added_customers',
         help_text='User who added this customer'
     )
+    is_prospect = models.BooleanField(default=False, help_text='Whether this customer is a prospect (created by agent, pending admin review)')
     is_archived = models.BooleanField(default=False, help_text='Whether this customer is archived')
     date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the customer was archived')
     archived_by = models.ForeignKey(

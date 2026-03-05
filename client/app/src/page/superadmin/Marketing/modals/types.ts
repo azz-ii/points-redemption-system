@@ -11,6 +11,16 @@ export interface Account {
   is_banned: boolean;
 }
 
+export interface ProductAssignment {
+  id: number;
+  item_code: string;
+  item_name: string;
+  legend: string;
+  category: string;
+  mktg_admin_id: number | null;
+  mktg_admin_username: string | null;
+}
+
 export interface LegendAssignment {
   legend: string;
   mktg_admin_id: number | null;

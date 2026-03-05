@@ -54,7 +54,7 @@ export function DeleteTeamModal({
             <h2 id="delete-team-title" className="text-xl font-semibold">
               Delete Team
             </h2>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               This action cannot be undone.
             </p>
           </div>
@@ -101,7 +101,7 @@ export function DeleteTeamModal({
         <div className="p-8 flex justify-end gap-3">
           <button
             onClick={handleClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
           >
             Cancel
           </button>

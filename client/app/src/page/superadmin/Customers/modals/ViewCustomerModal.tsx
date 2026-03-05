@@ -23,8 +23,13 @@ export function ViewCustomerModal({
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
-            <h2 id="view-customer-title" className="text-xl font-semibold">
+            <h2 id="view-customer-title" className="text-xl font-semibold flex items-center gap-2">
               Customer Details
+              {customer.is_prospect && (
+                <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500 text-white">
+                  Prospect
+                </span>
+              )}
             </h2>
             <p
               className="text-sm text-muted-foreground"
@@ -51,7 +56,7 @@ export function ViewCustomerModal({
                 type="text"
                 value={customer.id}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -62,7 +67,7 @@ export function ViewCustomerModal({
                 type="text"
                 value={customer.name}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -73,7 +78,7 @@ export function ViewCustomerModal({
                 type="text"
                 value={customer.brand ?? ""}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -84,7 +89,7 @@ export function ViewCustomerModal({
                 type="text"
                 value={customer.sales_channel ?? ""}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
           </div>
@@ -94,7 +99,7 @@ export function ViewCustomerModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent"
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-border hover:bg-accent"
           >
             Close
           </button>

@@ -1,6 +1,6 @@
 """
-Management command to test points deduction across all 3 deduction paths
-(SELF, DISTRIBUTOR, CUSTOMER), both auto-approve and manual-approve flows,
+Management command to test points deduction across both deduction paths
+(SELF, DISTRIBUTOR), both auto-approve and manual-approve flows,
 cancellation refunds (admin + marketing), and insufficient-points rejection.
 
 Usage:
@@ -13,7 +13,6 @@ from django.contrib.auth.models import User
 
 from users.models import UserProfile
 from distributers.models import Distributor
-from customers.models import Customer
 from items_catalogue.models import Product
 from teams.models import Team, TeamMembership
 from requests.models import RedemptionRequest
@@ -76,9 +75,6 @@ class Command(BaseCommand):
 
     def _get_distributor_points(self, dist):
         return Distributor.objects.get(id=dist.id).points
-
-    def _get_customer_points(self, cust):
-        return Customer.objects.get(id=cust.id).points
 
     def _create_request(self, payload):
         """POST to create a redemption request. Returns (response, data)."""
@@ -197,15 +193,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('  Distrib:  (none found, distributor tests will be skipped)'))
 
-        # 6. Customer with points
-        data['customer'] = Customer.objects.filter(is_archived=False).order_by('-points').first()
-        if data['customer']:
-            self.stdout.write(f'  Customer: {data["customer"].name} (id={data["customer"].id}, '
-                              f'points={data["customer"].points})')
-        else:
-            self.stdout.write(self.style.WARNING('  Customer: (none found, customer tests will be skipped)'))
-
-        # 7. Auto-approve product (requires_sales_approval=False, FIXED pricing)
+        # 6. Auto-approve product (requires_sales_approval=False, FIXED pricing)
         data['auto_product'] = Product.objects.filter(
             is_archived=False,
             requires_sales_approval=False,
@@ -266,13 +254,6 @@ class Command(BaseCommand):
                 entity.save(update_fields=['points'])
                 entity.refresh_from_db()
                 self.stdout.write(f'    (topped up distributor points to {entity.points})')
-        elif entity_type == 'customer':
-            self._save_points('CUSTOMER', entity.id, entity.points)
-            if entity.points < needed:
-                entity.points = needed + 500
-                entity.save(update_fields=['points'])
-                entity.refresh_from_db()
-                self.stdout.write(f'    (topped up customer points to {entity.points})')
 
     def _ensure_stock(self, product):
         """Ensure product has stock available for test."""
@@ -476,67 +457,9 @@ class Command(BaseCommand):
         if ok:
             self._pass(f'Distributor {dist_before} → {dist_after} (−{points_cost}), agent unchanged')
 
-    def _test_customer_deduction(self, data):
-        """Test 4: CUSTOMER deduction with auto-approve product."""
-        self.stdout.write('\n── Test 4: CUSTOMER deduction (auto-approve) ──')
-        product = data.get('auto_product')
-        agent = data['agent']
-        cust = data.get('customer')
-
-        if not product:
-            self._skip('No auto-approve product found')
-            return
-        if not cust:
-            self._skip('No customer found')
-            return
-
-        points_cost = int(float(product.points)) * 1
-        self._ensure_sufficient_points('customer', cust, points_cost)
-        self._ensure_stock(product)
-
-        agent_before = self._get_agent_points(agent)
-        cust_before = self._get_customer_points(cust)
-        audit_marker = self._last_audit_id()
-        self.stdout.write(f'    Customer points before: {cust_before}')
-        self.stdout.write(f'    Agent points before: {agent_before}')
-
-        if not self._login(agent):
-            self._fail('Could not login as agent')
-            return
-
-        resp, body = self._create_request({
-            'requested_for_type': 'CUSTOMER',
-            'requested_for_customer': cust.id,
-            'points_deducted_from': 'CUSTOMER',
-            'items': [{'product_id': product.id, 'quantity': 1}],
-        })
-        self._logout()
-
-        if resp.status_code != 201:
-            self._fail(f'Request creation failed: {resp.status_code} — {json.dumps(body)[:300]}')
-            return
-
-        cust_after = self._get_customer_points(cust)
-        agent_after = self._get_agent_points(agent)
-        self.stdout.write(f'    Customer points after: {cust_after}')
-        self.stdout.write(f'    Agent points after: {agent_after}')
-
-        ok = True
-        if cust_after != cust_before - points_cost:
-            self._fail(f'Customer points mismatch: expected {cust_before - points_cost}, got {cust_after}')
-            ok = False
-        if agent_after != agent_before:
-            self._fail(f'Agent points should be unchanged: was {agent_before}, now {agent_after}')
-            ok = False
-        if not self._check_audit_log('CUSTOMER', cust.id, 'REDEMPTION_DEDUCT', audit_marker):
-            self._fail('No REDEMPTION_DEDUCT audit log entry for customer')
-            ok = False
-        if ok:
-            self._pass(f'Customer {cust_before} → {cust_after} (−{points_cost}), agent unchanged')
-
     def _test_cancellation_refund(self, data):
-        """Test 5: Cancel an approved request and verify points are refunded (Admin)."""
-        self.stdout.write('\n── Test 5: Cancellation refund (Admin) ──')
+        """Test 4: Cancel an approved request and verify points are refunded (Admin)."""
+        self.stdout.write('\n── Test 4: Cancellation refund (Admin) ──')
         product = data.get('auto_product')
         agent = data['agent']
         admin = data.get('admin')
@@ -608,8 +531,8 @@ class Command(BaseCommand):
             self._pass(f'Points fully refunded: {after_deduct} → {after_refund} (+{points_cost}), audit logged')
 
     def _test_marketing_cancel(self, data):
-        """Test 7: Marketing user cancels an approved request and verifies refund."""
-        self.stdout.write('\n── Test 7: Cancellation refund (Marketing) ──')
+        """Test 5: Marketing user cancels an approved request and verifies refund."""
+        self.stdout.write('\n── Test 5: Cancellation refund (Marketing) ──')
         product = data.get('auto_product')
         agent = data['agent']
         marketing = data.get('marketing')
@@ -764,8 +687,6 @@ class Command(BaseCommand):
                 UserProfile.objects.filter(user_id=eid).update(points=pts)
             elif etype == 'DISTRIBUTOR':
                 Distributor.objects.filter(id=eid).update(points=pts)
-            elif etype == 'CUSTOMER':
-                Customer.objects.filter(id=eid).update(points=pts)
         if self._original_points:
             self.stdout.write(f'  Restored points for {len(self._original_points)} entit(ies)')
 
@@ -788,7 +709,6 @@ class Command(BaseCommand):
             self._test_self_deduction_auto_approve(data)
             self._test_self_deduction_manual_approve(data)
             self._test_distributor_deduction(data)
-            self._test_customer_deduction(data)
             self._test_cancellation_refund(data)
             self._test_insufficient_points(data)
             self._test_marketing_cancel(data)

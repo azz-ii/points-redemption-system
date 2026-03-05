@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.hashers import check_password
 import logging
-from .models import RedemptionRequest, RedemptionRequestItem, ApprovalStatusChoice, RequestStatus, RequestedForType
+from .models import RedemptionRequest, RedemptionRequestItem, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
@@ -18,7 +18,8 @@ from utils.email_service import (
     send_request_rejected_email,
     send_request_submitted_email,
     send_request_processed_email,
-    send_approved_request_notification_to_admin
+    send_approved_request_notification_to_admin,
+    send_ar_required_email
 )
 from users.models import UserProfile
 from distributers.models import Distributor
@@ -78,10 +79,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             return RedemptionRequest.objects.filter(
                 status='APPROVED'
             ).distinct().prefetch_related('items', 'items__product')
-        
-        # Other administrative support positions - global access to approved requests
-        elif profile.position in ['Reception', 'Executive Assistant']:
-            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__product')
         
         # Unspecified positions - no access
         else:
@@ -390,6 +387,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         redemption_request.processed_by = user
         redemption_request.date_processed = timezone.now()
         
+        # Set AR status based on request type
+        if redemption_request.requested_for_type == RequestedForType.CUSTOMER:
+            redemption_request.ar_status = AcknowledgementReceiptStatus.PENDING
+        else:
+            redemption_request.ar_status = AcknowledgementReceiptStatus.NOT_REQUIRED
+        
         # Get remarks if provided
         if 'remarks' in request.data:
             redemption_request.remarks = request.data.get('remarks')
@@ -410,6 +413,14 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             logger.info(f"✓ Processed email sent for request #{redemption_request.id}")
         else:
             logger.warning(f"⚠ Failed to send processed email for request #{redemption_request.id}")
+        
+        # Send AR required email if applicable
+        if redemption_request.ar_status == AcknowledgementReceiptStatus.PENDING:
+            ar_email_sent = send_ar_required_email(request_obj=redemption_request)
+            if ar_email_sent:
+                logger.info(f"✓ AR required email sent for request #{redemption_request.id}")
+            else:
+                logger.warning(f"⚠ Failed to send AR required email for request #{redemption_request.id}")
         
         serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
@@ -691,6 +702,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     redemption_request.processing_status = 'PROCESSED'
                     redemption_request.processed_by = user
                     redemption_request.date_processed = now
+                    
+                    # Set AR status based on request type
+                    if redemption_request.requested_for_type == RequestedForType.CUSTOMER:
+                        redemption_request.ar_status = AcknowledgementReceiptStatus.PENDING
+                    else:
+                        redemption_request.ar_status = AcknowledgementReceiptStatus.NOT_REQUIRED
+                    
                     redemption_request.save()
                     
                     logger.info(f"Request #{redemption_request.id} auto-marked as PROCESSED (all items complete)")
@@ -705,6 +723,14 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                         logger.info(f"✓ Processed email sent for request #{redemption_request.id}")
                     else:
                         logger.warning(f"⚠ Failed to send processed email for request #{redemption_request.id}")
+                    
+                    # Send AR required email if applicable
+                    if redemption_request.ar_status == AcknowledgementReceiptStatus.PENDING:
+                        ar_email_sent = send_ar_required_email(request_obj=redemption_request)
+                        if ar_email_sent:
+                            logger.info(f"✓ AR required email sent for request #{redemption_request.id}")
+                        else:
+                            logger.warning(f"⚠ Failed to send AR required email for request #{redemption_request.id}")
         
         except Exception as e:
             logger.error(f"Failed to process items for request #{redemption_request.id}: {str(e)}")
@@ -750,6 +776,71 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             'overall_processing_complete': redemption_request.is_marketing_processing_complete(),
             'items': RedemptionRequestItemSerializer(my_items, many=True).data
         })
+
+    @action(detail=True, methods=['post'], url_path='upload_acknowledgement_receipt')
+    def upload_acknowledgement_receipt(self, request, pk=None):
+        """Upload an acknowledgement receipt photo for a customer request."""
+        redemption_request = self.get_object()
+        user = request.user
+
+        # Only the original requesting sales agent can upload
+        if redemption_request.requested_by != user:
+            return Response(
+                {'error': 'Permission denied: Only the requesting sales agent can upload the acknowledgement receipt'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Must be a processed customer request awaiting AR
+        if redemption_request.ar_status != AcknowledgementReceiptStatus.PENDING:
+            return Response(
+                {'error': 'This request does not require an acknowledgement receipt upload'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if redemption_request.processing_status != 'PROCESSED':
+            return Response(
+                {'error': 'Only processed requests can have an acknowledgement receipt uploaded'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file is present
+        if 'acknowledgement_receipt' not in request.FILES:
+            return Response(
+                {'error': 'No file provided. Please upload an image file.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        uploaded_file = request.FILES['acknowledgement_receipt']
+
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+        if uploaded_file.content_type not in allowed_types:
+            return Response(
+                {'error': 'Invalid file type. Please upload a PNG, JPG, or WebP image.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file size (5MB max)
+        if uploaded_file.size > 5 * 1024 * 1024:
+            return Response(
+                {'error': 'File too large. Maximum size is 5MB.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Delete old file if replacing
+        if redemption_request.acknowledgement_receipt:
+            redemption_request.acknowledgement_receipt.delete(save=False)
+
+        redemption_request.acknowledgement_receipt = uploaded_file
+        redemption_request.ar_status = AcknowledgementReceiptStatus.UPLOADED
+        redemption_request.ar_uploaded_by = user
+        redemption_request.ar_uploaded_at = timezone.now()
+        redemption_request.save()
+
+        logger.info(f"AR uploaded for request #{redemption_request.id} by {user.username}")
+
+        serializer = self.get_serializer(redemption_request)
+        return Response(serializer.data)
 
 
 from rest_framework.views import APIView
@@ -928,19 +1019,6 @@ class ResetAllPointsView(APIView):
                         'batch_id': batch_id,
                     })
 
-                for cust in Customer.objects.filter(points__gt=0).only('id', 'name', 'points'):
-                    audit_entries.append({
-                        'entity_type': 'CUSTOMER',
-                        'entity_id': cust.id,
-                        'entity_name': cust.name,
-                        'previous_points': cust.points,
-                        'new_points': 0,
-                        'action_type': PointsAuditLog.ActionType.BULK_RESET,
-                        'changed_by': request.user,
-                        'reason': 'Reset all points to zero',
-                        'batch_id': batch_id,
-                    })
-
                 if audit_entries:
                     bulk_log_points_changes(audit_entries)
 
@@ -949,15 +1027,12 @@ class ResetAllPointsView(APIView):
                 
                 # Reset all user profile points
                 UserProfile.objects.all().update(points=0)
-                
-                # Reset all customer points
-                Customer.objects.all().update(points=0)
             
             logger.info(f"Superadmin {request.user.username} reset all points to zero")
             
             return Response({
                 'success': True,
-                'message': 'All points have been reset to zero for agents, distributors, and customers'
+                'message': 'All points have been reset to zero for agents and distributors'
             }, status=status.HTTP_200_OK)
             
         except Exception as e:

@@ -74,7 +74,7 @@ export function SendPasswordResetEmailModal({
               <h2 id="send-reset-email-title" className="text-xl font-semibold">
                 Send Password Reset Email
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 The user will receive an email with instructions.
               </p>
             </div>
@@ -114,7 +114,7 @@ export function SendPasswordResetEmailModal({
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send Email"}
           </button>

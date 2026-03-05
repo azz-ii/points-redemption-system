@@ -1,4 +1,4 @@
-﻿import { X, Package, CheckCircle } from "lucide-react";
+import { X, Package, CheckCircle } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types";
 
@@ -18,26 +18,26 @@ export function ViewRedemptionModal({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-400 text-black";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const getProcessingStatusColor = (status: string | undefined) => {
     switch (status?.toUpperCase()) {
       case "NOT_PROCESSED":
-        return "bg-orange-400 text-black";
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
       case "PROCESSED":
-        return "bg-blue-500 text-white";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       case "CANCELLED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -58,7 +58,7 @@ export function ViewRedemptionModal({
             <h2 id="view-redemption-title" className="text-xl font-semibold">
               Request Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Request #{item.id}
             </p>
           </div>
@@ -75,16 +75,16 @@ export function ViewRedemptionModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Request Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Requested For</label>
+                <label className="block text-xs text-muted-foreground mb-1">Requested For</label>
                 <p className="font-semibold">{item.requested_for_name}</p>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+                <label className="block text-xs text-muted-foreground mb-1">Total Points</label>
                 <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
               </div>
             </div>
@@ -92,12 +92,12 @@ export function ViewRedemptionModal({
 
           {/* Status */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Status
             </h3>
             <div className="flex gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Approval Status</label>
+                <label className="block text-xs text-muted-foreground mb-1">Approval Status</label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
                     item.status
@@ -107,7 +107,7 @@ export function ViewRedemptionModal({
                 </span>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Processing Status</label>
+                <label className="block text-xs text-muted-foreground mb-1">Processing Status</label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getProcessingStatusColor(
                     item.processing_status
@@ -144,6 +144,9 @@ export function ViewRedemptionModal({
               rejection_reason: item.rejection_reason,
               status: item.status,
               processing_status: item.processing_status,
+              ar_status: item.ar_status,
+              ar_uploaded_by_name: item.ar_uploaded_by_name,
+              ar_uploaded_at: item.ar_uploaded_at,
             }}
             showProcessing={true}
             showCancellation={true}
@@ -151,7 +154,7 @@ export function ViewRedemptionModal({
 
           {/* Items */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               <Package className="inline h-4 w-4 mr-1" />
               {myItems ? "My Assigned Items" : "Items"} ({displayItems.length})
             </h3>
@@ -165,12 +168,12 @@ export function ViewRedemptionModal({
                     <div>
                       <p className="font-semibold">{it.product_name}</p>
                       {it.product_code && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {it.product_code}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Qty: {it.quantity} × {it.points_per_item} pts = {it.total_points} pts
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Qty: {it.quantity} � {it.points_per_item} pts = {it.total_points} pts
                       </p>
                     </div>
                     {it.item_processed_by && (
@@ -190,7 +193,7 @@ export function ViewRedemptionModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
           >
             Close
           </button>

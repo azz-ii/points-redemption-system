@@ -337,7 +337,7 @@ function Inventory() {
             <div
               className="relative flex items-center rounded-lg border bg-card border-border"
             >
-              <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}

@@ -63,14 +63,6 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/marketing/process-requests" },
     { id: "history", label: "History", icon: History, path: "/marketing/history" },
   ],
-  reception: [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/reception/dashboard" },
-    { id: "history", label: "History", icon: History, path: "/reception/history" },
-  ],
-  "executive-assistant": [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/executive-assistant/dashboard" },
-    { id: "history", label: "History", icon: History, path: "/executive-assistant/history" },
-  ],
 };
 
 /** Get nav items for a given user position string */
@@ -80,8 +72,6 @@ export function getNavItemsForRole(position: string): NavItem[] {
   if (normalized === "sales agent") return NAV_ITEMS.sales;
   if (normalized === "approver") return NAV_ITEMS.approver;
   if (normalized === "marketing") return NAV_ITEMS.marketing;
-  if (normalized === "reception") return NAV_ITEMS.reception;
-  if (normalized === "executive assistant") return NAV_ITEMS["executive-assistant"];
   return NAV_ITEMS.admin;
 }
 

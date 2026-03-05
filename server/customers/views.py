@@ -7,12 +7,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.db import transaction
 import io
 import logging
 from datetime import datetime
 from django.utils import timezone
 from .models import Customer
-from .serializers import CustomerSerializer
+from .serializers import CustomerSerializer, ProspectCustomerSerializer
 
 # Configure logger for customer operations
 logger = logging.getLogger('customers')
@@ -102,8 +103,156 @@ class CustomerViewSet(viewsets.ModelViewSet):
         Lightweight endpoint for dropdown use - returns id, name, and location only.
         No pagination for efficient single-request loading.
         """
-        queryset = Customer.objects.filter(is_archived=False).values('id', 'name', 'brand', 'sales_channel').order_by('name')
+        queryset = Customer.objects.filter(is_archived=False).values('id', 'name', 'brand', 'sales_channel', 'is_prospect').order_by('name')
         return Response(list(queryset))
+
+    @action(detail=False, methods=['post'])
+    def create_prospect(self, request):
+        """
+        Create a prospect customer record (name only).
+        Any authenticated user (agent) can create a prospect.
+        """
+        serializer = ProspectCustomerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        name = serializer.validated_data['name'].strip()
+        if not name:
+            return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        customer = Customer.objects.create(
+            name=name,
+            is_prospect=True,
+            added_by=request.user if request.user.is_authenticated else None,
+        )
+        return Response(CustomerSerializer(customer).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def check_similar(self, request):
+        """
+        Check for existing customers with similar names.
+        Uses PostgreSQL trigram similarity when available, with difflib fallback.
+        Returns exact matches and similar customers.
+        """
+        name = request.query_params.get('name', '').strip()
+        if not name:
+            return Response({"exact_match": None, "similar": []})
+
+        # Check for case-insensitive exact match
+        exact = Customer.objects.filter(name__iexact=name, is_archived=False).first()
+        exact_data = CustomerSerializer(exact).data if exact else None
+
+        # Try trigram similarity (PostgreSQL pg_trgm)
+        similar_customers = []
+        try:
+            from django.contrib.postgres.search import TrigramSimilarity
+            similar_qs = (
+                Customer.objects.filter(is_archived=False)
+                .exclude(name__iexact=name)
+                .annotate(similarity=TrigramSimilarity('name', name))
+                .filter(similarity__gt=0.3)
+                .order_by('-similarity')[:5]
+            )
+            similar_customers = CustomerSerializer(similar_qs, many=True).data
+        except Exception:
+            # Fallback to Python difflib if trigram not available
+            import difflib
+            all_customers = Customer.objects.filter(is_archived=False).exclude(name__iexact=name)
+            matches = []
+            for c in all_customers:
+                ratio = difflib.SequenceMatcher(None, name.lower(), c.name.lower()).ratio()
+                if ratio > 0.5:
+                    matches.append((c, ratio))
+            matches.sort(key=lambda x: x[1], reverse=True)
+            similar_customers = CustomerSerializer([m[0] for m in matches[:5]], many=True).data
+
+        return Response({
+            "exact_match": exact_data,
+            "similar": similar_customers,
+        })
+
+    @action(detail=True, methods=['post'])
+    def promote(self, request, pk=None):
+        """
+        Promote a prospect customer to a full customer.
+        Requires brand and sales_channel. Admin only.
+        """
+        profile = getattr(request.user, 'profile', None)
+        if not profile or profile.position != 'Admin':
+            return Response(
+                {"error": "Only admins can promote prospect customers"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        customer = self.get_object()
+        if not customer.is_prospect:
+            return Response(
+                {"error": "Customer is not a prospect"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        brand = request.data.get('brand', '').strip()
+        sales_channel = request.data.get('sales_channel', '').strip()
+
+        if not brand:
+            return Response({"error": "Brand is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not sales_channel:
+            return Response({"error": "Sales channel is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        customer.brand = brand
+        customer.sales_channel = sales_channel
+        customer.is_prospect = False
+        customer.save(update_fields=['brand', 'sales_channel', 'is_prospect'])
+
+        return Response({
+            "message": "Customer promoted successfully",
+            "customer": CustomerSerializer(customer).data,
+        })
+
+    @action(detail=True, methods=['post'])
+    def merge(self, request, pk=None):
+        """
+        Merge this customer (source) into another customer (target).
+        Reassigns all redemption requests and archives the source.
+        Admin only.
+        """
+        profile = getattr(request.user, 'profile', None)
+        if not profile or profile.position != 'Admin':
+            return Response(
+                {"error": "Only admins can merge customers"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        source = self.get_object()
+        target_id = request.data.get('merge_into_id')
+
+        if not target_id:
+            return Response({"error": "merge_into_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target = Customer.objects.get(pk=target_id, is_archived=False)
+        except Customer.DoesNotExist:
+            return Response({"error": "Target customer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if source.id == target.id:
+            return Response({"error": "Cannot merge a customer into itself"}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            from requests.models import RedemptionRequest
+            # Reassign all redemption requests from source to target
+            updated_count = RedemptionRequest.objects.filter(
+                requested_for_customer=source
+            ).update(requested_for_customer=target)
+
+            # Archive the source customer
+            source.is_archived = True
+            source.date_archived = timezone.now()
+            source.archived_by = request.user
+            source.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+
+        return Response({
+            "message": f"Merged '{source.name}' into '{target.name}'. {updated_count} request(s) reassigned.",
+            "customer": CustomerSerializer(target).data,
+        })
 
 
 @method_decorator(csrf_exempt, name='dispatch')

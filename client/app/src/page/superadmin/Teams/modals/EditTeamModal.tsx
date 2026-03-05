@@ -337,13 +337,13 @@ export function EditTeamModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-team-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
           <div>
             <h2 id="edit-team-title" className="text-xl font-semibold">Edit Team</h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Update team information and members
             </p>
           </div>
@@ -359,7 +359,7 @@ export function EditTeamModal({
         {/* Content */}
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           <div>
-            <label className="text-xs text-gray-500 mb-2 block">
+            <label className="text-xs text-muted-foreground mb-2 block">
               Team Name *
             </label>
             <input
@@ -372,14 +372,14 @@ export function EditTeamModal({
                 );
                 setEditTeam({ ...editTeam, name: e.target.value });
               }}
-              className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
               placeholder="Enter team name"
             />
           </div>
 
           {/* Approver Selection */}
           <div>
-            <label className="text-xs text-gray-500 mb-2 block">
+            <label className="text-xs text-muted-foreground mb-2 block">
               Approver *
             </label>
             <select
@@ -388,7 +388,7 @@ export function EditTeamModal({
                 const val = e.target.value ? Number(e.target.value) : null;
                 setEditTeam({ ...editTeam, approver: val });
               }}
-              className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
             >
               <option value="">Select an approver...</option>
               {availableApprovers.map((approver) => (
@@ -400,15 +400,15 @@ export function EditTeamModal({
           </div>
 
           {/* Members Section */}
-          <div className="pt-4 border-t border-gray-700">
+          <div className="pt-4 border-t border-border">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-semibold text-gray-500">
+              <h3 className="text-sm font-semibold text-muted-foreground">
                 Team Members ({teamDetails?.members?.length || 0})
               </h3>
               <button
                 onClick={() => setShowAddMember(!showAddMember)}
                 disabled={actionLoading}
-                className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-card text-black hover:bg-accent transition-colors disabled:opacity-50"
+                className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-card text-foreground hover:bg-accent transition-colors disabled:opacity-50"
               >
                 <UserPlus className="h-3 w-3" />
                 {showAddMember ? "Cancel" : "Add Member"}
@@ -417,8 +417,8 @@ export function EditTeamModal({
 
             {/* Add Member Form */}
             {showAddMember && (
-              <div className="mb-4 p-4 rounded border border-gray-700 bg-gray-800 bg-opacity-50">
-                <label className="text-xs text-gray-500 mb-2 block">
+              <div className="mb-4 p-4 rounded border border-border bg-muted">
+                <label className="text-xs text-muted-foreground mb-2 block">
                   Select Sales Agent
                 </label>
                 <div className="flex gap-2">
@@ -441,7 +441,7 @@ export function EditTeamModal({
                   <button
                     onClick={handleAddMember}
                     disabled={!selectedSalesAgent || actionLoading}
-                    className="px-4 py-2 rounded text-sm font-semibold bg-card text-black hover:bg-accent transition-colors disabled:opacity-50"
+                    className="px-4 py-2 rounded text-sm font-semibold bg-card text-foreground hover:bg-accent transition-colors disabled:opacity-50"
                   >
                     {actionLoading ? "Adding..." : "Add"}
                   </button>
@@ -467,7 +467,7 @@ export function EditTeamModal({
                 className="border rounded-lg overflow-hidden border-border"
               >
                 {!teamDetails?.members || teamDetails.members.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8 text-sm">
+                  <div className="text-center text-muted-foreground py-8 text-sm">
                     No members in this team
                   </div>
                 ) : (
@@ -490,7 +490,7 @@ export function EditTeamModal({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                    <tbody className="divide-y divide-border">
                       {teamDetails.members.map((member) => (
                         <tr
                           key={member.id}
@@ -539,7 +539,7 @@ export function EditTeamModal({
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
           >
             {loading ? "Updating..." : "Update Team"}
           </button>
@@ -552,14 +552,14 @@ export function EditTeamModal({
           <div
             className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
           >
-            <div className="flex justify-between items-center p-6 border-b border-gray-700">
+            <div className="flex justify-between items-center p-6 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-red-500 bg-opacity-20">
                   <AlertCircle className="h-5 w-5 text-red-500" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold">{errorDialog.title}</h2>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Please review the issue below
                   </p>
                 </div>
@@ -579,13 +579,13 @@ export function EditTeamModal({
               <p className="text-sm">{errorDialog.message}</p>
             </div>
 
-            <div className="p-6 border-t border-gray-700 flex justify-end">
+            <div className="p-6 border-t border-border flex justify-end">
               <button
                 onClick={() => {
                   console.log("DEBUG EditTeamModal: Closing error dialog");
                   setErrorDialog({ show: false, title: "", message: "" });
                 }}
-                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
               >
                 Got it
               </button>

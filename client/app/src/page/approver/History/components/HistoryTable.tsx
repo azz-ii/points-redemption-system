@@ -22,11 +22,11 @@ export function HistoryTable({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -83,7 +83,7 @@ export function HistoryTable({
             ) : historyItems.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-6 py-12 text-center">
-                  <p className="text-sm text-gray-500">No processed requests found</p>
+                  <p className="text-sm text-muted-foreground">No processed requests found</p>
                 </td>
               </tr>
             ) : (
@@ -93,7 +93,7 @@ export function HistoryTable({
                   className="hover:bg-accent transition-colors"
                 >
                   <td className="px-6 py-4 text-sm">
-                    {item.team_name || <span className="text-gray-400 italic">No Team</span>}
+                    {item.team_name || <span className="text-muted-foreground italic">No Team</span>}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {item.requested_by_name}

@@ -1,4 +1,3 @@
-import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -20,7 +19,6 @@ export function MobileBottomNavSuperAdmin({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -101,19 +99,12 @@ export function MobileBottomNavSuperAdmin({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map((item) => {
         const isActive = !("action" in item) && currentPage === item.id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button
@@ -143,7 +134,6 @@ export function MobileBottomNavMarketing({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -216,19 +206,12 @@ export function MobileBottomNavMarketing({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map((item) => {
         const isActive = !("action" in item) && currentPage === item.id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button
@@ -258,7 +241,6 @@ export function MobileBottomNavReception({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -324,19 +306,12 @@ export function MobileBottomNavReception({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map((item) => {
         const isActive = !("action" in item) && currentPage === item.id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button
@@ -366,7 +341,6 @@ export function MobileBottomNavExecutiveAssistant({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -432,19 +406,12 @@ export function MobileBottomNavExecutiveAssistant({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map((item) => {
         const isActive = !("action" in item) && currentPage === item.id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button
@@ -474,7 +441,6 @@ export function MobileBottomNavSales({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -547,19 +513,12 @@ export function MobileBottomNavSales({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map((item) => {
         const isActive = !("action" in item) && currentPage === item.id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button
@@ -589,7 +548,6 @@ export function MobileBottomNavApprover({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -655,19 +613,12 @@ export function MobileBottomNavApprover({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-3 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map((item) => {
         const isActive = !("action" in item) && currentPage === item.id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button
@@ -697,7 +648,6 @@ export function MobileBottomNav({
 }: {
   isModalOpen?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
@@ -769,19 +719,12 @@ export function MobileBottomNav({
     <nav
       className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center p-4 border-t transition-transform duration-300 ${
         isVisible && !isModalOpen ? "translate-y-0" : "translate-y-full"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-gray-800"
-          : "bg-white border-gray-200"
-      }`}
+      } bg-background border-border`}
     >
       {navItems.map(({ id, icon: Icon, label, path }) => {
         const isActive = currentPage === id;
-        const activeClass = "bg-blue-600 text-white";
-        const inactiveClass =
-          resolvedTheme === "dark"
-            ? "text-gray-200 hover:bg-gray-800"
-            : "text-gray-700 hover:bg-gray-100";
+        const activeClass = "bg-primary text-primary-foreground";
+        const inactiveClass = "text-muted-foreground hover:bg-accent";
 
         return (
           <button

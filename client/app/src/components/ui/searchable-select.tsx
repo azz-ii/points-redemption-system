@@ -104,7 +104,7 @@ export function SearchableSelect<T extends SearchableSelectOption>({
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Loading..." : placeholder}
           disabled={disabled}
-          className={`w-full px-3 py-2 pr-10 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 ${
+          className={`w-full px-3 py-2 pr-10 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring ${
             disabled ? "opacity-50 cursor-wait" : ""
           }`}
         />
@@ -112,13 +112,13 @@ export function SearchableSelect<T extends SearchableSelectOption>({
           {selectedOption && allowEmpty && !disabled && (
             <button
               onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
               type="button"
             >
               <X className="h-4 w-4" />
             </button>
           )}
-          <div className="pointer-events-none text-gray-400">
+          <div className="pointer-events-none text-muted-foreground">
             {isOpen ? (
               <Search className="h-4 w-4" />
             ) : (
@@ -130,7 +130,7 @@ export function SearchableSelect<T extends SearchableSelectOption>({
 
       {/* Dropdown List */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto bg-card border-gray-600">
+        <div className="absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto bg-card border-border">
           {allowEmpty && (
             <button
               onMouseDown={(e) => {
@@ -139,15 +139,15 @@ export function SearchableSelect<T extends SearchableSelectOption>({
               }}
               className={`w-full px-3 py-2 text-left text-sm hover:bg-accent ${
                 value === null ? "bg-accent" : ""
-              } border-b border-gray-700`}
+              } border-b border-border`}
               type="button"
             >
-              <div className="text-gray-500 italic">{emptyLabel}</div>
+              <div className="text-muted-foreground italic">{emptyLabel}</div>
             </button>
           )}
           {filteredOptions.length === 0 ? (
             <div className="px-3 py-2 text-sm text-center">
-              <span className="text-gray-500">No results found</span>
+              <span className="text-muted-foreground">No results found</span>
             </div>
           ) : (
             filteredOptions.map((option) => (
@@ -159,7 +159,7 @@ export function SearchableSelect<T extends SearchableSelectOption>({
                 }}
                 className={`w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors ${
                   value === option.id ? "bg-accent" : ""
-                } border-b last:border-b-0 border-gray-700`}
+                } border-b last:border-b-0 border-border`}
                 type="button"
               >
                 <div>{displayFormat(option)}</div>

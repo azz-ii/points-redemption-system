@@ -60,7 +60,7 @@ export function CreateAccountModal({
             <h2 id="create-account-title" className="text-xl font-semibold">
               Create New Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Please fill in the details to create a new account
             </p>
           </div>
@@ -77,14 +77,14 @@ export function CreateAccountModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Credentials
             </h3>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="username"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Username *
                 </label>
@@ -104,7 +104,7 @@ export function CreateAccountModal({
               <div>
                 <label
                   htmlFor="password"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Password *
                 </label>
@@ -125,14 +125,14 @@ export function CreateAccountModal({
 
           {/* Personal Information Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Personal Information
             </h3>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="fullName"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Full Name *
                 </label>
@@ -152,7 +152,7 @@ export function CreateAccountModal({
               <div>
                 <label
                   htmlFor="email"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Email Address *
                 </label>
@@ -173,14 +173,14 @@ export function CreateAccountModal({
 
           {/* Role & Points Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Role & Points
             </h3>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="position"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Position *
                 </label>
@@ -206,7 +206,7 @@ export function CreateAccountModal({
                   <div>
                     <label
                       htmlFor="points"
-                      className="text-xs text-gray-500 mb-2 block"
+                      className="text-xs text-muted-foreground mb-2 block"
                     >
                       Points *
                     </label>
@@ -230,9 +230,9 @@ export function CreateAccountModal({
                   <div>
                     <label
                       htmlFor="team"
-                      className="text-xs text-gray-500 mb-2 block"
+                      className="text-xs text-muted-foreground mb-2 block"
                     >
-                      Team <span className="text-gray-400">(optional)</span>
+                      Team <span className="text-muted-foreground">(optional)</span>
                     </label>
                     <select
                       id="team"
@@ -259,9 +259,9 @@ export function CreateAccountModal({
                 <div>
                   <label
                     htmlFor="approver-team"
-                    className="text-xs text-gray-500 mb-2 block"
+                    className="text-xs text-muted-foreground mb-2 block"
                   >
-                    Team <span className="text-gray-400">(optional)</span>
+                    Team <span className="text-muted-foreground">(optional)</span>
                   </label>
                   <select
                     id="approver-team"

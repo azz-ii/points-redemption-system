@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { RequestTimeline } from "@/components/modals";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { StatusChip } from "../components/StatusChip";
+import { UploadARModal } from "./UploadARModal";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export interface WithdrawConfirmationModalProps {
@@ -126,6 +127,7 @@ export function ViewRedemptionStatusModal({
   onRequestWithdrawn,
 }: ViewRedemptionStatusModalProps & { onRequestWithdrawn?: () => void }) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showUploadARModal, setShowUploadARModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
@@ -137,6 +139,9 @@ export function ViewRedemptionStatusModal({
   const canWithdraw =
     normalizedStatus === "PENDING" &&
     request.sales_approval_status !== "APPROVED";
+
+  // Check if AR upload is needed
+  const canUploadAR = request.ar_status === "PENDING";
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
@@ -281,7 +286,8 @@ export function ViewRedemptionStatusModal({
               </h3>
               <StatusChip 
                 status={request.status as any} 
-                processingStatus={request.processing_status as any} 
+                processingStatus={request.processing_status as any}
+                arStatus={request.ar_status}
               />
             </div>
 
@@ -310,10 +316,29 @@ export function ViewRedemptionStatusModal({
                 rejection_reason: request.rejection_reason,
                 status: request.status,
                 processing_status: request.processing_status,
+                ar_status: request.ar_status,
+                ar_uploaded_by_name: request.ar_uploaded_by_name,
+                ar_uploaded_at: request.ar_uploaded_at,
               }}
               showProcessing={true}
               showCancellation={true}
             />
+
+            {/* Acknowledgement Receipt Image */}
+            {request.ar_status === "UPLOADED" && request.acknowledgement_receipt && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Acknowledgement Receipt
+                </h3>
+                <div className="border rounded-lg overflow-hidden border-border inline-block">
+                  <img
+                    src={request.acknowledgement_receipt}
+                    alt="Acknowledgement Receipt"
+                    className="max-w-full max-h-64 object-contain"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -336,6 +361,14 @@ export function ViewRedemptionStatusModal({
                   Cancel Request
                 </button>
               )}
+              {canUploadAR && (
+                <button
+                  onClick={() => setShowUploadARModal(true)}
+                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  Upload Acknowledgement Receipt
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -346,6 +379,18 @@ export function ViewRedemptionStatusModal({
           onConfirm={handleWithdraw}
           requestId={request.id}
           isSubmitting={isSubmitting}
+        />
+
+        <UploadARModal
+          isOpen={showUploadARModal}
+          onClose={() => setShowUploadARModal(false)}
+          requestId={request.id}
+          customerName={request.requested_for_name}
+          onUploaded={() => {
+            setShowUploadARModal(false);
+            onClose();
+            onRequestWithdrawn?.();
+          }}
         />
       </div>
     </TooltipProvider>

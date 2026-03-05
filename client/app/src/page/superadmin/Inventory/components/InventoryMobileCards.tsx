@@ -33,7 +33,7 @@ export function InventoryMobileCards({
           <p className="text-red-500 text-sm">{error}</p>
           <button
             onClick={onRetry}
-            className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
+            className="mt-4 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm"
           >
             Retry
           </button>
@@ -45,7 +45,7 @@ export function InventoryMobileCards({
   if (items.length === 0) {
     return (
       <div className="text-center py-32">
-        <p className="text-gray-500 text-sm">
+        <p className="text-muted-foreground text-sm">
           {searchQuery
             ? "No items match your search"
             : "No inventory items found"}
@@ -167,14 +167,14 @@ export function InventoryMobileCards({
           <div className="flex gap-2">
             <button
               onClick={() => onViewItem(item)}
-              className="flex-1 px-3 py-2 rounded flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white transition-colors font-semibold text-sm"
+              className="flex-1 px-3 py-2 rounded flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground transition-colors font-semibold text-sm"
             >
               <Eye className="h-4 w-4" />
               View
             </button>
             <button
               onClick={() => onEditItem(item)}
-              className="flex-1 px-3 py-2 rounded flex items-center justify-center gap-2 bg-muted hover:bg-gray-600 text-foreground transition-colors font-semibold text-sm"
+              className="flex-1 px-3 py-2 rounded flex items-center justify-center gap-2 bg-muted hover:bg-accent text-foreground transition-colors font-semibold text-sm"
             >
               <Edit className="h-4 w-4" />
               Edit

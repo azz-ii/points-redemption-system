@@ -43,6 +43,11 @@ export interface RequestHistoryItem {
   date_cancelled?: string | null;
   remarks?: string | null;
   rejection_reason?: string | null;
+  // Acknowledgement Receipt fields
+  ar_status?: string | null;
+  acknowledgement_receipt?: string | null;
+  ar_uploaded_by_name?: string | null;
+  ar_uploaded_at?: string | null;
   points_deducted_from?: string;
   points_deducted_from_display?: string;
   items: RequestHistoryItemVariant[];

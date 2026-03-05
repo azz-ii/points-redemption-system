@@ -103,6 +103,8 @@ function Catalogue() {
         added_by: product.added_by,
         date_archived: product.date_archived,
         archived_by: product.archived_by,
+        mktg_admin: product.mktg_admin ?? null,
+        mktg_admin_username: product.mktg_admin_username ?? null,
       }));
       setItems(mappedItems);
       setError(null);
@@ -173,6 +175,7 @@ function Catalogue() {
     requires_sales_approval: true,
     points_multiplier: "",
     price_multiplier: "",
+    mktg_admin: "",
   });
 
   const [editItem, setEditItem] = useState({
@@ -202,6 +205,7 @@ function Catalogue() {
     requires_sales_approval: true,
     points_multiplier: "",
     price_multiplier: "",
+    mktg_admin: "",
   });
 
   // Modal state for edit/view/archive
@@ -222,35 +226,6 @@ function Catalogue() {
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [editCurrentImage, setEditCurrentImage] = useState<string | null>(null);
   const [editImageRemoved, setEditImageRemoved] = useState(false);
-
-  // Additional modal state for product/variant operations
-  const [viewProductTarget, setViewProductTarget] = useState<Product | null>(
-    null,
-  );
-  const [showViewProductModal, setShowViewProductModal] = useState(false);
-  const [editVariantTarget, setEditVariantTarget] = useState<Product | null>(
-    null,
-  );
-  const [editVariantData, setEditVariantData] = useState({
-    item_code: "",
-    category: "",
-    points: "",
-    price: "",
-    pricing_type: "FIXED" as
-      | "FIXED"
-      | "PER_SQFT"
-      | "PER_INVOICE"
-      | "PER_DAY"
-      | "PER_EU_SRP",
-    points_multiplier: "",
-    price_multiplier: "",
-  });
-  const [showEditVariantModal, setShowEditVariantModal] = useState(false);
-  const [editVariantError, setEditVariantError] = useState<string | null>(null);
-  const [deleteProductTarget, _setDeleteProductTarget] =
-    useState<Product | null>(null);
-  const [showDeleteProductModal, _setShowDeleteProductModal] = useState(false);
-  const [updatingVariant, setUpdatingVariant] = useState(false);
 
   // Handle create item submission
   const handleCreateItem = async () => {
@@ -316,6 +291,7 @@ function Catalogue() {
         stock: parseInt(newItem.stock) || 0,
         has_stock: newItem.has_stock,
         requires_sales_approval: newItem.requires_sales_approval,
+        mktg_admin: newItem.mktg_admin ? parseInt(newItem.mktg_admin) : null,
       };
 
       // Build FormData for multipart upload (supports image)
@@ -366,6 +342,7 @@ function Catalogue() {
         requires_sales_approval: true,
         points_multiplier: "",
         price_multiplier: "",
+        mktg_admin: "",
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -414,6 +391,7 @@ function Catalogue() {
       requires_sales_approval: item.requires_sales_approval ?? true,
       points_multiplier: !isFixed ? item.points.toString() : "",
       price_multiplier: !isFixed ? item.price.toString() : "",
+      mktg_admin: item.mktg_admin?.toString() || "",
     });
   };
 
@@ -483,6 +461,7 @@ function Catalogue() {
         stock: parseInt(editItem.stock) || 0,
         has_stock: editItem.has_stock,
         requires_sales_approval: editItem.requires_sales_approval ?? true,
+        mktg_admin: editItem.mktg_admin ? parseInt(editItem.mktg_admin) : null,
       };
 
       // Build FormData for multipart upload (supports image)
@@ -637,113 +616,6 @@ function Catalogue() {
     }
   };
 
-  const handleViewProductClick = (product: Product) => {
-    setViewProductTarget(product);
-    setShowViewProductModal(true);
-  };
-
-  const handleEditVariantClick = (product: Product) => {
-    setEditVariantTarget(product);
-    setEditVariantData({
-      item_code: product.item_code,
-      category: product.category || "",
-      points: product.points,
-      price: product.price,
-      pricing_type: product.pricing_type || "FIXED",
-      points_multiplier: "",
-      price_multiplier: "",
-    });
-    setShowEditVariantModal(true);
-    setEditVariantError(null);
-  };
-
-  const handleDeleteProductClick = (_product: Product) => {
-    // Dead code — kept for backward compatibility but not rendered
-  };
-
-  const handleUpdateVariant = async () => {
-    if (!editVariantTarget) return;
-    setEditVariantError(null);
-
-    const isFixed = editVariantData.pricing_type === "FIXED";
-
-    // Validation
-    if (!editVariantData.item_code.trim()) {
-      setEditVariantError("Item code is required");
-      return;
-    }
-
-    // Validate based on pricing type
-    if (isFixed) {
-      if (!editVariantData.points.toString().trim()) {
-        setEditVariantError("Points is required");
-        return;
-      }
-      if (!editVariantData.price.toString().trim()) {
-        setEditVariantError("Price is required");
-        return;
-      }
-    } else {
-      if (!editVariantData.points_multiplier.toString().trim()) {
-        setEditVariantError("Points multiplier is required");
-        return;
-      }
-      if (!editVariantData.price_multiplier.toString().trim()) {
-        setEditVariantError("Price multiplier is required");
-        return;
-      }
-    }
-
-    try {
-      setUpdatingVariant(true);
-
-      // Build payload based on pricing type
-      const payload: Record<string, unknown> = {
-        item_code: editVariantData.item_code,
-        category: editVariantData.category || null,
-        pricing_type: editVariantData.pricing_type || "FIXED",
-      };
-
-      if (isFixed) {
-        payload.points = editVariantData.points;
-        payload.price = editVariantData.price;
-        payload.points_multiplier = null;
-        payload.price_multiplier = null;
-      } else {
-        payload.points = editVariantData.points_multiplier; // Backend may use points field
-        payload.price = editVariantData.price_multiplier; // Backend may use price field
-        payload.points_multiplier = editVariantData.points_multiplier;
-        payload.price_multiplier = editVariantData.price_multiplier;
-      }
-
-      const response = await fetchWithCsrf(`/api/catalogue/${editVariantTarget.id}/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to update product");
-      }
-      setShowEditVariantModal(false);
-      setEditVariantTarget(null);
-      fetchCatalogueItems();
-    } catch (err) {
-      console.error("Error updating product:", err);
-      setEditVariantError(
-        err instanceof Error ? err.message : "Failed to update product",
-      );
-    } finally {
-      setUpdatingVariant(false);
-    }
-  };
-
-  const confirmDeleteProduct = async () => {
-    // Dead code — kept for backward compatibility but not called
-  };
-
   return (
     <>
       {/* Desktop Layout */}
@@ -761,7 +633,7 @@ function Catalogue() {
                 type="checkbox"
                 checked={showArchived}
                 onChange={(e) => handleToggleArchived(e.target.checked)}
-                className="rounded border-gray-300"
+                className="rounded border-border"
               />
               Show Archived
             </label>
@@ -834,7 +706,7 @@ function Catalogue() {
               type="checkbox"
               checked={showArchived}
               onChange={(e) => handleToggleArchived(e.target.checked)}
-              className="rounded border-gray-300"
+              className="rounded border-border"
             />
             Show Archived
           </label>
@@ -926,6 +798,9 @@ function Catalogue() {
           setEditCurrentImage(null);
           setEditImageRemoved(true);
         }}
+        currentMktgAdminUsername={
+          items.find((i) => i.id === editingProductId)?.mktg_admin_username ?? null
+        }
       />
 
       <ViewItemModal
@@ -935,6 +810,7 @@ function Catalogue() {
           setViewTarget(null);
         }}
         product={viewTarget}
+        onAssignmentChange={fetchCatalogueItems}
       />
 
       <ArchiveItemModal

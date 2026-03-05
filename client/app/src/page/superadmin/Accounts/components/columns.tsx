@@ -53,24 +53,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     size: 40,
   },
   {
-    accessorKey: "username",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Username
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      return <div className="py-2">{row.getValue("username") || "N/A"}</div>
-    },
-  },
-  {
     accessorKey: "full_name",
     header: ({ column }) => {
       return (
@@ -105,7 +87,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     cell: ({ row }) => {
       const value = row.getValue("position") as string
       return (
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
           {value || "N/A"}
         </span>
       )
@@ -203,11 +185,11 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
       return (
         <div className="flex gap-1">
           {isActivated ? (
-            <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+            <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
               Active
             </span>
           ) : (
-            <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
+            <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
               Inactive
             </span>
           )}

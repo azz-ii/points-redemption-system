@@ -57,7 +57,7 @@ export function MarkAsProcessedModal({
               <h2 id="mark-processed-title" className="text-xl font-semibold">
                 Mark Items as Processed
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Request #{item.id}
               </p>
             </div>
@@ -79,7 +79,7 @@ export function MarkAsProcessedModal({
           </p>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Items to be processed
             </h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -89,7 +89,7 @@ export function MarkAsProcessedModal({
                   className="p-3 rounded border text-sm bg-card border-border"
                 >
                   <p className="font-medium">{it.product_name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Qty: {it.quantity} • {it.product_code}
                   </p>
                 </div>
@@ -109,14 +109,14 @@ export function MarkAsProcessedModal({
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 bg-card hover:bg-accent text-foreground border border-border"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={isSubmitting}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="px-6 py-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

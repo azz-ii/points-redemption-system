@@ -95,7 +95,7 @@ export function ExportModal({ isOpen, onClose, requests }: ExportModalProps) {
               {requests.length} request{requests.length !== 1 ? "s" : ""} •{" "}
               <span className="text-green-600">Approved: {statusSummary.approved}</span> •{" "}
               <span className="text-red-600">Rejected: {statusSummary.rejected}</span> •{" "}
-              <span className="text-gray-600">Cancelled: {statusSummary.cancelled}</span>
+              <span className="text-muted-foreground">Cancelled: {statusSummary.cancelled}</span>
             </p>
           </div>
           <button
@@ -124,7 +124,7 @@ export function ExportModal({ isOpen, onClose, requests }: ExportModalProps) {
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedFormat === "excel"
                     ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                    : "border-border hover:border-gray-600"
+                    : "border-border hover:border-border"
                 }`}
               >
                 <div className="font-medium">Excel (.xlsx)</div>
@@ -139,7 +139,7 @@ export function ExportModal({ isOpen, onClose, requests }: ExportModalProps) {
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedFormat === "pdf"
                     ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                    : "border-border hover:border-gray-600"
+                    : "border-border hover:border-border"
                 }`}
               >
                 <div className="font-medium">PDF (.pdf)</div>
@@ -163,7 +163,7 @@ export function ExportModal({ isOpen, onClose, requests }: ExportModalProps) {
                 >
                   Select All
                 </button>
-                <span className="text-xs text-gray-400">|</span>
+                <span className="text-xs text-muted-foreground">|</span>
                 <button
                   onClick={() => toggleAllColumns(false)}
                   className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"

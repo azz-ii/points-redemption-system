@@ -9,15 +9,11 @@ import PasswordReset from "../page/login/PasswordReset";
 // Dashboard pages
 import SalesDashboard from "../page/sales_agent/Dashboard";
 import MarketingDashboard from "../page/marketing/Dashboard/Dashboard";
-import ReceptionDashboard from "../page/reception/Dashboard";
-import ExecutiveAssistantDashboard from "../page/executive_assistant/Dashboard";
 import SuperAdminDashboard from "../page/superadmin/Dashboard";
 
 // History pages
 import ApproverHistory from "../page/approver/History/History";
 import MarketingHistory from "../page/marketing/History/History";
-import ReceptionHistory from "../page/reception/History";
-import ExecutiveAssistantHistory from "../page/executive_assistant/History";
 import RequestHistory from "../page/superadmin/RequestHistory/RequestHistory";
 
 // Approver pages
@@ -55,10 +51,6 @@ function DashboardRouter() {
       return <Navigate to="/approver/dashboard" replace />;
     case "Marketing":
       return <Navigate to="/marketing/dashboard" replace />;
-    case "Reception":
-      return <Navigate to="/reception/dashboard" replace />;
-    case "Executive Assistant":
-      return <Navigate to="/executive-assistant/dashboard" replace />;
     case "Admin":
     case "SuperAdmin":
     case "admin":
@@ -76,10 +68,6 @@ function HistoryRouter() {
       return <Navigate to="/approver/history" replace />;
     case "Marketing":
       return <Navigate to="/marketing/history" replace />;
-    case "Reception":
-      return <Navigate to="/reception/history" replace />;
-    case "Executive Assistant":
-      return <Navigate to="/executive-assistant/history" replace />;
     case "Admin":
     case "SuperAdmin":
     case "admin":
@@ -153,25 +141,7 @@ export function AppRoutes() {
             <Route path="/marketing/history" element={<MarketingHistory />} />
           </Route>
 
-          {/* Reception routes */}
-          <Route element={<ProtectedRoute allowedRoles={["Reception"]} />}>
-            <Route path="/reception/dashboard" element={<ReceptionDashboard />} />
-            <Route path="/reception/history" element={<ReceptionHistory />} />
-          </Route>
 
-          {/* Executive Assistant routes */}
-          <Route
-            element={<ProtectedRoute allowedRoles={["Executive Assistant"]} />}
-          >
-            <Route
-              path="/executive-assistant/dashboard"
-              element={<ExecutiveAssistantDashboard />}
-            />
-            <Route
-              path="/executive-assistant/history"
-              element={<ExecutiveAssistantHistory />}
-            />
-          </Route>
         </Route>
       </Route>
 

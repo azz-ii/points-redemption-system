@@ -69,7 +69,7 @@ export function EditStockModal({
                 {previewStatus}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Adjust stock levels for {item.item_name}
             </p>
           </div>
@@ -86,7 +86,7 @@ export function EditStockModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Item Info (Read-only) */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Item Information
             </h3>
             <div className="p-4 rounded-lg bg-card">
@@ -115,24 +115,24 @@ export function EditStockModal({
 
           {/* Stock Levels */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Stock Levels
             </h3>
 
             {/* Current Stock Info (Read-only) */}
             <div className="p-3 rounded-lg border bg-card border-border">
-              <p className="text-xs text-gray-500 mb-2">Current Stock Breakdown</p>
+              <p className="text-xs text-muted-foreground mb-2">Current Stock Breakdown</p>
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div>
-                  <span className="text-gray-500 text-xs">Total:</span>
+                  <span className="text-muted-foreground text-xs">Total:</span>
                   <p className="font-semibold">{item.stock}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs">Committed:</span>
+                  <span className="text-muted-foreground text-xs">Committed:</span>
                   <p className="font-semibold text-orange-500">{item.committed_stock}</p>
                 </div>
                 <div>
-                  <span className="text-gray-500 text-xs">Available:</span>
+                  <span className="text-muted-foreground text-xs">Available:</span>
                   <p
                     className={`font-semibold ${
                       item.available_stock === 0
@@ -144,7 +144,7 @@ export function EditStockModal({
                   </p>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 {item.committed_stock > 0
                   ? `${item.committed_stock} unit${item.committed_stock > 1 ? "s" : ""} reserved for pending/approved requests`
                   : "No units currently committed"}
@@ -153,7 +153,7 @@ export function EditStockModal({
 
             {/* Action Toggle */}
             <div>
-              <label className="text-xs text-gray-500 mb-2 block">Action *</label>
+              <label className="text-xs text-muted-foreground mb-2 block">Action *</label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -161,7 +161,7 @@ export function EditStockModal({
                   className={`flex-1 px-4 py-3 rounded border text-sm font-semibold transition-colors ${
                     data.action === "add"
                       ? "bg-green-600 text-white border-green-600"
-                      : "bg-card border-gray-600 text-foreground hover:bg-accent"
+                      : "bg-card border-border text-foreground hover:bg-accent"
                   }`}
                 >
                   + Add Stock
@@ -172,7 +172,7 @@ export function EditStockModal({
                   className={`flex-1 px-4 py-3 rounded border text-sm font-semibold transition-colors ${
                     data.action === "decrease"
                       ? "bg-red-600 text-white border-red-600"
-                      : "bg-card border-gray-600 text-foreground hover:bg-accent"
+                      : "bg-card border-border text-foreground hover:bg-accent"
                   }`}
                 >
                   − Decrease Stock
@@ -184,7 +184,7 @@ export function EditStockModal({
             <div>
               <label
                 htmlFor="stock-quantity-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Quantity *
               </label>
@@ -194,7 +194,7 @@ export function EditStockModal({
                 value={data.quantity}
                 onChange={(e) => setData({ ...data, quantity: e.target.value })}
                 min="1"
-                className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
                 placeholder={`Enter quantity to ${data.action === "add" ? "add" : "remove"}`}
                 aria-required="true"
               />
@@ -217,7 +217,7 @@ export function EditStockModal({
             <div>
               <label
                 htmlFor="stock-reason-input"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 {data.action === "decrease" ? "Reason *" : "Reason (optional)"}
               </label>
@@ -226,7 +226,7 @@ export function EditStockModal({
                 value={data.reason}
                 onChange={(e) => setData({ ...data, reason: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-3 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none"
                 placeholder={data.action === "decrease"
                   ? "Enter reason for stock decrease (e.g., damaged goods, inventory correction, expired items)"
                   : "Enter reason for stock addition (optional)"}

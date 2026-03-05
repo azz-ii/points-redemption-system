@@ -317,6 +317,64 @@ def send_request_processed_email(request_obj, distributor, processed_by):
         return False
 
 
+def send_ar_required_email(request_obj):
+    """
+    Send email notification to the sales agent that an Acknowledgement Receipt upload is required.
+    
+    Args:
+        request_obj: RedemptionRequest model instance (customer request that was just processed)
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        recipient_email = request_obj.requested_by.profile.email
+        
+        if not recipient_email:
+            logger.warning(f"No email address found for user {request_obj.requested_by.username}")
+            return False
+        
+        logger.debug(f"Preparing AR required email for request #{request_obj.id}")
+        
+        items_list = []
+        total_points = 0
+        for item in request_obj.items.all():
+            items_list.append({
+                'name': item.product.item_name,
+                'sku': item.product.item_code,
+                'quantity': item.quantity,
+                'total_points': item.total_points,
+            })
+            total_points += item.total_points
+        
+        date_processed_str = ''
+        if request_obj.date_processed:
+            date_processed_str = request_obj.date_processed.strftime('%B %d, %Y at %I:%M %p')
+        
+        customer = request_obj.get_requested_for_entity()
+        
+        context = {
+            'request_id': request_obj.id,
+            'customer_name': customer.name if customer else 'Unknown',
+            'requested_by': request_obj.requested_by.username,
+            'items': items_list,
+            'total_points': total_points,
+            'date_processed': date_processed_str,
+        }
+        
+        return send_html_email(
+            subject=f"Action Required: Upload Acknowledgement Receipt for Request #{request_obj.id}",
+            template_name='emails/ar_required.html',
+            context=context,
+            recipient_list=[recipient_email],
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending AR required email for request #{request_obj.id}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False
+
+
 def send_account_created_email(username, password, full_name, email, position):
     """
     Send email notification when a new account is created

@@ -12,10 +12,16 @@ export interface Customer {
   updated_at?: string;
   added_by?: number;
   added_by_name?: string;
+  is_prospect?: boolean;
   is_archived: boolean;
   date_archived?: string | null;
   archived_by?: number | null;
   archived_by_username?: string | null;
+}
+
+export interface SimilarCustomersResponse {
+  exact_match: Customer | null;
+  similar: Customer[];
 }
 
 export interface PaginatedCustomersResponse {
@@ -101,11 +107,56 @@ export const customersApi = {
     if (!response.ok) throw new Error('Failed to fetch customers');
     return response.json();
   },
-  getListAll: async (): Promise<{id: number; name: string; brand: string; sales_channel: string}[]> => {
+  getListAll: async (): Promise<{id: number; name: string; brand: string; sales_channel: string; is_prospect: boolean}[]> => {
     const response = await fetch(`${API_BASE_URL}/customers/list_all/`, {
       credentials: 'include',
     });
     if (!response.ok) throw new Error('Failed to fetch customers list');
+    return response.json();
+  },
+  checkSimilar: async (name: string): Promise<SimilarCustomersResponse> => {
+    const url = new URL(`${API_BASE_URL}/customers/check_similar/`, window.location.origin);
+    url.searchParams.append('name', name);
+    const response = await fetch(url.toString(), {
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to check similar customers');
+    return response.json();
+  },
+  createProspect: async (name: string): Promise<Customer> => {
+    const response = await fetch(`${API_BASE_URL}/customers/create_prospect/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) throw new Error('Failed to create prospect customer');
+    return response.json();
+  },
+  promoteCustomer: async (id: number, data: { brand: string; sales_channel: string }): Promise<{ message: string; customer: Customer }> => {
+    const response = await fetch(`${API_BASE_URL}/customers/${id}/promote/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to promote customer');
+    }
+    return response.json();
+  },
+  mergeCustomer: async (sourceId: number, targetId: number): Promise<{ message: string; customer: Customer }> => {
+    const response = await fetch(`${API_BASE_URL}/customers/${sourceId}/merge/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ merge_into_id: targetId }),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to merge customers');
+    }
     return response.json();
   },
   create: async (data: Omit<Customer, 'id' | 'date_added'>): Promise<Customer> => {

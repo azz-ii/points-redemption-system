@@ -33,7 +33,7 @@ export function BulkArchiveItemModal({
               <h2 id="bulk-archive-title" className="text-xl font-semibold">
                 Archive Multiple Items
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 This action can be reversed.
               </p>
             </div>

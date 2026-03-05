@@ -1,36 +1,34 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface StatusChipProps {
   status: string;
   processingStatus?: string;
+  arStatus?: string | null;
 }
 
-export function StatusChip({ status, processingStatus }: StatusChipProps) {
-  const base = "px-3 py-1 rounded-full text-xs font-semibold inline-block";
+export function StatusChip({ status, processingStatus, arStatus }: StatusChipProps) {
   const normalizedStatus = status.toUpperCase();
   
   // Show processing status if request is APPROVED
   if (normalizedStatus === "APPROVED") {
-    // If APPROVED and PROCESSED, show "Processed" status
     if (processingStatus === "PROCESSED") {
-      return (
-        <span
-          className={`${base} bg-blue-100 text-blue-700 dark:bg-blue-500 dark:text-white`}
-        >
-          Processed
-        </span>
-      );
+      // Check AR status for customer requests
+      if (arStatus === "PENDING") {
+        return <StatusBadge status="AWAITING_AR" label="Awaiting AR" size="md" />;
+      }
+      if (arStatus === "UPLOADED") {
+        return <StatusBadge status="PROCESSED" label="Completed" size="md" />;
+      }
+      return <StatusBadge status="PROCESSED" label="Processed" size="md" />;
     }
     
-    // If APPROVED and CANCELLED, show "Cancelled" status with tooltip
     if (processingStatus === "CANCELLED") {
       return (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span
-              className={`${base} cursor-help bg-red-100 text-red-700 dark:bg-red-500 dark:text-white`}
-            >
-              Cancelled
+            <span>
+              <StatusBadge status="CANCELLED" label="Cancelled" size="md" className="cursor-help" />
             </span>
           </TooltipTrigger>
           <TooltipContent>An Admin Has Cancelled this Request</TooltipContent>
@@ -38,32 +36,12 @@ export function StatusChip({ status, processingStatus }: StatusChipProps) {
       );
     }
     
-    // If APPROVED but not processed/cancelled, show "Approved" status
-    return (
-      <span
-        className={`${base} bg-green-100 text-green-700 dark:bg-green-500 dark:text-black`}
-      >
-        Approved
-      </span>
-    );
+    return <StatusBadge status="APPROVED" label="Approved" size="md" />;
   }
   
-  // For non-approved requests, show approval status
   if (normalizedStatus === "PENDING") {
-    return (
-      <span
-        className={`${base} bg-yellow-100 text-yellow-700 dark:bg-yellow-400 dark:text-black`}
-      >
-        Pending
-      </span>
-    );
+    return <StatusBadge status="PENDING" label="Pending" size="md" />;
   }
   
-  return (
-    <span
-      className={`${base} bg-red-100 text-red-700 dark:bg-red-500 dark:text-white`}
-    >
-      Rejected
-    </span>
-  );
+  return <StatusBadge status="REJECTED" label="Rejected" size="md" />;
 }

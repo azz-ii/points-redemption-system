@@ -13,7 +13,6 @@ import {
   MarketingUsersTable,
   MarketingUsersMobileCards,
   type MarketingUser,
-  type LegendAssignment,
 } from "./components";
 function Marketing() {
   const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([]);
@@ -64,28 +63,34 @@ function Marketing() {
 
       const assignmentsData = await assignmentsResponse.json();
 
-      // Build assignments map by user ID
-      const assignmentsByUser: Record<number, LegendAssignment[]> = {};
-      if (assignmentsResponse.ok && assignmentsData.assignments) {
-        for (const assignment of assignmentsData.assignments) {
-          if (assignment.mktg_admin_id) {
-            if (!assignmentsByUser[assignment.mktg_admin_id]) {
-              assignmentsByUser[assignment.mktg_admin_id] = [];
+      // Build assignments map by user ID from product-level data
+      const assignmentsByUser: Record<number, { legends: Record<string, { legend: string; item_count: number }>; products: { id: number; item_code: string; item_name: string; legend: string }[] }> = {};
+      if (assignmentsResponse.ok && assignmentsData.products) {
+        for (const product of assignmentsData.products) {
+          if (product.mktg_admin_id) {
+            if (!assignmentsByUser[product.mktg_admin_id]) {
+              assignmentsByUser[product.mktg_admin_id] = { legends: {}, products: [] };
             }
-            assignmentsByUser[assignment.mktg_admin_id].push({
-              legend: assignment.legend,
-              item_count: assignment.item_count,
-            });
+            const entry = assignmentsByUser[product.mktg_admin_id];
+            entry.products.push({ id: product.id, item_code: product.item_code, item_name: product.item_name, legend: product.legend });
+            if (!entry.legends[product.legend]) {
+              entry.legends[product.legend] = { legend: product.legend, item_count: 0 };
+            }
+            entry.legends[product.legend].item_count += 1;
           }
         }
       }
 
       // Merge users with their assignments
       const usersWithAssignments: MarketingUser[] = accounts.map(
-        (account: Account) => ({
-          ...account,
-          assigned_legends: assignmentsByUser[account.id] || [],
-        }),
+        (account: Account) => {
+          const entry = assignmentsByUser[account.id];
+          return {
+            ...account,
+            assigned_legends: entry ? Object.values(entry.legends) : [],
+            assigned_products: entry ? entry.products : [],
+          };
+        },
       );
 
       setMarketingUsers(usersWithAssignments);

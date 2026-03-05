@@ -1,5 +1,4 @@
-﻿import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LogOut,
@@ -25,7 +24,6 @@ import { ViewAccountModal } from "@/components/modals";
 import oracleLogoMobile from "@/assets/oracle-logo-mb.png";
 
 export function Sidebar() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -120,11 +118,7 @@ export function Sidebar() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -143,11 +137,7 @@ export function Sidebar() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-800"
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            } transition-all`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -168,12 +158,8 @@ export function Sidebar() {
                 sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
               } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               }`}
               title={label}
             >
@@ -192,26 +178,18 @@ export function Sidebar() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -219,9 +197,7 @@ export function Sidebar() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -230,11 +206,7 @@ export function Sidebar() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2.5 font-medium bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
@@ -253,7 +225,6 @@ export function Sidebar() {
 }
 
 export function SidebarSuperAdmin() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -348,11 +319,7 @@ export function SidebarSuperAdmin() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -371,11 +338,7 @@ export function SidebarSuperAdmin() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-800"
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            } transition-all`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -396,12 +359,8 @@ export function SidebarSuperAdmin() {
                 sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
               } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               }`}
               title={label}
             >
@@ -420,26 +379,18 @@ export function SidebarSuperAdmin() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -447,9 +398,7 @@ export function SidebarSuperAdmin() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -458,11 +407,7 @@ export function SidebarSuperAdmin() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2.5 font-medium bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
@@ -481,7 +426,6 @@ export function SidebarSuperAdmin() {
 }
 
 export function SidebarSales() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -544,11 +488,7 @@ export function SidebarSales() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -567,11 +507,7 @@ export function SidebarSales() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-            } transition-all`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -592,12 +528,8 @@ export function SidebarSales() {
                 sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
               } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               }`}
               title={label}
             >
@@ -616,26 +548,18 @@ export function SidebarSales() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -643,9 +567,7 @@ export function SidebarSales() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -654,11 +576,7 @@ export function SidebarSales() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2.5 font-medium bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
@@ -677,7 +595,6 @@ export function SidebarSales() {
 }
 
 export function SidebarApprover() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -734,11 +651,7 @@ export function SidebarApprover() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -757,11 +670,7 @@ export function SidebarApprover() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-            } transition-all`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -782,12 +691,8 @@ export function SidebarApprover() {
                 sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
               } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               }`}
               title={label}
             >
@@ -806,26 +711,18 @@ export function SidebarApprover() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -833,9 +730,7 @@ export function SidebarApprover() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -844,11 +739,7 @@ export function SidebarApprover() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2.5 font-medium bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
@@ -867,7 +758,6 @@ export function SidebarApprover() {
 }
 
 export function SidebarMarketing() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -930,11 +820,7 @@ export function SidebarMarketing() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -953,11 +839,7 @@ export function SidebarMarketing() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800 text-gray-400 hover:text-white"
-                : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
-            } transition-all`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition-all`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -978,12 +860,8 @@ export function SidebarMarketing() {
                 sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
               } py-2.5 rounded-lg font-medium transition-all ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               }`}
               title={label}
             >
@@ -1002,26 +880,18 @@ export function SidebarMarketing() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1029,9 +899,7 @@ export function SidebarMarketing() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -1040,11 +908,7 @@ export function SidebarMarketing() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
@@ -1063,7 +927,6 @@ export function SidebarMarketing() {
 }
 
 export function SidebarReception() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -1120,11 +983,7 @@ export function SidebarReception() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -1143,11 +1002,7 @@ export function SidebarReception() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent transition-colors`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -1168,12 +1023,8 @@ export function SidebarReception() {
                 sidebarExpanded ? "gap-3 px-2" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               } transition-colors`}
               title={label}
             >
@@ -1188,26 +1039,18 @@ export function SidebarReception() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1215,9 +1058,7 @@ export function SidebarReception() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -1226,11 +1067,7 @@ export function SidebarReception() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2.5 font-medium bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
@@ -1249,7 +1086,6 @@ export function SidebarReception() {
 }
 
 export function SidebarExecutiveAssistant() {
-  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const handleLogout = useLogout();
@@ -1306,11 +1142,7 @@ export function SidebarExecutiveAssistant() {
     <div
       className={`hidden md:flex md:flex-col md:${
         sidebarExpanded ? "w-60" : "w-20"
-      } ${
-        resolvedTheme === "dark"
-          ? "bg-gray-900 border-r-2 border-gray-800"
-          : "bg-white border-r-2 border-gray-200 shadow-sm"
-      } md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
+      } bg-sidebar border-r-2 border-sidebar-border shadow-sm md:py-4 md:px-3 md:justify-between md:transition-all md:duration-300 md:ease-in-out`}
     >
       {/* Top */}
       <div className="space-y-4">
@@ -1329,11 +1161,7 @@ export function SidebarExecutiveAssistant() {
           )}
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className={`p-2 rounded-lg shrink-0 ${
-              resolvedTheme === "dark"
-                ? "hover:bg-gray-800"
-                : "hover:bg-gray-100"
-            } transition-colors`}
+            className={`p-2 rounded-lg shrink-0 hover:bg-sidebar-accent transition-colors`}
             title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             {sidebarExpanded ? (
@@ -1354,12 +1182,8 @@ export function SidebarExecutiveAssistant() {
                 sidebarExpanded ? "gap-3 px-2" : "justify-center"
               } px-4 py-2 rounded-lg font-medium ${
                 currentPage === id
-                  ? resolvedTheme === "dark"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : resolvedTheme === "dark"
-                    ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
               } transition-colors`}
               title={label}
             >
@@ -1374,26 +1198,18 @@ export function SidebarExecutiveAssistant() {
 
       {/* Bottom - User Profile */}
       <div
-        className={`space-y-3 border-t pt-3 ${
-          resolvedTheme === "dark" ? "border-gray-800" : "border-gray-200"
-        }`}
+        className="space-y-3 border-t pt-3 border-border"
       >
         <button
           onClick={() => setShowAccountModal(true)}
           className={`w-full flex items-center ${
             sidebarExpanded ? "gap-3 px-2" : "justify-center"
-          } rounded-lg py-2 transition-all ${
-            resolvedTheme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"
-          }`}
+          } rounded-lg py-2 transition-all hover:bg-sidebar-accent`}
         >
           <div
-            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 ${
-              resolvedTheme === "dark"
-                ? "bg-blue-600 ring-blue-500/30"
-                : "bg-blue-500 ring-blue-400/30"
-            }`}
+            className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center overflow-hidden ring-2 bg-primary ring-primary/30`}
           >
-            <span className="text-white font-semibold text-sm">
+            <span className="text-primary-foreground font-semibold text-sm">
               {(username || "I").charAt(0).toUpperCase()}
             </span>
           </div>
@@ -1401,9 +1217,7 @@ export function SidebarExecutiveAssistant() {
             <div className="transition-all duration-300 text-left">
               <p className="font-medium text-sm">{username || "Guest"}</p>
               <p
-                className={`text-xs ${
-                  resolvedTheme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                className="text-xs text-muted-foreground"
               >
                 {role || "User"}
               </p>
@@ -1412,11 +1226,7 @@ export function SidebarExecutiveAssistant() {
         </button>
         <Button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 font-medium ${
-            resolvedTheme === "dark"
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-500 text-white hover:bg-red-600"
-          } transition-all shadow-lg hover:shadow-xl cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2.5 font-medium bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:shadow-xl cursor-pointer"
           title="Log Out"
         >
           <LogOut className="h-4 w-4 shrink-0" />

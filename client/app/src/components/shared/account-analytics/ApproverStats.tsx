@@ -1,3 +1,4 @@
+import { getStatusClasses } from "@/components/ui/status-badge";
 import { useState } from "react";
 import {
   CheckCircle2, XCircle, TrendingUp, Clock, FileText, ShieldCheck
@@ -90,7 +91,7 @@ export function ApproverStats({ stats, recentActivity }: ApproverStatsProps) {
                       <td className="px-3 py-2 text-xs truncate max-w-[120px]">{r.requested_for ?? "\u2014"}</td>
                       <td className="px-3 py-2 text-xs text-right font-semibold">{r.total_points.toLocaleString()}</td>
                       <td className="px-3 py-2">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[r.status] ?? "bg-muted text-foreground"}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(r.status) ?? "bg-muted text-foreground"}`}>
                           {r.status}
                         </span>
                       </td>

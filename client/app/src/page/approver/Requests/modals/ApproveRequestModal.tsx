@@ -41,7 +41,7 @@ export function ApproveRequestModal({
             <h2 id="approve-request-title" className="text-xl font-semibold">
               Approve Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Request for {request.requested_for_name}
             </p>
           </div>
@@ -64,7 +64,7 @@ export function ApproveRequestModal({
           <div>
             <label
               htmlFor="approve-remarks"
-              className="text-xs text-gray-500 mb-2 block"
+              className="text-xs text-muted-foreground mb-2 block"
             >
               Remarks (Optional)
             </label>
@@ -73,7 +73,7 @@ export function ApproveRequestModal({
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="Add any remarks..."
-              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               rows={3}
             />
           </div>

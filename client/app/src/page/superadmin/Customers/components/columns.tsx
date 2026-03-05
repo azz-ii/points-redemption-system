@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Pencil, ArrowUpDown, Archive, ArchiveRestore, MoreHorizontal } from "lucide-react"
+import { Pencil, ArrowUpDown, Archive, ArchiveRestore, MoreHorizontal, ArrowUpCircle, Merge } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,8 @@ interface ColumnContext {
   onEdit: (customer: Customer) => void
   onArchive: (customer: Customer) => void
   onUnarchive: (customer: Customer) => void
+  onPromote?: (customer: Customer) => void
+  onMerge?: (customer: Customer) => void
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => [
@@ -98,6 +100,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
     header: "Status",
     cell: ({ row }) => {
       const isArchived = row.original.is_archived
+      const isProspect = row.original.is_prospect
 
       if (isArchived) {
         return (
@@ -109,9 +112,19 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
         )
       }
 
+      if (isProspect) {
+        return (
+          <div className="flex gap-1">
+            <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+              Prospect
+            </span>
+          </div>
+        )
+      }
+
       return (
         <div className="flex gap-1">
-          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
             Active
           </span>
         </div>
@@ -158,6 +171,18 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
+              {customer.is_prospect && context.onPromote && (
+                <DropdownMenuItem onClick={() => context.onPromote!(customer)}>
+                  <ArrowUpCircle className="mr-2 h-4 w-4" />
+                  Promote
+                </DropdownMenuItem>
+              )}
+              {customer.is_prospect && context.onMerge && (
+                <DropdownMenuItem onClick={() => context.onMerge!(customer)}>
+                  <Merge className="mr-2 h-4 w-4" />
+                  Merge
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => context.onArchive(customer)} className="text-destructive">
                 <Archive className="mr-2 h-4 w-4" />
                 Archive

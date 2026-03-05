@@ -1,15 +1,18 @@
 import { X, Package } from "lucide-react";
 import type { ModalBaseProps, Product } from "./types";
 import { getLegendColor } from "./types";
+import { MarketingHandlerSection } from "../components";
 
 interface ViewItemModalProps extends ModalBaseProps {
   product: Product | null;
+  onAssignmentChange?: () => void;
 }
 
 export function ViewItemModal({
   isOpen,
   onClose,
   product,
+  onAssignmentChange,
 }: ViewItemModalProps) {
   if (!isOpen || !product) return null;
 
@@ -26,7 +29,7 @@ export function ViewItemModal({
             <h2 id="view-item-title" className="text-xl font-semibold">
               View Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Product details
             </p>
           </div>
@@ -42,7 +45,7 @@ export function ViewItemModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Product Details */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT DETAILS</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">PRODUCT DETAILS</h3>
 
             {/* Product Image */}
             <div className="flex justify-center">
@@ -50,12 +53,12 @@ export function ViewItemModal({
                 <img
                   src={product.image}
                   alt={product.item_name}
-                  className="w-48 h-48 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
+                  className="w-48 h-48 rounded-lg object-cover border-2 border-border"
                 />
               ) : (
                 <div className={`w-48 h-48 rounded-lg flex flex-col items-center justify-center bg-muted border-border border-2`}>
-                  <Package className="w-12 h-12 text-gray-400 mb-2" />
-                  <p className="text-xs text-gray-400">No image</p>
+                  <Package className="w-12 h-12 text-muted-foreground mb-2" />
+                  <p className="text-xs text-muted-foreground">No image</p>
                 </div>
               )}
             </div>
@@ -107,7 +110,7 @@ export function ViewItemModal({
 
               {/* Legend */}
               <div>
-                <p className="text-xs text-gray-500 mb-2">Legend</p>
+                <p className="text-xs text-muted-foreground mb-2">Legend</p>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLegendColor(
                     product.legend
@@ -141,12 +144,12 @@ export function ViewItemModal({
 
               {/* Tracks Inventory */}
               <div>
-                <p className="text-xs text-gray-500 mb-2">Inventory Tracking</p>
+                <p className="text-xs text-muted-foreground mb-2">Inventory Tracking</p>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                     product.has_stock
-                      ? "bg-green-500 text-white"
-                      : "bg-blue-500 text-white"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
                   }`}
                 >
                   {product.has_stock ? "Tracks Stock" : "Made to Order"}
@@ -236,6 +239,18 @@ export function ViewItemModal({
                 />
               </div>
             )}
+          </div>
+
+          {/* Marketing Handler Assignment */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">MARKETING HANDLER</h3>
+            <MarketingHandlerSection
+              productId={product.id}
+              productName={product.item_name}
+              currentMktgAdminId={product.mktg_admin}
+              currentMktgAdminUsername={product.mktg_admin_username}
+              onAssignmentChange={onAssignmentChange ?? (() => {})}
+            />
           </div>
         </div>
 

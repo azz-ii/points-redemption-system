@@ -20,13 +20,13 @@ export function ProcessRequestsMobileCards({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-400 text-black";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -79,11 +79,11 @@ export function ProcessRequestsMobileCards({
                   {item.request_status_display}
                 </span>
                 {isProcessed ? (
-                  <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+                  <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
                     Processed
                   </span>
                 ) : (
-                  <span className="px-2 py-1 rounded text-xs font-semibold bg-orange-400 text-black">
+                  <span className="px-2 py-1 rounded text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
                     Pending
                   </span>
                 )}
@@ -116,7 +116,7 @@ export function ProcessRequestsMobileCards({
             <div className="flex gap-2">
               <button
                 onClick={() => onViewRequest(item)}
-                className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+                className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Eye className="h-4 w-4" />
                 View

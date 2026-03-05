@@ -51,7 +51,10 @@ function getCellValue(account: Account, key: ExportColumn["key"]): string | numb
   if (typeof value === "boolean") {
     return value ? "Yes" : "No";
   }
-  return value ?? "";
+  if (Array.isArray(value)) {
+    return value.map((v) => v.name).join(", ");
+  }
+  return (value as string | number | null | undefined) ?? "";
 }
 
 /**

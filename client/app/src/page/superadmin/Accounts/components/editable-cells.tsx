@@ -145,7 +145,7 @@ export function EditableSelectCell({ value, isEditing, onChange, error }: Editab
 
   if (!isEditing) {
     return (
-      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
+      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
         {value || "N/A"}
       </span>
     )

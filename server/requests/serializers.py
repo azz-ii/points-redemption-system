@@ -68,6 +68,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     requested_by_name = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
     requested_for_customer_name = serializers.SerializerMethodField()
+    requested_for_customer_is_prospect = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
     processed_by_name = serializers.SerializerMethodField()
     cancelled_by_name = serializers.SerializerMethodField()
@@ -83,11 +84,16 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     # Marketing processing status
     marketing_processing_status = serializers.SerializerMethodField()
 
+    # Acknowledgement Receipt fields
+    ar_status_display = serializers.CharField(source='get_ar_status_display', read_only=True)
+    ar_uploaded_by_name = serializers.SerializerMethodField()
+
     class Meta:
         model = RedemptionRequest
         fields = [
             'id', 'requested_by', 'requested_by_name', 'requested_for', 
             'requested_for_name', 'requested_for_customer', 'requested_for_customer_name',
+            'requested_for_customer_is_prospect',
             'requested_for_type', 'team', 'team_name', 'points_deducted_from', 
             'points_deducted_from_display', 'total_points', 'status', 'status_display',
             'processing_status', 'processing_status_display', 'date_requested', 
@@ -100,6 +106,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'sales_approval_status', 'sales_approved_by', 'sales_approved_by_name',
             'sales_approval_date', 'sales_rejection_reason',
             'pending_approvals', 'marketing_processing_status',
+            # Acknowledgement Receipt fields
+            'ar_status', 'ar_status_display', 'acknowledgement_receipt',
+            'ar_uploaded_by', 'ar_uploaded_by_name', 'ar_uploaded_at',
             # SVC fields
             'svc_date', 'svc_time', 'svc_driver',
             'items'
@@ -121,6 +130,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
 
     def get_requested_for_customer_name(self, obj):
         return obj.requested_for_customer.name if obj.requested_for_customer else None
+
+    def get_requested_for_customer_is_prospect(self, obj):
+        return obj.requested_for_customer.is_prospect if obj.requested_for_customer else None
 
     def get_team_name(self, obj):
         return obj.team.name if obj.team else None
@@ -159,6 +171,14 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
 
     def get_pending_approvals(self, obj):
         return obj.get_pending_approvals()
+
+    def get_ar_uploaded_by_name(self, obj):
+        if obj.ar_uploaded_by:
+            profile = getattr(obj.ar_uploaded_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.ar_uploaded_by.username
+            return obj.ar_uploaded_by.username
+        return None
 
     def get_marketing_processing_status(self, obj):
         """Get the marketing processing status for this request"""

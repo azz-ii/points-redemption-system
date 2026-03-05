@@ -16,11 +16,11 @@ export function HistoryMobileCards({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -31,7 +31,7 @@ export function HistoryMobileCards({
   if (historyItems.length === 0) {
     return (
       <div className="flex justify-center items-center py-8">
-        <p className="text-sm text-gray-500">No processed requests found</p>
+        <p className="text-sm text-muted-foreground">No processed requests found</p>
       </div>
     );
   }
@@ -60,23 +60,23 @@ export function HistoryMobileCards({
 
           <div className="space-y-1 mb-3 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Team:</span>
+              <span className="text-muted-foreground">Team:</span>
               <span className="font-medium">
-                {item.team_name || <span className="text-gray-400 italic">No Team</span>}
+                {item.team_name || <span className="text-muted-foreground italic">No Team</span>}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">For:</span>
+              <span className="text-muted-foreground">For:</span>
               <span className="font-medium">{item.requested_for_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Points:</span>
+              <span className="text-muted-foreground">Points:</span>
               <span className="font-medium">
                 {item.total_points.toLocaleString()} pts
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Processed:</span>
+              <span className="text-muted-foreground">Processed:</span>
               <span className="font-medium">
                 {item.date_processed
                   ? new Date(item.date_processed).toLocaleDateString()
@@ -84,7 +84,7 @@ export function HistoryMobileCards({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">By:</span>
+              <span className="text-muted-foreground">By:</span>
               <span className="font-medium">{item.processed_by_name || "-"}</span>
             </div>
           </div>

@@ -42,7 +42,7 @@ export function ArchiveAccountModal({
               <h2 id="archive-account-title" className="text-xl font-semibold">
                 Archive User
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 This action can be reversed.
               </p>
             </div>

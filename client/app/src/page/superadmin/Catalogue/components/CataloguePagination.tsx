@@ -35,7 +35,7 @@ export function CataloguePagination({
               onRowsPerPageChange(value);
               onPageChange(1);
             }}
-            className={`px-2 py-1 rounded border text-xs bg-card border-border text-foreground focus:outline-none focus:border-blue-500`}
+            className={`px-2 py-1 rounded border text-xs bg-card border-border text-foreground focus:outline-none focus:border-ring`}
           >
             <option value="15">15</option>
             <option value="50">50</option>
@@ -105,7 +105,7 @@ export function CataloguePagination({
             onRowsPerPageChange(value);
             onPageChange(1);
           }}
-          className="px-3 py-1.5 rounded border text-sm bg-card border-border text-foreground focus:outline-none focus:border-blue-500"
+          className="px-3 py-1.5 rounded border text-sm bg-card border-border text-foreground focus:outline-none focus:border-ring"
         >
           <option value="15">15</option>
           <option value="50">50</option>

@@ -30,6 +30,4 @@ export const POSITION_OPTIONS = [
   { value: "Sales Agent", label: "Sales Agent" },
   { value: "Approver", label: "Approver" },
   { value: "Marketing", label: "Marketing" },
-  { value: "Reception", label: "Reception" },
-  { value: "Executive Assistant", label: "Executive Assistant" },
 ];

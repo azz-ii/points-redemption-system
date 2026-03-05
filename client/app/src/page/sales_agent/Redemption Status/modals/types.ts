@@ -33,7 +33,7 @@ export interface RedemptionRequest {
   requested_for_name: string;
   team: number | null;
   team_name: string | null;
-  points_deducted_from: "SELF" | "DISTRIBUTOR" | "CUSTOMER";
+  points_deducted_from: "SELF" | "DISTRIBUTOR";
   points_deducted_from_display: string;
   total_points: number;
   status: "PENDING" | "APPROVED" | "REJECTED";
@@ -70,6 +70,13 @@ export interface RedemptionRequest {
   remarks: string | null;
   rejection_reason: string | null;
   items: RedemptionRequestItem[];
+  // Acknowledgement Receipt fields
+  ar_status?: string | null;
+  ar_status_display?: string | null;
+  acknowledgement_receipt?: string | null;
+  ar_uploaded_by?: number | null;
+  ar_uploaded_by_name?: string | null;
+  ar_uploaded_at?: string | null;
 }
 
 export interface ViewRedemptionStatusModalProps extends ModalBaseProps {

@@ -1,3 +1,4 @@
+import { getStatusClasses } from "@/components/ui/status-badge";
 import { Eye, CheckCircle, XCircle, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,20 +25,8 @@ export function RequestsTable({
   onApprove,
   onReject,
 }: RequestsTableProps) {
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-400 text-black";
-      case "APPROVED":
-        return "bg-green-500 text-white";
-      case "REJECTED":
-        return "bg-red-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
 
-  return (
+return (
     <div
       className="rounded-lg border bg-card border-border overflow-hidden"
     >
@@ -86,7 +75,7 @@ export function RequestsTable({
             ) : requests.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center">
-                  <p className="text-sm text-gray-500">No requests found</p>
+                  <p className="text-sm text-muted-foreground">No requests found</p>
                 </td>
               </tr>
             ) : (
@@ -96,7 +85,7 @@ export function RequestsTable({
                   className="hover:bg-accent transition-colors"
                 >
                   <td className="px-6 py-4 text-sm">
-                    {request.team_name || <span className="text-gray-400 italic">No Team</span>}
+                    {request.team_name || <span className="text-muted-foreground italic">No Team</span>}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     {request.requested_by_name}
@@ -109,7 +98,7 @@ export function RequestsTable({
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getStatusBadgeColor(
+                      className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getStatusClasses(
                         request.status
                       )}`}
                     >

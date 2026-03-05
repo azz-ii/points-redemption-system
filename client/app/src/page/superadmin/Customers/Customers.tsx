@@ -12,6 +12,8 @@ import {
   UnarchiveCustomerModal,
   BulkArchiveCustomerModal,
   ExportModal,
+  PromoteCustomerModal,
+  MergeCustomerModal,
 } from "./modals";
 import { CustomersTable, CustomersMobileCards } from "./components";
 
@@ -123,6 +125,10 @@ function Customers() {
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [promoteTarget, setPromoteTarget] = useState<Customer | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<Customer | null>(null);
 
   // Handle create customer submission
   const handleCreateCustomer = async () => {
@@ -278,6 +284,18 @@ function Customers() {
     setShowBulkArchiveModal(true);
   };
 
+  // Handle promote click
+  const handlePromoteClick = (customer: Customer) => {
+    setPromoteTarget(customer);
+    setShowPromoteModal(true);
+  };
+
+  // Handle merge click
+  const handleMergeClick = (customer: Customer) => {
+    setMergeTarget(customer);
+    setShowMergeModal(true);
+  };
+
   // Confirm bulk archive
   const confirmBulkArchive = async () => {
     try {
@@ -330,7 +348,7 @@ function Customers() {
                   type="checkbox"
                   checked={showArchived}
                   onChange={(e) => handleToggleArchived(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-border"
                 />
                 Show Archived
               </label>
@@ -345,6 +363,8 @@ function Customers() {
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}
             onArchiveSelected={handleArchiveSelected}
+            onPromote={handlePromoteClick}
+            onMerge={handleMergeClick}
             onCreateNew={() => setShowCreateModal(true)}
             onRefresh={fetchCustomers}
             refreshing={loading}
@@ -375,7 +395,7 @@ function Customers() {
             <div
               className="relative flex items-center rounded-lg border bg-card border-border"
             >
-              <Search className="absolute left-3 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search....."
                 value={searchQuery}
@@ -477,6 +497,22 @@ function Customers() {
         onClose={() => setShowExportModal(false)}
         searchQuery={searchQuery}
         showArchived={showArchived}
+      />
+
+      {/* Promote Customer Modal */}
+      <PromoteCustomerModal
+        isOpen={showPromoteModal}
+        onClose={() => setShowPromoteModal(false)}
+        customer={promoteTarget}
+        onSuccess={fetchCustomers}
+      />
+
+      {/* Merge Customer Modal */}
+      <MergeCustomerModal
+        isOpen={showMergeModal}
+        onClose={() => setShowMergeModal(false)}
+        customer={mergeTarget}
+        onSuccess={fetchCustomers}
       />
     </>
   );

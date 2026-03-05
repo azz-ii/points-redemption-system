@@ -14,7 +14,7 @@ export function ModalHeader({
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
         )}
       </div>
       <button

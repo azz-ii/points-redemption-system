@@ -54,14 +54,14 @@ export function CustomersMobileCards({
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
+                className="mt-4 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm"
               >
                 Retry
               </button>
             )}
           </div>
         ) : filteredCustomers.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-muted-foreground py-8">
             No customers found
           </div>
         ) : (
@@ -83,14 +83,14 @@ export function CustomersMobileCards({
 
               <div className="space-y-2 mb-3">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Created:</span>
+                  <span className="text-muted-foreground">Created:</span>
                   <span className="font-medium">
                     {formatDate(customer.date_added)}
                   </span>
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-3 border-t border-gray-700">
+              <div className="flex gap-2 pt-3 border-t border-border">
                 <button
                   onClick={() => onView(customer)}
                   className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors bg-card hover:bg-accent"

@@ -1,4 +1,5 @@
 "use client";
+import { getStatusClasses } from "@/components/ui/status-badge";
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, ArrowUpDown, MoreHorizontal } from "lucide-react";
@@ -114,12 +115,8 @@ export const createColumns = (
     },
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      const statusClasses = {
-        PENDING: "bg-yellow-400 text-black",
-        APPROVED: "bg-green-500 text-white",
-        REJECTED: "bg-red-500 text-white",
-      };
-      const className = statusClasses[status as keyof typeof statusClasses] || "bg-gray-500 text-white";
+
+const className = getStatusClasses(status);
       
       return (
         <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${className}`}>
@@ -144,12 +141,8 @@ export const createColumns = (
     },
     cell: ({ row }) => {
       const processingStatus = row.getValue("processing_status") as string;
-      const statusClasses = {
-        NOT_PROCESSED: "bg-orange-400 text-black",
-        PROCESSED: "bg-blue-500 text-white",
-        CANCELLED: "bg-red-500 text-white",
-      };
-      const className = statusClasses[processingStatus as keyof typeof statusClasses] || "bg-gray-500 text-white";
+
+const className = getStatusClasses(processingStatus);
       
       return (
         <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${className}`}>

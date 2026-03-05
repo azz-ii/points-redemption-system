@@ -1,3 +1,4 @@
+import { getStatusClasses } from "@/components/ui/status-badge";
 import { X } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RequestItem } from "./types";
@@ -13,20 +14,7 @@ export function ViewRequestModal({
 }: ViewRequestModalProps) {
   if (!isOpen || !request) return null;
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-400 text-black";
-      case "APPROVED":
-        return "bg-green-500 text-white";
-      case "REJECTED":
-        return "bg-red-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
-
-  return (
+return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
@@ -40,7 +28,7 @@ export function ViewRequestModal({
             <h2 id="view-request-title" className="text-xl font-semibold">
               Request Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Request #{request.id}
             </p>
           </div>
@@ -57,16 +45,16 @@ export function ViewRequestModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Request Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Requested For</label>
+                <label className="block text-xs text-muted-foreground mb-1">Requested For</label>
                 <p className="font-semibold">{request.requested_for_name}</p>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+                <label className="block text-xs text-muted-foreground mb-1">Total Points</label>
                 <p className="font-semibold">{request.total_points.toLocaleString()} pts</p>
               </div>
             </div>
@@ -74,11 +62,11 @@ export function ViewRequestModal({
 
           {/* Status */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Status
             </h3>
             <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusClasses(
                 request.status
               )}`}
             >
@@ -111,6 +99,9 @@ export function ViewRequestModal({
               rejection_reason: request.rejection_reason,
               status: request.status,
               processing_status: request.processing_status,
+              ar_status: request.ar_status,
+              ar_uploaded_by_name: request.ar_uploaded_by_name,
+              ar_uploaded_at: request.ar_uploaded_at,
             }}
             showProcessing={true}
             showCancellation={true}
@@ -118,7 +109,7 @@ export function ViewRequestModal({
 
           {/* Items */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Items ({request.items.length})
             </h3>
             <div className="space-y-2">
@@ -129,11 +120,11 @@ export function ViewRequestModal({
                 >
                   <p className="font-semibold">{item.product_name}</p>
                   {item.product_code && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       {item.product_code}
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Qty: {item.quantity} × {item.points_per_item} pts ={" "}
                     {item.total_points} pts
                   </p>

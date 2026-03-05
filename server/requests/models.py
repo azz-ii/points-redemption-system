@@ -1,3 +1,4 @@
+import logging
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
@@ -32,6 +33,11 @@ class ApprovalStatusChoice(models.TextChoices):
     PENDING = 'PENDING', 'Pending'
     APPROVED = 'APPROVED', 'Approved'
     REJECTED = 'REJECTED', 'Rejected'
+
+class AcknowledgementReceiptStatus(models.TextChoices):
+    NOT_REQUIRED = 'NOT_REQUIRED', 'Not Required'
+    PENDING = 'PENDING', 'Pending'
+    UPLOADED = 'UPLOADED', 'Uploaded'
 
 class SvcDriverChoice(models.TextChoices):
     WITH_DRIVER = 'WITH_DRIVER', 'With Driver'
@@ -220,6 +226,33 @@ class RedemptionRequest(models.Model):
         help_text='Name of the driver for service delivery'
     )
 
+    # Acknowledgement Receipt fields (for customer requests)
+    ar_status = models.CharField(
+        max_length=20,
+        choices=AcknowledgementReceiptStatus.choices,
+        default=AcknowledgementReceiptStatus.NOT_REQUIRED,
+        help_text='Status of acknowledgement receipt upload (only for customer requests)'
+    )
+    acknowledgement_receipt = models.ImageField(
+        upload_to='acknowledgement_receipts/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text='Photo of the acknowledgement receipt (max 5MB, PNG/JPG/WebP)'
+    )
+    ar_uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ar_uploaded_requests',
+        help_text='Sales agent who uploaded the acknowledgement receipt'
+    )
+    ar_uploaded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Date and time when the acknowledgement receipt was uploaded'
+    )
+
     def __str__(self):
         entity_name = self.get_requested_for_name()
         return f"Request #{self.id} by {self.requested_by.username} for {entity_name}"
@@ -271,7 +304,7 @@ class RedemptionRequest(models.Model):
     
     def deduct_points(self):
         """
-        Deduct points from the appropriate account (agent, distributor, or customer).
+        Deduct points from the appropriate account (agent or distributor).
         Raises ValueError if insufficient points.
         Should be called within a transaction.
         """
@@ -317,6 +350,10 @@ class RedemptionRequest(models.Model):
                 changed_by=self.requested_by,
                 reason=f'Redemption request #{self.id}',
             )
+        else:
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Unexpected points_deducted_from value: {self.points_deducted_from!r} on request #{self.id}')
+            raise ValueError(f'Invalid points_deducted_from: {self.points_deducted_from}')
 
     def update_overall_status(self):
         """

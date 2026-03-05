@@ -28,7 +28,7 @@ export function ModalSkeleton({
 
       {/* Members Section */}
       {showMembersSection && (
-        <div className="pt-4 border-t border-gray-700">
+        <div className="pt-4 border-t border-border">
           <div className="flex justify-between items-center mb-3">
             <div className="h-4 w-40 rounded bg-muted animate-pulse" />
             <div className="h-8 w-28 rounded bg-muted animate-pulse" />

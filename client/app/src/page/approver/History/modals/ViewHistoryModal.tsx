@@ -18,20 +18,20 @@ export function ViewHistoryModal({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const getProcessingStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PROCESSED":
-        return "bg-blue-500 text-white";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       case "CANCELLED":
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
       default:
         return "bg-gray-400 text-white";
     }
@@ -51,7 +51,7 @@ export function ViewHistoryModal({
             <h2 id="view-history-title" className="text-xl font-semibold">
               Request History Details
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Request #{item.id}
             </p>
           </div>
@@ -68,35 +68,35 @@ export function ViewHistoryModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Request Info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Request Information
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Requested For</label>
+                <label className="block text-xs text-muted-foreground mb-1">Requested For</label>
                 <p className="font-semibold">{item.requested_for_name}</p>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Team</label>
+                <label className="block text-xs text-muted-foreground mb-1">Team</label>
                 <p className="font-semibold">
-                  {item.team_name || <span className="text-gray-400 italic">No Team</span>}
+                  {item.team_name || <span className="text-muted-foreground italic">No Team</span>}
                 </p>
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Total Points</label>
+              <label className="block text-xs text-muted-foreground mb-1">Total Points</label>
               <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
             </div>
           </div>
 
           {/* Status */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Status
             </h3>
             <div className="flex gap-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Approval Status</label>
+                <label className="block text-xs text-muted-foreground mb-1">Approval Status</label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
                     item.status
@@ -106,7 +106,7 @@ export function ViewHistoryModal({
                 </span>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Processing Status</label>
+                <label className="block text-xs text-muted-foreground mb-1">Processing Status</label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getProcessingStatusBadgeColor(
                     item.processing_status
@@ -150,7 +150,7 @@ export function ViewHistoryModal({
 
           {/* Items */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Items ({item.items.length})
             </h3>
             <div className="space-y-2">
@@ -165,14 +165,14 @@ export function ViewHistoryModal({
                         {requestItem.product_name}
                       </p>
                       {requestItem.category && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {requestItem.category}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Code: {requestItem.product_code}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Qty: {requestItem.quantity} × {requestItem.points_per_item} pts ={" "}
                         {requestItem.total_points} pts
                       </p>

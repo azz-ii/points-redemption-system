@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, ArrowUpDown, CheckCircle, MoreHorizontal } from "lucide-react";
@@ -91,10 +91,10 @@ export const createColumns = (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
             status === "APPROVED"
-              ? "bg-green-500 text-white"
+              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
               : status === "REJECTED"
-              ? "bg-red-500 text-white"
-              : "bg-yellow-400 text-black"
+              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
           }`}
         >
           {row.original.status_display || status}
@@ -124,10 +124,10 @@ export const createColumns = (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
             statusUpper === "PROCESSED"
-              ? "bg-blue-500 text-white"
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
               : statusUpper === "CANCELLED"
-              ? "bg-red-500 text-white"
-              : "bg-orange-400 text-black"
+              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+              : "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
           }`}
         >
           {row.original.processing_status_display || processingStatus?.replace(/_/g, ' ') || "Not Processed"}

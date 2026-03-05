@@ -51,7 +51,7 @@ export function AccountAnalytics({ accountId, position }: AccountAnalyticsProps)
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Performance Analytics
           </h3>
         </div>
@@ -84,7 +84,7 @@ export function AccountAnalytics({ accountId, position }: AccountAnalyticsProps)
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <BarChart3 className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Performance Analytics
         </h3>
       </div>

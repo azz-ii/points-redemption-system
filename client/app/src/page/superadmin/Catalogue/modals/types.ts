@@ -33,6 +33,8 @@ export interface Product {
   date_archived: string | null;
   archived_by: number | null;
   requires_sales_approval?: boolean;
+  mktg_admin: number | null;
+  mktg_admin_username: string | null;
 }
 
 export const LEGEND_OPTIONS = [
@@ -53,15 +55,15 @@ export const PRICING_TYPE_OPTIONS = [
 export const getLegendColor = (legend: string): string => {
   switch (legend) {
     case "Collateral":
-      return "bg-red-500 text-white";
+      return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
     case "Giveaway":
-      return "bg-blue-500 text-white";
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
     case "Asset":
-      return "bg-yellow-500 text-black";
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
     case "Benefit":
-      return "bg-green-500 text-white";
+      return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
     default:
-      return "bg-gray-500 text-white";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
   }
 };
 

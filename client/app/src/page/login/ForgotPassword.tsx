@@ -347,7 +347,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   Email Address
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     type="email"
                     id="email"
@@ -381,7 +381,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                   Verification Code
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <Input
                     type="text"
                     id="otpCode"

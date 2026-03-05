@@ -78,7 +78,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
         />
       ) : (
         <div className="w-10 h-10 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <Package className="w-5 h-5 text-gray-400" />
+          <Package className="w-5 h-5 text-muted-foreground" />
         </div>
       )
     },
@@ -189,8 +189,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
         <span
           className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
             isArchived
-              ? "bg-red-500 text-white"
-              : "bg-green-500 text-white"
+              ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
           }`}
         >
           {isArchived ? "Archived" : "Active"}

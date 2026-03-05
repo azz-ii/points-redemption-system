@@ -37,7 +37,7 @@ export function CatalogueMobileCards({
           <p className="text-red-500 text-sm">{error}</p>
           <button
             onClick={onRetry}
-            className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
+            className="mt-4 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm"
           >
             Retry
           </button>
@@ -49,7 +49,7 @@ export function CatalogueMobileCards({
   if (products.length === 0) {
     return (
       <div className="text-center py-32">
-        <p className="text-gray-500 text-sm">
+        <p className="text-muted-foreground text-sm">
           {searchQuery
             ? "No items match your search"
             : "No catalogue items found"}
@@ -78,7 +78,7 @@ export function CatalogueMobileCards({
                 />
               ) : (
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-muted">
-                  <Package className="w-6 h-6 text-gray-400" />
+                  <Package className="w-6 h-6 text-muted-foreground" />
                 </div>
               )}
               <div className="flex-1">
@@ -104,32 +104,32 @@ export function CatalogueMobileCards({
           {/* Info Grid */}
           <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
             <div>
-              <span className="text-gray-500">Category:</span>
+              <span className="text-muted-foreground">Category:</span>
               <p className="font-medium">
                 {product.category || "-"}
               </p>
             </div>
             <div>
-              <span className="text-gray-500">Points:</span>
+              <span className="text-muted-foreground">Points:</span>
               <p className="font-medium">{product.points}</p>
             </div>
             <div>
-              <span className="text-gray-500">Price:</span>
+              <span className="text-muted-foreground">Price:</span>
               <p className="font-medium">₱{product.price}</p>
             </div>
             <div>
-              <span className="text-gray-500">Stock:</span>
+              <span className="text-muted-foreground">Stock:</span>
               <p className="font-medium">
                 {product.available_stock} / {product.stock}
               </p>
             </div>
             <div className="col-span-2">
-              <span className="text-gray-500">Status:</span>
+              <span className="text-muted-foreground">Status:</span>
               <span
                 className={`ml-2 px-1 py-0.5 rounded-full text-xs font-semibold ${
                   product.is_archived
-                    ? "bg-slate-600 text-white"
-                    : "bg-green-500 text-white"
+                    ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
                 }`}
               >
                 {product.is_archived ? "Archived" : "Active"}
@@ -141,7 +141,7 @@ export function CatalogueMobileCards({
           <div className="flex gap-2">
             <button
               onClick={() => onView(product)}
-              className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white transition-colors font-semibold text-sm"
+              className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground transition-colors font-semibold text-sm"
               title="View"
             >
               <Eye className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function CatalogueMobileCards({
             {product.is_archived ? (
               <button
                 onClick={() => onUnarchive(product)}
-                className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-green-500 hover:bg-green-600 text-white transition-colors font-semibold text-sm"
+                className="flex-1 px-3 py-2 rounded flex items-center justify-center bg-green-600 hover:bg-green-700 text-white transition-colors font-semibold text-sm"
                 title="Restore"
               >
                 <ArchiveRestore className="h-4 w-4" />

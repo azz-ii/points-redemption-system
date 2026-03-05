@@ -36,7 +36,7 @@ export function ViewInventoryModal({
                 {item.stock_status}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               View stock information for {item.item_name}
             </p>
           </div>
@@ -53,7 +53,7 @@ export function ViewInventoryModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Item Info Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Item Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -65,7 +65,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.item_name}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -76,7 +76,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.item_code}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed font-mono bg-muted border-gray-600 text-foreground focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed font-mono bg-muted border-border text-foreground focus:outline-none"
                 />
               </div>
             </div>
@@ -89,7 +89,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.category}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -109,7 +109,7 @@ export function ViewInventoryModal({
 
           {/* Pricing Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Pricing
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -119,7 +119,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.points}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -128,7 +128,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.price}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
                 />
               </div>
             </div>
@@ -136,7 +136,7 @@ export function ViewInventoryModal({
 
           {/* Stock Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Stock Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -148,7 +148,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.stock.toString()}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
                 />
               </div>
               <div>
@@ -159,7 +159,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.committed_stock.toString()}
                   disabled
-                  className="w-full px-3 py-2 rounded border cursor-not-allowed font-semibold bg-muted border-gray-600 text-orange-400 focus:outline-none"
+                  className="w-full px-3 py-2 rounded border cursor-not-allowed font-semibold bg-muted border-border text-orange-400 focus:outline-none"
                 />
               </div>
               <div>
@@ -170,7 +170,7 @@ export function ViewInventoryModal({
                   type="text"
                   value={item.available_stock.toString()}
                   disabled
-                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold bg-muted border-gray-600 ${
+                  className={`w-full px-3 py-2 rounded border cursor-not-allowed font-semibold bg-muted border-border ${
                     item.available_stock === 0
                       ? "text-red-500"
                       : "text-green-500"
@@ -190,7 +190,7 @@ export function ViewInventoryModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-gray-600"
+            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
           >
             Close
           </button>

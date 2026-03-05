@@ -235,7 +235,7 @@ export function SetInventoryModal({
             </div>
             <button
               onClick={onClose}
-              className="text-muted-foreground hover:text-gray-300"
+              className="text-muted-foreground hover:text-foreground"
               disabled={loading}
             >
               <X className="h-6 w-6" />
@@ -261,7 +261,7 @@ export function SetInventoryModal({
                   placeholder="Search by item name, code, or category..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-muted border-border text-foreground placeholder-muted-foreground"
                   disabled={loading}
                 />
               </div>
@@ -302,7 +302,7 @@ export function SetInventoryModal({
                 return (
                   <div key={item.id}>
                     <div
-                      className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-gray-700/50"
+                      className="grid grid-cols-12 gap-4 items-center py-3 border-b border-border hover:bg-accent"
                     >
                       <div
                         className="col-span-2 text-sm font-medium text-foreground"
@@ -327,7 +327,7 @@ export function SetInventoryModal({
                             handleStockChange(item.id, e.target.value)
                           }
                           placeholder="0"
-                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                          className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-muted border-border text-foreground placeholder-muted-foreground"
                           disabled={loading}
                         />
                       </div>
@@ -352,7 +352,7 @@ export function SetInventoryModal({
                             setStockReasons((prev) => ({ ...prev, [item.id]: e.target.value }))
                           }
                           placeholder="Reason for decrease (required)"
-                          className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-muted border-red-600/50 text-foreground placeholder-gray-500"
+                          className="w-full px-3 py-1.5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-muted border-red-600/50 text-foreground placeholder-muted-foreground"
                           disabled={loading}
                         />
                       </div>
@@ -416,7 +416,7 @@ export function SetInventoryModal({
               {/* Advanced Section Header */}
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-gray-700/50"
+                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-accent"
                 disabled={loading}
               >
                 <div className="flex items-center gap-2">
@@ -481,7 +481,7 @@ export function SetInventoryModal({
                         }
                       }}
                       placeholder="Enter positive or negative number"
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-muted border-border text-foreground placeholder-muted-foreground"
                       disabled={loading}
                     />
                     <p
@@ -503,7 +503,7 @@ export function SetInventoryModal({
                       value={bulkReason}
                       onChange={(e) => setBulkReason(e.target.value)}
                       placeholder="Enter reason for stock change"
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-muted border-border text-foreground placeholder-muted-foreground"
                       disabled={loading}
                     />
                     {bulkStockDelta < 0 && !bulkReason.trim() && (
@@ -551,7 +551,7 @@ export function SetInventoryModal({
                     <>
                       <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-600"></div>
+                          <div className="w-full border-t border-border"></div>
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                           <span className="px-2 bg-gray-700/30 text-muted-foreground">

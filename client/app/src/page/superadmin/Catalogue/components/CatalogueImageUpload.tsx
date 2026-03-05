@@ -72,7 +72,7 @@ export function CatalogueImageUpload({
 
   return (
     <div className="space-y-2">
-      <label className="text-xs text-gray-500 mb-2 block">
+      <label className="text-xs text-muted-foreground mb-2 block">
         Product Image
       </label>
 
@@ -88,7 +88,7 @@ export function CatalogueImageUpload({
               className="w-full h-full object-cover"
             />
           ) : (
-            <Package className="w-10 h-10 text-gray-400" />
+            <Package className="w-10 h-10 text-muted-foreground" />
           )}
         </div>
 
@@ -113,12 +113,12 @@ export function CatalogueImageUpload({
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
             <div className="flex items-center gap-3 pointer-events-none">
-              <Upload className="w-5 h-5 text-gray-400" />
+              <Upload className="w-5 h-5 text-muted-foreground" />
               <div className="flex-1">
                 <p className="text-sm font-medium">
                   {displayImage ? "Change image" : "Upload image"}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   PNG, JPG, WebP up to 5MB
                 </p>
               </div>

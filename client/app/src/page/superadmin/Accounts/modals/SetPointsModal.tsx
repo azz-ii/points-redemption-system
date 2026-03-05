@@ -236,7 +236,7 @@ export function SetPointsModal({
                 placeholder="Search by username, full name, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background border-border text-foreground placeholder-muted-foreground"
+                className="w-full pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background border-border text-foreground placeholder-muted-foreground"
                 disabled={loading}
               />
             </div>
@@ -300,7 +300,7 @@ export function SetPointsModal({
                         handlePointsChange(account.id, e.target.value)
                       }
                       placeholder="0"
-                      className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background border-border text-foreground placeholder-muted-foreground"
+                      className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background border-border text-foreground placeholder-muted-foreground"
                       disabled={loading}
                     />
                   </div>
@@ -439,7 +439,7 @@ export function SetPointsModal({
                       }
                     }}
                     placeholder="Enter positive or negative number"
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background border-border text-foreground placeholder-muted-foreground"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background border-border text-foreground placeholder-muted-foreground"
                     disabled={loading}
                   />
                   <p
@@ -521,7 +521,7 @@ export function SetPointsModal({
               placeholder="Reason / Note (optional)"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background border-border text-foreground placeholder-muted-foreground"
+              className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background border-border text-foreground placeholder-muted-foreground"
               disabled={loading}
             />
           </div>

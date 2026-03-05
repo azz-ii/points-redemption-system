@@ -1,4 +1,4 @@
-﻿import { Eye, CheckCircle } from "lucide-react";
+import { Eye, CheckCircle } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { RedemptionItem } from "../modals/types";
 
@@ -25,26 +25,26 @@ export function RedemptionMobileCards({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-400 text-black";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const getProcessingStatusColor = (status: string | undefined) => {
     switch (status?.toUpperCase()) {
       case "NOT_PROCESSED":
-        return "bg-orange-400 text-black";
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
       case "PROCESSED":
-        return "bg-blue-500 text-white";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       case "CANCELLED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -56,7 +56,7 @@ export function RedemptionMobileCards({
         {loading ? (
           <MobileCardsSkeleton count={6} showHeader={false} />
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm">
             No requests found
           </div>
         ) : (
@@ -90,17 +90,17 @@ export function RedemptionMobileCards({
               </div>
               <div className="space-y-1 mb-3 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">For:</span>
+                  <span className="text-muted-foreground">For:</span>
                   <span className="font-medium">{item.requested_for_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Points:</span>
+                  <span className="text-muted-foreground">Points:</span>
                   <span className="font-medium">
                     {item.total_points.toLocaleString()} pts
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Date:</span>
+                  <span className="text-muted-foreground">Date:</span>
                   <span className="font-medium">
                     {new Date(item.date_requested).toLocaleDateString()}
                   </span>
@@ -109,7 +109,7 @@ export function RedemptionMobileCards({
               <div className="flex gap-2">
                 <button
                   onClick={() => onView(item)}
-                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+                  className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   <Eye className="h-4 w-4" />
                   View

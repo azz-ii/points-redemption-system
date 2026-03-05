@@ -68,7 +68,7 @@ export function CreateCustomerModal({
                 onChange={(e) =>
                   setNewCustomer({ ...newCustomer, name: e.target.value })
                 }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
                 placeholder="Enter customer name"
               />
             </div>
@@ -82,7 +82,7 @@ export function CreateCustomerModal({
                 onChange={(e) =>
                   setNewCustomer({ ...newCustomer, brand: e.target.value })
                 }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
                 placeholder="Enter brand name"
               />
             </div>
@@ -96,7 +96,7 @@ export function CreateCustomerModal({
                 onChange={(e) =>
                   setNewCustomer({ ...newCustomer, sales_channel: e.target.value })
                 }
-                className="w-full px-3 py-2 rounded border bg-card border-gray-600 text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
                 placeholder="Enter sales channel"
               />
             </div>
@@ -108,14 +108,14 @@ export function CreateCustomerModal({
           <button
             onClick={onClose}
             disabled={creating}
-            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent disabled:opacity-50"
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-border hover:bg-accent disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
             disabled={creating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {creating ? "Creating..." : "Create Customer"}
           </button>

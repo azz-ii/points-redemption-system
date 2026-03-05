@@ -21,7 +21,7 @@ export function AnalyticsModal({ isOpen, onClose, team }: AnalyticsModalProps) {
         <div className="flex justify-between items-center p-8">
           <div>
             <h2 id="analytics-team-title" className="text-xl font-semibold">Team Analytics</h2>
-            <p className="text-sm text-gray-500 mt-1">{team.name}</p>
+            <p className="text-sm text-muted-foreground mt-1">{team.name}</p>
           </div>
           <button
             onClick={onClose}

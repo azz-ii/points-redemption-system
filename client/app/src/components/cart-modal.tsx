@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Trash2, X, ChevronDown, Info, Search } from "lucide-react";
+import { Trash2, X, ChevronDown, Info, Search, UserPlus } from "lucide-react";
 import { distributorsApi } from "@/lib/distributors-api";
-import { customersApi } from "@/lib/customers-api";
+import { customersApi, type Customer as FullCustomer, type SimilarCustomersResponse } from "@/lib/customers-api";
 import { redemptionRequestsApi, clearCartBackend, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
 import { toast } from "sonner";
+import SimilarCustomersDialog from "./similar-customers-dialog";
 
 export interface CartItem {
   id: string;
@@ -52,7 +53,7 @@ export default function CartModal({
   
   // All entities for dropdown (preloaded)
   const [allDistributors, setAllDistributors] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
-  const [allCustomers, setAllCustomers] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
+  const [allCustomers, setAllCustomers] = useState<{id: number; name: string; brand: string; sales_channel: string; is_prospect: boolean}[]>([]);
   const [loadingEntities, setLoadingEntities] = useState(false);
   
   // Selected entity
@@ -64,6 +65,12 @@ export default function CartModal({
   const [customerSearch, setCustomerSearch] = useState("");
   const [showDistributorDropdown, setShowDistributorDropdown] = useState(false);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  
+  // Prospect customer creation state
+  const [showSimilarDialog, setShowSimilarDialog] = useState(false);
+  const [similarData, setSimilarData] = useState<SimilarCustomersResponse | null>(null);
+  const [prospectName, setProspectName] = useState("");
+  const [creatingProspect, setCreatingProspect] = useState(false);
   
   // Refs for click-outside handling
   const distributorDropdownRef = useRef<HTMLDivElement>(null);
@@ -113,8 +120,10 @@ export default function CartModal({
     (d.brand || '').toLowerCase().includes(distributorSearch.toLowerCase())
   );
   const filteredCustomers = allCustomers.filter(c => 
-    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    (c.brand || '').toLowerCase().includes(customerSearch.toLowerCase())
+    !c.is_prospect && (
+      c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+      (c.brand || '').toLowerCase().includes(customerSearch.toLowerCase())
+    )
   );
   
   // Click-outside handler for dropdowns
@@ -185,6 +194,56 @@ export default function CartModal({
     setShowCustomerDropdown(false);
     // Reset points deduction to SELF when switching entity type
     setPointsDeductedFrom('SELF');
+  };
+
+  // Prospect customer creation handlers
+  const handleCreateProspectClick = async (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setProspectName(trimmed);
+    setCreatingProspect(true);
+    try {
+      const result = await customersApi.checkSimilar(trimmed);
+      if (result.exact_match || result.similar.length > 0) {
+        setSimilarData(result);
+        setShowSimilarDialog(true);
+      } else {
+        await doCreateProspect(trimmed);
+      }
+    } catch {
+      toast.error("Failed to check for similar customers");
+    } finally {
+      setCreatingProspect(false);
+    }
+  };
+
+  const doCreateProspect = async (name: string) => {
+    setCreatingProspect(true);
+    try {
+      const created = await customersApi.createProspect(name);
+      const newEntry = { id: created.id, name: created.name, brand: '', sales_channel: '', is_prospect: true };
+      setAllCustomers(prev => [...prev, newEntry]);
+      setSelectedCustomerId(created.id);
+      setCustomerSearch("");
+      setShowCustomerDropdown(false);
+      setShowSimilarDialog(false);
+      toast.success(`Prospect customer "${name}" created`);
+    } catch {
+      toast.error("Failed to create prospect customer");
+    } finally {
+      setCreatingProspect(false);
+    }
+  };
+
+  const handleSelectExistingFromDialog = (customer: FullCustomer) => {
+    setSelectedCustomerId(customer.id);
+    setCustomerSearch("");
+    setShowCustomerDropdown(false);
+    setShowSimilarDialog(false);
+    // Add to allCustomers if not already there
+    if (!allCustomers.find(c => c.id === customer.id)) {
+      setAllCustomers(prev => [...prev, { id: customer.id, name: customer.name, brand: customer.brand || '', sales_channel: customer.sales_channel || '', is_prospect: !!customer.is_prospect }]);
+    }
   };
 
   const handleSubmit = async () => {
@@ -293,7 +352,7 @@ export default function CartModal({
         {step === "cart" ? (
           <>
             {/* Header */}
-            <div className="p-6 border-b border-gray-200 md:border-gray-800 flex justify-between items-center">
+            <div className="p-6 border-b border-border flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold">
                   Confirm your Redemption Items
@@ -379,7 +438,7 @@ export default function CartModal({
                                   disabled={item.quantity <= item.min_order_qty}
                                   className={`px-2 py-1 rounded ${
                                     item.quantity <= item.min_order_qty
-                                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                      ? "bg-muted text-muted-foreground cursor-not-allowed"
                                       : "bg-muted hover:bg-accent"
                                   }`}
                                 >
@@ -402,7 +461,7 @@ export default function CartModal({
                                   className={`px-2 py-1 rounded ${
                                     item.quantity >= item.available_stock || 
                                     (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
-                                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                      ? "bg-muted text-muted-foreground cursor-not-allowed"
                                       : "bg-muted hover:bg-accent"
                                   }`}
                                 >
@@ -461,7 +520,7 @@ export default function CartModal({
                                   className={`w-28 px-2 py-1 text-center rounded border outline-none ${
                                     inputErrors[item.id]
                                       ? 'border-red-500 focus:border-red-600'
-                                      : "bg-muted border-border focus:border-blue-500"
+                                      : "bg-muted border-border focus:border-ring"
                                   }`}
                                 />
                                 {PRICING_TYPE_INPUT_HINTS[item.pricing_type] && (
@@ -471,7 +530,7 @@ export default function CartModal({
                                 )}
                               </div>
                               {inputErrors[item.id] && (
-                                <span className="text-xs text-red-500">{inputErrors[item.id]}</span>
+                                <span className="text-xs text-destructive">{inputErrors[item.id]}</span>
                               )}
                               {!inputErrors[item.id] && item.dynamic_quantity && item.dynamic_quantity > 0 && (
                                 <span className={`text-xs text-muted-foreground`}>
@@ -527,7 +586,7 @@ export default function CartModal({
                     >
                       Total points for this request:
                     </span>
-                    <span className="font-semibold text-red-500">
+                    <span className="font-semibold text-red-600 dark:text-red-400">
                       -{totalPoints.toLocaleString()}
                     </span>
                   </div>
@@ -541,7 +600,7 @@ export default function CartModal({
                     </span>
                     <span
                       className={`font-bold text-lg ${
-                        remainingPoints >= 0 ? "text-green-500" : "text-red-500"
+                        remainingPoints >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                       }`}
                     >
                       {remainingPoints.toLocaleString()}
@@ -564,7 +623,7 @@ export default function CartModal({
                 disabled={items.length === 0 || remainingPoints < 0}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
                   items.length === 0 || remainingPoints < 0
-                    ? "bg-gray-600 cursor-not-allowed"
+                    ? "bg-muted cursor-not-allowed"
                     : "bg-primary hover:bg-primary/90"
                 }`}
               >
@@ -723,7 +782,7 @@ export default function CartModal({
                           <div className="relative">
                             <input
                               type="text"
-                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.brand}` : customerSearch}
+                              value={selectedCustomer ? `${selectedCustomer.name}${selectedCustomer.brand ? ` - ${selectedCustomer.brand}` : ''}` : customerSearch}
                               onChange={(e) => {
                                 setCustomerSearch(e.target.value);
                                 setSelectedCustomerId(null);
@@ -743,14 +802,7 @@ export default function CartModal({
                           {/* Dropdown List */}
                           {showCustomerDropdown && !loadingEntities && (
                             <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-48 overflow-y-auto bg-card border-border`}>
-                              {filteredCustomers.length === 0 ? (
-                                <div className="px-3 py-2 text-sm text-center">
-                                  <span className="text-muted-foreground">
-                                    No customers found
-                                  </span>
-                                </div>
-                              ) : (
-                                filteredCustomers.map((customer) => (
+                              {filteredCustomers.map((customer) => (
                                   <button
                                     key={customer.id}
                                     onMouseDown={(e) => {
@@ -761,12 +813,41 @@ export default function CartModal({
                                     }}
                                     className={`w-full px-3 py-2 text-left text-sm hover:bg-accent ${selectedCustomerId === customer.id ? 'bg-accent' : ''} border-b last:border-b-0 border-border`}
                                   >
-                                    <div className="font-medium">{customer.name}</div>
-                                    <div className={`text-xs mt-0.5 text-muted-foreground`}>
-                                      {customer.brand}
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">{customer.name}</span>
+                                      {customer.is_prospect && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-400 font-medium shrink-0">
+                                          Prospect
+                                        </span>
+                                      )}
                                     </div>
+                                    {customer.brand && (
+                                      <div className={`text-xs mt-0.5 text-muted-foreground`}>
+                                        {customer.brand}
+                                      </div>
+                                    )}
                                   </button>
-                                ))
+                                ))}
+                              {/* Create prospect option */}
+                              {customerSearch.trim() && (
+                                <button
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleCreateProspectClick(customerSearch);
+                                  }}
+                                  disabled={creatingProspect}
+                                  className="w-full px-3 py-2 text-left text-sm border-t border-border hover:bg-accent flex items-center gap-2 text-blue-600 dark:text-blue-400"
+                                >
+                                  <UserPlus className="h-3.5 w-3.5 shrink-0" />
+                                  <span>{creatingProspect ? 'Checking...' : `Create prospect: "${customerSearch.trim()}"`}</span>
+                                </button>
+                              )}
+                              {filteredCustomers.length === 0 && !customerSearch.trim() && (
+                                <div className="px-3 py-2 text-sm text-center">
+                                  <span className="text-muted-foreground">
+                                    No customers found
+                                  </span>
+                                </div>
                               )}
                             </div>
                           )}
@@ -941,7 +1022,7 @@ export default function CartModal({
               </button>
               <button 
                 onClick={handleSubmit}
-                className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-primary hover:bg-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 rounded-lg font-semibold text-white bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed"
               >
                 Submit Details
               </button>
@@ -992,7 +1073,7 @@ export default function CartModal({
                         <h3 className="font-semibold text-sm">{item.name}</h3>
                         {item.pricing_type === 'FIXED' ? (
                           <>
-                            <p className="text-xs text-green-500 font-semibold">
+                            <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
                               {item.points.toLocaleString()} pts
                             </p>
                             <p
@@ -1034,7 +1115,7 @@ export default function CartModal({
                                 className={`w-24 px-2 py-1 text-xs rounded border outline-none ${
                                   inputErrors[item.id]
                                     ? 'border-red-500 focus:border-red-600'
-                                    : "bg-muted border-border focus:border-blue-500"
+                                    : "bg-muted border-border focus:border-ring"
                                 }`}
                               />
                               {PRICING_TYPE_INPUT_HINTS[item.pricing_type] && (
@@ -1044,11 +1125,11 @@ export default function CartModal({
                               )}
                             </div>
                             {inputErrors[item.id] ? (
-                              <p className="text-xs text-red-500 mt-1">
+                              <p className="text-xs text-destructive mt-1">
                                 {inputErrors[item.id]}
                               </p>
                             ) : (
-                              <p className="text-xs text-green-500 font-semibold mt-1">
+                              <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
                                 = {getItemPoints(item).toLocaleString()} pts
                                 {item.dynamic_quantity && item.dynamic_quantity > 0 && (
                                   <span className={`ml-1 font-normal text-muted-foreground`}>
@@ -1094,7 +1175,7 @@ export default function CartModal({
                   <span className="text-muted-foreground">
                     Total request:
                   </span>
-                  <span className="font-semibold text-red-500">
+                  <span className="font-semibold text-red-600 dark:text-red-400">
                     -{totalPoints.toLocaleString()}
                   </span>
                 </div>
@@ -1106,7 +1187,7 @@ export default function CartModal({
                   </span>
                   <span
                     className={`font-bold ${
-                      remainingPoints >= 0 ? "text-green-500" : "text-red-500"
+                      remainingPoints >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {remainingPoints.toLocaleString()}
@@ -1271,7 +1352,7 @@ export default function CartModal({
                           <div className="relative">
                             <input
                               type="text"
-                              value={selectedCustomer ? `${selectedCustomer.name} - ${selectedCustomer.brand}` : customerSearch}
+                              value={selectedCustomer ? `${selectedCustomer.name}${selectedCustomer.brand ? ` - ${selectedCustomer.brand}` : ''}` : customerSearch}
                               onChange={(e) => {
                                 setCustomerSearch(e.target.value);
                                 setSelectedCustomerId(null);
@@ -1291,14 +1372,7 @@ export default function CartModal({
                           {/* Dropdown List */}
                           {showCustomerDropdown && !loadingEntities && (
                             <div className={`absolute z-50 w-full mt-1 rounded-md shadow-lg border max-h-40 overflow-y-auto bg-card border-border`}>
-                              {filteredCustomers.length === 0 ? (
-                                <div className="px-3 py-2 text-xs text-center">
-                                  <span className="text-muted-foreground">
-                                    No customers found
-                                  </span>
-                                </div>
-                              ) : (
-                                filteredCustomers.map((customer) => (
+                              {filteredCustomers.map((customer) => (
                                   <button
                                     key={customer.id}
                                     onMouseDown={(e) => {
@@ -1309,12 +1383,41 @@ export default function CartModal({
                                     }}
                                     className={`w-full px-3 py-2 text-left text-xs hover:bg-accent ${selectedCustomerId === customer.id ? 'bg-accent' : ''} border-b last:border-b-0 border-border`}
                                   >
-                                    <div className="font-medium">{customer.name}</div>
-                                    <div className={`text-xs mt-0.5 text-muted-foreground`}>
-                                      {customer.brand}
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-medium">{customer.name}</span>
+                                      {customer.is_prospect && (
+                                        <span className="text-[9px] px-1 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-400 font-medium shrink-0">
+                                          Prospect
+                                        </span>
+                                      )}
                                     </div>
+                                    {customer.brand && (
+                                      <div className={`text-xs mt-0.5 text-muted-foreground`}>
+                                        {customer.brand}
+                                      </div>
+                                    )}
                                   </button>
-                                ))
+                                ))}
+                              {/* Create prospect option */}
+                              {customerSearch.trim() && (
+                                <button
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleCreateProspectClick(customerSearch);
+                                  }}
+                                  disabled={creatingProspect}
+                                  className="w-full px-3 py-2 text-left text-xs border-t border-border hover:bg-accent flex items-center gap-1.5 text-blue-600 dark:text-blue-400"
+                                >
+                                  <UserPlus className="h-3 w-3 shrink-0" />
+                                  <span>{creatingProspect ? 'Checking...' : `Create prospect: "${customerSearch.trim()}"`}</span>
+                                </button>
+                              )}
+                              {filteredCustomers.length === 0 && !customerSearch.trim() && (
+                                <div className="px-3 py-2 text-xs text-center">
+                                  <span className="text-muted-foreground">
+                                    No customers found
+                                  </span>
+                                </div>
                               )}
                             </div>
                           )}
@@ -1494,7 +1597,7 @@ export default function CartModal({
               disabled={items.length === 0 || remainingPoints < 0}
               className={`w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground ${
                 items.length === 0 || remainingPoints < 0
-                  ? "bg-gray-600 cursor-not-allowed"
+                  ? "bg-muted cursor-not-allowed"
                   : "bg-primary hover:bg-primary/90"
               }`}
             >
@@ -1517,13 +1620,25 @@ export default function CartModal({
             </button>
             <button 
               onClick={handleSubmit}
-              className="w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground bg-primary hover:bg-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed"
             >
               Submit Details
             </button>
           </div>
         )}
       </div>
+
+      {/* Similar Customers Dialog */}
+      <SimilarCustomersDialog
+        isOpen={showSimilarDialog}
+        onClose={() => setShowSimilarDialog(false)}
+        prospectName={prospectName}
+        exactMatch={similarData?.exact_match ?? null}
+        similarCustomers={similarData?.similar ?? []}
+        onSelectExisting={handleSelectExistingFromDialog}
+        onCreateAnyway={() => doCreateProspect(prospectName)}
+        creating={creatingProspect}
+      />
     </div>
   );
 }

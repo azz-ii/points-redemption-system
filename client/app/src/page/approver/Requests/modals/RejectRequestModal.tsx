@@ -49,7 +49,7 @@ export function RejectRequestModal({
             <h2 id="reject-request-title" className="text-xl font-semibold">
               Reject Request
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Request for {request.requested_for_name}
             </p>
           </div>
@@ -72,7 +72,7 @@ export function RejectRequestModal({
           <div>
             <label
               htmlFor="reject-reason"
-              className="text-xs text-gray-500 mb-2 block"
+              className="text-xs text-muted-foreground mb-2 block"
             >
               Reason *
             </label>
@@ -81,7 +81,7 @@ export function RejectRequestModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Please provide a reason for rejection..."
-              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               rows={3}
               aria-required="true"
             />

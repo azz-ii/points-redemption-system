@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
@@ -135,7 +135,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
             <h2 id="view-account-title" className="text-xl font-semibold">
               My Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               View and manage your account details
             </p>
           </div>
@@ -172,7 +172,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
               <p className="text-red-500">{error}</p>
               <button
                 onClick={fetchCurrentUser}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
               >
                 Retry
               </button>
@@ -182,7 +182,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
               {/* Credentials Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     Credentials
                   </h3>
                   <button
@@ -224,7 +224,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                 {/* Inline Change Password Form */}
                 {showChangePassword && (
                   <div className="mt-4 p-4 rounded-lg border border-border bg-muted/40 space-y-3">
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Change Password</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Change Password</p>
 
                     {/* Current Password */}
                     <div>
@@ -235,7 +235,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
                           placeholder="Enter current password"
-                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                         />
                         <button
                           type="button"
@@ -258,7 +258,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="At least 6 characters"
-                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                         />
                         <button
                           type="button"
@@ -281,7 +281,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Re-enter new password"
-                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                         />
                         <button
                           type="button"
@@ -305,7 +305,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                       <button
                         onClick={handleChangePassword}
                         disabled={saving}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-colors"
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground transition-colors"
                       >
                         {saving ? "Saving..." : "Save"}
                       </button>
@@ -323,7 +323,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
 
               {/* Personal Information Section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Personal Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -354,7 +354,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
 
               {/* Account Details Section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Account Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

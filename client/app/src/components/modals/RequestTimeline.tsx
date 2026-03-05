@@ -1,4 +1,4 @@
-import { User, Calendar, CheckCircle, XCircle, Package, Ban } from "lucide-react";
+import { User, Calendar, CheckCircle, XCircle, Package, Ban, Upload } from "lucide-react";
 
 export interface RequestTimelineData {
   // Request info
@@ -30,6 +30,10 @@ export interface RequestTimelineData {
   rejection_reason?: string | null;
   status?: string;
   processing_status?: string;
+  // Acknowledgement Receipt fields
+  ar_status?: string | null;
+  ar_uploaded_by_name?: string | null;
+  ar_uploaded_at?: string | null;
 }
 
 interface RequestTimelineProps {
@@ -79,13 +83,13 @@ function TimelineItem({
         </p>
         <div className="mt-1 space-y-1">
           <div className="flex items-center gap-2 text-sm">
-            <User className="w-3 h-3 text-gray-400" />
+            <User className="w-3 h-3 text-muted-foreground" />
             <span className="text-muted-foreground">
               {person || "N/A"}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-3 h-3 text-gray-400" />
+            <Calendar className="w-3 h-3 text-muted-foreground" />
             <span className="text-muted-foreground">
               {formatDate(date)}
             </span>
@@ -247,6 +251,32 @@ export function RequestTimeline({
             title="Cancelled"
             person={data.cancelled_by_name}
             date={data.date_cancelled}
+          />
+        )}
+
+        {/* Acknowledgement Receipt */}
+        {data.ar_status && data.ar_status !== "NOT_REQUIRED" && (
+          <TimelineItem
+            icon={data.ar_status === "UPLOADED" ? Upload : Package}
+            iconColor={
+              data.ar_status === "UPLOADED"
+                ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400"
+                : "bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400"
+            }
+            title={
+              data.ar_status === "UPLOADED"
+                ? "Acknowledgement Receipt Uploaded"
+                : "Awaiting Acknowledgement Receipt"
+            }
+            person={data.ar_status === "UPLOADED" ? data.ar_uploaded_by_name : null}
+            date={data.ar_status === "UPLOADED" ? data.ar_uploaded_at : null}
+            extraInfo={
+              data.ar_status === "PENDING" ? (
+                <p className="text-xs mt-1 text-amber-600 dark:text-amber-400">
+                  Sales agent needs to upload the acknowledgement receipt
+                </p>
+              ) : null
+            }
           />
         )}
       </div>

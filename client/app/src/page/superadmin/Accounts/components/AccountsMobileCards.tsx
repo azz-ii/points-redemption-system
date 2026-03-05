@@ -58,7 +58,7 @@ export function AccountsMobileCards({
             )}
           </div>
         ) : filteredAccounts.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-muted-foreground py-8">
             No accounts found
           </div>
         ) : (
@@ -83,7 +83,7 @@ export function AccountsMobileCards({
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">
-                  <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-400 text-black">
+                  <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
                     {account.position || "N/A"}
                   </span>
                 </div>
@@ -97,11 +97,11 @@ export function AccountsMobileCards({
                   ) : (
                     <>
                       {account.is_activated ? (
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
                           Active
                         </span>
                       ) : (
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-500 text-white">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                           Inactive
                         </span>
                       )}

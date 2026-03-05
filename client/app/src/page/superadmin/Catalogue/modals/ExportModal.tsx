@@ -139,7 +139,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
             <h2 id="export-modal-title" className="text-xl font-semibold">
               Export Products
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -166,7 +166,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Format Selection */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Export Format
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -188,7 +188,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                 />
                 <div className="text-left">
                   <div className="font-medium">Excel</div>
-                  <div className="text-xs text-gray-500">.xlsx</div>
+                  <div className="text-xs text-muted-foreground">.xlsx</div>
                 </div>
               </button>
 
@@ -210,7 +210,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                 />
                 <div className="text-left">
                   <div className="font-medium">PDF</div>
-                  <div className="text-xs text-gray-500">.pdf</div>
+                  <div className="text-xs text-muted-foreground">.pdf</div>
                 </div>
               </button>
             </div>
@@ -219,7 +219,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
           {/* Column Selection */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Columns to Export
               </h3>
               <div className="flex gap-2">
@@ -230,7 +230,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                 >
                   Select All
                 </button>
-                <span className="text-gray-400">|</span>
+                <span className="text-muted-foreground">|</span>
                 <button
                   type="button"
                   onClick={handleDeselectAll}
@@ -254,7 +254,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                     type="checkbox"
                     checked={col.enabled}
                     onChange={() => handleColumnToggle(col.key)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-ring"
                   />
                   <span
                     className={`text-sm ${
@@ -268,21 +268,21 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                 </label>
               ))}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {enabledCount} of {columns.length} columns selected
             </p>
           </div>
 
           {/* Sort Options */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Sort Options
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
                   htmlFor="sortField"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Sort By
                 </label>
@@ -290,7 +290,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                   id="sortField"
                   value={sortField}
                   onChange={(e) => setSortField(e.target.value as SortField)}
-                  className={`w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500`}
+                  className={`w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring`}
                 >
                   {columns.map((col) => (
                     <option key={String(col.key)} value={col.key}>
@@ -301,7 +301,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 mb-2 block">
+                <label className="text-xs text-muted-foreground mb-2 block">
                   Direction
                 </label>
                 <div className="flex gap-2">

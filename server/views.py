@@ -34,15 +34,19 @@ class LoginView(APIView):
             return x_forwarded.split(',')[0].strip()
         return request.META.get('REMOTE_ADDR')
 
-    def _kill_other_sessions(self, user):
+    def _kill_other_sessions(self, user, current_session_key=None):
         """Delete every other Django session that belongs to *user*.
 
         Django stores session data as a pickled dict. We decode each
         active session and check whether its ``_auth_user_id`` matches.
+        ``current_session_key`` is excluded so that any in-flight requests
+        still using that session are not interrupted mid-response.
         """
         from django.contrib.sessions.models import Session as SessionModel
         user_id_str = str(user.pk)
         for session in SessionModel.objects.filter(expire_date__gte=timezone.now()):
+            if session.session_key == current_session_key:
+                continue  # never delete the session that owns this login request
             data = session.get_decoded()
             if data.get('_auth_user_id') == user_id_str:
                 session.delete()
@@ -114,7 +118,7 @@ class LoginView(APIView):
                     profile = None
 
                 # --- single active session enforcement -----------------------
-                self._kill_other_sessions(user)
+                self._kill_other_sessions(user, request.session.session_key)
 
                 # Clear failed-login counter on success
                 LoginAttempt.clear_failures(username)

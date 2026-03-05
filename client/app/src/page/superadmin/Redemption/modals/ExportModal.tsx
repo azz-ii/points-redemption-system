@@ -132,7 +132,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedFormat === "excel"
                     ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                    : "border-border hover:border-gray-600"
+                    : "border-border hover:border-border"
                 }`}
               >
                 <div className="font-medium">Excel (.xlsx)</div>
@@ -147,7 +147,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
                 className={`p-4 rounded-lg border-2 transition-all ${
                   selectedFormat === "pdf"
                     ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                    : "border-border hover:border-gray-600"
+                    : "border-border hover:border-border"
                 }`}
               >
                 <div className="font-medium">PDF (.pdf)</div>
@@ -171,7 +171,7 @@ export function ExportModal({ isOpen, onClose, redemptions }: ExportModalProps) 
                 >
                   Select All
                 </button>
-                <span className="text-xs text-gray-400">|</span>
+                <span className="text-xs text-muted-foreground">|</span>
                 <button
                   onClick={() => toggleAllColumns(false)}
                   className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"

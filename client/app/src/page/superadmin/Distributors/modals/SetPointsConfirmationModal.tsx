@@ -127,7 +127,7 @@ export function SetPointsConfirmationModal({
                   handleConfirm();
                 }
               }}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-muted border-gray-600 text-foreground placeholder-gray-500"
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-muted border-border text-foreground placeholder-muted-foreground"
               disabled={loading}
             />
           </div>
@@ -146,7 +146,7 @@ export function SetPointsConfirmationModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 px-4 py-2 rounded-lg transition-colors bg-muted text-gray-200 hover:bg-gray-600"
+            className="flex-1 px-4 py-2 rounded-lg transition-colors bg-muted text-foreground hover:bg-accent"
           >
             Cancel
           </button>

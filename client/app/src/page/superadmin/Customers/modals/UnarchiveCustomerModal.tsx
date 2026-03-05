@@ -42,7 +42,7 @@ export function UnarchiveCustomerModal({
               <h2 id="unarchive-customer-title" className="text-xl font-semibold">
                 Restore Customer
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Restore this archived customer.
               </p>
             </div>

@@ -72,7 +72,7 @@ export function EditAccountModal({
             <h2 id="edit-account-title" className="text-xl font-semibold">
               Edit Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Update account details for {account.full_name}
             </p>
           </div>
@@ -89,13 +89,13 @@ export function EditAccountModal({
         <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Credentials Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Credentials
             </h3>
             <div>
               <label
                 htmlFor="edit-username"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Username *
               </label>
@@ -115,14 +115,14 @@ export function EditAccountModal({
 
           {/* Personal Information Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Personal Information
             </h3>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="edit-fullName"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Full Name *
                 </label>
@@ -145,7 +145,7 @@ export function EditAccountModal({
               <div>
                 <label
                   htmlFor="edit-email"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Email Address *
                 </label>
@@ -166,14 +166,14 @@ export function EditAccountModal({
 
           {/* Role & Points Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Role & Points
             </h3>
             <div className="space-y-4">
               <div>
                 <label
                   htmlFor="edit-position"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Position *
                 </label>
@@ -199,7 +199,7 @@ export function EditAccountModal({
                   <div>
                     <label
                       htmlFor="edit-points"
-                      className="text-xs text-gray-500 mb-2 block"
+                      className="text-xs text-muted-foreground mb-2 block"
                     >
                       Points *
                     </label>
@@ -250,8 +250,8 @@ export function EditAccountModal({
 
                   {/* Team Section */}
                   <div>
-                    <label className="text-xs text-gray-500 mb-2 block">
-                      Team <span className="text-gray-400">(optional)</span>
+                    <label className="text-xs text-muted-foreground mb-2 block">
+                      Team <span className="text-muted-foreground">(optional)</span>
                     </label>
                     {inTeamNotRemoving ? (
                       <div className="flex items-center gap-3">
@@ -297,8 +297,8 @@ export function EditAccountModal({
 
               {editAccount.position === "Approver" && (
                 <div className="space-y-3">
-                  <label className="text-xs text-gray-500 block">
-                    Teams <span className="text-gray-400">(optional)</span>
+                  <label className="text-xs text-muted-foreground block">
+                    Teams <span className="text-muted-foreground">(optional)</span>
                   </label>
                   {account.approver_teams && account.approver_teams.length > 0 && (
                     <div className="space-y-2">

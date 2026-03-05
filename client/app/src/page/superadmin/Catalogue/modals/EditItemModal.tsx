@@ -1,7 +1,25 @@
-import { X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Loader2 } from "lucide-react";
 import type { ModalBaseProps } from "./types";
 import { PRICING_TYPE_OPTIONS } from "./types";
 import { CatalogueImageUpload } from "../components/CatalogueImageUpload";
+import { API_URL } from "@/lib/config";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface MarketingUser {
+  id: number;
+  username: string;
+  full_name: string;
+}
 
 interface EditItem {
   item_code: string;
@@ -21,6 +39,7 @@ interface EditItem {
   requires_sales_approval: boolean;
   points_multiplier: string;
   price_multiplier: string;
+  mktg_admin: string;
 }
 
 interface EditItemModalProps extends ModalBaseProps {
@@ -34,6 +53,7 @@ interface EditItemModalProps extends ModalBaseProps {
   imagePreview: string | null;
   onImageSelect: (file: File | null) => void;
   onImageRemove: () => void;
+  currentMktgAdminUsername?: string | null;
 }
 
 export function EditItemModal({
@@ -49,10 +69,75 @@ export function EditItemModal({
   imagePreview,
   onImageSelect,
   onImageRemove,
+  currentMktgAdminUsername,
 }: EditItemModalProps) {
+  const [marketingUsers, setMarketingUsers] = useState<MarketingUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [pendingMktgAdmin, setPendingMktgAdmin] = useState<string | null>(null);
+  // Capture the assigned handler at the moment the modal opens, not on first mount
+  const originalMktgAdmin = useRef(editItem.mktg_admin);
+
+  useEffect(() => {
+    if (isOpen) {
+      originalMktgAdmin.current = editItem.mktg_admin;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchUsers = async () => {
+      try {
+        setLoadingUsers(true);
+        const response = await fetch(
+          `${API_URL}/users/?position=Marketing,Admin&page_size=1000`,
+          { credentials: "include" }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setMarketingUsers(data.results || []);
+        }
+      } catch (err) {
+        console.error("Error fetching marketing users:", err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    fetchUsers();
+  }, [isOpen]);
+
+  const handleMktgAdminChange = (newValue: string) => {
+    // If currently assigned to someone and changing to a different user, show confirmation
+    if (
+      originalMktgAdmin.current &&
+      newValue &&
+      newValue !== originalMktgAdmin.current &&
+      currentMktgAdminUsername
+    ) {
+      setPendingMktgAdmin(newValue);
+      return;
+    }
+    setEditItem({ ...editItem, mktg_admin: newValue });
+  };
+
+  const confirmReassignment = () => {
+    if (pendingMktgAdmin !== null) {
+      setEditItem({ ...editItem, mktg_admin: pendingMktgAdmin });
+      setPendingMktgAdmin(null);
+    }
+  };
+
+  const pendingUserName = pendingMktgAdmin
+    ? marketingUsers.find((u) => u.id === parseInt(pendingMktgAdmin))?.full_name ||
+      "selected user"
+    : "";
+
+  const originalMktgAdminResolved = originalMktgAdmin.current;
+
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
         className="bg-card rounded-lg shadow-2xl max-w-4xl w-full border divide-y border-border divide-border"
@@ -66,7 +151,7 @@ export function EditItemModal({
             <h2 id="edit-item-title" className="text-xl font-semibold">
               Edit Product
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Update product details
             </p>
           </div>
@@ -90,7 +175,7 @@ export function EditItemModal({
 
           {/* Product Fields */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">PRODUCT INFORMATION</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">PRODUCT INFORMATION</h3>
 
             {/* Product Image Upload */}
             <CatalogueImageUpload
@@ -104,7 +189,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-item-code"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Item Code *
               </label>
@@ -115,7 +200,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, item_code: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder="e.g., MC0001"
                 aria-required="true"
               />
@@ -125,7 +210,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-item-name"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Item Name *
               </label>
@@ -136,7 +221,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, item_name: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder="e.g., Platinum Polo Shirt"
                 aria-required="true"
               />
@@ -146,7 +231,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-category"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Category
               </label>
@@ -157,7 +242,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, category: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder="e.g., Size M, Color Blue"
               />
             </div>
@@ -166,7 +251,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-description"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Description
               </label>
@@ -176,7 +261,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, description: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 resize-none text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none text-base"
                 rows={3}
                 placeholder="Detailed description of the item"
               />
@@ -186,7 +271,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-purpose"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Purpose
               </label>
@@ -196,7 +281,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, purpose: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 resize-none text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none text-base"
                 rows={2}
                 placeholder="Purpose of the item"
               />
@@ -206,7 +291,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-specs"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Specifications
               </label>
@@ -216,7 +301,7 @@ export function EditItemModal({
                 onChange={(e) =>
                   setEditItem({ ...editItem, specifications: e.target.value })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 resize-none text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring resize-none text-base"
                 rows={2}
                 placeholder="Specifications (e.g., 100% cotton, XS-XXL)"
               />
@@ -226,7 +311,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-legend"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Legend *
               </label>
@@ -243,7 +328,7 @@ export function EditItemModal({
                       | "Benefit",
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 aria-required="true"
               >
                 <option value="Collateral">Collateral</option>
@@ -257,7 +342,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-pricing-type"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Pricing Type *
               </label>
@@ -270,7 +355,7 @@ export function EditItemModal({
                     pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 aria-required="true"
               >
                 {PRICING_TYPE_OPTIONS.map((option) => (
@@ -285,7 +370,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-points"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 {editItem.pricing_type === "FIXED"
                   ? "Points Required *"
@@ -301,7 +386,7 @@ export function EditItemModal({
                     [editItem.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder={
                   editItem.pricing_type === "FIXED"
                     ? "e.g., 500"
@@ -322,7 +407,7 @@ export function EditItemModal({
             <div>
               <label
                 htmlFor="edit-price"
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 {editItem.pricing_type === "FIXED"
                   ? "Price *"
@@ -338,7 +423,7 @@ export function EditItemModal({
                     [editItem.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 placeholder={
                   editItem.pricing_type === "FIXED"
                     ? "e.g., ₱130.00"
@@ -353,7 +438,7 @@ export function EditItemModal({
               <div>
                 <label
                   htmlFor="edit-min-order-qty"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Min Order Qty *
                 </label>
@@ -365,7 +450,7 @@ export function EditItemModal({
                   onChange={(e) =>
                     setEditItem({ ...editItem, min_order_qty: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                   placeholder="1"
                   aria-required="true"
                 />
@@ -373,7 +458,7 @@ export function EditItemModal({
               <div>
                 <label
                   htmlFor="edit-max-order-qty"
-                  className="text-xs text-gray-500 mb-2 block"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
                   Max Order Qty
                 </label>
@@ -385,7 +470,7 @@ export function EditItemModal({
                   onChange={(e) =>
                     setEditItem({ ...editItem, max_order_qty: e.target.value })
                   }
-                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                   placeholder="Leave empty for unlimited"
                 />
                 <p
@@ -399,7 +484,7 @@ export function EditItemModal({
             {/* Stock */}
             <div>
               <label
-                className="text-xs text-gray-500 mb-2 block"
+                className="text-xs text-muted-foreground mb-2 block"
               >
                 Stock
               </label>
@@ -420,7 +505,7 @@ export function EditItemModal({
                   onChange={(e) =>
                     setEditItem({ ...editItem, has_stock: e.target.checked })
                   }
-                  className="w-5 h-5 rounded border bg-card border-border focus:ring-blue-500 accent-blue-600"
+                  className="w-5 h-5 rounded border bg-card border-border focus:ring-ring accent-blue-600"
                 />
                 <span className="text-sm font-medium">Track Inventory</span>
               </label>
@@ -440,7 +525,7 @@ export function EditItemModal({
                   onChange={(e) =>
                     setEditItem({ ...editItem, requires_sales_approval: e.target.checked })
                   }
-                  className="w-5 h-5 rounded border bg-card border-border focus:ring-blue-500 accent-blue-600"
+                  className="w-5 h-5 rounded border bg-card border-border focus:ring-ring accent-blue-600"
                 />
                 <span className="text-sm font-medium">Requires Sales Approval</span>
               </label>
@@ -449,6 +534,44 @@ export function EditItemModal({
               >
                 If unchecked, requests with this product will skip sales approval and go directly to marketing
               </p>
+            </div>
+
+            {/* Marketing Handler */}
+            <div>
+              <label
+                htmlFor="edit-mktg-admin"
+                className="text-xs text-muted-foreground mb-2 block"
+              >
+                Marketing Handler
+              </label>
+              {loadingUsers ? (
+                <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading users...
+                </div>
+              ) : (
+                <select
+                  id="edit-mktg-admin"
+                  value={editItem.mktg_admin}
+                  onChange={(e) => handleMktgAdminChange(e.target.value)}
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
+                >
+                  <option value="">No handler assigned</option>
+                  {marketingUsers.map((user) => (
+                    <option key={user.id} value={user.id.toString()}>
+                      {user.full_name || user.username}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {editItem.mktg_admin &&
+                editItem.mktg_admin !== originalMktgAdminResolved &&
+                originalMktgAdminResolved &&
+                currentMktgAdminUsername && (
+                  <p className="text-xs mt-1 text-amber-500">
+                    Will be reassigned from {currentMktgAdminUsername} on save
+                  </p>
+                )}
             </div>
           </div>
         </div>
@@ -465,12 +588,53 @@ export function EditItemModal({
           <button
             onClick={onConfirm}
             disabled={updating}
-            className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50"
+            className="px-6 py-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors disabled:opacity-50"
           >
             {updating ? "Updating..." : "Update Product"}
           </button>
         </div>
       </div>
     </div>
+
+    <AlertDialog
+      open={pendingMktgAdmin !== null}
+      onOpenChange={(open) => !open && setPendingMktgAdmin(null)}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirm Reassignment</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              <p>
+                <span className="font-medium text-foreground">
+                  {editItem.item_name}
+                </span>{" "}
+                is currently assigned to{" "}
+                <span className="font-medium text-foreground">
+                  {currentMktgAdminUsername}
+                </span>
+                . Changing the handler to{" "}
+                <span className="font-medium text-foreground">
+                  {pendingUserName}
+                </span>{" "}
+                will reassign this product when you save.
+              </p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border border-border bg-card hover:bg-accent text-foreground">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={confirmReassignment}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            Confirm Reassignment
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

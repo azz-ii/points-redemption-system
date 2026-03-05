@@ -138,7 +138,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Distributor>[] 
 
       return (
         <div className="flex gap-1">
-          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500 text-white">
+          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
             Active
           </span>
         </div>

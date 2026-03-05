@@ -358,6 +358,13 @@ export interface RedemptionRequestResponse {
     points_per_item: number;
     total_points: number;
   }>;
+  // Acknowledgement Receipt fields
+  ar_status: string | null;
+  ar_status_display: string | null;
+  acknowledgement_receipt: string | null;
+  ar_uploaded_by: number | null;
+  ar_uploaded_by_name: string | null;
+  ar_uploaded_at: string | null;
 }
 
 export const redemptionRequestsApi = {
@@ -469,6 +476,31 @@ export const redemptionRequestsApi = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || 'Failed to cancel request');
+    }
+
+    return response.json();
+  },
+
+  async uploadAcknowledgementReceipt(id: number, file: File): Promise<RedemptionRequestResponse> {
+    const formData = new FormData();
+    formData.append('acknowledgement_receipt', file);
+
+    const csrfToken = getCookie('csrftoken');
+    const headers: HeadersInit = {};
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/upload_acknowledgement_receipt/`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to upload acknowledgement receipt');
     }
 
     return response.json();

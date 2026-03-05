@@ -33,7 +33,7 @@ export function UnarchiveItemModal({
               <h2 id="unarchive-item-title" className="text-xl font-semibold">
                 Restore Item
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Restore this archived item.
               </p>
             </div>

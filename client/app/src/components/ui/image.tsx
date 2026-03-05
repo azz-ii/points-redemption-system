@@ -63,7 +63,7 @@ const Image = React.forwardRef<HTMLImageElement, ImageProps>(
     return (
       <>
         {isLoading && (
-          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+          <div className="absolute inset-0 bg-muted animate-pulse" />
         )}
         <img
           ref={ref}
@@ -94,7 +94,7 @@ const ImageFallback = React.forwardRef<HTMLDivElement, ImageFallbackProps>(
       <div
         ref={ref}
         className={cn(
-          "flex items-center justify-center w-full h-full bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400",
+          "flex items-center justify-center w-full h-full bg-muted text-muted-foreground",
           className
         )}
         {...props}

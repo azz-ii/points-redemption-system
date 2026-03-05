@@ -51,7 +51,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.id}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -62,7 +62,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.name}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -73,7 +73,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.brand ?? ""}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -84,7 +84,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.sales_channel ?? ""}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
 
@@ -95,7 +95,7 @@ export function ViewDistributorModal({
                 type="text"
                 value={distributor.points?.toLocaleString() ?? 0}
                 disabled
-                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-gray-600 text-foreground focus:outline-none"
+                className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-foreground focus:outline-none"
               />
             </div>
           </div>
@@ -105,7 +105,7 @@ export function ViewDistributorModal({
         <div className="p-8 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-gray-600 hover:bg-accent"
+            className="px-6 py-3 rounded-lg border font-semibold transition-colors border-border hover:bg-accent"
           >
             Close
           </button>

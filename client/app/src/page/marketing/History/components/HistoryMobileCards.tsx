@@ -16,26 +16,26 @@ export function HistoryMobileCards({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-400 text-black";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
       case "APPROVED":
-        return "bg-green-500 text-white";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "REJECTED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const getProcessingStatusColor = (status: string) => {
     switch (status) {
       case "NOT_PROCESSED":
-        return "bg-orange-400 text-black";
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
       case "PROCESSED":
-        return "bg-blue-500 text-white";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       case "CANCELLED":
-        return "bg-red-500 text-white";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
@@ -46,7 +46,7 @@ export function HistoryMobileCards({
   if (requests.length === 0) {
     return (
       <div className="flex justify-center items-center py-8">
-        <p className="text-sm text-gray-500">No processed requests found</p>
+        <p className="text-sm text-muted-foreground">No processed requests found</p>
       </div>
     );
   }
@@ -84,23 +84,23 @@ export function HistoryMobileCards({
 
           <div className="space-y-1 mb-3 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">For:</span>
+              <span className="text-muted-foreground">For:</span>
               <span className="font-medium">{request.requested_for_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Points:</span>
+              <span className="text-muted-foreground">Points:</span>
               <span className="font-medium">
                 {request.total_points.toLocaleString()} pts
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Requested:</span>
+              <span className="text-muted-foreground">Requested:</span>
               <span className="font-medium">
                 {new Date(request.date_requested).toLocaleDateString()}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Processed:</span>
+              <span className="text-muted-foreground">Processed:</span>
               <span className="font-medium">
                 {request.date_processed
                   ? new Date(request.date_processed).toLocaleDateString()
@@ -111,7 +111,7 @@ export function HistoryMobileCards({
 
           <button
             onClick={() => onView(request)}
-            className="w-full px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+            className="w-full px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Eye className="h-4 w-4" />
             View Details

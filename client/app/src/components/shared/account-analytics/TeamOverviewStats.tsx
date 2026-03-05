@@ -1,3 +1,4 @@
+import { getStatusClasses } from "@/components/ui/status-badge";
 import { useState } from "react";
 import {
   FileText, CheckCircle2, XCircle, Clock, TrendingUp,
@@ -46,7 +47,7 @@ export function TeamOverviewStats({ stats, recentActivity }: TeamOverviewStatsPr
         <StatCard label="Total Requests" value={stats.total_requests} icon={<FileText className="h-3.5 w-3.5" />} onClick={() => toggle("all")} active={activeFilter === "all"} />
         <StatCard label="Approved" value={stats.approved_count} icon={<CheckCircle2 className="h-3.5 w-3.5" />} color="text-green-500" onClick={() => toggle("APPROVED")} active={activeFilter === "APPROVED"} />
         <StatCard label="Rejected" value={stats.rejected_count} icon={<XCircle className="h-3.5 w-3.5" />} color="text-red-500" onClick={() => toggle("REJECTED")} active={activeFilter === "REJECTED"} />
-        <StatCard label="Withdrawn" value={stats.withdrawn_count} icon={<Undo2 className="h-3.5 w-3.5" />} color="text-gray-500" onClick={() => toggle("WITHDRAWN")} active={activeFilter === "WITHDRAWN"} />
+        <StatCard label="Withdrawn" value={stats.withdrawn_count} icon={<Undo2 className="h-3.5 w-3.5" />} color="text-muted-foreground" onClick={() => toggle("WITHDRAWN")} active={activeFilter === "WITHDRAWN"} />
         <StatCard label="Pending" value={stats.pending_count} icon={<Clock className="h-3.5 w-3.5" />} color="text-yellow-500" onClick={() => toggle("PENDING")} active={activeFilter === "PENDING"} />
       </StatGrid>
 
@@ -97,7 +98,7 @@ export function TeamOverviewStats({ stats, recentActivity }: TeamOverviewStatsPr
                       <td className="px-3 py-2 text-xs truncate max-w-[160px]" title={r.items}>{r.items || "\u2014"}</td>
                       <td className="px-3 py-2 text-xs text-right font-semibold">{r.total_points.toLocaleString()}</td>
                       <td className="px-3 py-2">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[r.status] ?? "bg-muted text-foreground"}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusClasses(r.status) ?? "bg-muted text-foreground"}`}>
                           {r.status}
                         </span>
                       </td>

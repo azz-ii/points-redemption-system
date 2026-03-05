@@ -17,15 +17,15 @@ interface MarketingUsersMobileCardsProps {
 const getLegendColor = (legend: string) => {
   switch (legend) {
     case "Collateral":
-      return "bg-red-500 text-white";
+      return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
     case "Giveaway":
-      return "bg-blue-500 text-white";
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
     case "Asset":
       return "bg-yellow-500 text-black";
     case "Benefit":
-      return "bg-green-500 text-white";
+      return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
     default:
-      return "bg-gray-500 text-white";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
   }
 };
 
@@ -65,7 +65,7 @@ export function MarketingUsersMobileCards({
       <div
         className="text-center py-8 rounded-lg bg-card"
       >
-        <p className="text-gray-500">No marketing users found</p>
+        <p className="text-muted-foreground">No marketing users found</p>
       </div>
     );
   }
@@ -80,18 +80,18 @@ export function MarketingUsersMobileCards({
           <div className="flex justify-between items-start mb-3">
             <div>
               <h3 className="font-semibold">{user.full_name}</h3>
-              <p className="text-sm text-gray-500">@{user.username || "No Username"}</p>
+              <p className="text-sm text-muted-foreground">@{user.username || "No Username"}</p>
             </div>
-            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
+            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
               {user.position}
             </span>
           </div>
 
-          <p className="text-sm text-gray-500 mb-3">{user.email}</p>
+          <p className="text-sm text-muted-foreground mb-3">{user.email}</p>
 
           {/* Assigned Legends */}
           <div className="mb-4">
-            <p className="text-xs text-gray-500 mb-2">Assigned Items:</p>
+            <p className="text-xs text-muted-foreground mb-2">Assigned Items:</p>
             {user.assigned_legends.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {user.assigned_legends.map((assignment) => (
@@ -106,7 +106,7 @@ export function MarketingUsersMobileCards({
                 ))}
               </div>
             ) : (
-              <span className="text-gray-400 text-sm italic">
+              <span className="text-muted-foreground text-sm italic">
                 No items assigned
               </span>
             )}
@@ -115,14 +115,14 @@ export function MarketingUsersMobileCards({
           <div className="flex gap-2">
             <button
               onClick={() => onViewAccount(user)}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-500 text-white text-sm font-medium hover:bg-blue-600"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/60"
             >
               <Eye className="h-4 w-4" />
               View
             </button>
             <button
               onClick={() => onEditAccount(user)}
-              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-500 text-white text-sm font-medium hover:bg-gray-600"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 text-sm font-medium hover:bg-accent"
             >
               <Pencil className="h-4 w-4" />
               Edit
