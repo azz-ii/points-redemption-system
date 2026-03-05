@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Check, X, Clock, Mail, LockOpen, MoreHorizontal } from "lucide-react"
+import { Eye, Pencil, Archive, ArchiveRestore, ArrowUpDown, Clock, Mail, LockOpen, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,11 +12,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import type { Account } from "../modals"
-import {
-  EditableTextCell,
-  EditableNumberCell,
-  EditableSelectCell,
-} from "./editable-cells"
 
 interface ColumnContext {
   onViewAccount: (account: Account) => void
@@ -24,9 +19,6 @@ interface ColumnContext {
   onArchiveAccount: (account: Account) => void
   onUnarchiveAccount: (account: Account) => void
   onViewPointsHistory?: (account: Account) => void
-  onToggleInlineEdit?: (account: Account) => void
-  onSaveInlineEdit?: (accountId: number) => void
-  onCancelInlineEdit?: () => void
   onSendPasswordResetEmail?: (account: Account) => void
   onUnlockAccount?: (account: Account) => void
 }
@@ -43,19 +35,15 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
         className="translate-y-[2px]"
-        disabled={!!(table.options.meta as any)?.editingRowId}
       />
     ),
-    cell: ({ row, table }) => {
-      const isEditing = (table.options.meta as any)?.editingRowId === row.original.id
-      
+    cell: ({ row }) => {
       return (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="translate-y-[2px]"
-          disabled={!!(table.options.meta as any)?.editingRowId || isEditing}
         />
       )
     },
@@ -78,19 +66,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
         </Button>
       )
     },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === row.original.id
-      const value = isEditing ? (meta?.editedData?.username ?? row.getValue("username")) : row.getValue("username")
-      
-      return (
-        <EditableTextCell
-          value={value as string}
-          isEditing={isEditing}
-          onChange={(val) => meta?.onFieldChange?.("username", val)}
-          error={meta?.fieldErrors?.username}
-        />
-      )
+    cell: ({ row }) => {
+      return <div className="py-2">{row.getValue("username") || "N/A"}</div>
     },
   },
   {
@@ -107,19 +84,8 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
         </Button>
       )
     },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === row.original.id
-      const value = isEditing ? (meta?.editedData?.full_name ?? row.getValue("full_name")) : row.getValue("full_name")
-      
-      return (
-        <EditableTextCell
-          value={value as string}
-          isEditing={isEditing}
-          onChange={(val) => meta?.onFieldChange?.("full_name", val)}
-          error={meta?.fieldErrors?.full_name}
-        />
-      )
+    cell: ({ row }) => {
+      return <div className="py-2">{row.getValue("full_name") || "N/A"}</div>
     },
   },
   {
@@ -136,18 +102,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
         </Button>
       )
     },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === row.original.id
-      const value = isEditing ? (meta?.editedData?.position ?? row.getValue("position")) : row.getValue("position")
-      
+    cell: ({ row }) => {
+      const value = row.getValue("position") as string
       return (
-        <EditableSelectCell
-          value={value as string}
-          isEditing={isEditing}
-          onChange={(val) => meta?.onFieldChange?.("position", val)}
-          error={meta?.fieldErrors?.position}
-        />
+        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-black">
+          {value || "N/A"}
+        </span>
       )
     },
   },
@@ -187,24 +147,12 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
         </Button>
       )
     },
-    cell: ({ row, table }) => {
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === row.original.id
-
+    cell: ({ row }) => {
       if (!row.original.uses_points) {
         return <span className="text-muted-foreground">—</span>
       }
-
-      const value = isEditing ? (meta?.editedData?.points ?? row.getValue("points")) : row.getValue("points")
-      
-      return (
-        <EditableNumberCell
-          value={value as number}
-          isEditing={isEditing}
-          onChange={(val) => meta?.onFieldChange?.("points", val)}
-          error={meta?.fieldErrors?.points}
-        />
-      )
+      const value = row.getValue("points") as number
+      return <div className="py-2">{value?.toLocaleString() ?? 0}</div>
     },
   },
   {
@@ -262,44 +210,16 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
   {
     id: "actions",
     header: () => <div className="text-right">Actions</div>,
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const account = row.original
-      const meta = table.options.meta as any
-      const isEditing = meta?.editingRowId === account.id
-      const isAnyRowEditing = !!meta?.editingRowId
       const isArchived = account.is_archived
-
-      if (isEditing) {
-        return (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onSaveInlineEdit?.(account.id)}
-              className="bg-green-500 hover:bg-green-600 text-white"
-              title="Save"
-            >
-              <Check className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => context.onCancelInlineEdit?.()}
-              className="bg-gray-500 hover:bg-gray-600 text-white"
-              title="Cancel"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )
-      }
 
       if (isArchived) {
         return (
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" disabled={isAnyRowEditing}>
+                <Button variant="ghost" size="sm">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -322,7 +242,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" disabled={isAnyRowEditing}>
+              <Button variant="ghost" size="sm">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -331,7 +251,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => context.onToggleInlineEdit?.(account)}>
+              <DropdownMenuItem onClick={() => context.onEditAccount(account)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>

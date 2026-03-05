@@ -21,13 +21,6 @@ interface AccountsTableProps {
   onViewPointsHistory?: (account: Account) => void;
   onSendPasswordResetEmail?: (account: Account) => void;
   onUnlockAccount?: (account: Account) => void;
-  editingRowId?: number | null;
-  editedData?: Record<string, any>;
-  onToggleInlineEdit?: (account: Account) => void;
-  onSaveInlineEdit?: (accountId: number) => void;
-  onCancelInlineEdit?: () => void;
-  onFieldChange?: (field: string, value: any) => void;
-  fieldErrors?: Record<string, string>;
   manualPagination?: boolean;
   pageCount?: number;
   totalResults?: number;
@@ -57,13 +50,6 @@ export function AccountsTable({
   onViewPointsHistory,
   onSendPasswordResetEmail,
   onUnlockAccount,
-  editingRowId,
-  editedData,
-  onToggleInlineEdit,
-  onSaveInlineEdit,
-  onCancelInlineEdit,
-  onFieldChange,
-  fieldErrors,
   manualPagination,
   pageCount,
   totalResults,
@@ -82,9 +68,6 @@ export function AccountsTable({
         onArchiveAccount,
         onUnarchiveAccount,
         onViewPointsHistory,
-        onToggleInlineEdit,
-        onSaveInlineEdit,
-        onCancelInlineEdit,
         onSendPasswordResetEmail,
         onUnlockAccount,
       }),
@@ -94,9 +77,6 @@ export function AccountsTable({
       onArchiveAccount,
       onUnarchiveAccount,
       onViewPointsHistory,
-      onToggleInlineEdit,
-      onSaveInlineEdit,
-      onCancelInlineEdit,
       onSendPasswordResetEmail,
       onUnlockAccount,
     ]
@@ -129,10 +109,6 @@ export function AccountsTable({
       initialSorting={[{ id: "username", desc: false }]}
       loadingMessage="Loading accounts..."
       emptyMessage="No accounts found"
-      editingRowId={editingRowId}
-      editedData={editedData}
-      onFieldChange={onFieldChange}
-      fieldErrors={fieldErrors}
       manualPagination={manualPagination}
       pageCount={pageCount}
       totalResults={totalResults}
