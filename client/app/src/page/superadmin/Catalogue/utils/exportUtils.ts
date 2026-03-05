@@ -60,18 +60,8 @@ function getCellValue(item: Product, key: ExportColumn["key"]): string | number 
       return formatDate(item.date_added);
     case "status":
       return item.is_archived ? "Archived" : "Active";
-    case "legend": {
-      // Format legend to be more readable
-      const legendMap: Record<string, string> = {
-        GIVEAWAY: "Giveaway",
-        MERCH: "Merch",
-        PROMO: "Promo",
-        AD_MATERIALS: "Ad Materials",
-        POINT_OF_SALE: "Point of Sale",
-        OTHERS: "Others",
-      };
-      return legendMap[item.legend] || item.legend;
-    }
+    case "legend":
+      return item.legend;
     case "pricing_type": {
       // Format pricing type to be more readable
       const pricingMap: Record<string, string> = {

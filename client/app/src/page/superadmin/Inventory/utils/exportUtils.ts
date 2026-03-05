@@ -38,18 +38,8 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
  */
 function getCellValue(item: InventoryItem, key: ExportColumn["key"]): string | number {
   switch (key) {
-    case "legend": {
-      // Format legend to be more readable
-      const legendMap: Record<string, string> = {
-        GIVEAWAY: "Giveaway",
-        MERCH: "Merch",
-        PROMO: "Promo",
-        AD_MATERIALS: "Ad Materials",
-        POINT_OF_SALE: "Point of Sale",
-        OTHERS: "Others",
-      };
-      return legendMap[item.legend] || item.legend;
-    }
+    case "legend":
+      return item.legend;
     default: {
       const value = item[key];
       if (typeof value === "boolean") return value ? "Yes" : "No";

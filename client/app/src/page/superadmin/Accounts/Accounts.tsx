@@ -17,6 +17,7 @@ import {
   SendPasswordResetEmailModal,
   UnlockAccountModal,
   type Account,
+  type TeamOption,
 } from "./modals";
 import { AccountsTable, AccountsMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
@@ -47,6 +48,13 @@ function Accounts() {
     points: 0,
     is_activated: true,
   });
+
+  // Team assignment for Sales Agent on creation
+  const [teams, setTeams] = useState<TeamOption[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+
+  // Team management for edit modal
+  const [selectedEditTeamId, setSelectedEditTeamId] = useState<number | null | "REMOVE">(null);
 
   const [editAccount, setEditAccount] = useState({
     username: "",
@@ -120,6 +128,17 @@ function Accounts() {
     fetchAccounts();
   }, [fetchAccounts]);
 
+  // Fetch teams lazily when the create or edit modal opens
+  useEffect(() => {
+    if ((!showCreateModal && !showEditModal) || teams.length > 0) return;
+    fetch(`${API_URL}/teams/`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data: { id: number; name: string }[]) => {
+        setTeams(data.map((t) => ({ id: t.id, name: t.name })));
+      })
+      .catch((err) => console.error("Error fetching teams:", err));
+  }, [showCreateModal, showEditModal, teams.length]);
+
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     setTablePage(0);
@@ -155,6 +174,10 @@ function Accounts() {
       return;
     }
 
+    // Capture before reset so the background calls use the intended values
+    const capturedTeamId = selectedTeamId;
+    const positionWas = newAccount.position;
+
     // Close modal and reset form immediately
     setShowCreateModal(false);
     const fullName = newAccount.full_name;
@@ -167,6 +190,7 @@ function Accounts() {
       points: 0,
       is_activated: true,
     });
+    setSelectedTeamId(null);
     setError("");
 
     // Show optimistic success message
@@ -184,8 +208,34 @@ function Accounts() {
       body: formData,
     })
       .then((response) => response.json())
-      .then((data) => {
+      .then(async (data) => {
         if (!data.error) {
+          // Assign to team if selected
+          if (capturedTeamId && positionWas === "Sales Agent" && data.user?.id) {
+            try {
+              const teamRes = await fetchWithCsrf(
+                `${API_URL}/teams/${capturedTeamId}/assign_member/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: data.user.id }),
+                },
+              );
+              if (!teamRes.ok) {
+                const teamErr = await teamRes.json().catch(() => ({}));
+                toast.warning(
+                  `Account created but team assignment failed: ${
+                    teamErr?.user?.[0] ||
+                    teamErr?.detail ||
+                    teamErr?.error ||
+                    "Unknown error"
+                  }`,
+                );
+              }
+            } catch {
+              toast.warning("Account created but team assignment failed.");
+            }
+          }
           // Silently refresh accounts list in background
           fetchAccounts();
         } else {
@@ -226,6 +276,7 @@ function Accounts() {
       points: account.points || 0,
       is_activated: account.is_activated,
     });
+    setSelectedEditTeamId(account.team_id ?? null);
     setShowEditModal(true);
     setError("");
   };
@@ -243,6 +294,10 @@ function Accounts() {
       setError("All fields are required");
       return;
     }
+
+    // Capture team intent before any async work
+    const oldTeamId = editingAccount.team_id ?? null;
+    const capturedEditTeamId = selectedEditTeamId;
 
     try {
       setLoading(true);
@@ -263,7 +318,60 @@ function Accounts() {
       if (response.ok) {
         setShowEditModal(false);
         setEditingAccount(null);
+        setSelectedEditTeamId(null);
         setError("");
+
+        // Handle team changes
+        if (editAccount.position === "Sales Agent") {
+          const shouldRemove =
+            oldTeamId != null &&
+            (capturedEditTeamId === "REMOVE" || capturedEditTeamId === null);
+          const shouldAssign =
+            typeof capturedEditTeamId === "number" &&
+            capturedEditTeamId !== oldTeamId;
+
+          if (shouldRemove) {
+            try {
+              await fetchWithCsrf(
+                `${API_URL}/teams/${oldTeamId}/remove_member/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: editingAccount.id }),
+                },
+              );
+            } catch {
+              toast.warning("Account updated but failed to remove from team.");
+            }
+          }
+
+          if (shouldAssign) {
+            try {
+              const teamRes = await fetchWithCsrf(
+                `${API_URL}/teams/${capturedEditTeamId}/assign_member/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: editingAccount.id }),
+                },
+              );
+              if (!teamRes.ok) {
+                const teamErr = await teamRes.json().catch(() => ({}));
+                toast.warning(
+                  `Account updated but team assignment failed: ${
+                    teamErr?.user?.[0] ??
+                    teamErr?.detail ??
+                    teamErr?.error ??
+                    "Unknown error"
+                  }`,
+                );
+              }
+            } catch {
+              toast.warning("Account updated but team assignment failed.");
+            }
+          }
+        }
+
         // Refresh accounts list
         fetchAccounts();
       } else {
@@ -750,6 +858,9 @@ function Accounts() {
         onClose={() => setShowCreateModal(false)}
         newAccount={newAccount}
         setNewAccount={setNewAccount}
+        teams={teams}
+        selectedTeamId={selectedTeamId}
+        setSelectedTeamId={setSelectedTeamId}
         loading={loading}
         error={error}
         setError={setError}
@@ -761,10 +872,14 @@ function Accounts() {
         onClose={() => {
           setShowEditModal(false);
           setEditingAccount(null);
+          setSelectedEditTeamId(null);
         }}
         account={editingAccount}
         editAccount={editAccount}
         setEditAccount={setEditAccount}
+        teams={teams}
+        selectedEditTeamId={selectedEditTeamId}
+        setSelectedEditTeamId={setSelectedEditTeamId}
         loading={loading}
         error={error}
         setError={setError}

@@ -15,7 +15,7 @@ export interface Product {
   description: string;
   purpose: string;
   specifications: string;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "ASSET" | "OTHERS";
+  legend: "Collateral" | "Giveaway" | "Asset" | "Benefit";
   category: string;
   points: string;
   price: string;
@@ -36,13 +36,10 @@ export interface Product {
 }
 
 export const LEGEND_OPTIONS = [
-  { value: "GIVEAWAY", label: "Giveaway" },
-  { value: "MERCH", label: "Merch" },
-  { value: "PROMO", label: "Promo" },
-  { value: "AD_MATERIALS", label: "Ad Materials" },
-  { value: "POINT_OF_SALE", label: "Point of Sale" },
-  { value: "ASSET", label: "Asset" },
-  { value: "OTHERS", label: "Others" },
+  { value: "Collateral", label: "Collateral" },
+  { value: "Giveaway", label: "Giveaway" },
+  { value: "Asset", label: "Asset" },
+  { value: "Benefit", label: "Benefit" },
 ] as const;
 
 export const PRICING_TYPE_OPTIONS = [
@@ -55,20 +52,14 @@ export const PRICING_TYPE_OPTIONS = [
 
 export const getLegendColor = (legend: string): string => {
   switch (legend) {
-    case "GIVEAWAY":
-      return "bg-blue-500 text-white";
-    case "MERCH":
-      return "bg-purple-500 text-white";
-    case "PROMO":
-      return "bg-orange-500 text-white";
-    case "AD_MATERIALS":
+    case "Collateral":
       return "bg-red-500 text-white";
-    case "POINT_OF_SALE":
+    case "Giveaway":
+      return "bg-blue-500 text-white";
+    case "Asset":
       return "bg-yellow-500 text-black";
-    case "ASSET":
+    case "Benefit":
       return "bg-green-500 text-white";
-    case "OTHERS":
-      return "bg-gray-500 text-white";
     default:
       return "bg-gray-500 text-white";
   }

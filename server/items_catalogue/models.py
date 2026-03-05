@@ -5,15 +5,10 @@ from django.conf import settings
 
 
 class ItemLegend(models.TextChoices):
-    GIVEAWAY = 'GIVEAWAY', 'Giveaway'
-    MERCH = 'MERCH', 'Merch'
-    PROMO = 'PROMO', 'Promo'
-    AD_MATERIALS = 'AD_MATERIALS', 'Ad Materials'
-    POINT_OF_SALE = 'POINT_OF_SALE', 'Point of Sale'
-    ASSET = 'ASSET', 'Asset'
-    COLLATERAL = 'COLLATERAL', 'Collateral'
-    BENEFIT = 'BENEFIT', 'Benefit'
-    OTHERS = 'OTHERS', 'Others'
+    COLLATERAL = 'Collateral', 'Collateral'
+    GIVEAWAY = 'Giveaway', 'Giveaway'
+    ASSET = 'Asset', 'Asset'
+    BENEFIT = 'Benefit', 'Benefit'
 
 
 class PricingType(models.TextChoices):

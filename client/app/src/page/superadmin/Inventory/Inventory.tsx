@@ -33,12 +33,10 @@ interface ApiInventoryItem {
   available_stock: number;
   has_stock: boolean;
   legend:
-    | "GIVEAWAY"
-    | "MERCH"
-    | "PROMO"
-    | "AD_MATERIALS"
-    | "POINT_OF_SALE"
-    | "OTHERS";
+    | "Collateral"
+    | "Giveaway"
+    | "Asset"
+    | "Benefit";
   stock_status: string;
 }
 

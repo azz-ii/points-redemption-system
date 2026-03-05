@@ -25,8 +25,8 @@ export interface LegendTotal {
 }
 
 export const LEGEND_OPTIONS = [
-  { value: "COLLATERAL", label: "Collateral" },
-  { value: "GIVEAWAY", label: "Giveaway" },
-  { value: "ASSET", label: "Asset" },
-  { value: "BENEFIT", label: "Benefit" },
+  { value: "Collateral", label: "Collateral" },
+  { value: "Giveaway", label: "Giveaway" },
+  { value: "Asset", label: "Asset" },
+  { value: "Benefit", label: "Benefit" },
 ];

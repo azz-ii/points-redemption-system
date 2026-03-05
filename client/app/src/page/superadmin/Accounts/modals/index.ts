@@ -8,4 +8,4 @@ export { ExportModal } from "./ExportModal";
 export { SetPointsModal } from "./SetPointsModal";
 export { SendPasswordResetEmailModal } from "./SendPasswordResetEmailModal";
 export { UnlockAccountModal } from "./UnlockAccountModal";
-export type { Account } from "./types";
+export type { Account, TeamOption } from "./types";

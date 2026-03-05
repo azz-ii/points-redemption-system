@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
-import type { ModalBaseProps } from "./types";
+import type { ModalBaseProps, TeamOption } from "./types";
 import { POSITION_OPTIONS } from "./types";
 
 interface NewAccountData {
@@ -16,6 +16,9 @@ interface NewAccountData {
 interface CreateAccountModalProps extends ModalBaseProps {
   newAccount: NewAccountData;
   setNewAccount: Dispatch<SetStateAction<NewAccountData>>;
+  teams: TeamOption[];
+  selectedTeamId: number | null;
+  setSelectedTeamId: Dispatch<SetStateAction<number | null>>;
   loading: boolean;
   error: string;
   setError: Dispatch<SetStateAction<string>>;
@@ -27,6 +30,9 @@ export function CreateAccountModal({
   onClose,
   newAccount,
   setNewAccount,
+  teams,
+  selectedTeamId,
+  setSelectedTeamId,
   loading,
   error,
   setError,
@@ -37,6 +43,7 @@ export function CreateAccountModal({
   const handleClose = () => {
     onClose();
     setError("");
+    setSelectedTeamId(null);
   };
 
   return (
@@ -195,29 +202,57 @@ export function CreateAccountModal({
               </div>
 
               {newAccount.position === "Sales Agent" && (
-                <div>
-                  <label
-                    htmlFor="points"
-                    className="text-xs text-gray-500 mb-2 block"
-                  >
-                    Points *
-                  </label>
-                  <input
-                    id="points"
-                    type="number"
-                    min="0"
-                    value={newAccount.points}
-                    onChange={(e) =>
-                      setNewAccount({
-                        ...newAccount,
-                        points: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
-                    placeholder="Enter points"
-                    aria-required="true"
-                  />
-                </div>
+                <>
+                  <div>
+                    <label
+                      htmlFor="points"
+                      className="text-xs text-gray-500 mb-2 block"
+                    >
+                      Points *
+                    </label>
+                    <input
+                      id="points"
+                      type="number"
+                      min="0"
+                      value={newAccount.points}
+                      onChange={(e) =>
+                        setNewAccount({
+                          ...newAccount,
+                          points: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                      placeholder="Enter points"
+                      aria-required="true"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="team"
+                      className="text-xs text-gray-500 mb-2 block"
+                    >
+                      Team <span className="text-gray-400">(optional)</span>
+                    </label>
+                    <select
+                      id="team"
+                      value={selectedTeamId ?? ""}
+                      onChange={(e) =>
+                        setSelectedTeamId(
+                          e.target.value ? Number(e.target.value) : null,
+                        )
+                      }
+                      className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                    >
+                      <option value="">No team assigned</option>
+                      {teams.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
               )}
             </div>
           </div>

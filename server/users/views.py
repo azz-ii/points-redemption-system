@@ -194,13 +194,26 @@ class UserViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             # Archive the user
+            previous_points = user.profile.points
             user.is_active = False
             user.save(update_fields=['is_active'])
             user.profile.is_archived = True
             user.profile.date_archived = timezone.now()
             user.profile.archived_by = request.user if request.user.is_authenticated else None
+            user.profile.points = 0
             user.profile.save()
-            
+
+            log_points_change(
+                entity_type='USER',
+                entity_id=user.id,
+                entity_name=user.profile.full_name or user.username,
+                previous_points=previous_points,
+                new_points=0,
+                action_type='INDIVIDUAL_SET',
+                changed_by=request.user if request.user.is_authenticated else None,
+                reason='Account archived',
+            )
+
             return Response({
                 "message": "User archived successfully",
                 "user": UserListSerializer(user).data

@@ -19,13 +19,13 @@ interface ColumnContext {
 
 const getLegendColor = (legend: string) => {
   switch (legend) {
-    case "COLLATERAL":
+    case "Collateral":
       return "bg-red-500 text-white"
-    case "GIVEAWAY":
+    case "Giveaway":
       return "bg-blue-500 text-white"
-    case "ASSET":
+    case "Asset":
       return "bg-yellow-500 text-black"
-    case "BENEFIT":
+    case "Benefit":
       return "bg-green-500 text-white"
     default:
       return "bg-gray-500 text-white"

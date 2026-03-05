@@ -152,6 +152,28 @@ export const createColumns = (context: ColumnContext): ColumnDef<Account>[] => [
     },
   },
   {
+    id: "team_name",
+    accessorFn: (row) => row.team_name ?? null,
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="px-0 hover:bg-transparent"
+      >
+        Team
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      if (row.original.position !== "Sales Agent") {
+        return <span className="text-muted-foreground">—</span>
+      }
+      return (
+        <span>{row.original.team_name ?? <span className="text-muted-foreground">—</span>}</span>
+      )
+    },
+  },
+  {
     accessorKey: "points",
     header: ({ column }) => {
       return (

@@ -15,6 +15,13 @@ export interface Account {
   archived_by?: number | null;
   archived_by_username?: string | null;
   is_locked?: boolean;
+  team_id?: number | null;
+  team_name?: string | null;
+}
+
+export interface TeamOption {
+  id: number;
+  name: string;
 }
 
 export const POSITION_OPTIONS = [

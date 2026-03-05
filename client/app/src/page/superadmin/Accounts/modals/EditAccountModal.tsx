@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
-import type { Account, ModalBaseProps } from "./types";
+import type { Account, ModalBaseProps, TeamOption } from "./types";
 import { POSITION_OPTIONS } from "./types";
 
 interface EditAccountData {
@@ -16,6 +16,9 @@ interface EditAccountModalProps extends ModalBaseProps {
   account: Account | null;
   editAccount: EditAccountData;
   setEditAccount: Dispatch<SetStateAction<EditAccountData>>;
+  teams: TeamOption[];
+  selectedEditTeamId: number | null | "REMOVE";
+  setSelectedEditTeamId: Dispatch<SetStateAction<number | null | "REMOVE">>;
   loading: boolean;
   error: string;
   setError: Dispatch<SetStateAction<string>>;
@@ -28,6 +31,9 @@ export function EditAccountModal({
   account,
   editAccount,
   setEditAccount,
+  teams,
+  selectedEditTeamId,
+  setSelectedEditTeamId,
   loading,
   error,
   setError,
@@ -39,6 +45,10 @@ export function EditAccountModal({
     onClose();
     setError("");
   };
+
+  // Whether the user is currently in a team and hasn't clicked Remove yet
+  const inTeamNotRemoving =
+    account.team_id != null && selectedEditTeamId !== "REMOVE" && typeof selectedEditTeamId !== "number";
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -177,57 +187,104 @@ export function EditAccountModal({
               </div>
 
               {editAccount.position === "Sales Agent" && (
-                <div>
-                  <label
-                    htmlFor="edit-points"
-                    className="text-xs text-gray-500 mb-2 block"
-                  >
-                    Points *
-                  </label>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      id="edit-points"
-                      type="number"
-                      min="0"
-                      value={editAccount.points}
-                      onChange={(e) =>
-                        setEditAccount({
-                          ...editAccount,
-                          points: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
-                      placeholder="Enter points"
-                      aria-required="true"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditAccount({
-                          ...editAccount,
-                          points: editAccount.points + 10,
-                        })
-                      }
-                      aria-label="Add 10 points"
-                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                <>
+                  <div>
+                    <label
+                      htmlFor="edit-points"
+                      className="text-xs text-gray-500 mb-2 block"
                     >
-                      +10
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditAccount({
-                          ...editAccount,
-                          points: editAccount.points + 100,
-                        })
-                      }
-                      aria-label="Add 100 points"
-                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
-                    >
-                      +100
-                    </button>
+                      Points *
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        id="edit-points"
+                        type="number"
+                        min="0"
+                        value={editAccount.points}
+                        onChange={(e) =>
+                          setEditAccount({
+                            ...editAccount,
+                            points: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                        placeholder="Enter points"
+                        aria-required="true"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditAccount({
+                            ...editAccount,
+                            points: editAccount.points + 10,
+                          })
+                        }
+                        aria-label="Add 10 points"
+                        className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                      >
+                        +10
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditAccount({
+                            ...editAccount,
+                            points: editAccount.points + 100,
+                          })
+                        }
+                        aria-label="Add 100 points"
+                        className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                      >
+                        +100
+                      </button>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Team Section */}
+                  <div>
+                    <label className="text-xs text-gray-500 mb-2 block">
+                      Team <span className="text-gray-400">(optional)</span>
+                    </label>
+                    {inTeamNotRemoving ? (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          value={account.team_name ?? ""}
+                          disabled
+                          className="flex-1 px-4 py-3 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedEditTeamId("REMOVE")}
+                          className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={
+                          typeof selectedEditTeamId === "number"
+                            ? selectedEditTeamId
+                            : ""
+                        }
+                        onChange={(e) =>
+                          setSelectedEditTeamId(
+                            e.target.value ? Number(e.target.value) : null,
+                          )
+                        }
+                        className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                      >
+                        <option value="">No team assigned</option>
+                        {teams.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>

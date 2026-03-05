@@ -9,7 +9,7 @@ export interface Product {
   description: string;
   purpose: string;
   specifications: string;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "ASSET" | "OTHERS";
+  legend: "Collateral" | "Giveaway" | "Asset" | "Benefit";
   category: string;
   points: string;
   price: string;

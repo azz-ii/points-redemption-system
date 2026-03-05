@@ -13,7 +13,7 @@ export interface InventoryItem {
   committed_stock: number;
   available_stock: number;
   has_stock: boolean;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "OTHERS";
+  legend: "Collateral" | "Giveaway" | "Asset" | "Benefit";
   stock_status: StockStatus;
 }
 
@@ -32,18 +32,14 @@ export const getStatusColor = (status: StockStatus): string => {
 
 export const getLegendColor = (legend: string): string => {
   switch (legend) {
-    case "GIVEAWAY":
-      return "bg-blue-500 text-white";
-    case "MERCH":
-      return "bg-purple-500 text-white";
-    case "PROMO":
-      return "bg-orange-500 text-white";
-    case "AD_MATERIALS":
+    case "Collateral":
       return "bg-red-500 text-white";
-    case "POINT_OF_SALE":
+    case "Giveaway":
+      return "bg-blue-500 text-white";
+    case "Asset":
       return "bg-yellow-500 text-black";
-    case "OTHERS":
-      return "bg-gray-500 text-white";
+    case "Benefit":
+      return "bg-green-500 text-white";
     default:
       return "bg-gray-500 text-white";
   }

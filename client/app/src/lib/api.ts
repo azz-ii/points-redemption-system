@@ -6,7 +6,7 @@ const API_BASE_URL = API_URL;
 
 // Backend API Response Types
 export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';
-export type LegendType = 'GIVEAWAY' | 'MERCH' | 'PROMO' | 'AD_MATERIALS' | 'POINT_OF_SALE' | 'OTHERS';
+export type LegendType = 'Collateral' | 'Giveaway' | 'Asset' | 'Benefit';
 
 export interface Product {
   id: number;
@@ -118,14 +118,12 @@ export interface UserProfile {
   };
 }
 
-// Map backend legend to frontend category
+// Map backend legend to frontend category (values are already title-case; map is identity)
 const legendToCategoryMap: Record<string, string> = {
-  GIVEAWAY: "Giveaway",
-  MERCH: "Merch",
-  PROMO: "Promo",
-  AD_MATERIALS: "Ad Materials",
-  POINT_OF_SALE: "Point of Sale",
-  OTHERS: "Others",
+  Collateral: "Collateral",
+  Giveaway: "Giveaway",
+  Asset: "Asset",
+  Benefit: "Benefit",
 };
 
 // Transform backend product data to frontend format

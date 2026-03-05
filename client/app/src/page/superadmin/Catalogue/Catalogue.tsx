@@ -153,14 +153,11 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "GIVEAWAY" as
-      | "GIVEAWAY"
-      | "MERCH"
-      | "PROMO"
-      | "AD_MATERIALS"
-      | "POINT_OF_SALE"
-      | "ASSET"
-      | "OTHERS",
+    legend: "Giveaway" as
+      | "Collateral"
+      | "Giveaway"
+      | "Asset"
+      | "Benefit",
     pricing_type: "FIXED" as
       | "FIXED"
       | "PER_SQFT"
@@ -185,14 +182,11 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "GIVEAWAY" as
-      | "GIVEAWAY"
-      | "MERCH"
-      | "PROMO"
-      | "AD_MATERIALS"
-      | "POINT_OF_SALE"
-      | "ASSET"
-      | "OTHERS",
+    legend: "Giveaway" as
+      | "Collateral"
+      | "Giveaway"
+      | "Asset"
+      | "Benefit",
     pricing_type: "FIXED" as
       | "FIXED"
       | "PER_SQFT"
@@ -361,7 +355,7 @@ function Catalogue() {
         description: "",
         purpose: "",
         specifications: "",
-        legend: "GIVEAWAY",
+        legend: "Giveaway",
         pricing_type: "FIXED",
         points: "",
         price: "",

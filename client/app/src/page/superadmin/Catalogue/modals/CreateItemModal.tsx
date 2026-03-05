@@ -10,7 +10,7 @@ interface NewItem {
   description: string;
   purpose: string;
   specifications: string;
-  legend: "GIVEAWAY" | "MERCH" | "PROMO" | "AD_MATERIALS" | "POINT_OF_SALE" | "ASSET" | "OTHERS";
+  legend: "Collateral" | "Giveaway" | "Asset" | "Benefit";
   pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
   points: string;
   price: string;
@@ -234,25 +234,19 @@ export function CreateItemModal({
                   setNewItem({
                     ...newItem,
                     legend: e.target.value as
-                      | "GIVEAWAY"
-                      | "MERCH"
-                      | "PROMO"
-                      | "AD_MATERIALS"
-                      | "POINT_OF_SALE"
-                      | "ASSET"
-                      | "OTHERS",
+                      | "Collateral"
+                      | "Giveaway"
+                      | "Asset"
+                      | "Benefit",
                   })
                 }
                 className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-blue-500 text-base"
                 aria-required="true"
               >
-                <option value="GIVEAWAY">Giveaway</option>
-                <option value="MERCH">Merch</option>
-                <option value="PROMO">Promo</option>
-                <option value="AD_MATERIALS">Ad Materials</option>
-                <option value="POINT_OF_SALE">Point of Sale</option>
-                <option value="ASSET">Asset</option>
-                <option value="OTHERS">Others</option>
+                <option value="Collateral">Collateral</option>
+                <option value="Giveaway">Giveaway</option>
+                <option value="Asset">Asset</option>
+                <option value="Benefit">Benefit</option>
               </select>
             </div>
 
