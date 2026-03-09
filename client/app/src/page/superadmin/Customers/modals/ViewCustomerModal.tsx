@@ -18,7 +18,7 @@ export function ViewCustomerModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-customer-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700 max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -47,7 +47,7 @@ export function ViewCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* ID */}
             <div>

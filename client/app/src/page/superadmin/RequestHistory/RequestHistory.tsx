@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { requestHistoryApi } from "@/lib/api";
+import { useState, useMemo, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -7,20 +8,22 @@ import {
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
+import { useRequestHistory } from "@/hooks/queries/useRequestHistory";
 import {
   ViewRequestModal,
   ExportModal,
   type RequestHistoryItem,
 } from "./modals";
 import { RequestHistoryTable, RequestHistoryMobileCards } from "./components";
-import { toast } from "sonner";
 
-function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
+function RequestHistory() {
+  const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests, setRequests] = useState<RequestHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const { data: rawRequests, isLoading: loading, isFetching: refreshing, error: queryError } = useRequestHistory(30_000);
+  const requests = (rawRequests ?? []) as unknown as RequestHistoryItem[];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load processed requests") : null;
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -28,51 +31,32 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
     useState<RequestHistoryItem | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
-  const fetchRequests = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const data = await requestHistoryApi.getProcessedRequests();
-      setRequests(data as unknown as RequestHistoryItem[]);
-    } catch (err) {
-      console.error("Error fetching processed requests:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load processed requests",
-      );
-      toast.error("Failed to load processed requests");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  // Fetch requests on mount
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
 
   const pageSize = 7;
-  const filteredRequests = requests.filter((request) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      request.id.toString().includes(query) ||
-      request.requested_by_name.toLowerCase().includes(query) ||
-      request.requested_for_name.toLowerCase().includes(query)
-    );
-  });
+  const { filteredRequests, totalPages, safePage, paginatedRequests } = useMemo(() => {
+    const filtered = requests.filter((request) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        request.id.toString().includes(query) ||
+        request.requested_by_name.toLowerCase().includes(query) ||
+        request.requested_for_name.toLowerCase().includes(query)
+      );
+    });
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+    const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const safe = Math.min(currentPage, pages);
+    const start = (safe - 1) * pageSize;
+    return {
+      filteredRequests: filtered,
+      totalPages: pages,
+      safePage: safe,
+      paginatedRequests: filtered.slice(start, start + pageSize),
+    };
+  }, [requests, searchQuery, currentPage, pageSize]);
 
   const handleViewClick = useCallback((request: RequestHistoryItem) => {
     setSelectedRequest(request);
@@ -84,7 +68,7 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
 
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Request History</h1>
@@ -96,7 +80,7 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => fetchRequests(true)}
+                onClick={handleManualRefresh}
                 disabled={refreshing}
                 className={`p-2 rounded-lg bg-card hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
                 title="Refresh"
@@ -113,14 +97,17 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
               {error}
             </div>
           ) : (
-            <RequestHistoryTable
-              requests={filteredRequests}
-              loading={loading}
-              onView={handleViewClick}
-              onRefresh={() => fetchRequests(true)}
-              refreshing={refreshing}
-              onExport={() => setShowExportModal(true)}
-            />
+            <div className="flex-1 min-h-0">
+              <RequestHistoryTable
+                requests={filteredRequests}
+                loading={loading}
+                onView={handleViewClick}
+                onRefresh={handleManualRefresh}
+                refreshing={refreshing}
+                onExport={() => setShowExportModal(true)}
+                fillHeight
+              />
+            </div>
           )}
         </div>
 

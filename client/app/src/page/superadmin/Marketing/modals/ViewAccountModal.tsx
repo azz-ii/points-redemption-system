@@ -86,7 +86,7 @@ export function ViewAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700 max-h-[90vh] flex flex-col overflow-hidden"
       >
         <div className="flex justify-between items-center p-8">
           <div>
@@ -104,7 +104,7 @@ export function ViewAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* User Info Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">

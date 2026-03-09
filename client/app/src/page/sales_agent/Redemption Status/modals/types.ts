@@ -29,7 +29,7 @@ export interface RedemptionRequest {
   id: number;
   requested_by: number;
   requested_by_name: string;
-  requested_for: number;
+  requested_for: number | null;
   requested_for_name: string;
   team: number | null;
   team_name: string | null;

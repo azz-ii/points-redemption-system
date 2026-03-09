@@ -1,4 +1,4 @@
-import { X, Package, CheckCircle } from "lucide-react";
+import { X, Package, CheckCircle, Clock } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types";
 
@@ -32,6 +32,8 @@ export function ViewRedemptionModal({
     switch (status?.toUpperCase()) {
       case "NOT_PROCESSED":
         return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
+      case "PARTIALLY_PROCESSED":
+        return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
       case "PROCESSED":
         return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       case "CANCELLED":
@@ -47,7 +49,7 @@ export function ViewRedemptionModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700 max-h-[90vh] flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-redemption-title"
@@ -72,7 +74,7 @@ export function ViewRedemptionModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* Request Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -159,32 +161,79 @@ export function ViewRedemptionModal({
               {myItems ? "My Assigned Items" : "Items"} ({displayItems.length})
             </h3>
             <div className="space-y-2">
-              {displayItems.map((it) => (
-                <div
-                  key={it.id}
-                  className="p-3 rounded border bg-card border-border"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold">{it.product_name}</p>
-                      {it.product_code && (
-                        <p className="text-xs text-muted-foreground">
-                          {it.product_code}
+              {displayItems.map((it) => {
+                const isFixed = !it.pricing_type || it.pricing_type === "FIXED";
+                const fulfilledQty = it.fulfilled_quantity ?? 0;
+                const isFullyProcessed = !!it.item_processed_by;
+                const isPartial = !isFullyProcessed && fulfilledQty > 0;
+                const logs = it.fulfillment_logs ?? [];
+
+                return (
+                  <div
+                    key={it.id}
+                    className="p-3 rounded border bg-card border-border"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold">{it.product_name}</p>
+                        {it.product_code && (
+                          <p className="text-xs text-muted-foreground">
+                            {it.product_code}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Qty: {it.quantity} &times; {it.points_per_item} pts = {it.total_points} pts
                         </p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Qty: {it.quantity} � {it.points_per_item} pts = {it.total_points} pts
-                      </p>
+                      </div>
+                      {isFullyProcessed ? (
+                        <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 shrink-0">
+                          <CheckCircle className="h-4 w-4" />
+                          Processed
+                        </span>
+                      ) : isPartial ? (
+                        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 shrink-0">
+                          Partial ({fulfilledQty}/{it.quantity})
+                        </span>
+                      ) : null}
                     </div>
-                    {it.item_processed_by && (
-                      <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                        <CheckCircle className="h-4 w-4" />
-                        Processed
-                      </span>
+
+                    {/* Progress bar for FIXED items with any fulfillment */}
+                    {isFixed && fulfilledQty > 0 && (
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                          <span>Fulfilled: {fulfilledQty} / {it.quantity}</span>
+                          {!isFullyProcessed && (
+                            <span>{(it.remaining_quantity ?? 0)} remaining</span>
+                          )}
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${isFullyProcessed ? "bg-green-500" : "bg-amber-500"}`}
+                            style={{ width: `${Math.round((fulfilledQty / it.quantity) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Fulfillment log history */}
+                    {logs.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground">Fulfillment History</p>
+                        {logs.map((log, idx) => (
+                          <div key={log.id} className="flex items-start gap-2 text-xs text-muted-foreground pl-1">
+                            <Clock className="h-3 w-3 mt-0.5 shrink-0" />
+                            <span>
+                              Pass #{idx + 1}: {log.fulfilled_quantity > 0 ? `${log.fulfilled_quantity} units` : "Fully processed"} by {log.fulfilled_by_name ?? "Unknown"} on{" "}
+                              {new Date(log.fulfilled_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              {log.notes ? ` \u2014 ${log.notes}` : ""}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

@@ -32,12 +32,15 @@ export interface PaginatedCustomersResponse {
 }
 
 export const customersApi = {
-  getCustomersPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedCustomersResponse> => {
+  getCustomersPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = '', showArchived?: boolean): Promise<PaginatedCustomersResponse> => {
     const url = new URL(`${API_BASE_URL}/customers/`, window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
+    }
+    if (showArchived) {
+      url.searchParams.append('show_archived', 'true');
     }
     const response = await fetch(url.toString(), {
       credentials: 'include',

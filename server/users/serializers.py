@@ -9,7 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = [
             'full_name', 'email', 'position', 'is_activated',
-            'uses_points', 'points',
+            'uses_points', 'points', 'can_self_request',
             'is_archived', 'date_archived', 'archived_by',
             'created_at', 'updated_at'
         ]
@@ -39,12 +39,13 @@ class UserSerializer(serializers.ModelSerializer):
     is_activated = serializers.BooleanField(write_only=True, required=False, default=True)
     uses_points = serializers.BooleanField(write_only=True, required=False, default=False)
     points = serializers.IntegerField(write_only=True, required=False, default=0)
+    can_self_request = serializers.BooleanField(write_only=True, required=False, default=False)
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'password', 'position', 'full_name', 'email',
-            'is_activated', 'uses_points', 'points', 'profile', 'is_active', 'date_joined'
+            'is_activated', 'uses_points', 'points', 'can_self_request', 'profile', 'is_active', 'date_joined'
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -74,6 +75,10 @@ class UserSerializer(serializers.ModelSerializer):
         validated_data.pop('uses_points', None)  # derived from position, ignore any client-supplied value
         uses_points = (position == 'Sales Agent')
         points = validated_data.pop('points', 0)
+        can_self_request = validated_data.pop('can_self_request', False)
+        # can_self_request only meaningful for Approvers
+        if position != 'Approver':
+            can_self_request = False
         password = validated_data.pop('password')
         
         # Create user
@@ -90,6 +95,7 @@ class UserSerializer(serializers.ModelSerializer):
             is_activated=is_activated,
             uses_points=uses_points,
             points=points,
+            can_self_request=can_self_request,
         )
         
         return user
@@ -102,6 +108,7 @@ class UserSerializer(serializers.ModelSerializer):
         is_activated = validated_data.pop('is_activated', None)
         uses_points = validated_data.pop('uses_points', None)
         points = validated_data.pop('points', None)
+        can_self_request = validated_data.pop('can_self_request', None)
         password = validated_data.pop('password', None)
         
         # Update user fields
@@ -127,6 +134,11 @@ class UserSerializer(serializers.ModelSerializer):
             # Always sync uses_points from effective position (Sales Agent only)
             effective_position = position if position is not None else instance.profile.position
             instance.profile.uses_points = (effective_position == 'Sales Agent')
+            # Sync can_self_request: only meaningful for Approvers
+            if can_self_request is not None:
+                instance.profile.can_self_request = can_self_request
+            if effective_position != 'Approver':
+                instance.profile.can_self_request = False
             if points is not None:
                 instance.profile.points = points
             instance.profile.save()
@@ -151,6 +163,7 @@ class UserListSerializer(serializers.ModelSerializer):
     is_activated = serializers.BooleanField(source='profile.is_activated', read_only=True)
     uses_points = serializers.BooleanField(source='profile.uses_points', read_only=True)
     points = serializers.IntegerField(source='profile.points', read_only=True)
+    can_self_request = serializers.BooleanField(source='profile.can_self_request', read_only=True)
     is_archived = serializers.BooleanField(source='profile.is_archived', read_only=True)
     date_archived = serializers.DateTimeField(source='profile.date_archived', read_only=True)
     archived_by = serializers.IntegerField(source='profile.archived_by_id', read_only=True)
@@ -169,7 +182,7 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'full_name', 'email', 'position', 'is_activated',
-            'uses_points', 'points',
+            'uses_points', 'points', 'can_self_request',
             'is_archived', 'date_archived', 'archived_by', 'archived_by_username',
             'is_active', 'date_joined',
             'team_id', 'team_name', 'is_team_approver', 'approver_teams',
@@ -177,15 +190,15 @@ class UserListSerializer(serializers.ModelSerializer):
         ]
     
     def get_team_id(self, obj):
-        """Get team ID if user is a Sales Agent"""
-        if hasattr(obj, 'profile') and obj.profile.position == 'Sales Agent':
+        """Get team ID if user is a Sales Agent or Approver with membership"""
+        if hasattr(obj, 'profile') and obj.profile.position in ('Sales Agent', 'Approver'):
             membership = obj.team_memberships.first()
             return membership.team.id if membership else None
         return None
     
     def get_team_name(self, obj):
-        """Get team name if user is a Sales Agent"""
-        if hasattr(obj, 'profile') and obj.profile.position == 'Sales Agent':
+        """Get team name if user is a Sales Agent or Approver with membership"""
+        if hasattr(obj, 'profile') and obj.profile.position in ('Sales Agent', 'Approver'):
             membership = obj.team_memberships.first()
             return membership.team.name if membership else None
         return None

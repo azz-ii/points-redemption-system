@@ -65,7 +65,7 @@ export function PromoteCustomerModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="promote-customer-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">

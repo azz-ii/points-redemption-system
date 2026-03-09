@@ -234,7 +234,7 @@ export function EditAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-2xl w-full border divide-y border-border divide-gray-700 max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -254,7 +254,7 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-4 flex-1 overflow-y-auto min-h-0">
           {/* User Info */}
           <div className="p-4 rounded-lg bg-card">
             <div className="space-y-2 text-sm">

@@ -19,7 +19,7 @@ export function BulkArchiveItemModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="bulk-archive-title"
@@ -47,7 +47,7 @@ export function BulkArchiveItemModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-4 flex-1 overflow-y-auto min-h-0">
           <p>
             Are you sure you want to archive <strong>{items.length}</strong> item(s)?
           </p>

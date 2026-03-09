@@ -57,27 +57,37 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/approver/dashboard" },
     { id: "requests", label: "Requests", icon: FileBox, path: "/approver/requests" },
     { id: "history", label: "History", icon: History, path: "/approver/history" },
+    { id: "team", label: "Team", icon: Users, path: "/approver/team" },
   ],
   marketing: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
+    { id: "item-assignments", label: "Item Assignments", icon: Package, path: "/marketing/item-assignments" },
     { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/marketing/process-requests" },
     { id: "history", label: "History", icon: History, path: "/marketing/history" },
   ],
 };
 
+const APPROVER_SELF_REQUEST_ITEMS: NavItem[] = [
+  { id: "redemption-status", label: "Redemption Status", icon: CheckCircle, path: "/approver/redemption-status" },
+  { id: "redeem-items", label: "Redeem Items", icon: Gift, path: "/approver/redeem-items" },
+];
+
 /** Get nav items for a given user position string */
-export function getNavItemsForRole(position: string): NavItem[] {
+export function getNavItemsForRole(position: string, canSelfRequest?: boolean): NavItem[] {
   const normalized = position.toLowerCase().trim();
   if (normalized === "admin" || normalized === "superadmin") return NAV_ITEMS.admin;
   if (normalized === "sales agent") return NAV_ITEMS.sales;
-  if (normalized === "approver") return NAV_ITEMS.approver;
+  if (normalized === "approver") {
+    if (canSelfRequest) return [...NAV_ITEMS.approver, ...APPROVER_SELF_REQUEST_ITEMS];
+    return NAV_ITEMS.approver;
+  }
   if (normalized === "marketing") return NAV_ITEMS.marketing;
   return NAV_ITEMS.admin;
 }
 
 /** Get mobile nav items for a given user position string */
-export function getMobileNavItemsForRole(position: string): NavItem[] {
-  const items = getNavItemsForRole(position);
+export function getMobileNavItemsForRole(position: string, canSelfRequest?: boolean): NavItem[] {
+  const items = getNavItemsForRole(position, canSelfRequest);
   // For mobile, show a subset (max 4 nav items + logout is handled separately)
   if (items.length <= 4) return items;
   // For admin, pick key items
@@ -114,8 +124,12 @@ export function AppSidebar({ items, mobileOpen, onMobileClose }: AppSidebarProps
     try { return localStorage.getItem("position"); } catch { return null; }
   });
 
+  const [canSelfReq] = useState<boolean>(() => {
+    try { return localStorage.getItem("canSelfRequest") === "true"; } catch { return false; }
+  });
+
   // Fallback nav items from stored role
-  const navItems = items ?? getNavItemsForRole(role ?? "admin");
+  const navItems = items ?? getNavItemsForRole(role ?? "admin", canSelfReq);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {

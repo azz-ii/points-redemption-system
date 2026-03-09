@@ -51,8 +51,8 @@ return (
                   >
                     {item.status_display || item.status}
                   </span>
-                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
-                    Processed
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusClasses(item.processing_status)}`}>
+                    {item.processing_status_display || item.processing_status}
                   </span>
                 </div>
               </div>

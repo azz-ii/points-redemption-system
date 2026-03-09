@@ -3,4 +3,4 @@ export { EditRedemptionModal } from "./EditRedemptionModal";
 export { MarkAsProcessedModal } from "./MarkAsProcessedModal";
 export { CancelRequestModal } from "./CancelRequestModal";
 export { ExportModal } from "./ExportModal";
-export type { RedemptionItem, RequestItemVariant, MyProcessingStatus } from "./types";
+export type { RedemptionItem, RequestItemVariant, MyProcessingStatus, ProcessItemData, ItemFulfillmentLog } from "./types";

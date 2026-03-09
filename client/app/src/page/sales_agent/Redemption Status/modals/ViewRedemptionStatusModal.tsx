@@ -172,7 +172,7 @@ export function ViewRedemptionStatusModal({
     <TooltipProvider>
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50 backdrop-blur-sm">
         <div
-          className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+          className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="view-redemption-status-title"
@@ -197,7 +197,7 @@ export function ViewRedemptionStatusModal({
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+          <div className="p-6 space-y-6 flex-1 overflow-y-auto min-h-0">
             {/* Customer Information */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">

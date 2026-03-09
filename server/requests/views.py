@@ -7,11 +7,12 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.hashers import check_password
 import logging
-from .models import RedemptionRequest, RedemptionRequestItem, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus
+from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
-    RedemptionRequestItemSerializer
+    RedemptionRequestItemSerializer,
+    PartialFulfillmentSerializer,
 )
 from utils.email_service import (
     send_request_approved_email, 
@@ -21,6 +22,7 @@ from utils.email_service import (
     send_approved_request_notification_to_admin,
     send_ar_required_email
 )
+from utils.sse import publish_sse_event
 from users.models import UserProfile
 from distributers.models import Distributor
 from customers.models import Customer
@@ -31,55 +33,106 @@ from points_audit.models import PointsAuditLog
 logger = logging.getLogger('email')
 
 
+def _build_base_queryset():
+    """
+    Shared helper that builds a fully-prefetched RedemptionRequest queryset.
+    Used by both RedemptionRequestViewSet and the standalone APIViews so all
+    list endpoints share the same N+1-free access pattern.
+    """
+    from django.db.models import Prefetch
+    return RedemptionRequest.objects.select_related(
+        'requested_by__profile',
+        'requested_for',
+        'requested_for_customer',
+        'team',
+        'reviewed_by__profile',
+        'processed_by__profile',
+        'cancelled_by__profile',
+        'sales_approved_by__profile',
+        'ar_uploaded_by__profile',
+    ).prefetch_related(
+        Prefetch(
+            'items',
+            queryset=RedemptionRequestItem.objects.select_related(
+                'product__mktg_admin',
+                'item_processed_by__profile',
+            ).prefetch_related(
+                Prefetch(
+                    'fulfillment_logs',
+                    queryset=ItemFulfillmentLog.objects.select_related(
+                        'fulfilled_by__profile'
+                    )
+                )
+            )
+        )
+    )
+
+
 class RedemptionRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = RedemptionRequestSerializer
+
+    def _base_queryset(self):
+        return _build_base_queryset()
 
     def get_queryset(self):
         """Filter requests based on user role and team"""
         from django.db.models import Q
         from teams.models import TeamMembership, Team
-        
+
         user = self.request.user
         profile = getattr(user, 'profile', None)
-        
+
         if not profile:
             # Super admin without profile sees only approved requests
-            return RedemptionRequest.objects.filter(status='APPROVED').prefetch_related('items', 'items__product')
-        
-        # Sales Agent - team-scoped access
+            return self._base_queryset().filter(status='APPROVED')
+
+        # Sales Agent - team-scoped access (single query via JOIN, no pre-check)
         if profile.position == 'Sales Agent':
-            # Sales agents see only their team's requests
-            membership = TeamMembership.objects.filter(user=user).first()
-            if membership:
-                # Show requests that belong to their team
-                return RedemptionRequest.objects.filter(
-                    team=membership.team
-                ).distinct().prefetch_related('items', 'items__product')
-            # If not in a team, only see own requests
-            return RedemptionRequest.objects.filter(requested_by=user).prefetch_related('items', 'items__product')
-        
-        # Approver - see only requests from teams they manage
+            # Q(team__memberships__user=user): requests from the agent's team
+            # Q(requested_by=user): fallback for agents not yet assigned to a team
+            return self._base_queryset().filter(
+                Q(team__memberships__user=user) | Q(requested_by=user)
+            ).distinct()
+
+        # Approver - see requests from teams they manage + their own self-requests
         elif profile.position == 'Approver':
-            return RedemptionRequest.objects.filter(
-                team__isnull=False,
-                team__approver=user,
-                requires_sales_approval=True
-            ).distinct().prefetch_related('items', 'items__product')
-        
+            qs = self._base_queryset().filter(
+                Q(team__isnull=False, team__approver=user, requires_sales_approval=True) |
+                Q(requested_by=user)
+            ).distinct()
+            # Optional server-side pre-filter: ?not_processed=1 returns only
+            # NOT_PROCESSED requests, shrinking the payload the client must
+            # download and parse on every poll.
+            if self.request.query_params.get('not_processed') == '1':
+                qs = qs.filter(processing_status='NOT_PROCESSED')
+            elif self.request.query_params.get('processed') == '1':
+                qs = qs.filter(processing_status='PROCESSED')
+            return qs
+
         # Marketing - see only APPROVED requests with items assigned to them
         elif profile.position == 'Marketing':
-            return RedemptionRequest.objects.filter(
+            return self._base_queryset().filter(
                 status='APPROVED',
                 items__product__mktg_admin=user
-            ).distinct().prefetch_related('items', 'items__product')
-        
-        # Admin - see all APPROVED requests for processing
+            ).distinct()
+
+        # Admin - see APPROVED requests with items assigned to them (explicit or unassigned)
+        #       + requests from teams they manage as approver + their own self-requests
         elif profile.position == 'Admin':
-            return RedemptionRequest.objects.filter(
-                status='APPROVED'
-            ).distinct().prefetch_related('items', 'items__product')
-        
+            qs = self._base_queryset().filter(
+                Q(status='APPROVED') & (
+                    Q(items__product__mktg_admin=user) | Q(items__product__mktg_admin__isnull=True)
+                )
+                | Q(team__isnull=False, team__approver=user, requires_sales_approval=True)
+                | Q(requested_by=user)
+            ).distinct()
+            if self.request.query_params.get('not_processed') == '1':
+                qs = qs.filter(processing_status='NOT_PROCESSED')
+            elif self.request.query_params.get('processed') == '1':
+                qs = qs.filter(processing_status='PROCESSED')
+            return qs
+
         # Unspecified positions - no access
         else:
             return RedemptionRequest.objects.none()
@@ -112,6 +165,14 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             raise ValidationError({
                 "detail": "You must be assigned to a team before creating a redemption request. Please contact your administrator."
             })
+        
+        # Approvers may only create SELF-type requests
+        approver_profile = getattr(user, 'profile', None)
+        if approver_profile and approver_profile.position == 'Approver':
+            if serializer.validated_data.get('requested_for_type') != 'SELF':
+                raise ValidationError({
+                    "detail": "Approvers can only create self-requests."
+                })
         
         # Create the request with team assignment (handled by serializer)
         redemption_request = serializer.save()
@@ -147,6 +208,24 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         
         # Return the created request with full details
         response_serializer = RedemptionRequestSerializer(redemption_request)
+
+        # SSE: notify team approver about new pending request
+        sse_targets = []
+        if redemption_request.team and redemption_request.team.approver_id:
+            sse_targets.append(redemption_request.team.approver_id)
+        # Also notify admins if auto-approved (no sales approval needed)
+        if not redemption_request.requires_sales_approval:
+            admin_ids = list(
+                UserProfile.objects.filter(position='Admin')
+                .values_list('user_id', flat=True)
+            )
+            sse_targets.extend(admin_ids)
+        if sse_targets:
+            publish_sse_event('request_created', {
+                'request_id': redemption_request.id,
+                'requested_by_name': redemption_request.requested_by.username,
+            }, target_users=sse_targets)
+
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
@@ -170,6 +249,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         if not redemption_request.team or redemption_request.team.approver != user:
             return Response(
                 {'error': 'Permission denied: You can only approve requests from your team'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Prevent self-approval
+        if redemption_request.requested_by == user:
+            return Response(
+                {'error': 'You cannot approve your own request'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
@@ -254,6 +340,19 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             )
         
         serializer = self.get_serializer(redemption_request)
+
+        # SSE: notify sales agent + admins about approval
+        sse_targets = [redemption_request.requested_by_id]
+        admin_ids = list(
+            UserProfile.objects.filter(position='Admin')
+            .values_list('user_id', flat=True)
+        )
+        sse_targets.extend(admin_ids)
+        publish_sse_event('request_approved', {
+            'request_id': redemption_request.id,
+            'status': redemption_request.status,
+        }, target_users=sse_targets)
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -276,6 +375,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         if not redemption_request.team or redemption_request.team.approver != user:
             return Response(
                 {'error': 'Permission denied: You can only reject requests from your team'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Prevent self-rejection
+        if redemption_request.requested_by == user:
+            return Response(
+                {'error': 'You cannot reject your own request'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
@@ -341,6 +447,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             logger.warning(f"⚠ Failed to send rejection email for request #{redemption_request.id}")
         
         serializer = self.get_serializer(redemption_request)
+
+        # SSE: notify sales agent about rejection
+        publish_sse_event('request_rejected', {
+            'request_id': redemption_request.id,
+        }, target_users=[redemption_request.requested_by_id])
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -387,11 +499,15 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         redemption_request.processed_by = user
         redemption_request.date_processed = timezone.now()
         
-        # Set AR status based on request type
-        if redemption_request.requested_for_type == RequestedForType.CUSTOMER:
-            redemption_request.ar_status = AcknowledgementReceiptStatus.PENDING
-        else:
-            redemption_request.ar_status = AcknowledgementReceiptStatus.NOT_REQUIRED
+        # Set AR status: required only for customer requests that contain at least one inventoried item
+        requires_ar = (
+            redemption_request.requested_for_type == RequestedForType.CUSTOMER
+            and redemption_request.items.filter(product__has_stock=True).exists()
+        )
+        redemption_request.ar_status = (
+            AcknowledgementReceiptStatus.PENDING if requires_ar
+            else AcknowledgementReceiptStatus.NOT_REQUIRED
+        )
         
         # Get remarks if provided
         if 'remarks' in request.data:
@@ -423,6 +539,12 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 logger.warning(f"⚠ Failed to send AR required email for request #{redemption_request.id}")
         
         serializer = self.get_serializer(redemption_request)
+
+        # SSE: notify sales agent about processing
+        publish_sse_event('request_processed', {
+            'request_id': redemption_request.id,
+        }, target_users=[redemption_request.requested_by_id])
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -469,40 +591,57 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         # Use transaction to ensure atomicity when refunding points and uncommitting stock
         try:
             with transaction.atomic():
-                # Refund points if the request was approved (points were deducted)
-                if redemption_request.points_deducted_from == 'SELF':
-                    user_profile = redemption_request.requested_by.profile
-                    previous_points = user_profile.points
-                    user_profile.points += redemption_request.total_points
-                    user_profile.save()
-                    log_points_change(
-                        entity_type='USER',
-                        entity_id=user_profile.user_id,
-                        entity_name=user_profile.full_name or redemption_request.requested_by.username,
-                        previous_points=previous_points,
-                        new_points=user_profile.points,
-                        action_type='REDEMPTION_REFUND',
-                        changed_by=user,
-                        reason=f'Cancellation of request #{redemption_request.id}',
-                    )
-                    logger.info(f"Refunded {redemption_request.total_points} points to sales agent {redemption_request.requested_by.username}")
-                elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
-                    distributor = redemption_request.requested_for
-                    if distributor:
-                        previous_points = distributor.points
-                        distributor.points += redemption_request.total_points
-                        distributor.save()
+                # SELF requests had no points deducted, skip refund calculation
+                is_self_request = redemption_request.requested_for_type == 'SELF'
+
+                # Compute points to refund: only for unfulfilled quantities/items
+                refund_points = 0
+                if not is_self_request:
+                    for item in redemption_request.items.select_related('product').all():
+                        pricing = item.pricing_type or 'FIXED'
+                        if pricing == 'FIXED':
+                            remaining = max(0, item.quantity - item.fulfilled_quantity)
+                            if item.points_per_item and remaining > 0:
+                                refund_points += remaining * item.points_per_item
+                        else:
+                            # Non-FIXED: refund full item points only if not yet processed
+                            if not item.item_processed_by:
+                                refund_points += item.total_points
+
+                if refund_points > 0:
+                    if redemption_request.points_deducted_from == 'SELF':
+                        user_profile = redemption_request.requested_by.profile
+                        previous_points = user_profile.points
+                        user_profile.points += refund_points
+                        user_profile.save()
                         log_points_change(
-                            entity_type='DISTRIBUTOR',
-                            entity_id=distributor.id,
-                            entity_name=distributor.name,
+                            entity_type='USER',
+                            entity_id=user_profile.user_id,
+                            entity_name=user_profile.full_name or redemption_request.requested_by.username,
                             previous_points=previous_points,
-                            new_points=distributor.points,
+                            new_points=user_profile.points,
                             action_type='REDEMPTION_REFUND',
                             changed_by=user,
                             reason=f'Cancellation of request #{redemption_request.id}',
                         )
-                        logger.info(f"Refunded {redemption_request.total_points} points to distributor {distributor.name}")
+                        logger.info(f"Refunded {refund_points} points to sales agent {redemption_request.requested_by.username}")
+                    elif redemption_request.points_deducted_from == 'DISTRIBUTOR':
+                        distributor = redemption_request.requested_for
+                        if distributor:
+                            previous_points = distributor.points
+                            distributor.points += refund_points
+                            distributor.save()
+                            log_points_change(
+                                entity_type='DISTRIBUTOR',
+                                entity_id=distributor.id,
+                                entity_name=distributor.name,
+                                previous_points=previous_points,
+                                new_points=distributor.points,
+                                action_type='REDEMPTION_REFUND',
+                                changed_by=user,
+                                reason=f'Cancellation of request #{redemption_request.id}',
+                            )
+                            logger.info(f"Refunded {refund_points} points to distributor {distributor.name}")
                 
                 # Release committed stock (stock was not deducted at approval, only committed at creation)
                 self._uncommit_stock(redemption_request)
@@ -529,6 +668,19 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             )
         
         serializer = self.get_serializer(redemption_request)
+
+        # SSE: notify sales agent + admins about cancellation
+        sse_targets = [redemption_request.requested_by_id]
+        admin_ids = list(
+            UserProfile.objects.filter(position='Admin')
+            .exclude(user_id=request.user.id)
+            .values_list('user_id', flat=True)
+        )
+        sse_targets.extend(admin_ids)
+        publish_sse_event('request_cancelled', {
+            'request_id': redemption_request.id,
+        }, target_users=sse_targets)
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
@@ -618,102 +770,215 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             logger.warning(f"Failed to send withdrawal confirmation to sales agent {user.username}")
         
         serializer = self.get_serializer(redemption_request)
+
+        # SSE: notify team approver about withdrawal
+        sse_targets = []
+        if redemption_request.team and redemption_request.team.approver_id:
+            sse_targets.append(redemption_request.team.approver_id)
+        if sse_targets:
+            publish_sse_event('request_withdrawn', {
+                'request_id': redemption_request.id,
+            }, target_users=sse_targets)
+
         return Response(serializer.data)
 
     def _uncommit_stock(self, redemption_request):
         """
-        Helper method to release committed stock when a request is rejected/withdrawn/cancelled.
+        Release committed stock when a request is rejected/withdrawn/cancelled.
+        Only uncommits the remaining (unfulfilled) quantity per item, since
+        deduct_stock() already released committed_stock for fulfilled units.
         Should only be called within a transaction.
         """
         for item in redemption_request.items.all():
             product = item.product
-            product.uncommit_stock(item.quantity)
-            logger.info(f"Uncommitted {item.quantity} units of {product.item_code}")
+            pricing = item.pricing_type or 'FIXED'
+            if pricing == 'FIXED':
+                remaining = max(0, item.quantity - item.fulfilled_quantity)
+            else:
+                # Non-FIXED: if fully processed (item_processed_by set), stock already deducted; no uncommit
+                remaining = 0 if item.item_processed_by else item.quantity
+            if remaining > 0:
+                product.uncommit_stock(remaining)
+                logger.info(f"Uncommitted {remaining} units of {product.item_code}")
 
     @action(detail=True, methods=['post'])
     def mark_items_processed(self, request, pk=None):
         """
-        Marketing or Admin user marks their assigned items as processed.
-        Each user must process their own assigned items.
+        Marketing or Admin user partially or fully fulfills their assigned items.
+
+        Request body:
+          { "items": [{ "item_id": int, "fulfilled_quantity": int, "notes": str? }, ...] }
+
+        Authorisation per item:
+          - Marketing: product.mktg_admin == request.user
+          - Admin:     product.mktg_admin is null  OR  product.mktg_admin == request.user
+
+        For FIXED pricing: fulfilled_quantity is required and must be <= remaining_quantity.
+        For non-FIXED pricing: fulfilled_quantity is ignored; the entire item is marked done.
+        Each call creates an ItemFulfillmentLog entry and advances fulfilled_quantity.
+        When fulfilled_quantity reaches quantity (FIXED) the item is marked fully done.
         """
         redemption_request = self.get_object()
         user = request.user
         profile = getattr(user, 'profile', None)
-        
-        # Permission check: Only Marketing or Admin position can use this endpoint
+
         if not profile or profile.position not in ['Marketing', 'Admin']:
             return Response(
                 {'error': 'Permission denied: Only Marketing or Admin users can process items'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
-        # Request must be approved
+
         if redemption_request.status != 'APPROVED':
             return Response(
                 {'error': 'Only approved requests can have items processed'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Get items assigned to this Marketing user
-        my_items = redemption_request.get_items_for_marketing_user(user)
-        
-        if not my_items.exists():
-            return Response(
-                {'error': 'You have no items assigned to you in this request'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Get items that haven't been processed yet
-        pending_items = my_items.filter(item_processed_by__isnull=True)
-        
-        if not pending_items.exists():
-            return Response(
-                {'error': 'All your items have already been processed'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Use transaction to ensure atomicity for stock deduction
+
+        # Validate request body
+        serializer = PartialFulfillmentSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        items_data = serializer.validated_data['items']
+
+        # Collect and validate all items before any writes
+        validated_items = []
+        for entry in items_data:
+            item_id = entry['item_id']
+            try:
+                item = redemption_request.items.select_related('product').get(id=item_id)
+            except RedemptionRequestItem.DoesNotExist:
+                return Response(
+                    {'error': f'Item {item_id} does not belong to this request'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            product = item.product
+            # Authorization check per item
+            if profile.position == 'Marketing':
+                if not product or product.mktg_admin != user:
+                    return Response(
+                        {'error': f'Item {item_id} is not assigned to you'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            else:  # Admin
+                if product and product.mktg_admin is not None and product.mktg_admin != user:
+                    return Response(
+                        {'error': f'Item {item_id} is assigned to a Marketing user, not you'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+            pricing = item.pricing_type or 'FIXED'
+
+            if pricing == 'FIXED':
+                fulfill_qty = entry.get('fulfilled_quantity')
+                if not fulfill_qty:
+                    return Response(
+                        {'error': f'fulfilled_quantity is required for FIXED pricing item {item_id}'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                remaining = item.remaining_quantity
+                if remaining == 0:
+                    return Response(
+                        {'error': f'Item {item_id} has already been fully fulfilled'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                if fulfill_qty > remaining:
+                    return Response(
+                        {'error': f'Item {item_id}: fulfilled_quantity ({fulfill_qty}) exceeds remaining quantity ({remaining})'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                validated_items.append({
+                    'item': item,
+                    'pricing': 'FIXED',
+                    'fulfill_qty': fulfill_qty,
+                    'notes': entry.get('notes') or '',
+                })
+            else:
+                # Non-FIXED: check not already processed
+                if item.item_processed_by is not None:
+                    return Response(
+                        {'error': f'Item {item_id} has already been fully processed'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                validated_items.append({
+                    'item': item,
+                    'pricing': pricing,
+                    'fulfill_qty': 0,  # sentinel for non-FIXED
+                    'notes': entry.get('notes') or '',
+                })
+
+        # Apply fulfillment inside a transaction
         try:
             with transaction.atomic():
-                # Process each pending item: mark as processed and deduct stock
                 now = timezone.now()
-                processed_count = 0
-                
-                for item in pending_items:
-                    # Mark item as processed
-                    item.item_processed_by = user
-                    item.item_processed_at = now
-                    item.save()
-                    
-                    # Deduct actual stock and release committed stock
+                partially_processed_count = 0
+                fully_processed_count = 0
+
+                for entry in validated_items:
+                    item = entry['item']
                     product = item.product
-                    product.deduct_stock(item.quantity)
-                    logger.info(f"Deducted {item.quantity} units from {product.item_code} stock (processed by {user.username})")
-                    
-                    processed_count += 1
-                
-                logger.info(f"Marketing user {user.username} processed {processed_count} items for request #{redemption_request.id}")
-                
-                # Check if all marketing processing is now complete
-                is_complete = redemption_request.is_marketing_processing_complete()
-                
-                # If all items are processed, automatically update the request's processing_status
-                if is_complete and redemption_request.processing_status != 'PROCESSED':
-                    redemption_request.processing_status = 'PROCESSED'
-                    redemption_request.processed_by = user
-                    redemption_request.date_processed = now
-                    
-                    # Set AR status based on request type
-                    if redemption_request.requested_for_type == RequestedForType.CUSTOMER:
-                        redemption_request.ar_status = AcknowledgementReceiptStatus.PENDING
+                    pricing = entry['pricing']
+                    notes = entry['notes']
+
+                    if pricing == 'FIXED':
+                        fulfill_qty = entry['fulfill_qty']
+                        item.fulfilled_quantity += fulfill_qty
+                        item.save(update_fields=['fulfilled_quantity'])
+
+                        # Deduct actual stock and release committed reservation for fulfilled units
+                        product.deduct_stock(fulfill_qty)
+
+                        # Create audit log
+                        ItemFulfillmentLog.objects.create(
+                            item=item,
+                            fulfilled_quantity=fulfill_qty,
+                            fulfilled_by=user,
+                            notes=notes,
+                        )
+
+                        # Check if now fully fulfilled
+                        if item.is_fully_fulfilled:
+                            item.item_processed_by = user
+                            item.item_processed_at = now
+                            item.save(update_fields=['item_processed_by', 'item_processed_at'])
+                            fully_processed_count += 1
+                            logger.info(
+                                f"Item #{item.id} ({product.item_code}) fully fulfilled "
+                                f"({item.quantity} units) by {user.username}"
+                            )
+                        else:
+                            partially_processed_count += 1
+                            logger.info(
+                                f"Item #{item.id} ({product.item_code}) partially fulfilled "
+                                f"({item.fulfilled_quantity}/{item.quantity} units) by {user.username}"
+                            )
                     else:
-                        redemption_request.ar_status = AcknowledgementReceiptStatus.NOT_REQUIRED
-                    
-                    redemption_request.save()
-                    
-                    logger.info(f"Request #{redemption_request.id} auto-marked as PROCESSED (all items complete)")
-                    
-                    # Send processed email notification
+                        # Non-FIXED: mark fully done in one pass
+                        item.item_processed_by = user
+                        item.item_processed_at = now
+                        item.save(update_fields=['item_processed_by', 'item_processed_at'])
+
+                        product.deduct_stock(item.quantity)
+
+                        ItemFulfillmentLog.objects.create(
+                            item=item,
+                            fulfilled_quantity=0,
+                            fulfilled_by=user,
+                            notes=notes,
+                        )
+                        fully_processed_count += 1
+                        logger.info(
+                            f"Item #{item.id} ({product.item_code}) (non-FIXED) fully processed "
+                            f"by {user.username}"
+                        )
+
+                # Advance the request's processing status
+                new_status = redemption_request.update_processing_status_after_fulfillment(user)
+                is_complete = new_status == 'PROCESSED'
+
+                if is_complete:
+                    logger.info(f"Request #{redemption_request.id} auto-marked as PROCESSED")
                     email_sent = send_request_processed_email(
                         request_obj=redemption_request,
                         distributor=redemption_request.get_requested_for_entity(),
@@ -723,50 +988,78 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                         logger.info(f"✓ Processed email sent for request #{redemption_request.id}")
                     else:
                         logger.warning(f"⚠ Failed to send processed email for request #{redemption_request.id}")
-                    
-                    # Send AR required email if applicable
+
                     if redemption_request.ar_status == AcknowledgementReceiptStatus.PENDING:
-                        ar_email_sent = send_ar_required_email(request_obj=redemption_request)
-                        if ar_email_sent:
+                        ar_sent = send_ar_required_email(request_obj=redemption_request)
+                        if ar_sent:
                             logger.info(f"✓ AR required email sent for request #{redemption_request.id}")
                         else:
                             logger.warning(f"⚠ Failed to send AR required email for request #{redemption_request.id}")
-        
+
         except Exception as e:
             logger.error(f"Failed to process items for request #{redemption_request.id}: {str(e)}")
             return Response(
                 {'error': 'Failed to process items', 'detail': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-        serializer = self.get_serializer(redemption_request)
+
+        serializer_out = self.get_serializer(redemption_request)
+
+        # SSE: notify admins + sales agent about items processing
+        sse_targets = list(
+            UserProfile.objects.filter(position='Admin')
+            .exclude(user_id=request.user.id)
+            .values_list('user_id', flat=True)
+        )
+        if is_complete:
+            sse_targets.append(redemption_request.requested_by_id)
+            if redemption_request.team and redemption_request.team.approver_id:
+                sse_targets.append(redemption_request.team.approver_id)
+        publish_sse_event('items_processed', {
+            'request_id': redemption_request.id,
+            'all_complete': is_complete,
+        }, target_users=sse_targets)
+
         return Response({
-            'message': f'Successfully processed {processed_count} item(s)',
-            'processed_count': processed_count,
+            'message': (
+                f'Successfully processed {fully_processed_count + partially_processed_count} item(s) '
+                f'({fully_processed_count} fully fulfilled, {partially_processed_count} partially fulfilled)'
+            ),
+            'partially_processed_count': partially_processed_count,
+            'fully_processed_count': fully_processed_count,
+            'remaining_count': (
+                redemption_request.items
+                .filter(item_processed_by__isnull=True)
+                .count()
+            ),
             'all_processing_complete': is_complete,
-            'request': serializer.data
+            'request': serializer_out.data,
         })
 
     @action(detail=True, methods=['get'])
     def my_processing_status(self, request, pk=None):
         """
         Get the current user's processing status for this request.
-        Shows which items are assigned to them and their processed status.
+        Shows which items are assigned to them and their fulfilled/remaining counts.
         """
         redemption_request = self.get_object()
         user = request.user
         profile = getattr(user, 'profile', None)
-        
+
         if not profile or profile.position not in ['Marketing', 'Admin']:
             return Response(
                 {'error': 'This endpoint is for Marketing or Admin users only'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
-        my_items = redemption_request.get_items_for_marketing_user(user)
+
+        if profile.position == 'Admin':
+            my_items = redemption_request.get_items_for_admin_user(user)
+        else:
+            my_items = redemption_request.get_items_for_marketing_user(user)
+        # "pending" here means not yet fully processed (item_processed_by is null)
         pending_items = my_items.filter(item_processed_by__isnull=True)
         processed_items = my_items.filter(item_processed_by__isnull=False)
-        
+
         return Response({
             'request_id': redemption_request.id,
             'total_assigned_items': my_items.count(),
@@ -774,7 +1067,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             'processed_items': processed_items.count(),
             'all_my_items_processed': pending_items.count() == 0,
             'overall_processing_complete': redemption_request.is_marketing_processing_complete(),
-            'items': RedemptionRequestItemSerializer(my_items, many=True).data
+            'items': RedemptionRequestItemSerializer(my_items, many=True).data,
         })
 
     @action(detail=True, methods=['post'], url_path='upload_acknowledgement_receipt')
@@ -840,6 +1133,17 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         logger.info(f"AR uploaded for request #{redemption_request.id} by {user.username}")
 
         serializer = self.get_serializer(redemption_request)
+
+        # SSE: notify admins about AR upload
+        admin_ids = list(
+            UserProfile.objects.filter(position='Admin')
+            .values_list('user_id', flat=True)
+        )
+        if admin_ids:
+            publish_sse_event('ar_uploaded', {
+                'request_id': redemption_request.id,
+            }, target_users=admin_ids)
+
         return Response(serializer.data)
 
 
@@ -857,30 +1161,30 @@ class DashboardStatsView(APIView):
     def get(self, request):
         """Get dashboard statistics for all requests in the system"""
         try:
-            # Get all request counts
-            total_requests = RedemptionRequest.objects.count()
-            pending_count = RedemptionRequest.objects.filter(status='PENDING').count()
-            approved_count = RedemptionRequest.objects.filter(status='APPROVED').count()
-            rejected_count = RedemptionRequest.objects.filter(status='REJECTED').count()
-            
-            processed_count = RedemptionRequest.objects.filter(processing_status='PROCESSED').count()
-            not_processed_count = RedemptionRequest.objects.filter(processing_status='NOT_PROCESSED').count()
-            cancelled_count = RedemptionRequest.objects.filter(processing_status='CANCELLED').count()
-            
+            # Two annotated GROUP-BY queries instead of seven separate COUNT queries
+            status_counts = {
+                row['status']: row['count']
+                for row in RedemptionRequest.objects.values('status').annotate(count=Count('id'))
+            }
+            proc_counts = {
+                row['processing_status']: row['count']
+                for row in RedemptionRequest.objects.values('processing_status').annotate(count=Count('id'))
+            }
+
             # Get on-board distributors and customers count (exclude archived)
             from distributers.models import Distributor
             from customers.models import Customer
             on_board_count = Distributor.objects.filter(is_archived=False).count()
             customers_count = Customer.objects.filter(is_archived=False).count()
-            
+
             return Response({
-                'total_requests': total_requests,
-                'pending_count': pending_count,
-                'approved_count': approved_count,
-                'rejected_count': rejected_count,
-                'processed_count': processed_count,
-                'not_processed_count': not_processed_count,
-                'cancelled_count': cancelled_count,
+                'total_requests': sum(status_counts.values()),
+                'pending_count': status_counts.get('PENDING', 0),
+                'approved_count': status_counts.get('APPROVED', 0),
+                'rejected_count': status_counts.get('REJECTED', 0),
+                'processed_count': proc_counts.get('PROCESSED', 0),
+                'not_processed_count': proc_counts.get('NOT_PROCESSED', 0),
+                'cancelled_count': proc_counts.get('CANCELLED', 0),
                 'on_board_count': on_board_count,
                 'customers_count': customers_count,
             })
@@ -911,17 +1215,8 @@ class DashboardRedemptionRequestsView(APIView):
             limit = min(limit, 100)  # Max 100 items per page
             limit = max(limit, 1)    # Min 1 item per page
             
-            # Get all redemption requests with related data
-            all_requests = RedemptionRequest.objects.all().prefetch_related(
-                'items',
-                'items__product',
-                'requested_by',
-                'requested_for',
-                'reviewed_by',
-                'processed_by',
-                'cancelled_by',
-                'team'
-            ).order_by('-date_requested')
+            # Use the shared helper for correct select_related + prefetch chains
+            all_requests = _build_base_queryset().order_by('-date_requested')
             
             # Get total count
             total_count = all_requests.count()
@@ -1070,25 +1365,27 @@ class AgentDashboardStatsView(APIView):
                 # If not in a team, only count own requests
                 team_requests = RedemptionRequest.objects.filter(requested_by=user)
             
-            # Calculate agent-specific statistics
-            pending_count = team_requests.filter(status='PENDING').count()
-            approved_count = team_requests.filter(status='APPROVED').count()
-            processed_count = team_requests.filter(processing_status='PROCESSED').count()
-            
+            # Single aggregate query instead of three separate COUNT queries
+            stats = team_requests.aggregate(
+                pending_count=Count('id', filter=Q(status='PENDING')),
+                approved_count=Count('id', filter=Q(status='APPROVED')),
+                processed_count=Count('id', filter=Q(processing_status='PROCESSED')),
+            )
+
             # Get agent's current points
             agent_points = profile.points if profile else 0
-            
+
             # Get count of active distributors in agent's team (if applicable)
             if membership:
                 # Get distributors associated with this team (exclude archived)
                 active_distributors_count = Distributor.objects.filter(is_archived=False).count()
             else:
                 active_distributors_count = 0
-            
+
             return Response({
-                'pending_count': pending_count,
-                'approved_count': approved_count,
-                'processed_count': processed_count,
+                'pending_count': stats['pending_count'],
+                'approved_count': stats['approved_count'],
+                'processed_count': stats['processed_count'],
                 'agent_points': agent_points,
                 'active_distributors_count': active_distributors_count,
                 'team_name': membership.team.name if membership else 'No Team',
@@ -1128,20 +1425,23 @@ class ApproverDashboardStatsView(APIView):
             requires_sales_approval=True,
         )
 
-        pending_count = team_requests.filter(status='PENDING').count()
-        approved_count = team_requests.filter(status='APPROVED').count()
-        rejected_count = team_requests.filter(status='REJECTED').count()
-        processed_count = team_requests.filter(processing_status='PROCESSED').count()
+        # Single aggregate query instead of four separate COUNT queries
+        stats = team_requests.aggregate(
+            pending_count=Count('id', filter=Q(status='PENDING')),
+            approved_count=Count('id', filter=Q(status='APPROVED')),
+            rejected_count=Count('id', filter=Q(status='REJECTED')),
+            processed_count=Count('id', filter=Q(processing_status='PROCESSED')),
+        )
 
         managed_teams = Team.objects.filter(approver=user)
         team_count = managed_teams.count()
         team_names = list(managed_teams.values_list('name', flat=True))
 
         return Response({
-            'pending_count': pending_count,
-            'approved_count': approved_count,
-            'rejected_count': rejected_count,
-            'processed_count': processed_count,
+            'pending_count': stats['pending_count'],
+            'approved_count': stats['approved_count'],
+            'rejected_count': stats['rejected_count'],
+            'processed_count': stats['processed_count'],
             'team_count': team_count,
             'team_names': team_names,
             'approver_name': user.get_full_name() or user.username,
@@ -1163,15 +1463,8 @@ class ProcessedRequestHistoryView(APIView):
                 'error': 'Access denied. Admin role required.'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # Get all processed requests
-        processed_requests = RedemptionRequest.objects.filter(
-            processing_status='PROCESSED'
-        ).prefetch_related(
-            'items',
-            'items__product'
-        ).order_by('-date_requested')
-        
-        serializer = RedemptionRequestSerializer(processed_requests, many=True)
+        all_requests = _build_base_queryset().order_by('-date_requested')
+        serializer = RedemptionRequestSerializer(all_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -1193,12 +1486,8 @@ class MarketingHistoryView(APIView):
         # Get all requests where this user has processed at least one item
         # This shows history regardless of current item legend assignment
         # (item_processed_by tracks who actually processed the item)
-        processed_requests = RedemptionRequest.objects.filter(
+        processed_requests = _build_base_queryset().filter(
             items__item_processed_by=user
-        ).distinct().prefetch_related(
-            'items',
-            'items__product'
-        ).order_by('-date_requested')
-        
+        ).distinct().order_by('-date_requested')
         serializer = RedemptionRequestSerializer(processed_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

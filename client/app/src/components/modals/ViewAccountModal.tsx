@@ -128,7 +128,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-account-title"
-        className={`bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border`}
+        className={`bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden`}
       >
         <div className="flex justify-between items-center p-8">
           <div>
@@ -148,7 +148,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {loading ? (
             <div className="space-y-6">
               {/* Credentials skeleton */}

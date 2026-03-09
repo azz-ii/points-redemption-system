@@ -32,7 +32,7 @@ export function BulkWithdrawModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[60] p-4 bg-black/50 backdrop-blur-sm">
       <div
-        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="bulk-withdraw-title"
@@ -53,7 +53,7 @@ export function BulkWithdrawModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 flex-1 overflow-y-auto min-h-0">
           <p className="text-sm mb-4 text-foreground">
             Are you sure you want to cancel these {requests.length} redemption request{requests.length !== 1 ? 's' : ''}? 
             The committed stock will be released back to inventory.

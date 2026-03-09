@@ -17,6 +17,7 @@ export interface Account {
   date_archived?: string | null;
   archived_by?: number | null;
   archived_by_username?: string | null;
+  can_self_request?: boolean;
 }
 
 export interface PaginatedAccountsResponse {
@@ -35,12 +36,15 @@ export interface BatchUpdateResponse {
 }
 
 export const usersApi = {
-  getAccountsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedAccountsResponse> => {
+  getAccountsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = '', showArchived?: boolean): Promise<PaginatedAccountsResponse> => {
     const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
+    }
+    if (showArchived) {
+      url.searchParams.append('show_archived', 'true');
     }
     const response = await fetch(url.toString(), {
       credentials: 'include',
@@ -125,5 +129,28 @@ export const usersApi = {
     }
     
     return allAccounts;
+  },
+
+  getMarketingUsersPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedAccountsResponse> => {
+    const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('page_size', pageSize.toString());
+    url.searchParams.append('position', 'Marketing,Admin');
+    if (searchQuery) {
+      url.searchParams.append('search', searchQuery);
+    }
+    const response = await fetch(url.toString(), { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch marketing users');
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return { count: data.length, next: null, previous: null, results: data };
+    }
+    return data;
+  },
+
+  getBulkAssignMarketing: async (): Promise<{ products: Array<{ id: number; item_code: string; item_name: string; legend: string; mktg_admin_id: number | null }> }> => {
+    const response = await fetch(`${API_BASE_URL}/catalogue/bulk-assign-marketing/`, { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch bulk assign marketing data');
+    return response.json();
   },
 };

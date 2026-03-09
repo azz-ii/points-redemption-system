@@ -113,7 +113,7 @@ export const createColumns = (
       const processingStatus = row.getValue("processing_status") as string;
       return (
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusClasses(processingStatus)}`}>
-          {row.original.processing_status_display || "Processed"}
+          {row.original.processing_status_display || processingStatus}
         </span>
       );
     },

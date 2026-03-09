@@ -24,6 +24,7 @@ interface InventoryTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  fillHeight?: boolean;
 }
 
 export function InventoryTable({
@@ -47,6 +48,7 @@ export function InventoryTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  fillHeight,
 }: InventoryTableProps) {
   const columns = useMemo(
     () =>
@@ -82,6 +84,7 @@ export function InventoryTable({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      fillHeight={fillHeight}
     />
   );
 }

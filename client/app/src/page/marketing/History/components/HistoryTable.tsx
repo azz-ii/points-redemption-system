@@ -10,6 +10,7 @@ interface HistoryTableProps {
   onExport?: (selected: RequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  fillHeight?: boolean;
 }
 
 export function HistoryTable({
@@ -19,6 +20,7 @@ export function HistoryTable({
   onExport,
   onRefresh,
   refreshing,
+  fillHeight,
 }: HistoryTableProps) {
   const columns = useMemo(
     () =>
@@ -51,6 +53,7 @@ export function HistoryTable({
       loadingMessage="Loading history..."
       emptyMessage="No history records found"
       pageSizeOptions={[15, 50, 100]}
+      fillHeight={fillHeight}
     />
   );
 }

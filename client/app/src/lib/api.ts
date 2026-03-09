@@ -112,9 +112,14 @@ export interface UserProfile {
   is_archived: boolean;
   uses_points: boolean;
   points: number;
+  can_self_request?: boolean;
+  team_id?: number | null;
+  team_name?: string | null;
+  approver_teams?: Array<{ id: number; name: string }>;
   profile: {
     uses_points: boolean;
     points: number;
+    can_self_request?: boolean;
   };
 }
 
@@ -302,11 +307,11 @@ export interface LegacyRedemptionRequestItem {
   dynamic_quantity?: number;
 }
 
-export type RequestedForType = 'DISTRIBUTOR' | 'CUSTOMER';
+export type RequestedForType = 'DISTRIBUTOR' | 'CUSTOMER' | 'SELF';
 
 export interface CreateRedemptionRequestData {
-  requested_for?: number; // Distributor ID (optional when type is CUSTOMER)
-  requested_for_customer?: number; // Customer ID (optional when type is DISTRIBUTOR)
+  requested_for?: number; // Distributor ID (optional when type is CUSTOMER or SELF)
+  requested_for_customer?: number; // Customer ID (optional when type is DISTRIBUTOR or SELF)
   requested_for_type: RequestedForType;
   points_deducted_from: 'SELF' | 'DISTRIBUTOR';
   remarks?: string;
@@ -328,12 +333,12 @@ export interface RedemptionRequestResponse {
   requested_for_type: RequestedForType;
   team: number | null;
   team_name: string | null;
-  points_deducted_from: string;
+  points_deducted_from: 'SELF' | 'DISTRIBUTOR';
   points_deducted_from_display: string;
   total_points: number;
-  status: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
   status_display: string;
-  processing_status: string;
+  processing_status: 'NOT_PROCESSED' | 'PROCESSED' | 'CANCELLED';
   processing_status_display: string;
   date_requested: string;
   reviewed_by: number | null;
@@ -353,10 +358,19 @@ export interface RedemptionRequestResponse {
     product: number;
     product_name: string;
     product_code: string;
-    category?: string | null;
+    category: string | null;
     quantity: number;
     points_per_item: number;
     total_points: number;
+    // Fulfillment tracking (present on detail/processing endpoints)
+    fulfilled_quantity?: number;
+    remaining_quantity?: number | null;
+    is_fully_fulfilled?: boolean;
+    fulfillment_logs?: Array<{ id: number; fulfilled_quantity: number; fulfilled_by: number | null; fulfilled_by_name: string | null; fulfilled_at: string; notes?: string | null }>;
+    item_processed_by?: number | null;
+    item_processed_by_name?: string | null;
+    item_processed_at?: string | null;
+    pricing_type?: string | null;
   }>;
   // Acknowledgement Receipt fields
   ar_status: string | null;
@@ -389,8 +403,11 @@ export const redemptionRequestsApi = {
     return result;
   },
 
-  async getRequests(): Promise<RedemptionRequestResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/`, {
+  async getRequests(params?: { notProcessed?: boolean; processed?: boolean }): Promise<RedemptionRequestResponse[]> {
+    const url = new URL(`${API_BASE_URL}/redemption-requests/`);
+    if (params?.notProcessed) url.searchParams.set('not_processed', '1');
+    else if (params?.processed) url.searchParams.set('processed', '1');
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -520,6 +537,9 @@ export interface MarketingProcessingStatusItem {
   quantity: number;
   points_per_item: number;
   total_points: number;
+  fulfilled_quantity: number;
+  remaining_quantity: number | null;
+  is_fully_fulfilled: boolean;
   item_processed_by?: number | null;
   item_processed_by_name?: string | null;
   item_processed_at?: string | null;
@@ -537,9 +557,17 @@ export interface MarketingProcessingStatus {
 
 export interface MarkItemsProcessedResponse {
   message: string;
-  processed_count: number;
+  partially_processed_count: number;
+  fully_processed_count: number;
+  remaining_count: number;
   all_processing_complete: boolean;
   request: RedemptionRequestResponse;
+}
+
+export interface ProcessItemData {
+  item_id: number;
+  fulfilled_quantity?: number;
+  notes?: string;
 }
 
 export const marketingRequestsApi = {
@@ -582,15 +610,15 @@ export const marketingRequestsApi = {
   },
 
   /**
-   * Mark the current marketing user's assigned items as processed.
-   * Each Marketing user must process their own assigned items.
+   * Mark specific items as processed (partial or full fulfillment).
+   * Each item entry specifies which item, how many units to fulfill, and optional notes.
    */
-  async markItemsProcessed(requestId: number): Promise<MarkItemsProcessedResponse> {
+  async markItemsProcessed(requestId: number, items: ProcessItemData[]): Promise<MarkItemsProcessedResponse> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/mark_items_processed/`, {
       method: 'POST',
       headers: getHeaders(),
       credentials: 'include',
-      body: JSON.stringify({}),
+      body: JSON.stringify({ items }),
     });
 
     if (!response.ok) {

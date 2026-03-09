@@ -27,7 +27,7 @@ export default function SimilarCustomersDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-md mx-4 rounded-xl shadow-2xl bg-card text-foreground border border-border">
+      <div className="relative w-full max-w-md mx-4 rounded-xl shadow-2xl bg-card text-foreground border border-border max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border flex items-start justify-between gap-3">
           <div className="flex items-start gap-2">
@@ -45,7 +45,7 @@ export default function SimilarCustomersDialog({
         </div>
 
         {/* Matches */}
-        <div className="p-4 max-h-60 overflow-y-auto space-y-2">
+        <div className="p-4 flex-1 overflow-y-auto min-h-0 space-y-2">
           {exactMatch && (
             <button
               onClick={() => onSelectExisting(exactMatch)}

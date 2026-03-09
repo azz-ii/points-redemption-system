@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
 import { API_URL } from "@/lib/config";
+import { useTeams } from "@/hooks/queries/useTeams";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import {
   Search,
@@ -29,8 +32,9 @@ import type { Team } from "./components/columns";
 
 function Teams() {
   const navigate = useNavigate();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(false);  const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
+  const { data: teams = [], isLoading: loading, isFetching: refreshing, refetch } = useTeams(10000);
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -59,46 +63,9 @@ function Teams() {
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
   const [teamForAnalytics, setTeamForAnalytics] = useState<{ id: number; name: string } | null>(null);
 
-  // Fetch teams on component mount
-  const fetchTeams = async () => {
-    try {
-      setLoading(true);
-      console.log("Fetching teams from API...");
-      const response = await fetch(`${API_URL}/teams/`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-
-      console.log("API Response:", response.status, response.ok);
-      console.log("API Data:", data);
-
-      if (response.ok) {
-        setTeams(Array.isArray(data) ? data : []);
-        console.log("Teams set:", Array.isArray(data) ? data : []);
-      } else {
-        console.error("API Error:", data);
-      }
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      console.error("Error fetching teams:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch marketing admins for dropdown
-  const fetchMarketingAdmins = async () => {
-    // No longer needed - approver fetching is handled in modals
-  };
-
-  // Load teams on mount
-  useEffect(() => {
-    fetchTeams();
-  }, []);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.teams.all });
+  }, [queryClient]);
 
   // Filter teams based on search query
   const filteredTeams = teams.filter(
@@ -197,7 +164,7 @@ function Teams() {
         toast.success(`Team "${newTeam.name}" created successfully!`);
         setIsCreateModalOpen(false);
         setNewTeam({ name: "", approver: null });
-        fetchTeams(); // Refresh teams list
+        queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
       } else {
         const errorMessage =
           data.name?.[0] ||
@@ -277,7 +244,7 @@ function Teams() {
         setIsEditModalOpen(false);
         setTeamToEdit(null);
         setEditTeam({ name: "", approver: null });
-        fetchTeams(); // Refresh teams list
+        queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
       } else {
         const errorMessage =
           data.name?.[0] ||
@@ -334,7 +301,7 @@ function Teams() {
         toast.success(`Team deleted successfully!`);
         setIsDeleteModalOpen(false);
         setTeamToDelete(null);
-        fetchTeams(); // Refresh teams list
+        queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
       } else {
         const data = await response.json();
         console.error("DEBUG Teams: Failed to delete team", {
@@ -368,7 +335,7 @@ function Teams() {
 
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Teams</h1>
@@ -381,8 +348,9 @@ function Teams() {
           </div>
 
           {/* Teams Table */}
-          <TeamsTable
-            teams={teams}
+          <div className="flex-1 min-h-0">
+            <TeamsTable
+              teams={teams}
             loading={loading}
             onView={(team) => handleViewTeam(team.id)}
             onEdit={handleEditClick}
@@ -392,9 +360,11 @@ function Teams() {
               console.log("DEBUG Teams: Opening create modal");
               setIsCreateModalOpen(true);
             }}
-            onRefresh={fetchTeams}
-            refreshing={loading}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
+            fillHeight
           />
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -594,7 +564,7 @@ function Teams() {
           setSelectedTeam(null);
         }}
         team={selectedTeam}
-        onRefresh={fetchTeams}
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: queryKeys.teams.all })}
       />
 
       <EditTeamModal
@@ -614,7 +584,7 @@ function Teams() {
         error={editError}
         setError={setEditError}
         onSubmit={handleEditTeam}
-        onRefresh={fetchTeams}
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: queryKeys.teams.all })}
       />
 
       <DeleteTeamModal

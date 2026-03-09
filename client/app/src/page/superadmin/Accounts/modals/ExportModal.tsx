@@ -129,7 +129,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-modal-title"
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6">
@@ -161,7 +161,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* Format Selection */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">

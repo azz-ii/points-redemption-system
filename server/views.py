@@ -117,19 +117,30 @@ class LoginView(APIView):
                     position = "Admin"  # Default position if profile doesn't exist
                     profile = None
 
-                # --- single active session enforcement -----------------------
-                self._kill_other_sessions(user, request.session.session_key)
-
                 # Clear failed-login counter on success
                 LoginAttempt.clear_failures(username)
 
-                # Log the user in to create a session so `request.user` is populated
+                # Kill sessions that belong to this user BEFORE login() so
+                # that zombie sessions (resurrected by SESSION_SAVE_EVERY_REQUEST
+                # on an in-flight request) are cleaned up even if their key
+                # differs from the about-to-be-cycled key.
+                pre_login_key = request.session.session_key
+                self._kill_other_sessions(user, pre_login_key)
+
+                # Log the user in to create a session so `request.user` is populated.
+                # login() calls cycle_key() which replaces the old session key with
+                # a new one, so we run a second kill to catch any session that was
+                # written between the first kill and the cycle.
                 login(request, user)
+
+                # --- single active session enforcement -----------------------
+                self._kill_other_sessions(user, request.session.session_key)
 
                 response = Response({
                     "message": "Login successful",
                     "position": position,
                     "username": username,
+                    "can_self_request": profile.can_self_request if profile else False,
                 }, status=status.HTTP_200_OK)
                 
                 # Ensure CSRF cookie is set

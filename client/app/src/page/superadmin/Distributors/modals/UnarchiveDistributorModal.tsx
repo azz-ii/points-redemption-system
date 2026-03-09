@@ -31,7 +31,7 @@ export function UnarchiveDistributorModal({
         aria-modal="true"
         aria-labelledby="unarchive-distributor-title"
         aria-describedby="unarchive-distributor-message"
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         <div className="flex justify-between items-center p-8">
           <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ export function UnarchiveDistributorModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-4 flex-1 overflow-y-auto min-h-0">
           <p id="unarchive-distributor-message" className="text-base">
             Are you sure you want to restore <strong>{distributor.name}</strong>?
           </p>

@@ -15,7 +15,7 @@ export function AnalyticsModal({ isOpen, onClose, team }: AnalyticsModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="analytics-team-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-gray-700 max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -33,7 +33,7 @@ export function AnalyticsModal({ isOpen, onClose, team }: AnalyticsModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-8 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 flex-1 overflow-y-auto min-h-0">
           <TeamAnalytics teamId={team.id} />
         </div>
       </div>

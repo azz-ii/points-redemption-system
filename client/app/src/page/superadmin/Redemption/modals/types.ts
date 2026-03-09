@@ -1,5 +1,14 @@
 ﻿export type { ModalBaseProps } from "@/components/modals";
 
+export interface ItemFulfillmentLog {
+  id: number;
+  fulfilled_quantity: number;
+  fulfilled_by: number | null;
+  fulfilled_by_name: string | null;
+  fulfilled_at: string;
+  notes?: string | null;
+}
+
 export interface RequestItemVariant {
   id: number;
   product: number;
@@ -9,9 +18,22 @@ export interface RequestItemVariant {
   quantity: number;
   points_per_item: number;
   total_points: number;
+  pricing_type?: string | null;
+  // Partial fulfillment tracking
+  fulfilled_quantity: number;
+  remaining_quantity: number | null;
+  is_fully_fulfilled: boolean;
+  fulfillment_logs?: ItemFulfillmentLog[];
   item_processed_by?: number | null;
   item_processed_by_name?: string | null;
   item_processed_at?: string | null;
+}
+
+/** Data sent per-item when calling mark_items_processed */
+export interface ProcessItemData {
+  item_id: number;
+  fulfilled_quantity?: number;
+  notes?: string;
 }
 
 export interface RedemptionItem {

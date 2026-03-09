@@ -17,6 +17,7 @@ class PointsAuditLog(models.Model):
         BULK_RESET = 'BULK_RESET', 'Bulk Reset'
         REDEMPTION_DEDUCT = 'REDEMPTION_DEDUCT', 'Redemption Deduction'
         REDEMPTION_REFUND = 'REDEMPTION_REFUND', 'Redemption Refund'
+        SALES_VOL_ALLOC = 'SALES_VOL_ALLOC', 'Sales Volume Allocation'
 
     entity_type = models.CharField(max_length=20, choices=EntityType.choices)
     entity_id = models.IntegerField(help_text='Primary key of the affected entity')

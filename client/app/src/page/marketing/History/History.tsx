@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { marketingRequestsApi } from "@/lib/api";
 import { toast } from "sonner";
+import { useMarketingHistory } from "@/hooks/queries/useMarketingRequests";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import type { RequestItem } from "@/page/marketing/ProcessRequests/modals/types";
 import { HistoryTable } from "./components/HistoryTable";
 import { HistoryMobileCards } from "./components/HistoryMobileCards";
@@ -11,13 +13,10 @@ import { ExportModal } from "./modals/ExportModal";
 import { exportToCSV, exportToExcel } from "./utils/exportUtils";
 
 export default function MarketingHistory() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 15; // Increased from 7 for mobile pagination
-  const [requests, setRequests] = useState<RequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const pageSize = 15;
   
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -26,41 +25,23 @@ export default function MarketingHistory() {
   const [selectedRequests, setSelectedRequests] = useState<RequestItem[]>([]);
   const [isExporting, setIsExporting] = useState(false);
 
-  const fetchHistory = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const data = await marketingRequestsApi.getHistory();
-      setRequests(data as unknown as RequestItem[]);
-    } catch (err) {
-      console.error("Error fetching history:", err);
-      setError(err instanceof Error ? err.message : "Failed to load history");
-      toast.error("Failed to load history");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useMarketingHistory(30_000);
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load history") : null;
 
-  // Fetch history on mount
-  useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
 
   // Handlers
-  const handleViewClick = (request: RequestItem) => {
+  const handleViewClick = useCallback((request: RequestItem) => {
     setSelectedRequest(request);
     setShowViewModal(true);
-  };
+  }, []);
 
-  const handleExport = (selected: RequestItem[]) => {
+  const handleExport = useCallback((selected: RequestItem[]) => {
     setSelectedRequests(selected);
     setShowExportModal(true);
-  };
+  }, []);
 
   const handleExportConfirm = async (format: "csv" | "excel") => {
     try {
@@ -85,21 +66,27 @@ export default function MarketingHistory() {
   };
 
   // Mobile pagination - filter and paginate for mobile cards only
-  const filteredRequests = requests.filter((request) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      request.id.toString().includes(query) ||
-      request.requested_by_name.toLowerCase().includes(query) ||
-      request.requested_for_name.toLowerCase().includes(query)
-    );
-  });
+  const { filteredRequests, totalPages, safePage, paginatedRequests } = useMemo(() => {
+    const filtered = requests.filter((request) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        request.id.toString().includes(query) ||
+        request.requested_by_name.toLowerCase().includes(query) ||
+        request.requested_for_name.toLowerCase().includes(query)
+      );
+    });
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+    const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const safe = Math.min(currentPage, pages);
+    const start = (safe - 1) * pageSize;
+    return {
+      filteredRequests: filtered,
+      totalPages: pages,
+      safePage: safe,
+      paginatedRequests: filtered.slice(start, start + pageSize),
+    };
+  }, [requests, searchQuery, currentPage, pageSize]);
 
   return (
     <>
@@ -162,7 +149,7 @@ export default function MarketingHistory() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-4xl font-bold mb-1">History</h1>
@@ -171,20 +158,23 @@ export default function MarketingHistory() {
           </p>
         </div>
 
-        {error ? (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        ) : (
-          <HistoryTable
-            requests={requests}
-            loading={loading}
-            onView={handleViewClick}
-            onExport={handleExport}
-            onRefresh={() => fetchHistory(true)}
-            refreshing={refreshing}
-          />
-        )}
+        <div className="flex-1 min-h-0">
+          {error ? (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+              {error}
+            </div>
+          ) : (
+            <HistoryTable
+              requests={requests}
+              loading={loading}
+              onView={handleViewClick}
+              onExport={handleExport}
+              onRefresh={handleManualRefresh}
+              refreshing={refreshing}
+              fillHeight
+            />
+          )}
+        </div>
       </div>
 
       <ViewHistoryModal

@@ -110,7 +110,7 @@ export function UploadARModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[60] p-4 bg-black/50 backdrop-blur-sm">
       <div
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border border-border"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border border-border max-h-[90vh] flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="upload-ar-title"

@@ -22,6 +22,7 @@ interface MarketingUsersTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  fillHeight?: boolean;
 }
 
 export function MarketingUsersTable({
@@ -43,6 +44,7 @@ export function MarketingUsersTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  fillHeight,
 }: MarketingUsersTableProps) {
   const columns = useMemo(
     () =>
@@ -84,6 +86,7 @@ export function MarketingUsersTable({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      fillHeight={fillHeight}
     />
   );
 }

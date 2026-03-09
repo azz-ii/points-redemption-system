@@ -36,6 +36,11 @@ class ProductListCreateView(APIView):
 
         products = Product.objects.all()
 
+        # Optional: filter to products assigned to the current marketing user
+        mktg_admin_filter = request.query_params.get('mktg_admin', '').strip()
+        if mktg_admin_filter == 'me' and request.user.is_authenticated:
+            products = products.filter(mktg_admin=request.user)
+
         # Apply archived filter - toggle between active and archived views
         if show_archived:
             # Show ONLY archived products

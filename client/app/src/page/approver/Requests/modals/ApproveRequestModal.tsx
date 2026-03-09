@@ -30,7 +30,7 @@ export function ApproveRequestModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
-        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-md w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="approve-request-title"
@@ -55,7 +55,7 @@ export function ApproveRequestModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           <p className="text-sm">
             Are you sure you want to approve this request for{" "}
             <span className="font-semibold">{request.requested_for_name}</span>?

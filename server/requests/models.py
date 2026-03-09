@@ -15,6 +15,7 @@ class PointsDeductionChoice(models.TextChoices):
 class RequestedForType(models.TextChoices):
     DISTRIBUTOR = 'DISTRIBUTOR', 'Distributor'
     CUSTOMER = 'CUSTOMER', 'Customer'
+    SELF = 'SELF', 'Self'
 
 class RequestStatus(models.TextChoices):
     PENDING = 'PENDING', 'Pending'
@@ -24,6 +25,7 @@ class RequestStatus(models.TextChoices):
 
 class ProcessingStatus(models.TextChoices):
     NOT_PROCESSED = 'NOT_PROCESSED', 'Not Processed'
+    PARTIALLY_PROCESSED = 'PARTIALLY_PROCESSED', 'Partially Processed'
     PROCESSED = 'PROCESSED', 'Processed'
     CANCELLED = 'CANCELLED', 'Cancelled'
 
@@ -259,12 +261,19 @@ class RedemptionRequest(models.Model):
 
     def get_requested_for_entity(self):
         """Get the entity (Distributor or Customer) this request is for."""
+        if self.requested_for_type == RequestedForType.SELF:
+            return None
         if self.requested_for_type == RequestedForType.CUSTOMER:
             return self.requested_for_customer
         return self.requested_for
 
     def get_requested_for_name(self):
         """Get the name of the entity this request is for."""
+        if self.requested_for_type == RequestedForType.SELF:
+            profile = getattr(self.requested_by, 'profile', None)
+            if profile:
+                return profile.full_name or self.requested_by.username
+            return self.requested_by.username
         entity = self.get_requested_for_entity()
         return entity.name if entity else 'Unknown'
 
@@ -308,6 +317,10 @@ class RedemptionRequest(models.Model):
         Raises ValueError if insufficient points.
         Should be called within a transaction.
         """
+        # SELF requests have no points deduction
+        if self.requested_for_type == 'SELF':
+            return
+
         # Check if sufficient points are available
         if self.points_deducted_from == 'SELF':
             user_profile = self.requested_by.profile
@@ -404,6 +417,14 @@ class RedemptionRequest(models.Model):
         """
         return self.items.filter(product__mktg_admin=user)
 
+    def get_items_for_admin_user(self, user):
+        """
+        Get items assigned to an Admin user: explicitly assigned to them OR unassigned (mktg_admin is None).
+        Returns QuerySet of RedemptionRequestItem.
+        """
+        from django.db.models import Q
+        return self.items.filter(Q(product__mktg_admin=user) | Q(product__mktg_admin__isnull=True))
+
     def get_items_pending_processing(self, user):
         """
         Get items assigned to this Marketing user that haven't been processed yet.
@@ -412,6 +433,40 @@ class RedemptionRequest(models.Model):
             product__mktg_admin=user,
             item_processed_by__isnull=True
         )
+
+    def has_any_fulfillment_progress(self):
+        """Return True if any item has at least one fulfillment pass recorded."""
+        from django.db.models import Q
+        return self.items.filter(
+            Q(fulfilled_quantity__gt=0) | Q(item_processed_by__isnull=False)
+        ).exists()
+
+    def update_processing_status_after_fulfillment(self, processed_by_user):
+        """
+        Promote request processing_status after a fulfillment pass.
+        Returns the new processing_status value.
+        """
+        if self.is_marketing_processing_complete():
+            if self.processing_status != ProcessingStatus.PROCESSED:
+                self.processing_status = ProcessingStatus.PROCESSED
+                self.processed_by = processed_by_user
+                self.date_processed = timezone.now()
+                requires_ar = (
+                    self.requested_for_type == RequestedForType.CUSTOMER
+                    and self.items.filter(product__has_stock=True).exists()
+                )
+                self.ar_status = (
+                    AcknowledgementReceiptStatus.PENDING if requires_ar
+                    else AcknowledgementReceiptStatus.NOT_REQUIRED
+                )
+                self.save()
+            return ProcessingStatus.PROCESSED
+        elif self.has_any_fulfillment_progress():
+            if self.processing_status not in [ProcessingStatus.PARTIALLY_PROCESSED, ProcessingStatus.PROCESSED]:
+                self.processing_status = ProcessingStatus.PARTIALLY_PROCESSED
+                self.save()
+            return ProcessingStatus.PARTIALLY_PROCESSED
+        return self.processing_status
 
     def is_marketing_processing_complete(self):
         """
@@ -432,30 +487,35 @@ class RedemptionRequest(models.Model):
     def get_marketing_processing_status(self):
         """
         Get detailed status of marketing processing.
-        Returns dict with counts and user-specific info.
+        Uses Python-level filtering over prefetched items to avoid N+1 queries.
+        self.items.all() hits the prefetch cache when this is called during a
+        list request (via _base_queryset); falls back to a single DB query
+        when called in a non-list context (e.g. a detail or write endpoint).
         """
-        items_with_mktg = self.items.filter(
-            product__mktg_admin__isnull=False
-        ).select_related('product__mktg_admin', 'item_processed_by')
-        
-        total = items_with_mktg.count()
-        processed = items_with_mktg.filter(item_processed_by__isnull=False).count()
-        
-        # Group by marketing user
+        all_items = list(self.items.all())
+        items_with_mktg = [
+            item for item in all_items
+            if item.product_id and item.product.mktg_admin_id
+        ]
+
+        total = len(items_with_mktg)
+        processed = sum(1 for item in items_with_mktg if item.item_processed_by_id is not None)
+
         user_status = {}
         for item in items_with_mktg:
             mktg_user = item.product.mktg_admin
-            if mktg_user.id not in user_status:
-                user_status[mktg_user.id] = {
-                    'user_id': mktg_user.id,
+            uid = mktg_user.id
+            if uid not in user_status:
+                user_status[uid] = {
+                    'user_id': uid,
                     'username': mktg_user.username,
                     'total_items': 0,
                     'processed_items': 0,
                 }
-            user_status[mktg_user.id]['total_items'] += 1
-            if item.item_processed_by:
-                user_status[mktg_user.id]['processed_items'] += 1
-        
+            user_status[uid]['total_items'] += 1
+            if item.item_processed_by_id is not None:
+                user_status[uid]['processed_items'] += 1
+
         return {
             'total_items': total,
             'processed_items': processed,
@@ -467,6 +527,16 @@ class RedemptionRequest(models.Model):
         verbose_name = "Redemption Request"
         verbose_name_plural = "Redemption Requests"
         ordering = ['-date_requested']
+        indexes = [
+            # Supports the default ORDER BY -date_requested on every list query
+            models.Index(fields=['date_requested'], name='req_date_requested_idx'),
+            # Filtered in every role branch (APPROVED, PENDING, etc.)
+            models.Index(fields=['status'], name='req_status_idx'),
+            # Filtered by Admin / Marketing processing views
+            models.Index(fields=['processing_status'], name='req_processing_status_idx'),
+            # Composite for the Approver query: filter(team=X, status=Y)
+            models.Index(fields=['team', 'status'], name='req_team_status_idx'),
+        ]
 
 class RedemptionRequestItem(models.Model):
     id = models.AutoField(primary_key=True)
@@ -517,6 +587,12 @@ class RedemptionRequestItem(models.Model):
         help_text='Snapshot of points multiplier at request time'
     )
     
+    # Partial fulfillment tracking
+    fulfilled_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text='Cumulative units fulfilled across all processing passes (for FIXED pricing items)'
+    )
+
     # Item-level processing by Marketing user
     item_processed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -524,13 +600,29 @@ class RedemptionRequestItem(models.Model):
         null=True,
         blank=True,
         related_name='processed_request_items',
-        help_text='Marketing user who processed this specific item'
+        help_text='Marketing user who fully processed this specific item'
     )
     item_processed_at = models.DateTimeField(
         null=True,
         blank=True,
-        help_text='Date and time when this item was processed by Marketing'
+        help_text='Date and time when this item was fully processed'
     )
+
+    @property
+    def is_fully_fulfilled(self):
+        """True when all units have been fulfilled (FIXED) or item has been marked done (non-FIXED)."""
+        pricing = self.pricing_type or 'FIXED'
+        if pricing == 'FIXED':
+            return self.fulfilled_quantity >= self.quantity
+        return self.item_processed_by is not None
+
+    @property
+    def remaining_quantity(self):
+        """Remaining units to be fulfilled. Only meaningful for FIXED pricing."""
+        pricing = self.pricing_type or 'FIXED'
+        if pricing == 'FIXED':
+            return max(0, self.quantity - self.fulfilled_quantity)
+        return None
 
     def save(self, *args, **kwargs):
         # Automatically calculate total_points based on pricing type
@@ -551,3 +643,43 @@ class RedemptionRequestItem(models.Model):
         verbose_name = "Redemption Request Item"
         verbose_name_plural = "Redemption Request Items"
         ordering = ['id']
+
+
+class ItemFulfillmentLog(models.Model):
+    """Audit log for each partial or full fulfillment pass on a redemption request item."""
+    id = models.AutoField(primary_key=True)
+    item = models.ForeignKey(
+        RedemptionRequestItem,
+        on_delete=models.CASCADE,
+        related_name='fulfillment_logs',
+        help_text='The request item this log entry belongs to'
+    )
+    fulfilled_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text='Units fulfilled in this pass (for FIXED pricing; 0 for non-FIXED full-process)'
+    )
+    fulfilled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='item_fulfillment_logs',
+        help_text='User who performed this fulfillment pass'
+    )
+    fulfilled_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='Date and time of this fulfillment pass'
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Optional notes about this fulfillment pass'
+    )
+
+    def __str__(self):
+        return f"FulfillmentLog item #{self.item_id}: {self.fulfilled_quantity} units by {self.fulfilled_by}"
+
+    class Meta:
+        verbose_name = "Item Fulfillment Log"
+        verbose_name_plural = "Item Fulfillment Logs"
+        ordering = ['fulfilled_at']

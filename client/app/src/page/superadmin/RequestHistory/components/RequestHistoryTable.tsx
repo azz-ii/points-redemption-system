@@ -10,6 +10,7 @@ interface RequestHistoryTableProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
+  fillHeight?: boolean;
 }
 
 export function RequestHistoryTable({
@@ -19,6 +20,7 @@ export function RequestHistoryTable({
   onRefresh,
   refreshing,
   onExport,
+  fillHeight,
 }: RequestHistoryTableProps) {
   const columns = useMemo(
     () =>
@@ -49,6 +51,7 @@ export function RequestHistoryTable({
       emptyMessage="No processed requests found"
       pageSizeOptions={[15, 50, 100]}
       initialSorting={[{ id: "date_requested", desc: true }]}
+      fillHeight={fillHeight}
     />
   );
 }

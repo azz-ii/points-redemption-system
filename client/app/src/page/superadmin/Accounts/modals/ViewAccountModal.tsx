@@ -112,7 +112,7 @@ export function ViewAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         <div className="flex justify-between items-center p-8">
           <div>
@@ -130,7 +130,7 @@ export function ViewAccountModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* Avatar Section */}
           <div className="flex justify-center">
             <div className="w-24 h-24 rounded-full flex items-center justify-center bg-muted">
@@ -215,7 +215,7 @@ export function ViewAccountModal({
             </div>
           </div>
 
-          {/* Team Section — Sales Agents only */}
+          {/* Team Section ï¿½ Sales Agents only */}
           {localAccount.position === "Sales Agent" && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Team</h3>
@@ -268,7 +268,7 @@ export function ViewAccountModal({
             </div>
           )}
 
-          {/* Team Section — Approvers only (read-only list) */}
+          {/* Team Section ï¿½ Approvers only (read-only list) */}
           {localAccount.position === "Approver" && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">

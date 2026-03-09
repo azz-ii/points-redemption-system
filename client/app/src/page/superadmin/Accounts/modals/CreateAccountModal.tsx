@@ -11,6 +11,7 @@ interface NewAccountData {
   position: string;
   points: number;
   is_activated: boolean;
+  can_self_request: boolean;
 }
 
 interface CreateAccountModalProps extends ModalBaseProps {
@@ -19,6 +20,8 @@ interface CreateAccountModalProps extends ModalBaseProps {
   teams: TeamOption[];
   selectedTeamId: number | null;
   setSelectedTeamId: Dispatch<SetStateAction<number | null>>;
+  selectedMemberTeamId: number | null;
+  setSelectedMemberTeamId: Dispatch<SetStateAction<number | null>>;
   loading: boolean;
   error: string;
   setError: Dispatch<SetStateAction<string>>;
@@ -33,6 +36,8 @@ export function CreateAccountModal({
   teams,
   selectedTeamId,
   setSelectedTeamId,
+  selectedMemberTeamId,
+  setSelectedMemberTeamId,
   loading,
   error,
   setError,
@@ -44,6 +49,7 @@ export function CreateAccountModal({
     onClose();
     setError("");
     setSelectedTeamId(null);
+    setSelectedMemberTeamId(null);
   };
 
   return (
@@ -52,7 +58,7 @@ export function CreateAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -74,7 +80,7 @@ export function CreateAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* Credentials Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -261,7 +267,7 @@ export function CreateAccountModal({
                     htmlFor="approver-team"
                     className="text-xs text-muted-foreground mb-2 block"
                   >
-                    Team <span className="text-muted-foreground">(optional)</span>
+                    Manages Team <span className="text-muted-foreground">(optional)</span>
                   </label>
                   <select
                     id="approver-team"
@@ -281,6 +287,56 @@ export function CreateAccountModal({
                     ))}
                   </select>
                 </div>
+              )}
+
+              {newAccount.position === "Approver" && (
+                <div>
+                  <label
+                    htmlFor="approver-member-team"
+                    className="text-xs text-muted-foreground mb-2 block"
+                  >
+                    Member of Team <span className="text-muted-foreground">(optional)</span>
+                  </label>
+                  <select
+                    id="approver-member-team"
+                    value={selectedMemberTeamId ?? ""}
+                    onChange={(e) =>
+                      setSelectedMemberTeamId(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                  >
+                    <option value="">No team assigned</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    The team whose approver will review this user's self-requests
+                  </p>
+                </div>
+              )}
+
+              {newAccount.position === "Approver" && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newAccount.can_self_request}
+                    onChange={(e) =>
+                      setNewAccount({ ...newAccount, can_self_request: e.target.checked })
+                    }
+                    className="w-4 h-4 rounded border-border"
+                  />
+                  <div>
+                    <span className="text-sm text-foreground">Allow self-requests</span>
+                    <p className="text-xs text-muted-foreground">
+                      Enable this approver to create redemption requests for themselves
+                    </p>
+                  </div>
+                </label>
               )}
             </div>
           </div>

@@ -6,22 +6,26 @@ import { AppSidebar, getNavItemsForRole, getMobileNavItemsForRole } from "@/comp
 import { AppMobileNav } from "@/components/AppMobileNav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationPanel } from "@/components/notification-panel";
+import { useRealtimeEvents } from "@/hooks/useRealtimeEvents";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { userPosition } = useAuth();
+  const { userPosition, canSelfRequest } = useAuth();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  // SSE: listen for real-time events and invalidate queries
+  useRealtimeEvents();
 
   const useHamburgerNav = ["admin", "superadmin", "sales agent", "marketing", "approver"].includes(
     userPosition?.toLowerCase()?.trim() ?? ""
   );
 
-  const sidebarItems = getNavItemsForRole(userPosition);
-  const mobileNavItems = getMobileNavItemsForRole(userPosition);
+  const sidebarItems = getNavItemsForRole(userPosition, canSelfRequest);
+  const mobileNavItems = getMobileNavItemsForRole(userPosition, canSelfRequest);
 
   return (
     <div className="flex flex-col h-screen md:flex-row bg-background text-foreground">

@@ -19,9 +19,11 @@ import RequestHistory from "../page/superadmin/RequestHistory/RequestHistory";
 // Approver pages
 import ApproverDashboard from "../page/approver/Dashboard/Dashboard";
 import ApproverRequests from "../page/approver/Requests/Requests";
+import ApproverTeam from "../page/approver/Team/Team";
 
 // Marketing pages
 import MarketingProcessRequests from "../page/marketing/ProcessRequests/ProcessRequests";
+import ItemAssignments from "../page/marketing/ItemAssignments/ItemAssignments";
 
 // Sales Agent pages
 import RedeemItem from "../page/sales_agent/Redeem Item/Redeem-Item";
@@ -119,6 +121,9 @@ export function AppRoutes() {
             <Route path="/approver/dashboard" element={<ApproverDashboard />} />
             <Route path="/approver/requests" element={<ApproverRequests />} />
             <Route path="/approver/history" element={<ApproverHistory />} />
+            <Route path="/approver/team" element={<ApproverTeam />} />
+            <Route path="/approver/redeem-items" element={<RedeemItem />} />
+            <Route path="/approver/redemption-status" element={<RedemptionStatus />} />
           </Route>
 
           {/* Sales Agent routes */}
@@ -139,6 +144,7 @@ export function AppRoutes() {
               element={<MarketingProcessRequests />}
             />
             <Route path="/marketing/history" element={<MarketingHistory />} />
+            <Route path="/marketing/item-assignments" element={<ItemAssignments />} />
           </Route>
 
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -6,6 +6,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useMarketingRequests } from "@/hooks/queries/useMarketingRequests";
+import { useMarkItemsProcessed, useMarketingCancelRequest } from "@/hooks/mutations/useMarketingMutations";
 import {
   ViewRequestModal,
   MarkItemsProcessedModal,
@@ -13,17 +15,17 @@ import {
   type RequestItem,
   type MyProcessingStatus,
   type FlattenedRequestItem,
+  type ProcessItemData,
 } from "./modals";
 import { ProcessRequestsTable, ProcessRequestsMobileCards, BulkMarkProcessedModal } from "./components";
 import { marketingRequestsApi } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 function ProcessRequests() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests, setRequests] = useState<RequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -37,30 +39,15 @@ function ProcessRequests() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
 
-  const fetchRequests = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const data = await marketingRequestsApi.getRequests();
-      setRequests(data as unknown as RequestItem[]);
-    } catch (err) {
-      console.error("Error fetching requests:", err);
-      setError(err instanceof Error ? err.message : "Failed to load requests");
-      toast.error("Failed to load requests");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useMarketingRequests(30_000);
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load requests") : null;
 
-  // Fetch requests on mount
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  const markItemsMutation = useMarkItemsProcessed();
+  const cancelMutation = useMarketingCancelRequest();
+
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
 
   const fetchMyProcessingStatus = async (requestId: number) => {
     try {
@@ -75,7 +62,7 @@ function ProcessRequests() {
   };
 
   // Flatten requests to items for table display
-  const flattenedItems: FlattenedRequestItem[] = requests.flatMap((request) =>
+  const flattenedItems: FlattenedRequestItem[] = useMemo(() => requests.flatMap((request) =>
     request.items.map((item) => ({
       ...item,
       requestId: request.id,
@@ -88,28 +75,34 @@ function ProcessRequests() {
       date_requested: request.date_requested,
       request: request,
     }))
-  );
+  ), [requests]);
 
   // Mobile filtering and pagination
   const pageSize = 7;
-  const filtered = flattenedItems.filter((item) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.requestId.toString().includes(query) ||
-      item.product_code.toLowerCase().includes(query) ||
-      item.product_name.toLowerCase().includes(query) ||
-      item.requested_for_name.toLowerCase().includes(query) ||
-      item.requested_by_name.toLowerCase().includes(query) ||
-      (item.category && item.category.toLowerCase().includes(query))
-    );
-  });
+  const { filtered, totalPages, safePage, paginatedItems } = useMemo(() => {
+    const f = flattenedItems.filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        item.requestId.toString().includes(query) ||
+        item.product_code.toLowerCase().includes(query) ||
+        item.product_name.toLowerCase().includes(query) ||
+        item.requested_for_name.toLowerCase().includes(query) ||
+        item.requested_by_name.toLowerCase().includes(query) ||
+        (item.category && item.category.toLowerCase().includes(query))
+      );
+    });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedItems = filtered.slice(startIndex, endIndex);
+    const pages = Math.max(1, Math.ceil(f.length / pageSize));
+    const safe = Math.min(currentPage, pages);
+    const start = (safe - 1) * pageSize;
+    return {
+      filtered: f,
+      totalPages: pages,
+      safePage: safe,
+      paginatedItems: f.slice(start, start + pageSize),
+    };
+  }, [flattenedItems, searchQuery, currentPage, pageSize]);
 
   const handleViewClick = async (item: FlattenedRequestItem) => {
     setSelectedItem(item);
@@ -129,18 +122,18 @@ function ProcessRequests() {
     }
   };
 
-  const handleMarkProcessedConfirm = async () => {
+  const handleMarkProcessedConfirm = async (items: ProcessItemData[]) => {
     if (!selectedRequest) return;
 
     setIsSubmitting(true);
     try {
-      await marketingRequestsApi.markItemsProcessed(selectedRequest.id);
+      await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
       setSelectedItem(null);
       setSelectedRequest(null);
       setMyProcessingStatus(null);
-      fetchRequests(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error marking items as processed:", err);
       toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
@@ -175,7 +168,7 @@ function ProcessRequests() {
       toast.success("Request cancelled successfully");
       setShowCancelModal(false);
       setSelectedCancelRequest(null);
-      fetchRequests(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error cancelling request:", err);
       toast.error(err instanceof Error ? err.message : "Failed to cancel request");
@@ -194,11 +187,18 @@ function ProcessRequests() {
         return acc;
       }, {} as Record<number, FlattenedRequestItem[]>);
 
-      // Mark items in each request as processed
+      // Mark items in each request as processed (full remaining quantity)
       const results = await Promise.allSettled(
-        Object.keys(requestGroups).map(requestId =>
-          marketingRequestsApi.markItemsProcessed(Number(requestId))
-        )
+        Object.keys(requestGroups).map((requestId) => {
+          const items: ProcessItemData[] = requestGroups[Number(requestId)].map((item) => ({
+            item_id: item.id,
+            // For FIXED pricing use remaining_quantity; for non-FIXED omit fulfilled_quantity
+            ...(!item.pricing_type || item.pricing_type === "FIXED"
+              ? { fulfilled_quantity: item.remaining_quantity ?? item.quantity }
+              : {}),
+          }));
+          return marketingRequestsApi.markItemsProcessed(Number(requestId), items);
+        })
       );
 
       const succeeded = results.filter(r => r.status === "fulfilled").length;
@@ -212,7 +212,7 @@ function ProcessRequests() {
 
       setShowBulkProcessModal(false);
       setBulkProcessTargets([]);
-      fetchRequests(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Bulk mark processed failed:", err);
       toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
@@ -284,7 +284,7 @@ function ProcessRequests() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-4xl font-bold mb-1">Process Requests</h1>
@@ -293,22 +293,25 @@ function ProcessRequests() {
           </p>
         </div>
 
-        {error ? (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        ) : (
-          <ProcessRequestsTable
-            items={flattenedItems}
-            loading={loading}
-            onViewRequest={handleViewClick}
-            onMarkItemProcessed={handleMarkItemProcessedClick}
-            onCancelRequest={handleCancelClick}
-            onBulkMarkProcessed={handleBulkMarkProcessed}
-            onRefresh={() => fetchRequests(true)}
-            refreshing={refreshing}
-          />
-        )}
+        <div className="flex-1 min-h-0">
+          {error ? (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+              {error}
+            </div>
+          ) : (
+            <ProcessRequestsTable
+              items={flattenedItems}
+              loading={loading}
+              onViewRequest={handleViewClick}
+              onMarkItemProcessed={handleMarkItemProcessedClick}
+              onCancelRequest={handleCancelClick}
+              onBulkMarkProcessed={handleBulkMarkProcessed}
+              onRefresh={handleManualRefresh}
+              refreshing={refreshing}
+              fillHeight
+            />
+          )}
+        </div>
       </div>
 
       <ViewRequestModal

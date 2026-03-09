@@ -34,7 +34,7 @@ export function SetPointsConfirmationModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
-        className="rounded-lg shadow-2xl w-full max-w-md mx-4 bg-card"
+        className="rounded-lg shadow-2xl w-full max-w-md mx-4 bg-card max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div

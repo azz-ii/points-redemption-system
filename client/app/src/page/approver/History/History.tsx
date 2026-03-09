@@ -1,65 +1,56 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { redemptionRequestsApi } from "@/lib/api";
-import { toast } from "sonner";
+import { useRequests } from "@/hooks/queries/useRequests";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import type { HistoryItem } from "./types";
 import { HistoryTable, HistoryMobileCards } from "./components";
 import { ViewHistoryModal } from "./modals";
 
 function ApproverHistory() {
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [_error, setError] = useState<string | null>(null);
 
-  // Fetch processed requests on mount
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await redemptionRequestsApi.getRequests();
-      // Filter to show only PROCESSED requests
-      const processedRequests = data.filter(
-        (req) => req.processing_status === "PROCESSED"
-      );
-      setHistoryItems(processedRequests);
-    } catch (err) {
-      console.error("Error fetching history:", err);
-      setError(err instanceof Error ? err.message : "Failed to load history");
-      toast.error("Failed to load history");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [pageSize, setPageSize] = useState(15);
-  const filteredItems = historyItems.filter((item) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.id.toString().includes(query) ||
-      item.requested_by_name.toLowerCase().includes(query) ||
-      item.requested_for_name.toLowerCase().includes(query) ||
-      item.status.toLowerCase().includes(query) ||
-      item.processing_status.toLowerCase().includes(query)
-    );
+  const { data: historyItems = [], isLoading: loading, isFetching: refreshing } = useRequests({
+    refetchInterval: 30_000,
+    processed: true,
   });
 
-  const sortedItems = [...filteredItems].sort(
-    (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
-  );
-  const totalPages = Math.max(1, Math.ceil(sortedItems.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedItems = sortedItems.slice(startIndex, endIndex);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
+
+  // Mobile filtering, sorting, and pagination
+  const pageSize = 15;
+  const { sortedItems, totalPages, safePage, paginatedItems } = useMemo(() => {
+    const filtered = historyItems.filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        item.id.toString().includes(query) ||
+        item.requested_by_name.toLowerCase().includes(query) ||
+        item.requested_for_name.toLowerCase().includes(query) ||
+        item.status.toLowerCase().includes(query) ||
+        item.processing_status.toLowerCase().includes(query)
+      );
+    });
+
+    const sorted = [...filtered].sort(
+      (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+    );
+    const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
+    const safe = Math.min(currentPage, pages);
+    const start = (safe - 1) * pageSize;
+    return {
+      sortedItems: sorted,
+      totalPages: pages,
+      safePage: safe,
+      paginatedItems: sorted.slice(start, start + pageSize),
+    };
+  }, [historyItems, searchQuery, currentPage, pageSize]);
 
   return (
     <>
@@ -115,7 +106,7 @@ function ApproverHistory() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-semibold">History</h1>
@@ -125,69 +116,15 @@ function ApproverHistory() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative flex items-center bg-card border-border">
-            <Search className="absolute left-3 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Search by ID, Name....."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-10 w-full bg-transparent border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <HistoryTable
-          historyItems={paginatedItems}
-          loading={loading}
-          onView={setSelectedItem}
-        />
-
-        {/* Desktop Pagination */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Rows per page</span>
-            <select
-              className="h-8 rounded-md border border-input bg-background px-2 text-sm"
-              value={pageSize}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                setPageSize(val === filteredItems.length ? filteredItems.length : val);
-                setCurrentPage(1);
-              }}
-            >
-              {[15, 50, 100].map((size) => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-              <option value={filteredItems.length}>All ({filteredItems.length})</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-              disabled={safePage === 1}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-            >
-              <ChevronLeft className="h-4 w-4" /> Previous
-            </button>
-            <span className="text-sm font-medium">
-              Page {safePage} of {totalPages}
-            </span>
-            <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, safePage + 1))
-              }
-              disabled={safePage === totalPages}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-            >
-              Next <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+        <div className="flex-1 min-h-0">
+          <HistoryTable
+            historyItems={historyItems}
+            loading={loading}
+            onView={setSelectedItem}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
+            fillHeight
+          />
         </div>
       </div>
 

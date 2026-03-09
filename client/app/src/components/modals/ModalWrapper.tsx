@@ -31,7 +31,7 @@ export function ModalWrapper({
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-card rounded-lg shadow-2xl ${maxWidthClasses[maxWidth]} w-full border divide-y border-border divide-border`}
+        className={`bg-card rounded-lg shadow-2xl ${maxWidthClasses[maxWidth]} w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden`}
         role={role}
         aria-modal="true"
         aria-labelledby={ariaLabelledBy}

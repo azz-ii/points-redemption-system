@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useInventoryPage } from "@/hooks/queries/useInventory";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import type { InventoryItem, StockStatus } from "./modals";
 import {
   ViewInventoryModal,
@@ -21,37 +24,22 @@ import {
   InventoryMobileCards,
 } from "./components";
 
-interface ApiInventoryItem {
-  id: number;
-  item_name: string;
-  item_code: string;
-  category: string;
-  points: string;
-  price: string;
-  stock: number;
-  committed_stock: number;
-  available_stock: number;
-  has_stock: boolean;
-  legend:
-    | "Collateral"
-    | "Giveaway"
-    | "Asset"
-    | "Benefit";
-  stock_status: string;
-}
-
 function Inventory() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [items, setItems] = useState<InventoryItem[]>([]);
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
 
   // Pagination state (0-indexed for DataTable compatibility)
   const [tablePage, setTablePage] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState(15);
+
+  const { data: inventoryData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useInventoryPage(
+    tablePage + 1, pageSize, searchQuery, 10000,
+  );
+  const items = inventoryData?.results ?? [];
+  const totalCount = inventoryData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const error = queryError ? "Failed to load inventory items. Please try again." : null;
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -64,61 +52,16 @@ function Inventory() {
   const [updating, setUpdating] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // Mutation loading state
+  const [mutationLoading, setMutationLoading] = useState(false);
+
   // History modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyTarget, setHistoryTarget] = useState<InventoryItem | null>(null);
 
-  // Fetch inventory items from API
-  const fetchInventoryItems = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const params = new URLSearchParams();
-      params.append("page", String(tablePage + 1));
-      params.append("page_size", String(pageSize));
-      if (searchQuery.trim()) {
-        params.append("search", searchQuery.trim());
-      }
-
-      const response = await fetch(`/api/inventory/?${params.toString()}`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch inventory items");
-      }
-
-      const data = await response.json();
-      const inventoryItems: InventoryItem[] = (data.results || []).map(
-        (item: ApiInventoryItem) => ({
-          id: item.id,
-          item_name: item.item_name,
-          item_code: item.item_code,
-          category: item.category,
-          points: item.points,
-          price: item.price,
-          stock: item.stock,
-          committed_stock: item.committed_stock,
-          available_stock: item.available_stock,
-          has_stock: item.has_stock,
-          legend: item.legend,
-          stock_status: item.stock_status as StockStatus,
-        }),
-      );
-      setItems(inventoryItems);
-      setTotalCount(data.count || 0);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching inventory items:", err);
-      setError("Failed to load inventory items. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [tablePage, pageSize, searchQuery]);
-
-  useEffect(() => {
-    fetchInventoryItems();
-  }, [fetchInventoryItems]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.inventory.all });
+  }, [queryClient]);
 
   const handlePageChange = useCallback((pageIndex: number) => {
     setTablePage(pageIndex);
@@ -161,7 +104,7 @@ function Inventory() {
   // Handle set inventory - batch updates (only changed items)
   const handleSetStock = async (updates: { id: number; adjustment: number; reason: string }[]) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
 
       // Use batch API for efficiency
       const result = await inventoryApi.batchUpdateStock(updates);
@@ -177,19 +120,19 @@ function Inventory() {
         );
       }
 
-      fetchInventoryItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
     } catch (err) {
       console.error("Error updating stock:", err);
       toast.error(err instanceof Error ? err.message : "Failed to update stock");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Handle bulk set stock
   const handleBulkSetStock = async (stockDelta: number, password: string, reason: string) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const result = await inventoryApi.bulkUpdateStock(stockDelta, password, reason);
 
       // Success
@@ -198,19 +141,19 @@ function Inventory() {
         result.message ||
           `Successfully updated ${result.updated_count} item(s)`,
       );
-      fetchInventoryItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
     } catch (err) {
       console.error("Error bulk updating stock:", err);
       toast.error(err instanceof Error ? err.message : "Failed to bulk update stock");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Handle reset all stock
   const handleResetAllStock = async (password: string, reason: string) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const result = await inventoryApi.resetAllStock(password, reason);
 
       // Success
@@ -218,12 +161,12 @@ function Inventory() {
       toast.success(
         result.message || `Successfully reset ${result.updated_count} item(s)`,
       );
-      fetchInventoryItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
     } catch (err) {
       console.error("Error resetting stock:", err);
       toast.error(err instanceof Error ? err.message : "Failed to reset stock");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
@@ -270,7 +213,7 @@ function Inventory() {
       setShowEditModal(false);
       setEditTarget(null);
       setEditError(null);
-      fetchInventoryItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
     } catch (err) {
       console.error("Error updating stock:", err);
       setEditError(
@@ -286,7 +229,7 @@ function Inventory() {
 
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Inventory</h1>
@@ -299,16 +242,17 @@ function Inventory() {
           </div>
 
           {/* Table */}
-          <InventoryTable
-            items={items}
+          <div className="flex-1 min-h-0">
+            <InventoryTable
+              items={items}
             loading={loading}
             error={error}
             onViewItem={handleViewClick}
             onEditItem={handleEditClick}
             onViewHistory={handleViewHistory}
-            onRetry={fetchInventoryItems}
-            onRefresh={fetchInventoryItems}
-            refreshing={loading}
+            onRetry={() => refetch()}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
             onExport={() => setShowExportModal(true)}
             onSetInventory={() => setShowSetInventoryModal(true)}
             manualPagination
@@ -320,7 +264,9 @@ function Inventory() {
             pageSize={pageSize}
             pageSizeOptions={[15, 50, 100]}
             onPageSizeChange={handlePageSizeChange}
+            fillHeight
           />
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -357,7 +303,7 @@ function Inventory() {
             error={error}
             onViewItem={handleViewClick}
             onEditItem={handleEditClick}
-            onRetry={fetchInventoryItems}
+            onRetry={() => refetch()}
             searchQuery={searchQuery}
           />
 

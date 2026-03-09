@@ -12,6 +12,7 @@ interface ProcessRequestsTableProps {
   onBulkMarkProcessed?: (items: FlattenedRequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  fillHeight?: boolean;
 }
 
 export function ProcessRequestsTable({
@@ -23,6 +24,7 @@ export function ProcessRequestsTable({
   onBulkMarkProcessed,
   onRefresh,
   refreshing = false,
+  fillHeight,
 }: ProcessRequestsTableProps) {
   const columns = useMemo(
     () =>
@@ -55,7 +57,7 @@ export function ProcessRequestsTable({
   };
 
   return (
-    <div className="hidden md:block">
+    <div className={fillHeight ? "h-full" : "hidden md:block"}>
       <DataTable
         columns={columns}
         data={items}
@@ -74,6 +76,7 @@ export function ProcessRequestsTable({
         loadingMessage="Loading items..."
         emptyMessage="No items found"
         pageSizeOptions={[15, 50, 100]}
+        fillHeight={fillHeight}
       />
     </div>
   );

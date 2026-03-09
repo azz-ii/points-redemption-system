@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   RotateCcw,
@@ -12,14 +12,8 @@ import { toast } from "sonner";
 import {
   analyticsApi,
   type DateRange,
-  type AnalyticsOverview,
-  type TimeSeriesEntry,
-  type ItemPopularity,
-  type AgentPerformance,
-  type TeamPerformance,
-  type TurnaroundData,
-  type EntityAnalytics,
 } from "./utils/analyticsApi";
+import { useSuperadminDashboard } from "@/hooks/queries/useSuperadminDashboard";
 import {
   DateRangeSelector,
   OverviewCards,
@@ -46,67 +40,17 @@ function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRange>("30");
   const [showExportModal, setShowExportModal] = useState(false);
 
-  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
-  const [overviewLoading, setOverviewLoading] = useState(true);
-
-  const [timeSeries, setTimeSeries] = useState<TimeSeriesEntry[]>([]);
-  const [timeSeriesLoading, setTimeSeriesLoading] = useState(true);
-
-  const [items, setItems] = useState<ItemPopularity[]>([]);
-  const [itemsLoading, setItemsLoading] = useState(true);
-
-  const [agents, setAgents] = useState<AgentPerformance[]>([]);
-  const [agentsLoading, setAgentsLoading] = useState(true);
-
-  const [teams, setTeams] = useState<TeamPerformance[]>([]);
-  const [teamsLoading, setTeamsLoading] = useState(true);
-
-  const [turnaround, setTurnaround] = useState<TurnaroundData | null>(null);
-  const [turnaroundLoading, setTurnaroundLoading] = useState(true);
-
-  const [distributors, setDistributors] = useState<EntityAnalytics[]>([]);
-  const [customers, setCustomers] = useState<EntityAnalytics[]>([]);
-  const [entitiesLoading, setEntitiesLoading] = useState(true);
-
-  // ── Fetch analytics data when range changes ──
-  const fetchAnalytics = useCallback(async (range: DateRange) => {
-    console.debug(`[Dashboard] Fetching analytics for range=${range}`);
-
-    // Overview
-    setOverviewLoading(true);
-    analyticsApi.getOverview(range).then((d) => { setOverview(d); setOverviewLoading(false); }).catch((e) => { console.error("[Dashboard] overview err:", e); setOverviewLoading(false); });
-
-    // Time-series
-    setTimeSeriesLoading(true);
-    analyticsApi.getTimeSeries(range).then((d) => { setTimeSeries(d); setTimeSeriesLoading(false); }).catch((e) => { console.error("[Dashboard] timeseries err:", e); setTimeSeriesLoading(false); });
-
-    // Items
-    setItemsLoading(true);
-    analyticsApi.getItems(range).then((d) => { setItems(d); setItemsLoading(false); }).catch((e) => { console.error("[Dashboard] items err:", e); setItemsLoading(false); });
-
-    // Agents
-    setAgentsLoading(true);
-    analyticsApi.getAgents(range).then((d) => { setAgents(d); setAgentsLoading(false); }).catch((e) => { console.error("[Dashboard] agents err:", e); setAgentsLoading(false); });
-
-    // Teams
-    setTeamsLoading(true);
-    analyticsApi.getTeams(range).then((d) => { setTeams(d); setTeamsLoading(false); }).catch((e) => { console.error("[Dashboard] teams err:", e); setTeamsLoading(false); });
-
-    // Turnaround
-    setTurnaroundLoading(true);
-    analyticsApi.getTurnaround(range).then((d) => { setTurnaround(d); setTurnaroundLoading(false); }).catch((e) => { console.error("[Dashboard] turnaround err:", e); setTurnaroundLoading(false); });
-
-    // Entities
-    setEntitiesLoading(true);
-    Promise.all([
-      analyticsApi.getEntities("distributor", range),
-      analyticsApi.getEntities("customer", range),
-    ]).then(([dist, cust]) => { setDistributors(dist); setCustomers(cust); setEntitiesLoading(false); }).catch((e) => { console.error("[Dashboard] entities err:", e); setEntitiesLoading(false); });
-  }, []);
-
-  useEffect(() => {
-    fetchAnalytics(dateRange);
-  }, [dateRange, fetchAnalytics]);
+  const {
+    overview,
+    timeSeries,
+    items,
+    agents,
+    teams,
+    turnaround,
+    distributors,
+    customers,
+    invalidateAll,
+  } = useSuperadminDashboard(dateRange);
 
   const handleResetAllPointsConfirm = async () => {
     if (!password) { toast.error("Please enter your password"); return; }
@@ -120,7 +64,7 @@ function Dashboard() {
         setPassword("");
         setSelectedClient("");
         setPointAmount("");
-        fetchAnalytics(dateRange);
+        invalidateAll();
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to reset points.");
@@ -161,7 +105,7 @@ function Dashboard() {
       </div>
 
       {/* ── Overview Cards ── */}
-      <OverviewCards data={overview} loading={overviewLoading} />
+      <OverviewCards data={overview.data ?? null} loading={overview.isLoading} />
 
       {/* ── Charts Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -171,8 +115,8 @@ function Dashboard() {
           action={
             <ChartExportButton
               filename="request-trends"
-              disabled={timeSeriesLoading}
-              data={timeSeries.map((e) => ({
+              disabled={timeSeries.isLoading}
+              data={(timeSeries.data ?? []).map((e) => ({
                 Date: e.date,
                 Requests: e.request_count,
                 "Points Redeemed": e.points_redeemed,
@@ -182,7 +126,7 @@ function Dashboard() {
             />
           }
         >
-          <TimeSeriesChart data={timeSeries} loading={timeSeriesLoading} />
+          <TimeSeriesChart data={timeSeries.data ?? []} loading={timeSeries.isLoading} />
         </ChartCard>
 
         {/* Turnaround Time */}
@@ -191,8 +135,8 @@ function Dashboard() {
           action={
             <ChartExportButton
               filename="turnaround-time"
-              disabled={turnaroundLoading}
-              data={turnaround?.trend.map((e) => ({
+              disabled={turnaround.isLoading}
+              data={turnaround.data?.trend.map((e) => ({
                 Month: e.month,
                 "Avg Hours": e.avg_total_hours ?? "N/A",
                 Count: e.count,
@@ -200,7 +144,7 @@ function Dashboard() {
             />
           }
         >
-          <TurnaroundChart data={turnaround} loading={turnaroundLoading} />
+          <TurnaroundChart data={turnaround.data ?? null} loading={turnaround.isLoading} />
         </ChartCard>
 
         {/* Item Popularity */}
@@ -209,8 +153,8 @@ function Dashboard() {
           action={
             <ChartExportButton
               filename="item-popularity"
-              disabled={itemsLoading}
-              data={items.map((e) => ({
+              disabled={items.isLoading}
+              data={(items.data ?? []).map((e) => ({
                 Item: e.item_name,
                 Code: e.item_code,
                 Category: e.legend,
@@ -222,9 +166,9 @@ function Dashboard() {
           }
         >
           <ItemPopularityChart
-            data={items}
-            loading={itemsLoading}
-            detailItems={items.map((item) => ({
+            data={items.data ?? []}
+            loading={items.isLoading}
+            detailItems={(items.data ?? []).map((item) => ({
               id: item.product_id,
               label: item.item_name,
               fetcher: async () => {
@@ -259,8 +203,8 @@ function Dashboard() {
           action={
             <ChartExportButton
               filename="agent-performance"
-              disabled={agentsLoading}
-              data={agents.map((e) => ({
+              disabled={agents.isLoading}
+              data={(agents.data ?? []).map((e) => ({
                 Agent: e.agent_name,
                 Team: e.team_name || "-",
                 "Total Requests": e.total_requests,
@@ -273,9 +217,9 @@ function Dashboard() {
           }
         >
           <AgentPerformanceChart
-            data={agents}
-            loading={agentsLoading}
-            detailItems={agents.map((agent) => ({
+            data={agents.data ?? []}
+            loading={agents.isLoading}
+            detailItems={(agents.data ?? []).map((agent) => ({
               id: agent.agent_id,
               label: agent.agent_name,
               fetcher: async () => {
@@ -307,8 +251,8 @@ function Dashboard() {
           action={
             <ChartExportButton
               filename="team-performance"
-              disabled={teamsLoading}
-              data={teams.map((e) => ({
+              disabled={teams.isLoading}
+              data={(teams.data ?? []).map((e) => ({
                 Team: e.team_name,
                 "Total Requests": e.total_requests,
                 Approved: e.approved_count,
@@ -319,7 +263,7 @@ function Dashboard() {
             />
           }
         >
-          <TeamPerformanceChart data={teams} loading={teamsLoading} />
+          <TeamPerformanceChart data={teams.data ?? []} loading={teams.isLoading} />
         </ChartCard>
 
         {/* Entity Analytics */}
@@ -328,8 +272,8 @@ function Dashboard() {
           action={
             <ChartExportButton
               filename="entity-analytics"
-              disabled={entitiesLoading}
-              data={[...distributors, ...customers].map((e) => ({
+              disabled={distributors.isLoading || customers.isLoading}
+              data={[...(distributors.data ?? []), ...(customers.data ?? [])].map((e) => ({
                 Name: e.entity_name,
                 Type: e.entity_type,
                 Requests: e.request_count,
@@ -340,9 +284,9 @@ function Dashboard() {
           }
         >
           <EntityAnalyticsChart
-            distributors={distributors}
-            customers={customers}
-            loading={entitiesLoading}
+            distributors={distributors.data ?? []}
+            customers={customers.data ?? []}
+            loading={distributors.isLoading || customers.isLoading}
           />
         </ChartCard>
       </div>
@@ -456,14 +400,14 @@ function Dashboard() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         data={{
-          overview,
-          timeSeries,
-          items,
-          agents,
-          teams,
-          turnaround,
-          distributors,
-          customers,
+          overview: overview.data ?? null,
+          timeSeries: timeSeries.data ?? [],
+          items: items.data ?? [],
+          agents: agents.data ?? [],
+          teams: teams.data ?? [],
+          turnaround: turnaround.data ?? null,
+          distributors: distributors.data ?? [],
+          customers: customers.data ?? [],
         }}
       />
     </div>

@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { marketingRequestsApi } from "@/lib/api";
+import { useMarketingRequests, useMarketingHistory } from "@/hooks/queries/useMarketingRequests";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import type {
   RequestItem,
   FlattenedRequestItem,
@@ -18,11 +21,7 @@ import { DashboardTable, DashboardMobileCards } from "./components";
 function MarketingDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests, setRequests] = useState<RequestItem[]>([]);
-  const [historyRequests, setHistoryRequests] = useState<RequestItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -34,33 +33,15 @@ function MarketingDashboard() {
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchData = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const [requestsData, historyData] = await Promise.all([
-        marketingRequestsApi.getRequests(),
-        marketingRequestsApi.getHistory(),
-      ]);
-      setRequests(requestsData as unknown as RequestItem[]);
-      setHistoryRequests(historyData as unknown as RequestItem[]);
-    } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError(err instanceof Error ? err.message : "Failed to load dashboard data");
-      toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const { data: requests = [], isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useMarketingRequests(5000);
+  const { data: historyRequests = [], isLoading: historyLoading } = useMarketingHistory(10000);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const loading = requestsLoading || historyLoading;
+  const error = requestsError ? (requestsError instanceof Error ? requestsError.message : "Failed to load dashboard data") : null;
+
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
 
   const fetchMyProcessingStatus = async (requestId: number) => {
     try {
@@ -143,13 +124,14 @@ function MarketingDashboard() {
 
     setIsSubmitting(true);
     try {
-      await marketingRequestsApi.markItemsProcessed(selectedRequest.id);
+      const items = (myProcessingStatus?.items ?? []).map((item) => ({ item_id: item.id }));
+      await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
       setSelectedItem(null);
       setSelectedRequest(null);
       setMyProcessingStatus(null);
-      fetchData(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error marking items as processed:", err);
       toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
@@ -183,7 +165,10 @@ function MarketingDashboard() {
 
       const results = await Promise.allSettled(
         Object.keys(requestGroups).map((requestId) =>
-          marketingRequestsApi.markItemsProcessed(Number(requestId))
+          marketingRequestsApi.markItemsProcessed(
+            Number(requestId),
+            requestGroups[Number(requestId)].map((item) => ({ item_id: item.id }))
+          )
         )
       );
 
@@ -200,7 +185,7 @@ function MarketingDashboard() {
 
       setShowBulkProcessModal(false);
       setBulkProcessTargets([]);
-      fetchData(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Bulk mark processed failed:", err);
       toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
@@ -296,7 +281,7 @@ function MarketingDashboard() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -339,21 +324,24 @@ function MarketingDashboard() {
           </div>
         </div>
 
-        {error ? (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        ) : (
-          <DashboardTable
-            items={flattenedItems}
-            loading={loading}
-            onViewRequest={handleViewClick}
-            onMarkItemProcessed={handleMarkItemProcessedClick}
-            onBulkMarkProcessed={handleBulkMarkProcessed}
-            onRefresh={() => fetchData(true)}
-            refreshing={refreshing}
-          />
-        )}
+        <div className="flex-1 min-h-0">
+          {error ? (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+              {error}
+            </div>
+          ) : (
+            <DashboardTable
+              items={flattenedItems}
+              loading={loading}
+              onViewRequest={handleViewClick}
+              onMarkItemProcessed={handleMarkItemProcessedClick}
+              onBulkMarkProcessed={handleBulkMarkProcessed}
+              onRefresh={handleManualRefresh}
+              refreshing={refreshing}
+              fillHeight
+            />
+          )}
+        </div>
       </div>
 
       <ViewRequestModal

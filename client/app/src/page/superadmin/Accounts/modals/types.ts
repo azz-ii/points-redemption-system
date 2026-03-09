@@ -18,6 +18,7 @@ export interface Account {
   team_id?: number | null;
   team_name?: string | null;
   approver_teams?: { id: number; name: string }[];
+  can_self_request?: boolean;
 }
 
 export interface TeamOption {

@@ -5,7 +5,9 @@ from .views import (
     DistributorExportView, 
     DistributorBulkUpdatePointsView, 
     DistributorBatchUpdatePointsView,
-    UnarchiveDistributorView
+    UnarchiveDistributorView,
+    SalesVolumeTiersView,
+    DistributorAllocateSalesVolumeView,
 )
 
 router = DefaultRouter()
@@ -16,5 +18,7 @@ urlpatterns = [
     path('api/distributors/bulk_update_points/', DistributorBulkUpdatePointsView.as_view(), name='distributor-bulk-update-points'),
     path('api/distributors/batch_update_points/', DistributorBatchUpdatePointsView.as_view(), name='distributor-batch-update-points'),
     path('api/distributors/<int:pk>/unarchive/', UnarchiveDistributorView.as_view(), name='distributor-unarchive'),
+    path('api/distributors/sales-volume-tiers/', SalesVolumeTiersView.as_view(), name='distributor-sales-volume-tiers'),
+    path('api/distributors/allocate-sales-volume/', DistributorAllocateSalesVolumeView.as_view(), name='distributor-allocate-sales-volume'),
     path('api/', include(router.urls)),
 ]

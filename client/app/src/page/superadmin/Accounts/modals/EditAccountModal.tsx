@@ -10,6 +10,7 @@ interface EditAccountData {
   position: string;
   points: number;
   is_activated: boolean;
+  can_self_request: boolean;
 }
 
 interface EditAccountModalProps extends ModalBaseProps {
@@ -64,7 +65,7 @@ export function EditAccountModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-account-title"
-        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -86,7 +87,7 @@ export function EditAccountModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {/* Credentials Section */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -298,7 +299,7 @@ export function EditAccountModal({
               {editAccount.position === "Approver" && (
                 <div className="space-y-3">
                   <label className="text-xs text-muted-foreground block">
-                    Teams <span className="text-muted-foreground">(optional)</span>
+                    Manages Teams <span className="text-muted-foreground">(optional)</span>
                   </label>
                   {account.approver_teams && account.approver_teams.length > 0 && (
                     <div className="space-y-2">
@@ -370,6 +371,74 @@ export function EditAccountModal({
                       ))}
                   </select>
                 </div>
+              )}
+
+              {editAccount.position === "Approver" && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-2 block">
+                    Member of Team <span className="text-muted-foreground">(optional)</span>
+                  </label>
+                  {account.team_id != null && selectedEditTeamId !== "REMOVE" && typeof selectedEditTeamId !== "number" ? (
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={account.team_name ?? ""}
+                        disabled
+                        className="flex-1 px-4 py-3 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEditTeamId("REMOVE")}
+                        className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={
+                        typeof selectedEditTeamId === "number"
+                          ? selectedEditTeamId
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setSelectedEditTeamId(
+                          e.target.value ? Number(e.target.value) : null,
+                        )
+                      }
+                      className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                    >
+                      <option value="">No team assigned</option>
+                      {teams.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    The team whose approver will review this user's self-requests
+                  </p>
+                </div>
+              )}
+
+              {editAccount.position === "Approver" && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editAccount.can_self_request}
+                    onChange={(e) =>
+                      setEditAccount({ ...editAccount, can_self_request: e.target.checked })
+                    }
+                    className="w-4 h-4 rounded border-border"
+                  />
+                  <div>
+                    <span className="text-sm text-foreground">Allow self-requests</span>
+                    <p className="text-xs text-muted-foreground">
+                      Enable this approver to create redemption requests for themselves
+                    </p>
+                  </div>
+                </label>
               )}
             </div>
           </div>

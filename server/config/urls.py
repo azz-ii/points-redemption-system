@@ -30,6 +30,7 @@ from views import (
     ActivateAccountView,
 )
 from items_catalogue.views import ProductListCreateView, ProductDetailView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView, StockAuditLogListView
+from utils.sse_views import sse_events_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -68,6 +69,8 @@ urlpatterns = [
     path('api/points-audit/', include('points_audit.urls')),
     # Cart API
     path('api/cart/', include('cart.urls')),
+    # SSE real-time events
+    path('api/sse/events/', sse_events_view, name='sse_events'),
 ]
 
 # Serve static and media files in development

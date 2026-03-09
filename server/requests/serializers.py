@@ -1,8 +1,25 @@
 from rest_framework import serializers
-from .models import RedemptionRequest, RedemptionRequestItem, RequestedForType
+from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, RequestedForType
 from items_catalogue.models import Product
 from distributers.models import Distributor
 from customers.models import Customer
+
+
+class ItemFulfillmentLogSerializer(serializers.ModelSerializer):
+    fulfilled_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ItemFulfillmentLog
+        fields = ['id', 'fulfilled_quantity', 'fulfilled_by', 'fulfilled_by_name', 'fulfilled_at', 'notes']
+        read_only_fields = ['id', 'fulfilled_at']
+
+    def get_fulfilled_by_name(self, obj):
+        if obj.fulfilled_by:
+            profile = getattr(obj.fulfilled_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.fulfilled_by.username
+            return obj.fulfilled_by.username
+        return None
 
 
 class RedemptionRequestItemSerializer(serializers.ModelSerializer):
@@ -12,6 +29,9 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
     pricing_type_display = serializers.SerializerMethodField()
     item_processed_by_name = serializers.SerializerMethodField()
     item_legend = serializers.SerializerMethodField()
+    remaining_quantity = serializers.SerializerMethodField()
+    is_fully_fulfilled = serializers.SerializerMethodField()
+    fulfillment_logs = ItemFulfillmentLogSerializer(many=True, read_only=True)
 
     class Meta:
         model = RedemptionRequestItem
@@ -21,9 +41,13 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
             'total_points', 'image_url',
             # Dynamic pricing fields
             'pricing_type', 'pricing_type_display', 'dynamic_quantity', 'points_multiplier',
+            # Partial fulfillment fields
+            'fulfilled_quantity', 'remaining_quantity', 'is_fully_fulfilled',
             # Item-level processing fields
             'item_processed_by', 'item_processed_by_name', 'item_processed_at',
-            'item_legend'
+            'item_legend',
+            # Fulfillment history
+            'fulfillment_logs',
         ]
         read_only_fields = ['id']
 
@@ -61,6 +85,12 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
         if obj.product:
             return obj.product.legend
         return None
+
+    def get_remaining_quantity(self, obj):
+        return obj.remaining_quantity
+
+    def get_is_fully_fulfilled(self, obj):
+        return obj.is_fully_fulfilled
 
 
 class RedemptionRequestSerializer(serializers.ModelSerializer):
@@ -197,7 +227,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         allow_null=True
     )
     requested_for_type = serializers.ChoiceField(
-        choices=['DISTRIBUTOR', 'CUSTOMER'],
+        choices=['DISTRIBUTOR', 'CUSTOMER', 'SELF'],
         default='DISTRIBUTOR'
     )
     points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR'])
@@ -224,7 +254,24 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         requested_for_customer = data.get('requested_for_customer')
         points_deducted_from = data.get('points_deducted_from')
         
-        if requested_for_type == 'DISTRIBUTOR':
+        if requested_for_type == 'SELF':
+            # Validate that the user is an Approver with can_self_request
+            user = self.context['request'].user
+            profile = getattr(user, 'profile', None)
+            if not profile or profile.position != 'Approver':
+                raise serializers.ValidationError({
+                    'requested_for_type': 'Only Approvers can create self-requests'
+                })
+            if not profile.can_self_request:
+                raise serializers.ValidationError({
+                    'requested_for_type': 'You are not authorized to create self-requests. Please contact your administrator.'
+                })
+            # Clear entity fields for SELF requests
+            data['requested_for'] = None
+            data['requested_for_customer'] = None
+            # Force points_deducted_from to SELF (no actual deduction will happen)
+            data['points_deducted_from'] = 'SELF'
+        elif requested_for_type == 'DISTRIBUTOR':
             if not requested_for:
                 raise serializers.ValidationError({
                     'requested_for': 'Distributor is required when requested_for_type is DISTRIBUTOR'
@@ -451,3 +498,15 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                 })
         
         return redemption_request
+
+
+class PartialFulfillmentItemSerializer(serializers.Serializer):
+    """Validates a single item entry in a partial fulfillment request."""
+    item_id = serializers.IntegerField()
+    fulfilled_quantity = serializers.IntegerField(min_value=1, required=False, allow_null=True)
+    notes = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
+
+
+class PartialFulfillmentSerializer(serializers.Serializer):
+    """Validates the body sent to mark_items_processed."""
+    items = PartialFulfillmentItemSerializer(many=True, min_length=1)

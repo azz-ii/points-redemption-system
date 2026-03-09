@@ -39,12 +39,15 @@ export interface PaginatedProductsResponse {
 }
 
 export const catalogueApi = {
-  getProductsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedProductsResponse> => {
+  getProductsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = '', showArchived?: boolean): Promise<PaginatedProductsResponse> => {
     const url = new URL(`${API_BASE_URL}/catalogue/`, window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
+    }
+    if (showArchived) {
+      url.searchParams.append('show_archived', 'true');
     }
     const response = await fetch(url.toString(), {
       credentials: 'include',
@@ -94,5 +97,22 @@ export const catalogueApi = {
     }
     
     return allProducts;
+  },
+
+  getAssignedItemsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedProductsResponse> => {
+    const url = new URL(`${API_BASE_URL}/catalogue/`, window.location.origin);
+    url.searchParams.append('mktg_admin', 'me');
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('page_size', pageSize.toString());
+    if (searchQuery) {
+      url.searchParams.append('search', searchQuery);
+    }
+    const response = await fetch(url.toString(), { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to fetch assigned items');
+    const data = await response.json();
+    if (Array.isArray(data)) {
+      return { count: data.length, next: null, previous: null, results: data };
+    }
+    return data;
   },
 };

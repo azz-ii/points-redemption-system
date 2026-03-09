@@ -148,7 +148,7 @@ export function InventoryHistoryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col bg-card">
+      <div className="rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col bg-card">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-border">
           <div className="flex items-center gap-3">

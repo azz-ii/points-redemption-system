@@ -30,6 +30,7 @@ interface AccountsTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  fillHeight?: boolean;
 }
 
 export function AccountsTable({
@@ -59,6 +60,7 @@ export function AccountsTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  fillHeight,
 }: AccountsTableProps) {
   const columns = useMemo(
     () =>
@@ -118,6 +120,7 @@ export function AccountsTable({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      fillHeight={fillHeight}
     />
   );
 }

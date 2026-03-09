@@ -6,4 +6,5 @@ export { UnarchiveDistributorModal } from "./UnarchiveDistributorModal";
 export { BulkArchiveDistributorModal } from "./BulkArchiveDistributorModal";
 export { ExportModal } from "./ExportModal";
 export { SetPointsModal } from "./SetPointsModal";
+export { SalesVolumeAllocationModal } from "./SalesVolumeAllocationModal";
 export type { Distributor, DistributorFormData } from "./types";

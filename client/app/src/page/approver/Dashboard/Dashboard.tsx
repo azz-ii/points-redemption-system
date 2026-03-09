@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
-import {
-  approverDashboardApi,
-  type ApproverDashboardStats,
-} from "@/lib/distributors-api";
-import { redemptionRequestsApi, type RedemptionRequestResponse } from "@/lib/api";
+import { useApproverDashboardStats } from "@/hooks/queries/useDashboard";
+import { useRequests } from "@/hooks/queries/useRequests";
+import { useApproveRequest, useRejectRequest } from "@/hooks/mutations/useRequestMutations";
 import { toast } from "sonner";
 import { ViewRequestModal, ApproveRequestModal, RejectRequestModal, type RequestItem } from "../Requests/modals";
 import { RequestsTable, RequestsMobileCards } from "../Requests/components";
@@ -13,80 +11,28 @@ import { RequestsTable, RequestsMobileCards } from "../Requests/components";
 function ApproverDashboard() {
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState<ApproverDashboardStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-
-  const [requests, setRequests] = useState<RedemptionRequestResponse[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   // Modal states
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setStatsLoading(true);
-        const data = await approverDashboardApi.getStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-        toast.error("Failed to load dashboard statistics");
-      } finally {
-        setStatsLoading(false);
-      }
-    };
+  const { data: stats, isLoading: statsLoading } = useApproverDashboardStats(5000);
+  const { data: allRequests = [], isLoading: requestsLoading, isFetching: isRefreshing, refetch } = useRequests(5000);
 
-    fetchStats();
-  }, []);
+  const requests = useMemo(
+    () => allRequests.filter(
+      (req) =>
+        req.status === "PENDING" &&
+        (req.processing_status === "NOT_PROCESSED" || !req.processing_status),
+    ),
+    [allRequests],
+  );
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  const approveMutation = useApproveRequest();
+  const rejectMutation = useRejectRequest();
 
-  const fetchRequests = async () => {
-    try {
-      setRequestsLoading(true);
-      const data = await redemptionRequestsApi.getRequests();
-      const pending = data.filter(
-        (req) =>
-          req.status === "PENDING" &&
-          (req.processing_status === "NOT_PROCESSED" || !req.processing_status),
-      );
-      setRequests(pending);
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-      toast.error("Failed to load requests");
-    } finally {
-      setRequestsLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      const [statsData, reqData] = await Promise.all([
-        approverDashboardApi.getStats(),
-        redemptionRequestsApi.getRequests(),
-      ]);
-      setStats(statsData);
-      const pending = reqData.filter(
-        (req) =>
-          req.status === "PENDING" &&
-          (req.processing_status === "NOT_PROCESSED" || !req.processing_status),
-      );
-      setRequests(pending);
-      toast.success("Dashboard refreshed");
-    } catch (error) {
-      console.error("Error refreshing dashboard:", error);
-      toast.error("Failed to refresh dashboard");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  const handleRefresh = () => { refetch(); };
 
   const handleViewClick = (request: RequestItem) => {
     setSelectedRequest(request);
@@ -110,19 +56,17 @@ function ApproverDashboard() {
     setSelectedRequest(null);
     toast.success("Request approved successfully");
 
-    redemptionRequestsApi
-      .approveRequest(selectedRequest.id, remarks)
-      .then(() => {
-        fetchRequests();
-        approverDashboardApi.getStats().then(setStats).catch(() => {});
-      })
-      .catch((err) => {
-        console.error("Error approving request:", err);
-        toast.error(
-          err instanceof Error ? err.message : "Failed to approve request",
-        );
-        fetchRequests();
-      });
+    approveMutation.mutate(
+      { id: selectedRequest.id, remarks },
+      {
+        onError: (err) => {
+          console.error("Error approving request:", err);
+          toast.error(
+            err instanceof Error ? err.message : "Failed to approve request",
+          );
+        },
+      },
+    );
   };
 
   const handleRejectConfirm = async (reason: string, remarks: string) => {
@@ -132,19 +76,17 @@ function ApproverDashboard() {
     setSelectedRequest(null);
     toast.success("Request rejected successfully");
 
-    redemptionRequestsApi
-      .rejectRequest(selectedRequest.id, reason, remarks)
-      .then(() => {
-        fetchRequests();
-        approverDashboardApi.getStats().then(setStats).catch(() => {});
-      })
-      .catch((err) => {
-        console.error("Error rejecting request:", err);
-        toast.error(
-          err instanceof Error ? err.message : "Failed to reject request",
-        );
-        fetchRequests();
-      });
+    rejectMutation.mutate(
+      { id: selectedRequest.id, reason, remarks },
+      {
+        onError: (err) => {
+          console.error("Error rejecting request:", err);
+          toast.error(
+            err instanceof Error ? err.message : "Failed to reject request",
+          );
+        },
+      },
+    );
   };
 
   return (

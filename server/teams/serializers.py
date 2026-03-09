@@ -74,9 +74,9 @@ class TeamSerializer(serializers.ModelSerializer):
             return value
         if not hasattr(value, 'profile'):
             raise serializers.ValidationError('User does not have a profile.')
-        if value.profile.position != 'Approver':
+        if value.profile.position not in ('Approver', 'Admin'):
             raise serializers.ValidationError(
-                'Only Approver-position users can be assigned as team approver.'
+                'Only Approver or Admin position users can be assigned as team approver.'
             )
         return value
 
@@ -113,7 +113,7 @@ class AssignMemberSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     
     def validate_user_id(self, value):
-        """Validate user exists and is a Sales Agent"""
+        """Validate user exists and is a Sales Agent or Approver"""
         try:
             user = User.objects.get(id=value)
         except User.DoesNotExist:
@@ -122,8 +122,8 @@ class AssignMemberSerializer(serializers.Serializer):
         if not hasattr(user, 'profile'):
             raise serializers.ValidationError('User does not have a profile.')
         
-        if user.profile.position != 'Sales Agent':
-            raise serializers.ValidationError('Only Sales Agents can be added to teams.')
+        if user.profile.position not in ('Sales Agent', 'Approver'):
+            raise serializers.ValidationError('Only Sales Agents and Approvers can be added to teams.')
         
         # Check if user is already in a team
         existing_membership = TeamMembership.objects.filter(user=user).first()

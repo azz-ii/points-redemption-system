@@ -26,6 +26,7 @@ interface CustomersTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  fillHeight?: boolean;
 }
 
 export function CustomersTable({
@@ -52,6 +53,7 @@ export function CustomersTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  fillHeight,
 }: CustomersTableProps) {
   const columns = createColumns({
     onEdit,
@@ -96,6 +98,7 @@ export function CustomersTable({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      fillHeight={fillHeight}
     />
   );
 }

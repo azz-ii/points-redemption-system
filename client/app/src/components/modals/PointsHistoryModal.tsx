@@ -142,7 +142,7 @@ export function PointsHistoryModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div
-        className={`rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col bg-card`}
+        className={`rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col bg-card`}
       >
         {/* Header */}
         <div

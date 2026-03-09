@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLogout } from "@/context/AuthContext";
+import { useState, useMemo, useCallback } from "react";
 import { Search } from "lucide-react";
+import { useRequests } from "@/hooks/queries/useRequests";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./modals/ViewRedemptionStatusModal";
 import { BulkWithdrawModal } from "./modals/BulkWithdrawModal";
 import type { RedemptionRequest } from "./modals/types";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import {
   RedemptionStatusTable,
   RedemptionStatusMobileCards,
 } from "./components";
 
 export default function RedemptionStatus() {
-  const _navigate = useNavigate();
-  const _handleLogout = useLogout();
+  const queryClient = useQueryClient();
 
   // State for data
   const [searchQuery, setSearchQuery] = useState(""); // Mobile only
@@ -25,64 +25,40 @@ export default function RedemptionStatus() {
   const [bulkWithdrawTargets, setBulkWithdrawTargets] = useState<RedemptionRequest[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
-  const [requests, setRequests] = useState<RedemptionRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 7; // Mobile only
 
-  // Fetch redemption requests from API
-  const fetchRequests = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      
-      const response = await fetch(`${API_URL}/redemption-requests/`, {
-        credentials: "include",
-      });
+  const { data: requests = [], isLoading: loading, isFetching: refreshing } = useRequests(30_000);
+  const error: string | null = null;
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch requests: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setRequests(data);
-    } catch (err) {
-      console.error("Error fetching redemption requests:", err);
-      setError(err instanceof Error ? err.message : "Failed to load requests");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
 
   // Mobile filtering and pagination
-  const filtered = requests.filter((request) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      request.id.toString().includes(q) ||
-      request.requested_for_name.toLowerCase().includes(q) ||
-      request.status_display.toLowerCase().includes(q) ||
-      request.items.some(item => 
-        item.product_code.toLowerCase().includes(q) ||
-        item.product_name.toLowerCase().includes(q)
-      )
-    );
-  });
+  const { filtered, totalPages, safePage, paginatedRequests } = useMemo(() => {
+    const f = requests.filter((request) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        request.id.toString().includes(q) ||
+        request.requested_for_name.toLowerCase().includes(q) ||
+        request.status_display.toLowerCase().includes(q) ||
+        request.items.some(item => 
+          item.product_code.toLowerCase().includes(q) ||
+          item.product_name.toLowerCase().includes(q)
+        )
+      );
+    });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const safePage = Math.min(currentPageIndex, totalPages);
-  const startIndex = (safePage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedRequests = filtered.slice(startIndex, endIndex);
+    const pages = Math.max(1, Math.ceil(f.length / itemsPerPage));
+    const safe = Math.min(currentPageIndex, pages);
+    const start = (safe - 1) * itemsPerPage;
+    return {
+      filtered: f,
+      totalPages: pages,
+      safePage: safe,
+      paginatedRequests: f.slice(start, start + itemsPerPage),
+    };
+  }, [requests, searchQuery, currentPageIndex, itemsPerPage]);
 
   const openDetails = (request: RedemptionRequest) => {
     setSelectedRequest(request);
@@ -119,7 +95,7 @@ export default function RedemptionStatus() {
 
       closeWithdrawModal();
       closeDetails();
-      fetchRequests(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Failed to cancel request:", err);
       alert(err instanceof Error ? err.message : "Failed to cancel request");
@@ -157,7 +133,7 @@ export default function RedemptionStatus() {
 
       setShowBulkWithdrawModal(false);
       setBulkWithdrawTargets([]);
-      fetchRequests(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Bulk withdraw failed:", err);
       alert(err instanceof Error ? err.message : "Failed to cancel requests");
@@ -167,7 +143,7 @@ export default function RedemptionStatus() {
   };
 
   return (
-    <div className="md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+    <>
       {/* Mobile Layout */}
       <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
         {/* Header */}
@@ -207,7 +183,7 @@ export default function RedemptionStatus() {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:block">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-4xl font-bold mb-1">Redemption Status</h1>
@@ -216,18 +192,21 @@ export default function RedemptionStatus() {
           </p>
         </div>
 
-        <TooltipProvider>
-          <RedemptionStatusTable
-            requests={requests}
-            onViewRequest={openDetails}
-            onCancelRequest={openWithdrawModal}
-            onBulkCancel={handleBulkWithdraw}
-            onRefresh={() => fetchRequests(true)}
-            refreshing={refreshing}
-            loading={loading}
-            error={error}
-          />
-        </TooltipProvider>
+        <div className="flex-1 min-h-0">
+          <TooltipProvider>
+            <RedemptionStatusTable
+              requests={requests}
+              onViewRequest={openDetails}
+              onCancelRequest={openWithdrawModal}
+              onBulkCancel={handleBulkWithdraw}
+              onRefresh={handleManualRefresh}
+              refreshing={refreshing}
+              loading={loading}
+              error={error}
+              fillHeight
+            />
+          </TooltipProvider>
+        </div>
       </div>
 
       <ViewRedemptionStatusModal
@@ -235,7 +214,7 @@ export default function RedemptionStatus() {
         onClose={closeDetails}
         item={selectedRequest?.items[0] || null}
         request={selectedRequest}
-        onRequestWithdrawn={() => fetchRequests(true)}
+        onRequestWithdrawn={() => queryClient.invalidateQueries({ queryKey: queryKeys.requests.all })}
       />
 
       {showWithdrawModal && selectedRequest && (
@@ -257,6 +236,6 @@ export default function RedemptionStatus() {
           isSubmitting={isSubmitting}
         />
       )}
-    </div>
+    </>
   );
 }

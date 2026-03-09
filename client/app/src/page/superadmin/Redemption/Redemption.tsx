@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { marketingRequestsApi } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import {
@@ -7,22 +7,27 @@ import {
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
+import { useMarketingRequests } from "@/hooks/queries/useMarketingRequests";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import {
   ViewRedemptionModal,
   MarkAsProcessedModal,
   ExportModal,
   type RedemptionItem,
   type MyProcessingStatus,
+  type ProcessItemData,
 } from "./modals";
 import { RedemptionTable, RedemptionMobileCards } from "./components";
 import { toast } from "sonner";
 
 function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests, setRequests] = useState<RedemptionItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: rawRequests, isLoading: loading, isFetching: refreshing, error: queryError } = useMarketingRequests(30_000);
+  const requests = (rawRequests ?? []) as unknown as RedemptionItem[];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load requests") : null;
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -34,30 +39,9 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
     useState<MyProcessingStatus | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
-  const fetchRequests = useCallback(async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      const data = await marketingRequestsApi.getRequests();
-      setRequests(data as unknown as RedemptionItem[]);
-    } catch (err) {
-      console.error("Error fetching requests:", err);
-      setError(err instanceof Error ? err.message : "Failed to load requests");
-      toast.error("Failed to load requests");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  // Fetch requests on mount
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.requests.all });
+  }, [queryClient]);
 
   const fetchMyProcessingStatus = useCallback(async (requestId: number) => {
     try {
@@ -73,22 +57,28 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   }, []);
 
   const pageSize = 7;
-  const filteredRequests = requests.filter((request) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      request.id.toString().includes(query) ||
-      request.requested_by_name.toLowerCase().includes(query) ||
-      request.requested_for_name.toLowerCase().includes(query) ||
-      request.status.toLowerCase().includes(query)
-    );
-  });
+  const { filteredRequests, totalPages, safePage, paginatedRequests } = useMemo(() => {
+    const filtered = requests.filter((request) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        request.id.toString().includes(query) ||
+        request.requested_by_name.toLowerCase().includes(query) ||
+        request.requested_for_name.toLowerCase().includes(query) ||
+        request.status.toLowerCase().includes(query)
+      );
+    });
 
-  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+    const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const safe = Math.min(currentPage, pages);
+    const start = (safe - 1) * pageSize;
+    return {
+      filteredRequests: filtered,
+      totalPages: pages,
+      safePage: safe,
+      paginatedRequests: filtered.slice(start, start + pageSize),
+    };
+  }, [requests, searchQuery, currentPage, pageSize]);
 
   const handleViewClick = useCallback(
     async (request: RedemptionItem) => {
@@ -112,16 +102,16 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
     [fetchMyProcessingStatus],
   );
 
-  const handleMarkProcessedConfirm = async () => {
+  const handleMarkProcessedConfirm = async (items: ProcessItemData[]) => {
     if (!selectedRequest) return;
 
     try {
-      await marketingRequestsApi.markItemsProcessed(selectedRequest.id);
+      await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
       setSelectedRequest(null);
       setMyProcessingStatus(null);
-      fetchRequests(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error marking items as processed:", err);
       toast.error(
@@ -147,7 +137,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
 
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Process Requests</h1>
@@ -160,7 +150,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => fetchRequests(true)}
+                onClick={handleManualRefresh}
                 disabled={refreshing}
                 className={`p-2 rounded-lg bg-card hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
                 title="Refresh"
@@ -177,16 +167,19 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
               {error}
             </div>
           ) : (
-            <RedemptionTable
-              redemptions={filteredRequests}
-              loading={loading}
-              onView={handleViewClick}
-              onMarkAsProcessed={handleMarkProcessedClick}
-              canMarkProcessed={canMarkProcessed}
-              onRefresh={() => fetchRequests(true)}
-              refreshing={refreshing}
-              onExport={() => setShowExportModal(true)}
-            />
+            <div className="flex-1 min-h-0">
+              <RedemptionTable
+                redemptions={filteredRequests}
+                loading={loading}
+                onView={handleViewClick}
+                onMarkAsProcessed={handleMarkProcessedClick}
+                canMarkProcessed={canMarkProcessed}
+                onRefresh={handleManualRefresh}
+                refreshing={refreshing}
+                onExport={() => setShowExportModal(true)}
+                fillHeight
+              />
+            </div>
           )}
         </div>
 

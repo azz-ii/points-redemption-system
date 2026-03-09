@@ -62,9 +62,10 @@ export interface RequestHistoryItemVariant {
   quantity: number;
   points_per_item: number;
   total_points: number;
-  legend: string;
-  is_processed: boolean;
-  processed_by: number | null;
-  processed_by_name: string | null;
-  date_processed: string | null;
+  item_legend?: string | null;
+  fulfilled_quantity?: number;
+  is_fully_fulfilled?: boolean;
+  item_processed_by?: number | null;
+  item_processed_by_name?: string | null;
+  item_processed_at?: string | null;
 }

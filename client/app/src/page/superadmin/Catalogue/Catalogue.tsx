@@ -8,6 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useCataloguePage } from "@/hooks/queries/useCatalogue";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import type { Product, User } from "./modals";
 import {
   CreateItemModal,
@@ -24,9 +27,7 @@ import {
 } from "./components";
 
 function Catalogue() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [items, setItems] = useState<Product[]>([]);
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -34,9 +35,15 @@ function Catalogue() {
 
   // Pagination state (0-indexed for DataTable compatibility)
   const [tablePage, setTablePage] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState(15);
+
+  const { data: catalogueData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useCataloguePage(
+    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  );
+  const items = catalogueData?.results ?? [];
+  const totalCount = catalogueData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const error = queryError ? "Failed to load products. Please try again." : null;
 
   // Fetch users for dropdowns
   useEffect(() => {
@@ -56,69 +63,9 @@ function Catalogue() {
     fetchUsers();
   }, []);
 
-  const fetchCatalogueItems = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      const params = new URLSearchParams();
-      params.append("page", String(tablePage + 1));
-      params.append("page_size", String(pageSize));
-      if (searchQuery.trim()) {
-        params.append("search", searchQuery.trim());
-      }
-      if (showArchived) {
-        params.append("show_archived", "true");
-      }
-
-      const response = await fetch(`/api/catalogue/?${params.toString()}`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch products");
-      }
-
-      const data = await response.json();
-      const products = data.results || [];
-      setTotalCount(data.count || 0);
-
-      const mappedItems: Product[] = products.map((product: Product) => ({
-        id: product.id,
-        item_code: product.item_code,
-        item_name: product.item_name,
-        description: product.description,
-        purpose: product.purpose,
-        specifications: product.specifications,
-        legend: product.legend,
-        category: product.category,
-        points: product.points,
-        price: product.price,
-        pricing_type: product.pricing_type || "FIXED",
-        stock: product.stock || 0,
-        committed_stock: product.committed_stock || 0,
-        available_stock: product.available_stock || 0,
-        image: product.image || null,
-        is_archived: product.is_archived || false,
-        date_added: product.date_added,
-        added_by: product.added_by,
-        date_archived: product.date_archived,
-        archived_by: product.archived_by,
-        mktg_admin: product.mktg_admin ?? null,
-        mktg_admin_username: product.mktg_admin_username ?? null,
-      }));
-      setItems(mappedItems);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setError("Failed to load products. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [tablePage, pageSize, searchQuery, showArchived]);
-
-  useEffect(() => {
-    fetchCatalogueItems();
-  }, [fetchCatalogueItems]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.catalogue.all });
+  }, [queryClient]);
 
   const handlePageChange = useCallback((pageIndex: number) => {
     setTablePage(pageIndex);
@@ -135,8 +82,6 @@ function Catalogue() {
   }, []);
 
   const handleToggleArchived = useCallback((checked: boolean) => {
-    setLoading(true);
-    setItems([]); // Clear items to show full loading UI
     setShowArchived(checked);
     setTablePage(0);
   }, []);
@@ -350,7 +295,7 @@ function Catalogue() {
       setCreateImagePreview(null);
 
       // Refresh items list
-      fetchCatalogueItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error creating product:", err);
       setCreateError(
@@ -504,7 +449,7 @@ function Catalogue() {
       setShowEditModal(false);
       setEditingProductId(null);
       setEditError(null);
-      fetchCatalogueItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error updating product:", err);
       setEditError(
@@ -561,7 +506,7 @@ function Catalogue() {
 
       setShowArchiveModal(false);
       setArchiveTarget(null);
-      fetchCatalogueItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error archiving product:", err);
       alert("Failed to archive product. Please try again.");
@@ -585,7 +530,7 @@ function Catalogue() {
 
       setShowUnarchiveModal(false);
       setUnarchiveTarget(null);
-      fetchCatalogueItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error restoring product:", err);
       alert("Failed to restore product. Please try again.");
@@ -607,7 +552,7 @@ function Catalogue() {
       }
       setShowBulkArchiveModal(false);
       setBulkArchiveTargets([]);
-      fetchCatalogueItems();
+      queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error bulk archiving products:", err);
       alert("Failed to archive some products. Please try again.");
@@ -619,7 +564,7 @@ function Catalogue() {
   return (
     <>
       {/* Desktop Layout */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-semibold">Catalogue</h1>
@@ -641,19 +586,20 @@ function Catalogue() {
         </div>
 
         {/* Table */}
-        <CatalogueTable
-          products={items}
+        <div className="flex-1 min-h-0">
+          <CatalogueTable
+            products={items}
           loading={loading}
           error={error}
-          onRetry={fetchCatalogueItems}
+          onRetry={() => refetch()}
           onView={handleViewClick}
           onEdit={handleEditClick}
           onArchive={handleArchiveClick}
           onUnarchive={handleUnarchiveClick}
           onArchiveSelected={handleBulkArchiveClick}
           onCreateNew={() => setShowCreateModal(true)}
-          onRefresh={fetchCatalogueItems}
-          refreshing={loading}
+          onRefresh={handleManualRefresh}
+          refreshing={refreshing}
           onExport={() => setShowExportModal(true)}
           manualPagination
           pageCount={pageCount}
@@ -664,7 +610,9 @@ function Catalogue() {
           pageSize={pageSize}
           pageSizeOptions={[15, 50, 100]}
           onPageSizeChange={handlePageSizeChange}
+          fillHeight
         />
+        </div>
       </div>
 
       {/* Mobile Layout */}
@@ -721,7 +669,7 @@ function Catalogue() {
           onEdit={handleEditClick}
           onArchive={handleArchiveClick}
           onUnarchive={handleUnarchiveClick}
-          onRetry={fetchCatalogueItems}
+          onRetry={() => refetch()}
           searchQuery={searchQuery}
         />
 
@@ -810,7 +758,7 @@ function Catalogue() {
           setViewTarget(null);
         }}
         product={viewTarget}
-        onAssignmentChange={fetchCatalogueItems}
+        onAssignmentChange={() => queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all })}
       />
 
       <ArchiveItemModal

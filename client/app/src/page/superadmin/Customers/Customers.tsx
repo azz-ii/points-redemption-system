@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { API_URL } from "@/lib/config";
 import { Search, Plus } from "lucide-react";
+import { useCustomersPage } from "@/hooks/queries/useCustomers";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 import { customersApi, type Customer } from "@/lib/customers-api";
+import { API_URL } from "@/lib/config";
 import {
   CreateCustomerModal,
   EditCustomerModal,
@@ -18,9 +21,8 @@ import {
 import { CustomersTable, CustomersMobileCards } from "./components";
 
 function Customers() {
-  const currentPage = "customers";  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const currentPage = "customers";
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -28,44 +30,20 @@ function Customers() {
   // Server-side pagination state
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
-  const [totalCount, setTotalCount] = useState(0);
+
+  const { data: customersData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useCustomersPage(
+    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  );
+  const customers = customersData?.results ?? [];
+  const totalCount = customersData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const error = queryError ? "Failed to load customers. Please try again." : null;
 
-  const fetchCustomers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const url = new URL(`${API_URL}/customers/`, window.location.origin);
-      url.searchParams.append('page', String(tablePage + 1));
-      url.searchParams.append('page_size', String(pageSize));
-      if (showArchived) {
-        url.searchParams.append('show_archived', 'true');
-      }
-      if (searchQuery) {
-        url.searchParams.append('search', searchQuery);
-      }
-      const response = await fetch(url.toString(), {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch customers');
-      }
-      const data = await response.json();
-      setCustomers(data.results || []);
-      setTotalCount(data.count || 0);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching customers:", err);
-      setError("Failed to load customers. Please try again.");
-      setCustomers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tablePage, pageSize, searchQuery, showArchived]);
+  const [mutationLoading, setMutationLoading] = useState(false);
 
-  // Fetch customers on mount and when dependencies change
-  useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.customers.all });
+  }, [queryClient]);
 
   // Reset to first page when showArchived changes
   useEffect(() => {
@@ -87,8 +65,6 @@ function Customers() {
   }, []);
 
   const handleToggleArchived = useCallback((checked: boolean) => {
-    setLoading(true);
-    setCustomers([]); // Clear customers to show full loading UI
     setShowArchived(checked);
     setTablePage(0);
   }, []);
@@ -151,7 +127,7 @@ function Customers() {
     try {
       setCreating(true);
       const createdCustomer = await customersApi.createCustomer(newCustomer);
-      setCustomers((prev) => [...prev, createdCustomer]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       setNewCustomer({
         name: "",
         brand: "",
@@ -205,9 +181,7 @@ function Customers() {
         editingCustomerId,
         editCustomer,
       );
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === editingCustomerId ? updatedCustomer : c)),
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
       setShowEditModal(false);
       setEditingCustomerId(null);
       setEditError(null);
@@ -240,23 +214,23 @@ function Customers() {
   // Confirm archive customer
   const confirmArchive = async (id: number) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       await customersApi.deleteCustomer(id);
       setShowArchiveModal(false);
       setArchiveTarget(null);
-      fetchCustomers();
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error archiving customer:", err);
       alert("Failed to archive customer. Please try again.");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Confirm unarchive customer
   const confirmUnarchive = async (id: number) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const response = await fetch(`${API_URL}/customers/${id}/unarchive/`, {
         method: 'POST',
         credentials: 'include',
@@ -269,12 +243,12 @@ function Customers() {
       
       setShowUnarchiveModal(false);
       setUnarchiveTarget(null);
-      fetchCustomers();
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error unarchiving customer:", err);
       alert(err instanceof Error ? err.message : "Failed to unarchive customer. Please try again.");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
@@ -299,7 +273,7 @@ function Customers() {
   // Confirm bulk archive
   const confirmBulkArchive = async () => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const archiveResults = await Promise.allSettled(
         bulkArchiveTargets.map((customer) =>
           customersApi.deleteCustomer(customer.id)
@@ -318,12 +292,12 @@ function Customers() {
         alert(`Archived ${successCount} of ${bulkArchiveTargets.length} customer(s). ${failCount} failed.`);
       }
 
-      fetchCustomers();
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error archiving customers:", err);
       alert("Error archiving some customers");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
@@ -332,7 +306,7 @@ function Customers() {
 
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Customers</h1>
@@ -354,11 +328,12 @@ function Customers() {
               </label>
             </div>
           </div>
-          <CustomersTable
-            customers={customers}
+          <div className="flex-1 min-h-0">
+            <CustomersTable
+              customers={customers}
             loading={loading}
             error={error}
-            onRetry={fetchCustomers}
+            onRetry={() => refetch()}
             onEdit={handleEditClick}
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}
@@ -366,8 +341,8 @@ function Customers() {
             onPromote={handlePromoteClick}
             onMerge={handleMergeClick}
             onCreateNew={() => setShowCreateModal(true)}
-            onRefresh={fetchCustomers}
-            refreshing={loading}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
             onExport={() => setShowExportModal(true)}
             manualPagination
             pageCount={pageCount}
@@ -378,7 +353,9 @@ function Customers() {
             pageSize={pageSize}
             pageSizeOptions={[15, 50, 100]}
             onPageSizeChange={handlePageSizeChange}
+            fillHeight
           />
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -425,7 +402,7 @@ function Customers() {
             filteredCustomers={customers}
             loading={loading}
             error={error}
-            onRetry={fetchCustomers}
+            onRetry={() => refetch()}
             page={tablePage + 1}
             totalPages={pageCount}
             onPageChange={(p) => setTablePage(p - 1)}
@@ -504,7 +481,7 @@ function Customers() {
         isOpen={showPromoteModal}
         onClose={() => setShowPromoteModal(false)}
         customer={promoteTarget}
-        onSuccess={fetchCustomers}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })}
       />
 
       {/* Merge Customer Modal */}
@@ -512,7 +489,7 @@ function Customers() {
         isOpen={showMergeModal}
         onClose={() => setShowMergeModal(false)}
         customer={mergeTarget}
-        onSuccess={fetchCustomers}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })}
       />
     </>
   );

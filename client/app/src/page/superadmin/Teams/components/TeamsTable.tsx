@@ -12,6 +12,7 @@ interface TeamsTableProps {
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  fillHeight?: boolean;
 }
 
 export function TeamsTable({
@@ -25,6 +26,7 @@ export function TeamsTable({
   onCreateNew,
   onRefresh,
   refreshing,
+  fillHeight,
 }: TeamsTableProps) {
   const columns = createColumns({
     onView,
@@ -62,6 +64,7 @@ export function TeamsTable({
       emptyMessage="No teams found"
       pageSizeOptions={[15, 50, 100]}
       initialSorting={[{ id: "name", desc: false }]}
+      fillHeight={fillHeight}
     />
   );
 }

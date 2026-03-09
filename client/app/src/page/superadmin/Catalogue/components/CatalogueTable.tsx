@@ -25,6 +25,7 @@ interface CatalogueTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  fillHeight?: boolean;
 }
 
 export function CatalogueTable({
@@ -50,6 +51,7 @@ export function CatalogueTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  fillHeight,
 }: CatalogueTableProps) {
   const columns = createColumns({
     onView,
@@ -84,6 +86,7 @@ export function CatalogueTable({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      fillHeight={fillHeight}
     />
   );
 }

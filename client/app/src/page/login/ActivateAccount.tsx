@@ -244,7 +244,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
 
       {/* Success Dialog */}
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">
               Account Activated Successfully

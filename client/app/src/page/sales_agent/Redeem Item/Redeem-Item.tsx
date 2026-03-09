@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "@/context/AuthContext";
 import CartModal, { type CartItem } from "@/components/cart-modal";
-import { fetchCatalogueItems, type RedeemItemData, fetchCurrentUser, getCart, saveCart } from "@/lib/api";
+import { type RedeemItemData, saveCart } from "@/lib/api";
+import { useRedeemItems } from "@/hooks/queries/useCatalogue";
+import { useCurrentUser } from "@/hooks/queries/useCurrentUser";
+import { useCart } from "@/hooks/queries/useCart";
 import { toast } from "sonner";
 import {
   RedeemItemHeader,
@@ -23,103 +26,51 @@ export default function RedeemItem() {
   const [currentPage_num, setCurrentPage_num] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [items, setItems] = useState<RedeemItemData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userPoints, setUserPoints] = useState<number>(0);
-  const [userLoading, setUserLoading] = useState(true);
-  const itemsPerPage = 6;
+  const itemsPerPage = 12;
+
+  // Query hooks for data fetching
+  const { data: items = [], isLoading: loading, error: itemsError } = useRedeemItems();
+  const { data: userProfile, isLoading: userLoading } = useCurrentUser();
+  const { data: savedCartItems } = useCart();
+
+  const error = itemsError ? (itemsError instanceof Error ? itemsError.message : "Failed to load catalogue items") : null;
+  const userPoints = userProfile?.points || userProfile?.profile?.points || 0;
 
   // Track whether the initial cart load has completed so we don't immediately
   // write back what we just fetched.
   const cartLoadedRef = useRef(false);
 
-  // Fetch items, user profile, and saved cart on component mount
+  // Restore saved cart when items and saved cart data are both available
   useEffect(() => {
-    console.log("[Redeem-Item] Component mounted, fetching catalogue items and user profile...");
-    
-    const loadData = async () => {
-      try {
-        // Fetch catalogue items
-        setLoading(true);
-        setError(null);
-        console.log("[Redeem-Item] Starting API fetch for items...");
-        
-        const fetchedItems = await fetchCatalogueItems();
-        console.log("[Redeem-Item] Successfully fetched items:", fetchedItems);
-        
-        setItems(fetchedItems);
-        console.log("[Redeem-Item] State updated with items");
+    if (cartLoadedRef.current) return;
+    if (!items.length || savedCartItems === undefined) return;
 
-        // Restore saved cart — cross-reference against live catalogue so stale
-        // (archived/deleted) products are silently dropped.
-        try {
-          const savedItems = await getCart();
-          if (savedItems.length > 0) {
-            const activeIdSet = new Set(fetchedItems.map(i => i.id));
-            const restored: CartItem[] = savedItems
-              .filter(si => activeIdSet.has(String(si.product_id)))
-              .map(si => {
-                const live = fetchedItems.find(i => i.id === String(si.product_id))!;
-                const minQty = live.min_order_qty ?? 1;
-                return {
-                  id: live.id,
-                  name: live.name,
-                  points: live.points,
-                  image: live.image,
-                  quantity: si.quantity ?? minQty,
-                  needs_driver: si.needs_driver,
-                  pricing_type: live.pricing_type,
-                  points_multiplier: live.points_multiplier,
-                  dynamic_quantity: si.dynamic_quantity != null ? Number(si.dynamic_quantity) : (live.pricing_type === 'FIXED' ? undefined : 0),
-                  available_stock: live.available_stock,
-                  min_order_qty: minQty,
-                  max_order_qty: live.max_order_qty,
-                };
-              });
-            setCartItems(restored);
-          }
-        } catch (cartErr) {
-          console.warn("[Redeem-Item] Could not restore saved cart:", cartErr);
-        } finally {
-          cartLoadedRef.current = true;
-        }
-      } catch (err) {
-        console.error("[Redeem-Item] Error loading catalogue items:", err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to load catalogue items";
-        setError(errorMessage);
-        console.error("[Redeem-Item] Error state set:", errorMessage);
-        cartLoadedRef.current = true; // allow saves even if catalogue fails
-      } finally {
-        setLoading(false);
-        console.log("[Redeem-Item] Loading complete");
-      }
-
-      try {
-        // Fetch user profile
-        setUserLoading(true);
-        console.log("[Redeem-Item] Starting API fetch for user profile...");
-        
-        const userProfile = await fetchCurrentUser();
-        console.log("[Redeem-Item] Successfully fetched user profile:", userProfile);
-        
-        // Get points from either the direct field or profile field
-        const points = userProfile.points || userProfile.profile?.points || 0;
-        setUserPoints(points);
-        console.log("[Redeem-Item] User points set to:", points);
-      } catch (err) {
-        console.error("[Redeem-Item] Error loading user profile:", err);
-        // Don't set error state for user profile, just keep default points
-        setUserPoints(0);
-        console.error("[Redeem-Item] User points defaulted to 0");
-      } finally {
-        setUserLoading(false);
-        console.log("[Redeem-Item] User profile loading complete");
-      }
-    };
-
-    loadData();
-  }, []);
+    if (savedCartItems && savedCartItems.length > 0) {
+      const activeIdSet = new Set(items.map(i => i.id));
+      const restored: CartItem[] = savedCartItems
+        .filter(si => activeIdSet.has(String(si.product_id)))
+        .map(si => {
+          const live = items.find(i => i.id === String(si.product_id))!;
+          const minQty = live.min_order_qty ?? 1;
+          return {
+            id: live.id,
+            name: live.name,
+            points: live.points,
+            image: live.image,
+            quantity: si.quantity ?? minQty,
+            needs_driver: si.needs_driver,
+            pricing_type: live.pricing_type,
+            points_multiplier: live.points_multiplier,
+            dynamic_quantity: si.dynamic_quantity != null ? Number(si.dynamic_quantity) : (live.pricing_type === 'FIXED' ? undefined : 0),
+            available_stock: live.available_stock,
+            min_order_qty: minQty,
+            max_order_qty: live.max_order_qty,
+          };
+        });
+      setCartItems(restored);
+    }
+    cartLoadedRef.current = true;
+  }, [items, savedCartItems]);
 
   // Debounced cart persistence — save any cart change to the server after 500 ms.
   // Skip until the initial cart load has finished to avoid overwriting the saved cart.
@@ -235,11 +186,9 @@ export default function RedeemItem() {
   };
 
   return (
-    <div
-      className="flex-1 overflow-y-auto pb-20 md:pb-0"
-    >
-      {/* Header */}
-      <div className="p-4 md:p-8 md:pb-6">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      {/* Static top: header, search, filters */}
+      <div className="flex-shrink-0 px-4 md:px-8 pt-4 md:pt-8">
         <RedeemItemHeader
           userPoints={userPoints}
           userLoading={userLoading}
@@ -261,21 +210,27 @@ export default function RedeemItem() {
             setCurrentPage_num(1);
           }}
         />
+      </div>
 
-        <ItemsGrid
-          items={paginatedItems}
-          loading={loading}
-          error={error}
-          searchQuery={searchQuery}
-          activeCategory={activeCategory}
-          onAddToCart={handleAddToCart}
-        />
-
-        <Pagination
-          currentPage={currentPage_num}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage_num}
-        />
+      {/* Grid + pagination fill remaining vh */}
+      <div className="flex-1 min-h-0 flex flex-col px-4 md:px-8">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <ItemsGrid
+            items={paginatedItems}
+            loading={loading}
+            error={error}
+            searchQuery={searchQuery}
+            activeCategory={activeCategory}
+            onAddToCart={handleAddToCart}
+          />
+        </div>
+        <div className="flex-shrink-0 pb-20 md:pb-4">
+          <Pagination
+            currentPage={currentPage_num}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage_num}
+          />
+        </div>
       </div>
 
       {/* Cart Modal */}

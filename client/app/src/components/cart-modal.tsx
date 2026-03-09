@@ -5,6 +5,7 @@ import { customersApi, type Customer as FullCustomer, type SimilarCustomersRespo
 import { redemptionRequestsApi, clearCartBackend, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
 import { toast } from "sonner";
 import SimilarCustomersDialog from "./similar-customers-dialog";
+import { useAuth } from "@/context/AuthContext";
 
 export interface CartItem {
   id: string;
@@ -40,6 +41,9 @@ export default function CartModal({
   onRemoveItem,
   availablePoints,
 }: CartModalProps) {
+  const { userPosition, canSelfRequest } = useAuth();
+  const isSelfRequest = userPosition === 'Approver' && canSelfRequest;
+
   const [step, setStep] = useState<"cart" | "details">("cart");
   const [remarks, setRemarks] = useState("");
   const [svcDate, setSvcDate] = useState<string>("");
@@ -48,8 +52,8 @@ export default function CartModal({
   const [plateNumber, setPlateNumber] = useState<string>("");
   const [driverName, setDriverName] = useState<string>("");
   
-  // Entity type selection (Distributor or Customer)
-  const [entityType, setEntityType] = useState<RequestedForType>('DISTRIBUTOR');
+  // Entity type selection (Distributor, Customer, or Self)
+  const [entityType, setEntityType] = useState<RequestedForType>(isSelfRequest ? 'SELF' : 'DISTRIBUTOR');
   
   // All entities for dropdown (preloaded)
   const [allDistributors, setAllDistributors] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
@@ -85,7 +89,7 @@ export default function CartModal({
 
   // Load all distributors and customers when modal opens or step changes to details
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isSelfRequest) return;
     
     const loadEntities = async () => {
       setLoadingEntities(true);
@@ -247,14 +251,16 @@ export default function CartModal({
   };
 
   const handleSubmit = async () => {
-    // Validate entity selection based on type
-    if (entityType === 'DISTRIBUTOR' && !selectedDistributor) {
-      toast.error("Please select a distributor");
-      return;
-    }
-    if (entityType === 'CUSTOMER' && !selectedCustomer) {
-      toast.error("Please select a customer");
-      return;
+    // Validate entity selection based on type (skip for SELF)
+    if (!isSelfRequest) {
+      if (entityType === 'DISTRIBUTOR' && !selectedDistributor) {
+        toast.error("Please select a distributor");
+        return;
+      }
+      if (entityType === 'CUSTOMER' && !selectedCustomer) {
+        toast.error("Please select a customer");
+        return;
+      }
     }
 
     if (items.length === 0) {
@@ -264,14 +270,14 @@ export default function CartModal({
 
     // Prepare request data using the correct API structure
     const requestData: CreateRedemptionRequestData = {
-      requested_for_type: entityType,
-      ...(entityType === 'DISTRIBUTOR' && selectedDistributor 
+      requested_for_type: isSelfRequest ? 'SELF' : entityType,
+      ...(!isSelfRequest && entityType === 'DISTRIBUTOR' && selectedDistributor 
         ? { requested_for: selectedDistributor.id }
         : {}),
-      ...(entityType === 'CUSTOMER' && selectedCustomer 
+      ...(!isSelfRequest && entityType === 'CUSTOMER' && selectedCustomer 
         ? { requested_for_customer: selectedCustomer.id }
         : {}),
-      points_deducted_from: pointsDeductedFrom,
+      points_deducted_from: isSelfRequest ? 'SELF' : pointsDeductedFrom,
       remarks: remarks || undefined,
       items: items.map(item => {
         if (item.pricing_type === 'FIXED') {
@@ -297,9 +303,11 @@ export default function CartModal({
       }),
     };
 
-    const entityName = entityType === 'DISTRIBUTOR' 
-      ? selectedDistributor?.name 
-      : selectedCustomer?.name;
+    const entityName = isSelfRequest
+      ? 'yourself'
+      : entityType === 'DISTRIBUTOR' 
+        ? selectedDistributor?.name 
+        : selectedCustomer?.name;
 
     // Close modal and reset form immediately
     items.forEach(item => onRemoveItem(item.id));
@@ -313,7 +321,7 @@ export default function CartModal({
     setPlateNumber("");
     setDriverName("");
     setPointsDeductedFrom('SELF');
-    setEntityType('DISTRIBUTOR');
+    setEntityType(isSelfRequest ? 'SELF' : 'DISTRIBUTOR');
     onClose();
 
     // Show optimistic success message
@@ -347,7 +355,7 @@ export default function CartModal({
 
       {/* Desktop Modal */}
       <div
-        className={`relative hidden md:flex flex-col mx-4 w-full max-w-2xl max-h-[85vh] rounded-xl shadow-2xl bg-card text-foreground`}
+        className={`relative hidden md:flex flex-col mx-4 w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl bg-card text-foreground`}
       >
         {step === "cart" ? (
           <>
@@ -363,7 +371,7 @@ export default function CartModal({
                   Please review the items and quantities below before confirming
                 </p>
               </div>
-              <button
+              <button 
                 onClick={onClose}
                 className={`p-2 rounded-md hover:bg-accent`}
               >
@@ -569,6 +577,21 @@ export default function CartModal({
               <div
                 className={`px-6 py-4 border-t border-border`}
               >
+                {isSelfRequest ? (
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Total points for this request:
+                      </span>
+                      <span className="font-semibold">
+                        {totalPoints.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic">
+                      No points will be deducted for self-requests
+                    </p>
+                  </div>
+                ) : (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span
@@ -607,6 +630,7 @@ export default function CartModal({
                     </span>
                   </div>
                 </div>
+                )}
               </div>
             )}
 
@@ -620,9 +644,9 @@ export default function CartModal({
               </button>
               <button
                 onClick={() => setStep("details")}
-                disabled={items.length === 0 || remainingPoints < 0}
+                disabled={items.length === 0 || (!isSelfRequest && remainingPoints < 0)}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
-                  items.length === 0 || remainingPoints < 0
+                  items.length === 0 || (!isSelfRequest && remainingPoints < 0)
                     ? "bg-muted cursor-not-allowed"
                     : "bg-primary hover:bg-primary/90"
                 }`}
@@ -661,7 +685,29 @@ export default function CartModal({
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">Recipient Details</h3>
                   
-                  {loadingEntities ? (
+                  {isSelfRequest ? (
+                    /* Self-request mode: no entity selection needed */
+                    <div className="mt-4 space-y-4">
+                      <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
+                        <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                          This request is for yourself. No distributor or customer selection is needed.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className={`text-sm text-foreground`}>
+                          Purpose/Remarks
+                        </label>
+                        <textarea
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          placeholder="Enter Purpose or Remarks"
+                          rows={4}
+                          className={`w-full px-3 py-2 rounded-md outline-none resize-none bg-muted border border-border`}
+                        />
+                      </div>
+                    </div>
+                  ) : loadingEntities ? (
                     /* Skeleton Loading */
                     <div className="mt-4 space-y-4">
                       {/* Toggle buttons skeleton */}
@@ -874,7 +920,8 @@ export default function CartModal({
                 </div>
               </div>
 
-              {/* Points Deduction */}
+              {/* Points Deduction - hide for self-requests */}
+              {!isSelfRequest && (
               <div
                 className={`rounded-lg border border-border`}
               >
@@ -912,6 +959,7 @@ export default function CartModal({
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Service Vehicle Use - Only show if items need driver */}
               {hasItemsNeedingDriver && (
@@ -1033,7 +1081,7 @@ export default function CartModal({
 
       {/* Mobile Modal */}
       <div
-        className={`relative md:hidden mx-4 w-full max-w-md max-h-[85vh] rounded-xl shadow-2xl flex flex-col overflow-hidden bg-card text-foreground`}
+        className={`relative md:hidden mx-4 w-full max-w-md max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden bg-card text-foreground`}
       >
         {step === "cart" ? (
           <>
@@ -1163,6 +1211,22 @@ export default function CartModal({
               <div
                 className={`px-4 py-3 border-t space-y-2 text-xs border-border`}
               >
+                {isSelfRequest ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Total request:
+                      </span>
+                      <span className="font-semibold">
+                        {totalPoints.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground italic">
+                      No points will be deducted for self-requests
+                    </p>
+                  </>
+                ) : (
+                <>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     Current points:
@@ -1193,6 +1257,8 @@ export default function CartModal({
                     {remainingPoints.toLocaleString()}
                   </span>
                 </div>
+                </>
+                )}
               </div>
             )}
           </>
@@ -1225,7 +1291,29 @@ export default function CartModal({
                 <div className="p-3">
                   <h3 className="text-sm font-semibold">Recipient Details</h3>
                   
-                  {loadingEntities ? (
+                  {isSelfRequest ? (
+                    /* Self-request mode: no entity selection needed */
+                    <div className="mt-3 space-y-3">
+                      <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-2">
+                        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
+                        <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">
+                          This request is for yourself. No distributor or customer selection is needed.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className={`text-xs text-foreground`}>
+                          Purpose/Remarks
+                        </label>
+                        <textarea
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          placeholder="Enter Purpose or Remarks"
+                          rows={3}
+                          className={`w-full px-3 py-2 text-sm rounded-md outline-none resize-none bg-muted border border-border`}
+                        />
+                      </div>
+                    </div>
+                  ) : loadingEntities ? (
                     /* Skeleton Loading */
                     <div className="mt-3 space-y-3">
                       {/* Toggle buttons skeleton */}
@@ -1450,7 +1538,8 @@ export default function CartModal({
                 </div>
               </div>
 
-              {/* Points Deduction */}
+              {/* Points Deduction - hide for self-requests */}
+              {!isSelfRequest && (
               <div
                 className={`rounded-lg border border-border`}
               >
@@ -1488,6 +1577,7 @@ export default function CartModal({
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Service Vehicle Use - Only show if items need driver */}
               {hasItemsNeedingDriver && (
@@ -1594,9 +1684,9 @@ export default function CartModal({
           <div className="flex flex-col gap-2 p-4 border-t border-border">
             <button
               onClick={() => setStep("details")}
-              disabled={items.length === 0 || remainingPoints < 0}
+              disabled={items.length === 0 || (!isSelfRequest && remainingPoints < 0)}
               className={`w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground ${
-                items.length === 0 || remainingPoints < 0
+                items.length === 0 || (!isSelfRequest && remainingPoints < 0)
                   ? "bg-muted cursor-not-allowed"
                   : "bg-primary hover:bg-primary/90"
               }`}

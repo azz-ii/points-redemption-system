@@ -4,6 +4,9 @@ import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
 import { API_URL } from "@/lib/config";
 import { UserPlus } from "lucide-react";
+import { useAccountsPage } from "@/hooks/queries/useAccounts";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import {
   ViewAccountModal,
@@ -24,16 +27,25 @@ import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Accounts() {
   const { username: loggedInUsername } = useAuth();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
   // Server-side pagination state
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
-  const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Mutation-specific state (loading spinners for mutations, form validation errors)
+  const [mutationLoading, setMutationLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const { data: accountsData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useAccountsPage(
+    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  );
+  const accounts = accountsData?.results ?? [];
+  const totalCount = accountsData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const error = queryError ? "Failed to load accounts" : formError;
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -47,11 +59,15 @@ function Accounts() {
     position: "",
     points: 0,
     is_activated: true,
+    can_self_request: false,
   });
 
   // Team assignment for Sales Agent on creation
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+
+  // Team membership for Approver on creation (which team they belong to as a member)
+  const [selectedMemberTeamId, setSelectedMemberTeamId] = useState<number | null>(null);
 
   // Team management for edit modal
   const [selectedEditTeamId, setSelectedEditTeamId] = useState<number | null | "REMOVE">(null);
@@ -67,6 +83,7 @@ function Accounts() {
     position: "",
     points: 0,
     is_activated: true,
+    can_self_request: false,
   });
 
   const [showViewModal, setShowViewModal] = useState(false);
@@ -81,51 +98,15 @@ function Accounts() {
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
   const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Account | null>(null);
-  const [showArchived, setShowArchived] = useState(false);
   const [showSendResetEmailModal, setShowSendResetEmailModal] = useState(false);
   const [sendResetEmailTarget, setSendResetEmailTarget] = useState<Account | null>(null);
-
-  // Unlock account state
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [unlockTarget, setUnlockTarget] = useState<Account | null>(null);
   const [unlockLoading, setUnlockLoading] = useState(false);
 
-  // Fetch accounts on component mount
-  const fetchAccounts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const url = new URL(`${API_URL}/users/`, window.location.origin);
-      url.searchParams.append('page', String(tablePage + 1));
-      url.searchParams.append('page_size', String(pageSize));
-      if (showArchived) {
-        url.searchParams.append('show_archived', 'true');
-      }
-      if (searchQuery) {
-        url.searchParams.append('search', searchQuery);
-      }
-      const response = await fetch(url.toString(), {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        setError("Failed to load accounts");
-        return;
-      }
-      const data = await response.json();
-      setAccounts(data.results || []);
-      setTotalCount(data.count || 0);
-    } catch (err) {
-      setError("Error connecting to server");
-      console.error("Error fetching accounts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [tablePage, pageSize, searchQuery, showArchived]);
-
-  // Load accounts on mount and when dependencies change
-  useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.accounts.all });
+  }, [queryClient]);
 
   // Fetch teams lazily when the create or edit modal opens
   useEffect(() => {
@@ -156,8 +137,6 @@ function Accounts() {
     setShowArchived(checked);
     setTablePage(0);
     setSearchQuery("");
-    setAccounts([]);
-    setLoading(true);
   }, []);
 
   // Create new account (non-blocking)
@@ -169,12 +148,13 @@ function Accounts() {
       !newAccount.email ||
       !newAccount.position
     ) {
-      setError("All fields are required");
+      setFormError("All fields are required");
       return;
     }
 
     // Capture before reset so the background calls use the intended values
     const capturedTeamId = selectedTeamId;
+    const capturedMemberTeamId = selectedMemberTeamId;
     const positionWas = newAccount.position;
 
     // Close modal and reset form immediately
@@ -188,9 +168,11 @@ function Accounts() {
       position: "",
       points: 0,
       is_activated: true,
+      can_self_request: false,
     });
     setSelectedTeamId(null);
-    setError("");
+    setSelectedMemberTeamId(null);
+    setFormError("");
 
     // Show optimistic success message
     toast.success(`Account for ${fullName} created successfully!`);
@@ -236,7 +218,7 @@ function Accounts() {
             }
           }
 
-          // Assign team if Approver
+          // Assign team if Approver (manages team)
           if (capturedTeamId && positionWas === "Approver" && data.user?.id) {
             try {
               const teamRes = await fetchWithCsrf(
@@ -262,8 +244,35 @@ function Accounts() {
               toast.warning("Account created but team assignment failed.");
             }
           }
+
+          // Assign membership team if Approver (member of team)
+          if (capturedMemberTeamId && positionWas === "Approver" && data.user?.id) {
+            try {
+              const memberRes = await fetchWithCsrf(
+                `${API_URL}/teams/${capturedMemberTeamId}/assign_member/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: data.user.id }),
+                },
+              );
+              if (!memberRes.ok) {
+                const memberErr = await memberRes.json().catch(() => ({}));
+                toast.warning(
+                  `Account created but team membership assignment failed: ${
+                    memberErr?.user_id?.[0] ||
+                    memberErr?.detail ||
+                    memberErr?.error ||
+                    "Unknown error"
+                  }`,
+                );
+              }
+            } catch {
+              toast.warning("Account created but team membership assignment failed.");
+            }
+          }
           // Silently refresh accounts list in background
-          fetchAccounts();
+          queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
         } else {
           // Show error toast if creation failed
           toast.error(
@@ -283,9 +292,7 @@ function Accounts() {
   // Handle account update from view modal
   const handleViewAccountUpdate = (updatedAccount: Account) => {
     // Update the account in the accounts list
-    setAccounts((prev) =>
-      prev.map((acc) => (acc.id === updatedAccount.id ? updatedAccount : acc)),
-    );
+    queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
 
     // Update the viewTarget to reflect changes in the modal
     setViewTarget(updatedAccount);
@@ -301,12 +308,13 @@ function Accounts() {
       position: account.position,
       points: account.points || 0,
       is_activated: account.is_activated,
+      can_self_request: account.can_self_request ?? false,
     });
     setSelectedEditTeamId(account.team_id ?? null);
     setApproverTeamsToRemove([]);
     setApproverTeamToAdd(null);
     setShowEditModal(true);
-    setError("");
+    setFormError("");
   };
 
   // Update account
@@ -319,7 +327,7 @@ function Accounts() {
       !editAccount.email ||
       !editAccount.position
     ) {
-      setError("All fields are required");
+      setFormError("All fields are required");
       return;
     }
 
@@ -330,7 +338,7 @@ function Accounts() {
     const capturedApproverTeamToAdd = approverTeamToAdd;
 
     try {
-      setLoading(true);
+      setMutationLoading(true);
 
       // Prepare form data
       const formData = new FormData();
@@ -351,7 +359,7 @@ function Accounts() {
         setSelectedEditTeamId(null);
         setApproverTeamsToRemove([]);
         setApproverTeamToAdd(null);
-        setError("");
+        setFormError("");
 
         // Handle team changes
         if (editAccount.position === "Sales Agent") {
@@ -448,12 +456,62 @@ function Accounts() {
               toast.warning("Account updated but team assignment failed.");
             }
           }
+
+          // Handle membership team changes for Approver
+          const oldMemberTeamId = editingAccount.team_id ?? null;
+          const shouldRemoveMembership =
+            oldMemberTeamId != null &&
+            (capturedEditTeamId === "REMOVE" || capturedEditTeamId === null);
+          const shouldAssignMembership =
+            typeof capturedEditTeamId === "number" &&
+            capturedEditTeamId !== oldMemberTeamId;
+
+          if (shouldRemoveMembership) {
+            try {
+              await fetchWithCsrf(
+                `${API_URL}/teams/${oldMemberTeamId}/remove_member/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: editingAccount.id }),
+                },
+              );
+            } catch {
+              toast.warning("Account updated but failed to remove membership from team.");
+            }
+          }
+
+          if (shouldAssignMembership) {
+            try {
+              const memberRes = await fetchWithCsrf(
+                `${API_URL}/teams/${capturedEditTeamId}/assign_member/`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: editingAccount.id }),
+                },
+              );
+              if (!memberRes.ok) {
+                const memberErr = await memberRes.json().catch(() => ({}));
+                toast.warning(
+                  `Account updated but team membership assignment failed: ${
+                    memberErr?.user_id?.[0] ??
+                    memberErr?.detail ??
+                    memberErr?.error ??
+                    "Unknown error"
+                  }`,
+                );
+              }
+            } catch {
+              toast.warning("Account updated but team membership assignment failed.");
+            }
+          }
         }
 
         // Refresh accounts list
-        fetchAccounts();
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       } else {
-        setError(
+        setFormError(
           data.details?.username?.[0] ||
             data.details?.email?.[0] ||
             data.error ||
@@ -461,17 +519,17 @@ function Accounts() {
         );
       }
     } catch (err) {
-      setError("Error connecting to server");
+      setFormError("Error connecting to server");
       console.error("Error updating account:", err);
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Archive account
   const handleArchiveAccount = async (id: number) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const response = await fetchWithCsrf(`/api/users/${id}/archive/`, {
         method: "POST",
       });
@@ -480,22 +538,22 @@ function Accounts() {
         setShowArchiveModal(false);
         setArchiveTarget(null);
         toast.success("Account archived successfully");
-        fetchAccounts();
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       } else {
-        setError("Failed to archive account");
+        setFormError("Failed to archive account");
       }
     } catch (err) {
-      setError("Error connecting to server");
+      setFormError("Error connecting to server");
       console.error("Error archiving account:", err);
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Unarchive account
   const handleUnarchiveAccount = async (id: number) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const response = await fetchWithCsrf(`/api/users/${id}/unarchive/`, {
         method: "POST",
       });
@@ -504,7 +562,7 @@ function Accounts() {
         setShowUnarchiveModal(false);
         setUnarchiveTarget(null);
         toast.success("Account restored successfully");
-        fetchAccounts();
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       } else {
         const data = await response.json();
         toast.error(data.error || "Failed to restore account");
@@ -513,7 +571,7 @@ function Accounts() {
       console.error("Error restoring account:", err);
       toast.error("Error connecting to server");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
@@ -533,7 +591,7 @@ function Accounts() {
         toast.success(data.message || "Account unlocked successfully");
         setShowUnlockModal(false);
         setUnlockTarget(null);
-        fetchAccounts();
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       } else {
         toast.error(data.error || "Failed to unlock account");
       }
@@ -554,7 +612,7 @@ function Accounts() {
   // Confirm bulk archive
   const handleBulkArchiveConfirm = async () => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
 
       const archiveResults = await Promise.allSettled(
         bulkArchiveTargets.map((account) =>
@@ -580,20 +638,20 @@ function Accounts() {
         toast.error(`Archived ${successCount} of ${bulkArchiveTargets.length} account(s). ${failCount} failed.`);
       }
 
-      fetchAccounts();
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
     } catch (err) {
-      setError("Error archiving accounts");
+      setFormError("Error archiving accounts");
       console.error("Error archiving accounts:", err);
       toast.error("Error archiving some accounts");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Handle set points submission - batch updates (only changed accounts)
   const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
 
       // Use batch API for efficiency
       const result = await usersApi.batchUpdatePoints(updates, reason);
@@ -607,18 +665,18 @@ function Accounts() {
       }
 
       // Refresh accounts list
-      fetchAccounts();
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
     } catch (err) {
       console.error("Error updating points:", err);
       toast.error("Error updating points");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   const handleBulkSetPoints = async (pointsDelta: number, password: string) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
 
       const response = await fetchWithCsrf(
         `${API_URL}/users/bulk_update_points/`,
@@ -644,7 +702,7 @@ function Accounts() {
             `Successfully updated points for ${data.updated_count} account(s)`,
         );
         // Refresh accounts list
-        fetchAccounts();
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       } else {
         toast.error(data.error || "Failed to update points");
       }
@@ -653,13 +711,13 @@ function Accounts() {
       setShowSetPointsModal(false);
       toast.error("Error updating points. Please try again.");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   const handleResetAllPoints = async (password: string) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
 
       const response = await fetchWithCsrf(
         `${API_URL}/users/bulk_update_points/`,
@@ -685,7 +743,7 @@ function Accounts() {
             `Successfully reset points for ${data.updated_count} account(s)`,
         );
         // Refresh accounts list
-        fetchAccounts();
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
       } else {
         toast.error(data.error || "Failed to reset points");
       }
@@ -694,14 +752,14 @@ function Accounts() {
       setShowSetPointsModal(false);
       toast.error("Error resetting points. Please try again.");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   return (
     <>
       {/* Desktop Layout */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-semibold">Accounts</h1>
@@ -721,22 +779,23 @@ function Accounts() {
         </div>
 
         {/* Desktop Table */}
-        <AccountsTable
-          key={showArchived ? "archived" : "active"}
+        <div className="flex-1 min-h-0">
+          <AccountsTable
+            key={showArchived ? "archived" : "active"}
           accounts={accounts}
           loading={loading}
           error={error}
-          onRetry={fetchAccounts}
+          onRetry={() => refetch()}
           onViewAccount={(account) => {
             setViewTarget(account);
             setShowViewModal(true);
-            setError("");
+            setFormError("");
           }}
           onEditAccount={handleEditClick}
           onArchiveAccount={(account) => {
             setArchiveTarget(account);
             setShowArchiveModal(true);
-            setError("");
+            setFormError("");
           }}
           onUnarchiveAccount={(account) => {
             setUnarchiveTarget(account);
@@ -745,8 +804,8 @@ function Accounts() {
           onArchiveSelected={handleArchiveSelected}
           onCreateNew={() => setShowCreateModal(true)}
           onSetPoints={() => setShowSetPointsModal(true)}
-          onRefresh={fetchAccounts}
-          refreshing={loading}
+          onRefresh={handleManualRefresh}
+          refreshing={refreshing}
           onExport={() => setShowExportModal(true)}
           onViewPointsHistory={(account) => {
             setPointsHistoryTarget(account);
@@ -769,7 +828,9 @@ function Accounts() {
           pageSize={pageSize}
           pageSizeOptions={[15, 50, 100]}
           onPageSizeChange={handlePageSizeChange}
+          fillHeight
         />
+        </div>
       </div>
 
       {/* Mobile Layout */}
@@ -795,7 +856,7 @@ function Accounts() {
           filteredAccounts={accounts}
           loading={loading}
           error={error}
-          onRetry={fetchAccounts}
+          onRetry={() => refetch()}
           currentPage={tablePage + 1}
           setCurrentPage={((p: number) => setTablePage(p - 1)) as React.Dispatch<React.SetStateAction<number>>}
           onViewAccount={(account) => {
@@ -806,7 +867,7 @@ function Accounts() {
           onArchiveAccount={(account) => {
             setArchiveTarget(account);
             setShowArchiveModal(true);
-            setError("");
+            setFormError("");
           }}
           onSendPasswordResetEmail={(account) => {
             setSendResetEmailTarget(account);
@@ -827,9 +888,11 @@ function Accounts() {
         teams={teams}
         selectedTeamId={selectedTeamId}
         setSelectedTeamId={setSelectedTeamId}
+        selectedMemberTeamId={selectedMemberTeamId}
+        setSelectedMemberTeamId={setSelectedMemberTeamId}
         loading={loading}
         error={error}
-        setError={setError}
+        setError={setFormError}
         onSubmit={handleCreateAccount}
       />
 
@@ -854,7 +917,7 @@ function Accounts() {
         setApproverTeamToAdd={setApproverTeamToAdd}
         loading={loading}
         error={error}
-        setError={setError}
+        setError={setFormError}
         onSubmit={handleUpdateAccount}
       />
 

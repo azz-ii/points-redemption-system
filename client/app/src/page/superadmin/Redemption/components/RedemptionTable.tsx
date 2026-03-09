@@ -14,6 +14,7 @@ interface RedemptionTableProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   onExport?: () => void;
+  fillHeight?: boolean;
 }
 
 export function RedemptionTable({
@@ -27,6 +28,7 @@ export function RedemptionTable({
   onRefresh,
   refreshing,
   onExport,
+  fillHeight,
 }: RedemptionTableProps) {
   const columns = useMemo(
     () =>
@@ -60,6 +62,7 @@ export function RedemptionTable({
       emptyMessage="No redemption requests found"
       pageSizeOptions={[15, 50, 100]}
       initialSorting={[{ id: "date_requested", desc: true }]}
+      fillHeight={fillHeight}
     />
   );
 }

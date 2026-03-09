@@ -270,7 +270,7 @@ export function ViewTeamModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="view-team-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -290,7 +290,7 @@ export function ViewTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {loading ? (
             <ModalSkeleton
               showFormSection={true}

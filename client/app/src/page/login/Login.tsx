@@ -22,11 +22,12 @@ function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showActivateAccount, setShowActivateAccount] = useState(false);
   const [activationUsername, setActivationUsername] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLoginSuccess = (position: string) => {
-    login(position, username);
+  const handleLoginSuccess = (position: string, canSelfRequest?: boolean) => {
+    login(position, username, canSelfRequest);
     navigate("/dashboard", { replace: true });
   };
 
@@ -44,6 +45,7 @@ function Login() {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoggingIn(true);
 
     try {
       const response = await fetchWithCsrf(`${API_URL}/login/`, {
@@ -62,16 +64,18 @@ function Login() {
         if (data.needs_activation) {
           setActivationUsername(data.username);
           setShowActivateAccount(true);
+          setIsLoggingIn(false);
           return;
         }
         
         const position = data.position || "Admin";
+        const canSelfRequest = !!data.can_self_request;
         setUsername("");
         setPassword("");
         toast.success("Login successful", {
           description: data.message || "Welcome back!"
         });
-        setTimeout(() => handleLoginSuccess(position), 1000);
+        handleLoginSuccess(position, canSelfRequest);
       } else {
         console.error("Login failed:", data);
         
@@ -99,12 +103,14 @@ function Login() {
             description: (data.error || data.detail || "Invalid credentials") + suffix
           });
         }
+        setIsLoggingIn(false);
       }
     } catch (err) {
       console.error("Error connecting to server:", err);
       toast.error("Server Error", {
         description: "Unable to connect to authentication server"
       });
+      setIsLoggingIn(false);
     }
   };
 
@@ -242,9 +248,10 @@ function Login() {
 
             <Button
               type="submit"
-              className="w-full h-12 font-medium cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={isLoggingIn}
+              className="w-full h-12 font-medium cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Log In
+              {isLoggingIn ? "Logging in..." : "Log In"}
             </Button>
           </form>
         </div>

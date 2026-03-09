@@ -1,11 +1,8 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
-import {
-  agentDashboardApi,
-  type AgentDashboardStats,
-} from "@/lib/distributors-api";
-import { redemptionRequestsApi } from "@/lib/api";
+import { useAgentDashboardStats } from "@/hooks/queries/useDashboard";
+import { useRequests } from "@/hooks/queries/useRequests";
 import { toast } from "sonner";
 import {
   Table,
@@ -32,104 +29,33 @@ interface RedemptionItem {
 function SalesAgentDashboard() {
   const navigate = useNavigate();
 
-  // Stats
-  const [stats, setStats] = useState<AgentDashboardStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const { data: stats, isLoading: statsLoading } = useAgentDashboardStats(30_000);
+  const { data: allRequests = [], isLoading: requestsLoading, isFetching: isRefreshing, refetch } = useRequests(30_000);
 
-  // Requests
-  const [requests, setRequests] = useState<RedemptionItem[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const requests = useMemo(
+    () => (allRequests as any[])
+      .filter((req) => req.status === "PENDING")
+      .map(
+        (req) =>
+          ({
+            id: req.id,
+            requested_by: req.requested_by,
+            requested_by_name: req.requested_by_name,
+            requested_for: req.requested_for,
+            requested_for_name: req.requested_for_name,
+            status: req.status,
+            processing_status: req.processing_status,
+            total_points: req.total_points,
+            date_requested: req.date_requested,
+            items: req.items,
+          }) as RedemptionItem,
+      ),
+    [allRequests],
+  );
 
-  // Fetch agent dashboard statistics
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setStatsLoading(true);
-        const data = await agentDashboardApi.getStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-        toast.error("Failed to load dashboard statistics");
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  // Fetch agent's pending requests
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setRequestsLoading(true);
-        const response = await redemptionRequestsApi.getRequests();
-        const allRequests = response || [];
-
-        // Map to RedemptionItem format and filter for PENDING status only
-        const mappedRequests = (allRequests as any[])
-          .filter((req) => req.status === "PENDING")
-          .map(
-            (req) =>
-              ({
-                id: req.id,
-                requested_by: req.requested_by,
-                requested_by_name: req.requested_by_name,
-                requested_for: req.requested_for,
-                requested_for_name: req.requested_for_name,
-                status: req.status,
-                processing_status: req.processing_status,
-                total_points: req.total_points,
-                date_requested: req.date_requested,
-                items: req.items,
-              }) as RedemptionItem,
-          );
-
-        setRequests(mappedRequests);
-      } catch (error) {
-        console.error("Error fetching requests:", error);
-        toast.error("Failed to load requests");
-      } finally {
-        setRequestsLoading(false);
-      }
-    };
-
-    fetchRequests();
-  }, []);
-
-  const handleRefreshRequests = async () => {
-    try {
-      setIsRefreshing(true);
-      const response = await redemptionRequestsApi.getRequests();
-      const allRequests = response || [];
-
-      const mappedRequests = (allRequests as any[])
-        .filter((req) => req.status === "PENDING")
-        .map(
-          (req) =>
-            ({
-              id: req.id,
-              requested_by: req.requested_by,
-              requested_by_name: req.requested_by_name,
-              requested_for: req.requested_for,
-              requested_for_name: req.requested_for_name,
-              status: req.status,
-              processing_status: req.processing_status,
-              total_points: req.total_points,
-              date_requested: req.date_requested,
-              items: req.items,
-            }) as RedemptionItem,
-        );
-
-      setRequests(mappedRequests);
-      toast.success("Requests refreshed successfully");
-    } catch (error) {
-      console.error("Error refreshing requests:", error);
-      toast.error("Failed to refresh requests");
-    } finally {
-      setIsRefreshing(false);
-    }
+  const handleRefreshRequests = () => {
+    refetch();
+    toast.success("Requests refreshed successfully");
   };
 
   return (
@@ -452,12 +378,12 @@ function SalesAgentDashboard() {
                         {new Date(
                           request.date_requested,
                         ).toLocaleDateString()}
-                      </TableCell>{" "}
+                      </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                           {request.status}
                         </span>
-                      </TableCell>{" "}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : !requestsLoading ? (

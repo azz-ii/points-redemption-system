@@ -507,7 +507,7 @@ function PasswordReset() {
 
       {/* Success Dialog */}
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Password Changed Successfully</AlertDialogTitle>
             <AlertDialogDescription>

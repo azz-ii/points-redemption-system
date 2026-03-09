@@ -13,7 +13,7 @@ class Team(models.Model):
         null=True,
         blank=True,
         related_name='managed_teams',
-        limit_choices_to={'profile__position': 'Approver'},
+        limit_choices_to={'profile__position__in': ['Approver', 'Admin']},
         help_text='Approver who manages this team'
     )
     is_archived = models.BooleanField(default=False, help_text='Whether this team is archived')
@@ -64,7 +64,7 @@ class TeamMembership(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='team_memberships',
-        limit_choices_to={'profile__position': 'Sales Agent'},
+        limit_choices_to={'profile__position__in': ['Sales Agent', 'Approver']},
         help_text='User who is a member of the team'
     )
     joined_at = models.DateTimeField(auto_now_add=True)
@@ -88,10 +88,10 @@ class TeamMembership(models.Model):
         return f"{user_name} → {self.team.name}"
 
     def clean(self):
-        """Validate that user is a Sales Agent"""
+        """Validate that user is a Sales Agent or an Approver with self-request capability"""
         if self.user and hasattr(self.user, 'profile'):
-            if self.user.profile.position != 'Sales Agent':
-                raise ValidationError({'user': 'Only Sales Agents can be team members.'})
+            if self.user.profile.position not in ('Sales Agent', 'Approver'):
+                raise ValidationError({'user': 'Only Sales Agents and Approvers can be team members.'})
 
     def save(self, *args, **kwargs):
         """Override save to run validation"""

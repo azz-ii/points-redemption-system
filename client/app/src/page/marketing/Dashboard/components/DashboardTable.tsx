@@ -12,6 +12,7 @@ interface DashboardTableProps {
   onBulkMarkProcessed?: (items: FlattenedRequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  fillHeight?: boolean;
 }
 
 export function DashboardTable({
@@ -22,6 +23,7 @@ export function DashboardTable({
   onBulkMarkProcessed,
   onRefresh,
   refreshing = false,
+  fillHeight,
 }: DashboardTableProps) {
   const columns = useMemo(
     () =>
@@ -51,7 +53,7 @@ export function DashboardTable({
   };
 
   return (
-    <div className="hidden md:block">
+    <div className={fillHeight ? "h-full" : "hidden md:block"}>
       <DataTable
         columns={columns}
         data={items}
@@ -70,6 +72,7 @@ export function DashboardTable({
         loadingMessage="Loading items..."
         emptyMessage="No items to process"
         pageSizeOptions={[15, 50, 100]}
+        fillHeight={fillHeight}
       />
     </div>
   );

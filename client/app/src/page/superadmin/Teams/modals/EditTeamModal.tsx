@@ -143,7 +143,7 @@ export function EditTeamModal({
 
   const fetchAvailableApprovers = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/users/?position=Approver`, {
+      const response = await fetch(`${API_URL}/users/?position=Approver,Admin`, {
         method: "GET",
         credentials: "include",
         headers: {
@@ -337,7 +337,7 @@ export function EditTeamModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-team-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -357,7 +357,7 @@ export function EditTeamModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           <div>
             <label className="text-xs text-muted-foreground mb-2 block">
               Team Name *

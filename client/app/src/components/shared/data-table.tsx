@@ -28,6 +28,7 @@ import {
   Download,
   Coins,
   BookOpen,
+  TrendingUp,
 } from "lucide-react"
 
 import {
@@ -63,6 +64,7 @@ interface DataTableProps<TData, TValue> {
   createButtonIcon?: "user" | "plus"
   onSetPoints?: () => void
   onSetInventory?: () => void
+  onAllocateSalesVolume?: () => void
   onRefresh?: () => void
   refreshing?: boolean
   onExport?: (selectedRows: TData[]) => void
@@ -103,6 +105,9 @@ interface DataTableProps<TData, TValue> {
   editedData?: Record<string, any>
   onFieldChange?: (field: string, value: any) => void
   fieldErrors?: Record<string, string>
+
+  // Layout
+  fillHeight?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -117,6 +122,7 @@ export function DataTable<TData, TValue>({
   createButtonIcon = "plus",
   onSetPoints,
   onSetInventory,
+  onAllocateSalesVolume,
   onRefresh,
   refreshing = false,
   onExport,
@@ -144,6 +150,7 @@ export function DataTable<TData, TValue>({
   onSearch,
   pageSizeOptions = [15, 50, 100],
   onPageSizeChange,
+  fillHeight = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -219,10 +226,10 @@ export function DataTable<TData, TValue>({
     : []
   const hasSelection = selectedRows.length > 0
 
-  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints || onSetInventory
+  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints || onSetInventory || onAllocateSalesVolume
 
   return (
-    <div className="space-y-4">
+    <div className={fillHeight ? "flex flex-col h-full gap-4 pb-2" : "space-y-4"}>
       {showToolbar && (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -308,7 +315,7 @@ export function DataTable<TData, TValue>({
               </Button>
             )}
           </div>
-          {(onCreateNew || onSetPoints || onSetInventory) && (
+          {(onCreateNew || onSetPoints || onSetInventory || onAllocateSalesVolume) && (
             <div className="flex gap-2">
               {onSetInventory && (
                 <button
@@ -317,6 +324,15 @@ export function DataTable<TData, TValue>({
                 >
                   <BookOpen className="h-5 w-5" />
                   <span>Set Inventory</span>
+                </button>
+              )}
+              {onAllocateSalesVolume && (
+                <button
+                  onClick={onAllocateSalesVolume}
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  <TrendingUp className="h-5 w-5" />
+                  <span>Allocate Points</span>
                 </button>
               )}
               {onSetPoints && (
@@ -342,8 +358,8 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
-      <div className="border rounded-lg overflow-hidden" style={{ height: "70vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, overflow: "auto", scrollbarGutter: "stable", paddingRight: "20px" }}>
+      <div className="border rounded-lg overflow-hidden flex-shrink min-h-0" style={fillHeight ? { display: "flex", flexDirection: "column" } : { height: "70vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ minHeight: 0, overflow: "auto", scrollbarGutter: "stable", paddingRight: "20px" }}>
           <Table style={{ width: "100%", minWidth: table.getTotalSize() }}>
             <TableHeader className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -380,7 +396,7 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {loading && data.length === 0 ? (
                 // Skeleton loading rows
-                Array.from({ length: 10 }).map((_, rowIndex) => (
+                Array.from({ length: fillHeight ? 15: 10 }).map((_, rowIndex) => (
                   <TableRow key={rowIndex}>
                     {table.getAllColumns().filter(col => col.getIsVisible()).map((column, colIndex) => {
                       const isFirstCol = colIndex === 0;

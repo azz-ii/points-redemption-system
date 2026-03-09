@@ -11,6 +11,7 @@ interface RedemptionStatusTableProps {
   refreshing?: boolean;
   loading: boolean;
   error: string | null;
+  fillHeight?: boolean;
 }
 
 export function RedemptionStatusTable({
@@ -22,6 +23,7 @@ export function RedemptionStatusTable({
   refreshing = false,
   loading,
   error,
+  fillHeight,
 }: RedemptionStatusTableProps) {
   const columns = createColumns({
     onViewRequest,
@@ -47,26 +49,29 @@ export function RedemptionStatusTable({
   };
 
   return (
-    <div className="hidden md:block">
-      <DataTable
-        columns={columns}
-        data={requests}
-        loading={loading}
-        error={error}
-        onDeleteSelected={onBulkCancel}
-        onRefresh={onRefresh}
-        refreshing={refreshing}
-        searchPlaceholder="Search by Request ID, Customer, Item..."
-        globalFilterFn={globalFilterFn}
-        showSearch={true}
-        showPagination={true}
-        showColumnVisibility={true}
-        pageSize={15}
-        initialSorting={[{ id: "date_requested", desc: true }]}
-        loadingMessage="Loading requests..."
-        emptyMessage="No redemption requests found"
-        pageSizeOptions={[15, 50, 100]}
-      />
+    <div className={fillHeight ? "h-full overflow-hidden relative" : "hidden md:block"}>
+      <div className={fillHeight ? "absolute inset-0" : undefined}>
+        <DataTable
+          columns={columns}
+          data={requests}
+          loading={loading}
+          error={error}
+          onDeleteSelected={onBulkCancel}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          searchPlaceholder="Search by Request ID, Customer, Item..."
+          globalFilterFn={globalFilterFn}
+          showSearch={true}
+          showPagination={true}
+          showColumnVisibility={true}
+          pageSize={15}
+          initialSorting={[{ id: "date_requested", desc: true }]}
+          loadingMessage="Loading requests..."
+          emptyMessage="No redemption requests found"
+          pageSizeOptions={[15, 50, 100]}
+          fillHeight={fillHeight}
+        />
+      </div>
     </div>
   );
 }

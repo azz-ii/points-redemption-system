@@ -36,7 +36,7 @@ export function UnlockAccountModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="rounded-lg shadow-2xl w-full max-w-md mx-4 bg-card">
+      <div className="rounded-lg shadow-2xl w-full max-w-md mx-4 bg-card max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 p-6 border-b border-border">
           <div className="p-2 rounded-full bg-red-500/10">

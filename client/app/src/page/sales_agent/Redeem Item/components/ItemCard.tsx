@@ -13,10 +13,10 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
 
   return (
     <div
-      className="rounded-lg overflow-hidden border bg-card border-border"
+      className="rounded-lg overflow-hidden border bg-card border-border flex flex-col"
     >
       {/* Image */}
-      <div className="bg-gray-300 h-40 md:h-48 overflow-hidden relative">
+      <div className="h-36 md:h-44 bg-gray-300 overflow-hidden relative flex-shrink-0">
         {imageLoading && (
           <div className="absolute inset-0 bg-gray-300 dark:bg-gray-700 animate-pulse" />
         )}
@@ -59,19 +59,19 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
         )}
       </div>
       {/* Info */}
-      <div className="p-4 relative">
+      <div className="flex-shrink-0 p-2">
         {imageLoading ? (
           /* Skeleton state */
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex-1 space-y-2">
+          <div className="flex justify-between items-end">
+            <div className="flex-1 space-y-1">
               {/* Title skeleton */}
               <div
-                className="h-4 md:h-5 rounded animate-pulse bg-muted"
+                className="h-3 md:h-4 rounded animate-pulse bg-muted"
                 style={{ width: "70%" }}
               />
               {/* Points skeleton */}
               <div
-                className="h-3 md:h-4 rounded animate-pulse bg-muted"
+                className="h-3 rounded animate-pulse bg-muted"
                 style={{ width: "40%" }}
               />
               {/* Stock/category skeleton */}
@@ -87,29 +87,29 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
             </div>
             {/* Button skeleton */}
             <div
-              className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 animate-pulse bg-muted"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-full flex-shrink-0 animate-pulse bg-muted"
             />
           </div>
         ) : (
           /* Actual content */
-          <div className="flex justify-between items-start mb-2">
+          <div className="flex justify-between items-end">
             <div>
-              <h3 className="font-semibold text-sm md:text-base">
+              <h3 className="font-semibold text-xs md:text-sm leading-tight">
                 {item.name}
               </h3>
               {isDynamicPricing ? (
-                <p className="text-xs md:text-sm text-primary">
+                <p className="text-xs text-primary">
                   {multiplier.toLocaleString()} pts / {DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
                 </p>
               ) : (
                 <p
-                  className="text-xs md:text-sm text-muted-foreground"
+                  className="text-xs text-muted-foreground"
                 >
                   {item.points.toLocaleString()} pts
                 </p>
               )}
               <p
-                className={`text-xs mt-1 ${
+                className={`text-xs ${
                   !item.has_stock
                     ? 'text-blue-500 dark:text-blue-400'
                     : item.available_stock === 0 
@@ -133,10 +133,10 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
             {/* Add button */}
             <button
               onClick={() => onAddToCart(item)}
-              className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-400 text-black hover:bg-yellow-300"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-400 text-black hover:bg-yellow-300"
               aria-label={`Add ${item.name}`}
             >
-              <Plus className="h-4 w-4 md:h-5 md:w-5" />
+              <Plus className="h-3 w-3 md:h-4 md:w-4" />
             </button>
           </div>
         )}

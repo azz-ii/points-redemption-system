@@ -86,7 +86,7 @@ export function MergeCustomerModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="merge-customer-title"
-        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border"
+        className="bg-card rounded-lg shadow-2xl max-w-3xl w-full border divide-y border-border divide-border max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-8">
@@ -109,7 +109,7 @@ export function MergeCustomerModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto min-h-0">
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500 text-red-600 text-sm">
               {error}

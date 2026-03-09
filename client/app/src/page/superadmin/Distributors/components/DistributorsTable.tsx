@@ -17,6 +17,7 @@ interface DistributorsTableProps {
   refreshing?: boolean;
   onExport?: () => void;
   onSetPoints?: () => void;
+  onAllocateSalesVolume?: () => void;
   onViewPointsHistory?: (distributor: Distributor) => void;
   manualPagination?: boolean;
   pageCount?: number;
@@ -27,6 +28,7 @@ interface DistributorsTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  fillHeight?: boolean;
 }
 
 export function DistributorsTable({
@@ -44,6 +46,7 @@ export function DistributorsTable({
   refreshing,
   onExport,
   onSetPoints,
+  onAllocateSalesVolume,
   onViewPointsHistory,
   manualPagination,
   pageCount,
@@ -54,6 +57,7 @@ export function DistributorsTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  fillHeight,
 }: DistributorsTableProps) {
   const columns = createColumns({
     onView,
@@ -78,6 +82,7 @@ export function DistributorsTable({
       refreshing={refreshing}
       onExport={onExport}
       onSetPoints={onSetPoints}
+      onAllocateSalesVolume={onAllocateSalesVolume}
       searchPlaceholder="Filter by name, email, or location..."
       globalFilterFn={(row, _columnId, filterValue) => {
         const s = String(filterValue).toLowerCase()
@@ -99,6 +104,7 @@ export function DistributorsTable({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      fillHeight={fillHeight}
     />
   );
 }

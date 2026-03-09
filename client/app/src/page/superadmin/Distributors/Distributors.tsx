@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import { API_URL } from "@/lib/config";
 import { Search, Plus } from "lucide-react";
+import { useDistributorsPage } from "@/hooks/queries/useDistributors";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 import { distributorsApi, type Distributor, type ChunkedUpdateProgress } from "@/lib/distributors-api";
+import { API_URL } from "@/lib/config";
 import {
   CreateDistributorModal,
   EditDistributorModal,
@@ -13,15 +16,14 @@ import {
   BulkArchiveDistributorModal,
   ExportModal,
   SetPointsModal,
+  SalesVolumeAllocationModal,
 } from "./modals";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Distributors() {
   const currentPage = "distributors";
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [distributors, setDistributors] = useState<Distributor[]>([]);
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
@@ -29,44 +31,20 @@ function Distributors() {
   // Server-side pagination state
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
-  const [totalCount, setTotalCount] = useState(0);
+
+  const { data: distributorsData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useDistributorsPage(
+    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  );
+  const distributors = distributorsData?.results ?? [];
+  const totalCount = distributorsData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const error = queryError ? "Failed to load distributors. Please try again." : null;
 
-  const fetchDistributors = useCallback(async () => {
-    try {
-      setLoading(true);
-      const url = new URL(`${API_URL}/distributors/`, window.location.origin);
-      url.searchParams.append('page', String(tablePage + 1));
-      url.searchParams.append('page_size', String(pageSize));
-      if (showArchived) {
-        url.searchParams.append('show_archived', 'true');
-      }
-      if (searchQuery) {
-        url.searchParams.append('search', searchQuery);
-      }
-      const response = await fetch(url.toString(), {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch distributors');
-      }
-      const data = await response.json();
-      setDistributors(data.results || []);
-      setTotalCount(data.count || 0);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching distributors:", err);
-      setError("Failed to load distributors. Please try again.");
-      setDistributors([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [tablePage, pageSize, searchQuery, showArchived]);
+  const [mutationLoading, setMutationLoading] = useState(false);
 
-  // Fetch distributors on mount and when dependencies change
-  useEffect(() => {
-    fetchDistributors();
-  }, [fetchDistributors]);
+  const handleManualRefresh = useCallback(() => {
+    queryClient.resetQueries({ queryKey: queryKeys.distributors.all });
+  }, [queryClient]);
 
   // Reset to first page when showArchived changes
   useEffect(() => {
@@ -88,8 +66,6 @@ function Distributors() {
   }, []);
 
   const handleToggleArchived = useCallback((checked: boolean) => {
-    setLoading(true);
-    setDistributors([]); // Clear distributors to show full loading UI
     setShowArchived(checked);
     setTablePage(0);
   }, []);
@@ -131,6 +107,8 @@ function Distributors() {
   const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Distributor | null>(null);
   const [settingPoints, setSettingPoints] = useState(false);
   const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
+  const [showSalesVolumeModal, setShowSalesVolumeModal] = useState(false);
+  const [allocatingVolume, setAllocatingVolume] = useState(false);
 
   // Handle create distributor submission
   const handleCreateDistributor = async () => {
@@ -154,7 +132,7 @@ function Distributors() {
       setCreating(true);
       const createdDistributor =
         await distributorsApi.createDistributor(newDistributor);
-      setDistributors((prev) => [...prev, createdDistributor]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
       setNewDistributor({
         name: "",
         brand: "",
@@ -208,11 +186,7 @@ function Distributors() {
         editingDistributorId,
         editDistributor,
       );
-      setDistributors((prev) =>
-        prev.map((d) =>
-          d.id === editingDistributorId ? updatedDistributor : d,
-        ),
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
       setShowEditModal(false);
       setEditingDistributorId(null);
       setEditError(null);
@@ -245,23 +219,23 @@ function Distributors() {
   // Confirm archive distributor
   const confirmArchive = async (id: number) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       await distributorsApi.deleteDistributor(id);
       setShowArchiveModal(false);
       setArchiveTarget(null);
-      fetchDistributors();
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error archiving distributor:", err);
       alert("Failed to archive distributor. Please try again.");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   // Confirm unarchive distributor
   const confirmUnarchive = async (id: number) => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const response = await fetch(`${API_URL}/distributors/${id}/unarchive/`, {
         method: 'POST',
         credentials: 'include',
@@ -274,12 +248,12 @@ function Distributors() {
       
       setShowUnarchiveModal(false);
       setUnarchiveTarget(null);
-      fetchDistributors();
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error unarchiving distributor:", err);
       alert(err instanceof Error ? err.message : "Failed to unarchive distributor. Please try again.");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
@@ -292,7 +266,7 @@ function Distributors() {
   // Confirm bulk archive
   const confirmBulkArchive = async () => {
     try {
-      setLoading(true);
+      setMutationLoading(true);
       const archiveResults = await Promise.allSettled(
         bulkArchiveTargets.map((distributor) =>
           distributorsApi.deleteDistributor(distributor.id)
@@ -311,12 +285,12 @@ function Distributors() {
         alert(`Archived ${successCount} of ${bulkArchiveTargets.length} distributor(s). ${failCount} failed.`);
       }
 
-      fetchDistributors();
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error archiving distributors:", err);
       alert("Error archiving some distributors");
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
@@ -371,7 +345,7 @@ function Distributors() {
       }
 
       // Refresh distributors list
-      fetchDistributors();
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error updating points:", err);
       alert("Error updating points");
@@ -418,7 +392,7 @@ function Distributors() {
       alert(
         `Successfully updated points for ${data.updated_count} distributor(s)`,
       );
-      fetchDistributors();
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("[DEBUG] Error bulk updating points:", err);
       alert("Error updating points. Please try again.");
@@ -464,7 +438,7 @@ function Distributors() {
       alert(
         `Successfully reset points for ${data.updated_count} distributor(s)`,
       );
-      fetchDistributors();
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("[DEBUG] Error resetting points:", err);
       alert("Error resetting points. Please try again.");
@@ -473,12 +447,40 @@ function Distributors() {
     }
   };
 
+  // Handle sales volume allocation
+  const handleSalesVolumeAllocate = async (
+    allocations: { id: number; sales_volume: number }[],
+    reason: string = ''
+  ) => {
+    try {
+      setAllocatingVolume(true);
+      const result = await distributorsApi.allocateSalesVolume(allocations, reason);
+
+      setShowSalesVolumeModal(false);
+
+      if (result.failed_count === 0) {
+        alert(`Successfully allocated points for ${result.updated_count} distributor(s)`);
+      } else {
+        alert(
+          `Allocated points for ${result.updated_count} distributor(s). ${result.failed_count} failed.`
+        );
+      }
+
+      queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
+    } catch (err) {
+      console.error("Error allocating sales volume points:", err);
+      alert(err instanceof Error ? err.message : "Error allocating points. Please try again.");
+    } finally {
+      setAllocatingVolume(false);
+    }
+  };
+
   return (
     <>
 
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:flex-1 md:overflow-y-auto md:p-8">
+        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-semibold">Distributors</h1>
@@ -498,21 +500,23 @@ function Distributors() {
               </label>
             </div>
           </div>
-          <DistributorsTable
-            distributors={distributors}
+          <div className="flex-1 min-h-0">
+            <DistributorsTable
+              distributors={distributors}
             loading={loading}
             error={error}
-            onRetry={fetchDistributors}
+            onRetry={() => refetch()}
             onView={handleViewClick}
             onEdit={handleEditClick}
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}
             onArchiveSelected={handleArchiveSelected}
             onCreateNew={() => setShowCreateModal(true)}
-            onRefresh={fetchDistributors}
-            refreshing={loading}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
             onExport={() => setShowExportModal(true)}
             onSetPoints={() => setShowSetPointsModal(true)}
+            onAllocateSalesVolume={() => setShowSalesVolumeModal(true)}
             onViewPointsHistory={(distributor) => {
               setPointsHistoryTarget(distributor);
               setShowPointsHistory(true);
@@ -526,7 +530,9 @@ function Distributors() {
             pageSize={pageSize}
             pageSizeOptions={[15, 50, 100]}
             onPageSizeChange={handlePageSizeChange}
+            fillHeight
           />
+          </div>
         </div>
 
         {/* Mobile Layout */}
@@ -573,7 +579,7 @@ function Distributors() {
             filteredDistributors={distributors}
             loading={loading}
             error={error}
-            onRetry={fetchDistributors}
+            onRetry={() => refetch()}
             page={tablePage + 1}
             totalPages={pageCount}
             onPageChange={(p) => setTablePage(p - 1)}
@@ -657,6 +663,15 @@ function Distributors() {
         onBulkSubmit={handleBulkSetPoints}
         onResetAll={handleResetAllPoints}
         progress={updateProgress}
+      />
+
+      {/* Sales Volume Allocation Modal */}
+      <SalesVolumeAllocationModal
+        isOpen={showSalesVolumeModal}
+        onClose={() => setShowSalesVolumeModal(false)}
+        onFetchPage={distributorsApi.getDistributorsPage}
+        loading={allocatingVolume}
+        onSubmit={handleSalesVolumeAllocate}
       />
 
       {pointsHistoryTarget && (

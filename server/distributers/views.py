@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from .models import Distributor
 from .serializers import DistributorSerializer
 import io
+import math
 import logging
 from datetime import datetime
 from points_audit.utils import bulk_log_points_changes, generate_batch_id
@@ -21,6 +22,25 @@ from points_audit.models import PointsAuditLog
 
 # Configure logger for distributor operations
 logger = logging.getLogger('distributors')
+
+# Sales volume tiers for points allocation
+# Each tier defines a sales volume range and the rate used to calculate points
+SALES_VOLUME_TIERS = [
+    {"level": 1, "lower": 1,     "upper": 5000,   "rate": 0.25},
+    {"level": 2, "lower": 5001,  "upper": 10000,  "rate": 0.50},
+    {"level": 3, "lower": 10001, "upper": 20000,  "rate": 0.75},
+    {"level": 4, "lower": 20001, "upper": 30000,  "rate": 1.00},
+    {"level": 5, "lower": 30001, "upper": 50000,  "rate": 1.25},
+    {"level": 6, "lower": 50001, "upper": 500000, "rate": 1.50},
+]
+
+
+def get_rate_for_sales_volume(sales_volume):
+    """Look up the rate for a given sales volume from the tiers table."""
+    for tier in SALES_VOLUME_TIERS:
+        if tier["lower"] <= sales_volume <= tier["upper"]:
+            return tier["rate"]
+    return None
 
 class DistributorPagination(PageNumberPagination):
     """
@@ -574,6 +594,133 @@ class DistributorBatchUpdatePointsView(APIView):
             "updated_count": len(updated_ids),
             "failed_count": len(failed),
             "updated_ids": updated_ids,
+            "failed": failed if failed else None
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SalesVolumeTiersView(APIView):
+    """Return the sales volume tiers used for points allocation."""
+
+    def get(self, request):
+        return Response(SALES_VOLUME_TIERS, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DistributorAllocateSalesVolumeView(APIView):
+    """Allocate points to distributors based on their sales volume."""
+
+    def post(self, request):
+        allocations = request.data.get('allocations', [])
+        reason = request.data.get('reason', '')
+
+        if not allocations:
+            return Response({"error": "No allocations provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        failed = []
+        update_map = {}  # id -> { sales_volume, rate, points_to_add }
+
+        for alloc in allocations:
+            dist_id = alloc.get('id')
+            sales_volume = alloc.get('sales_volume')
+
+            if dist_id is None or sales_volume is None:
+                failed.append({'id': dist_id, 'error': 'Missing id or sales_volume'})
+                continue
+
+            try:
+                sales_volume = int(sales_volume)
+            except (ValueError, TypeError):
+                failed.append({'id': dist_id, 'error': 'Invalid sales_volume value'})
+                continue
+
+            if sales_volume < 1 or sales_volume > 500000:
+                failed.append({'id': dist_id, 'error': f'Sales volume {sales_volume} is out of range (1-500,000)'})
+                continue
+
+            rate = get_rate_for_sales_volume(sales_volume)
+            if rate is None:
+                failed.append({'id': dist_id, 'error': f'No matching tier for sales volume {sales_volume}'})
+                continue
+
+            points_to_add = math.floor(sales_volume * rate)
+            update_map[dist_id] = {
+                'sales_volume': sales_volume,
+                'rate': rate,
+                'points_to_add': points_to_add,
+            }
+
+        # Fetch distributors to update
+        distributor_ids = list(update_map.keys())
+        distributors_to_update = Distributor.objects.filter(
+            id__in=distributor_ids,
+            is_archived=False
+        )
+
+        old_points_map = {}
+        updated_distributors = []
+        for distributor in distributors_to_update:
+            old_points_map[distributor.id] = distributor.points or 0
+            info = update_map[distributor.id]
+            distributor.points = max(0, (distributor.points or 0) + info['points_to_add'])
+            updated_distributors.append(distributor)
+
+        # Check for IDs that weren't found
+        found_ids = {d.id for d in distributors_to_update}
+        for dist_id in distributor_ids:
+            if dist_id not in found_ids:
+                failed.append({'id': dist_id, 'error': 'Distributor not found or is archived'})
+
+        # Bulk update in transaction
+        updated_ids = []
+        with transaction.atomic():
+            if updated_distributors:
+                Distributor.objects.bulk_update(updated_distributors, ['points'])
+                updated_ids = [d.id for d in updated_distributors]
+
+        # Create audit entries
+        if updated_ids:
+            batch_id = generate_batch_id()
+            audit_entries = []
+            for d in updated_distributors:
+                if d.id in updated_ids:
+                    info = update_map[d.id]
+                    audit_entries.append({
+                        'entity_type': 'DISTRIBUTOR',
+                        'entity_id': d.id,
+                        'entity_name': d.name,
+                        'previous_points': old_points_map.get(d.id, 0),
+                        'new_points': d.points,
+                        'action_type': 'SALES_VOL_ALLOC',
+                        'changed_by': request.user if request.user.is_authenticated else None,
+                        'reason': reason or f'Sales volume allocation: volume={info["sales_volume"]}, rate={info["rate"]}',
+                        'batch_id': batch_id,
+                    })
+
+            if audit_entries:
+                try:
+                    bulk_log_points_changes(audit_entries)
+                except Exception as e:
+                    logger.error(f"Failed to create audit log entries: {str(e)}")
+
+        # Build response with allocation details
+        allocation_details = []
+        for d in updated_distributors:
+            info = update_map[d.id]
+            allocation_details.append({
+                'id': d.id,
+                'name': d.name,
+                'sales_volume': info['sales_volume'],
+                'rate': info['rate'],
+                'points_added': info['points_to_add'],
+                'new_total': d.points,
+            })
+
+        return Response({
+            "message": f"Allocated points for {len(updated_ids)} distributor(s)",
+            "updated_count": len(updated_ids),
+            "failed_count": len(failed),
+            "allocations": allocation_details,
             "failed": failed if failed else None
         }, status=status.HTTP_200_OK)
 

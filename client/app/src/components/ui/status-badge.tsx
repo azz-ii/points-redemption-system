@@ -14,6 +14,7 @@ const STATUS_CLASSES: Record<string, string> = {
   PROCESSED: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   COMPLETED: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
   NOT_PROCESSED: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
+  PARTIALLY_PROCESSED: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   CANCELLED: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
   AWAITING_AR: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
 };

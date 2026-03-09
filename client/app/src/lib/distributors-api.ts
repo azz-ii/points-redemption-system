@@ -100,13 +100,38 @@ export interface ChunkedUpdateResult {
   partialSuccess: boolean;
 }
 
+export interface SalesVolumeTier {
+  level: number;
+  lower: number;
+  upper: number;
+  rate: number;
+}
+
+export interface SalesVolumeAllocationResponse {
+  message: string;
+  updated_count: number;
+  failed_count: number;
+  allocations: {
+    id: number;
+    name: string;
+    sales_volume: number;
+    rate: number;
+    points_added: number;
+    new_total: number;
+  }[];
+  failed?: { id: number; error: string }[] | null;
+}
+
 export const distributorsApi = {
-  getDistributorsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = ''): Promise<PaginatedDistributorsResponse> => {
+  getDistributorsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = '', showArchived?: boolean): Promise<PaginatedDistributorsResponse> => {
     const url = new URL(`${API_BASE_URL}/distributors/`, window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
+    }
+    if (showArchived) {
+      url.searchParams.append('show_archived', 'true');
     }
     const response = await fetch(url.toString(), {
       credentials: 'include',
@@ -344,6 +369,31 @@ export const distributorsApi = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete distributor');
+  },
+
+  getSalesVolumeTiers: async (): Promise<SalesVolumeTier[]> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/sales-volume-tiers/`, {
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch sales volume tiers');
+    return response.json();
+  },
+
+  allocateSalesVolume: async (
+    allocations: { id: number; sales_volume: number }[],
+    reason?: string
+  ): Promise<SalesVolumeAllocationResponse> => {
+    const response = await fetch(`${API_BASE_URL}/distributors/allocate-sales-volume/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ allocations, reason: reason || '' }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to allocate sales volume points');
+    }
+    return data;
   },
 };
 

@@ -193,9 +193,16 @@ return (
       const processingStatus = row.original.request_processing_status;
       const processingDisplay = row.original.request_processing_status_display;
       const isProcessed = !!row.original.item_processed_by;
+      const fulfilledQty = row.original.fulfilled_quantity ?? 0;
+      const totalQty = row.original.quantity;
+      const isPartial = !isProcessed && fulfilledQty > 0;
 
 return isProcessed ? (
         <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Item Processed
+        </span>
+      ) : isPartial ? (
+        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+          Partial ({fulfilledQty}/{totalQty})
         </span>
       ) : (
         <span
