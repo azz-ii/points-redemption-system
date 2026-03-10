@@ -264,6 +264,32 @@ export function CreateAccountModal({
               {newAccount.position === "Approver" && (
                 <div>
                   <label
+                    htmlFor="approver-points"
+                    className="text-xs text-muted-foreground mb-2 block"
+                  >
+                    Points *
+                  </label>
+                  <input
+                    id="approver-points"
+                    type="number"
+                    min="0"
+                    value={newAccount.points}
+                    onChange={(e) =>
+                      setNewAccount({
+                        ...newAccount,
+                        points: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                    placeholder="Enter points"
+                    aria-required="true"
+                  />
+                </div>
+              )}
+
+              {newAccount.position === "Approver" && (
+                <div>
+                  <label
                     htmlFor="approver-team"
                     className="text-xs text-muted-foreground mb-2 block"
                   >

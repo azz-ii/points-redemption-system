@@ -153,11 +153,14 @@ export default function CartModal({
     if (isNaN(value)) return 'Please enter a valid number';
     
     // Type-specific validations
-    if (pricingType === 'PER_INVOICE' || pricingType === 'PER_EU_SRP') {
+    if (pricingType === 'PER_EU_SRP') {
       if (value > 999999.99) return 'Amount too large';
       // Check for reasonable decimal places (max 2)
       const decimals = value.toString().split('.')[1];
       if (decimals && decimals.length > 2) return 'Max 2 decimal places';
+    } else if (pricingType === 'PER_INVOICE') {
+      if (value > 999999) return 'Quantity too large';
+      if (value % 1 !== 0) return 'Must be a whole number';
     } else if (pricingType === 'PER_SQFT') {
       if (value > 999999) return 'Area too large';
     } else if (pricingType === 'PER_DAY') {
@@ -265,6 +268,16 @@ export default function CartModal({
 
     if (items.length === 0) {
       toast.error("Cart is empty");
+      return;
+    }
+
+    // Validate dynamic-pricing items have a quantity entered
+    const missingDynamic = items.filter(
+      item => item.pricing_type !== 'FIXED' && !(item.dynamic_quantity && item.dynamic_quantity > 0)
+    );
+    if (missingDynamic.length > 0) {
+      const label = DYNAMIC_QUANTITY_LABELS[missingDynamic[0].pricing_type as keyof typeof DYNAMIC_QUANTITY_LABELS]?.toLowerCase() ?? 'quantity';
+      toast.error(`Please enter a ${label} for "${missingDynamic[0].name}"`);
       return;
     }
 
@@ -506,13 +519,13 @@ export default function CartModal({
                                 </div>
                               )}
                               <div className="flex items-center gap-1">
-                                {(item.pricing_type === 'PER_INVOICE' || item.pricing_type === 'PER_EU_SRP') && (
+                                {item.pricing_type === 'PER_EU_SRP' && (
                                   <span className={`text-xs text-muted-foreground`}>$</span>
                                 )}
                                 <input
                                   type="number"
                                   min="0"
-                                  step={item.pricing_type === 'PER_DAY' ? '1' : '0.01'}
+                                  step={(item.pricing_type === 'PER_DAY' || item.pricing_type === 'PER_INVOICE') ? '1' : '0.01'}
                                   value={item.dynamic_quantity || ''}
                                   onChange={(e) => {
                                     const val = parseFloat(e.target.value) || 0;
@@ -522,7 +535,8 @@ export default function CartModal({
                                   }}
                                   placeholder={
                                     item.pricing_type === 'PER_SQFT' ? 'e.g., 150' :
-                                    item.pricing_type === 'PER_INVOICE' || item.pricing_type === 'PER_EU_SRP' ? 'e.g., 1234.56' :
+                                    item.pricing_type === 'PER_EU_SRP' ? 'e.g., 1234.56' :
+                                    item.pricing_type === 'PER_INVOICE' ? 'e.g., 35' :
                                     item.pricing_type === 'PER_DAY' ? 'e.g., 5' : '0'
                                   }
                                   className={`w-28 px-2 py-1 text-center rounded border outline-none ${
@@ -577,21 +591,6 @@ export default function CartModal({
               <div
                 className={`px-6 py-4 border-t border-border`}
               >
-                {isSelfRequest ? (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Total points for this request:
-                      </span>
-                      <span className="font-semibold">
-                        {totalPoints.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground italic">
-                      No points will be deducted for self-requests
-                    </p>
-                  </div>
-                ) : (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span
@@ -630,7 +629,6 @@ export default function CartModal({
                     </span>
                   </div>
                 </div>
-                )}
               </div>
             )}
 
@@ -644,9 +642,9 @@ export default function CartModal({
               </button>
               <button
                 onClick={() => setStep("details")}
-                disabled={items.length === 0 || (!isSelfRequest && remainingPoints < 0)}
+                disabled={items.length === 0 || remainingPoints < 0}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
-                  items.length === 0 || (!isSelfRequest && remainingPoints < 0)
+                  items.length === 0 || remainingPoints < 0
                     ? "bg-muted cursor-not-allowed"
                     : "bg-primary hover:bg-primary/90"
                 }`}
@@ -1211,21 +1209,6 @@ export default function CartModal({
               <div
                 className={`px-4 py-3 border-t space-y-2 text-xs border-border`}
               >
-                {isSelfRequest ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Total request:
-                      </span>
-                      <span className="font-semibold">
-                        {totalPoints.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground italic">
-                      No points will be deducted for self-requests
-                    </p>
-                  </>
-                ) : (
                 <>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
@@ -1258,7 +1241,6 @@ export default function CartModal({
                   </span>
                 </div>
                 </>
-                )}
               </div>
             )}
           </>
@@ -1684,9 +1666,9 @@ export default function CartModal({
           <div className="flex flex-col gap-2 p-4 border-t border-border">
             <button
               onClick={() => setStep("details")}
-              disabled={items.length === 0 || (!isSelfRequest && remainingPoints < 0)}
+              disabled={items.length === 0 || remainingPoints < 0}
               className={`w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground ${
-                items.length === 0 || (!isSelfRequest && remainingPoints < 0)
+                items.length === 0 || remainingPoints < 0
                   ? "bg-muted cursor-not-allowed"
                   : "bg-primary hover:bg-primary/90"
               }`}

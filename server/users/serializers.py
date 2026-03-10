@@ -73,7 +73,7 @@ class UserSerializer(serializers.ModelSerializer):
             })
         is_activated = validated_data.pop('is_activated', True)
         validated_data.pop('uses_points', None)  # derived from position, ignore any client-supplied value
-        uses_points = (position == 'Sales Agent')
+        uses_points = (position in ('Sales Agent', 'Approver'))
         points = validated_data.pop('points', 0)
         can_self_request = validated_data.pop('can_self_request', False)
         # can_self_request only meaningful for Approvers
@@ -131,9 +131,9 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.profile.email = email
             if is_activated is not None:
                 instance.profile.is_activated = is_activated
-            # Always sync uses_points from effective position (Sales Agent only)
+            # Always sync uses_points from effective position
             effective_position = position if position is not None else instance.profile.position
-            instance.profile.uses_points = (effective_position == 'Sales Agent')
+            instance.profile.uses_points = (effective_position in ('Sales Agent', 'Approver'))
             # Sync can_self_request: only meaningful for Approvers
             if can_self_request is not None:
                 instance.profile.can_self_request = can_self_request

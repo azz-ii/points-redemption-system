@@ -66,6 +66,13 @@ class Product(models.Model):
         choices=PricingType.choices,
         default=PricingType.FIXED
     )
+    points_multiplier = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Rate for dynamic pricing (e.g. 25 for "25 pts per sq ft"). Unused for FIXED pricing.'
+    )
     
     # Order quantity limits
     min_order_qty = models.PositiveIntegerField(

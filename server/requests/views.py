@@ -591,22 +591,18 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         # Use transaction to ensure atomicity when refunding points and uncommitting stock
         try:
             with transaction.atomic():
-                # SELF requests had no points deducted, skip refund calculation
-                is_self_request = redemption_request.requested_for_type == 'SELF'
-
                 # Compute points to refund: only for unfulfilled quantities/items
                 refund_points = 0
-                if not is_self_request:
-                    for item in redemption_request.items.select_related('product').all():
-                        pricing = item.pricing_type or 'FIXED'
-                        if pricing == 'FIXED':
-                            remaining = max(0, item.quantity - item.fulfilled_quantity)
-                            if item.points_per_item and remaining > 0:
-                                refund_points += remaining * item.points_per_item
-                        else:
-                            # Non-FIXED: refund full item points only if not yet processed
-                            if not item.item_processed_by:
-                                refund_points += item.total_points
+                for item in redemption_request.items.select_related('product').all():
+                    pricing = item.pricing_type or 'FIXED'
+                    if pricing == 'FIXED':
+                        remaining = max(0, item.quantity - item.fulfilled_quantity)
+                        if item.points_per_item and remaining > 0:
+                            refund_points += remaining * item.points_per_item
+                    else:
+                        # Non-FIXED: refund full item points only if not yet processed
+                        if not item.item_processed_by:
+                            refund_points += item.total_points
 
                 if refund_points > 0:
                     if redemption_request.points_deducted_from == 'SELF':

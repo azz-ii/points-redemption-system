@@ -52,7 +52,7 @@ export const PRICING_TYPE_LABELS: Record<PricingType, string> = {
 export const DYNAMIC_QUANTITY_LABELS: Record<PricingType, string> = {
   FIXED: 'Quantity',
   PER_SQFT: 'Total Square Footage',
-  PER_INVOICE: 'Invoice Amount',
+  PER_INVOICE: 'Quantity',
   PER_DAY: 'Number of Days',
   PER_EU_SRP: 'End User SRP Amount',
 };
@@ -60,7 +60,7 @@ export const DYNAMIC_QUANTITY_LABELS: Record<PricingType, string> = {
 export const PRICING_TYPE_DESCRIPTIONS: Record<PricingType, string> = {
   FIXED: 'Standard fixed-price item. Points are calculated per unit.',
   PER_SQFT: 'Points calculated based on total square footage. Enter the area measurement to calculate total points.',
-  PER_INVOICE: 'Points calculated as a percentage of the invoice amount. Enter the invoice total (in currency) to calculate points.',
+  PER_INVOICE: 'Points calculated per unit/piece. Enter the number of pieces or units to calculate total points.',
   PER_DAY: 'Points calculated per day. Enter the number of days to calculate total points.',
   PER_EU_SRP: 'Points calculated as a percentage of End User Suggested Retail Price (EU SRP). Enter the SRP amount to calculate points.',
 };
@@ -68,7 +68,7 @@ export const PRICING_TYPE_DESCRIPTIONS: Record<PricingType, string> = {
 export const PRICING_TYPE_INPUT_HINTS: Record<PricingType, string> = {
   FIXED: '',
   PER_SQFT: 'sq ft',
-  PER_INVOICE: 'USD',
+  PER_INVOICE: 'pcs',
   PER_DAY: 'days',
   PER_EU_SRP: 'USD',
 };

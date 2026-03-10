@@ -297,6 +297,60 @@ export function EditAccountModal({
               )}
 
               {editAccount.position === "Approver" && (
+                <div>
+                  <label
+                    htmlFor="edit-approver-points"
+                    className="text-xs text-muted-foreground mb-2 block"
+                  >
+                    Points *
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      id="edit-approver-points"
+                      type="number"
+                      min="0"
+                      value={editAccount.points}
+                      onChange={(e) =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="flex-1 px-4 py-3 rounded border bg-background border-border text-foreground focus:outline-none focus:border-primary"
+                      placeholder="Enter points"
+                      aria-required="true"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: editAccount.points + 10,
+                        })
+                      }
+                      aria-label="Add 10 points"
+                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                    >
+                      +10
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditAccount({
+                          ...editAccount,
+                          points: editAccount.points + 100,
+                        })
+                      }
+                      aria-label="Add 100 points"
+                      className="px-4 py-3 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                    >
+                      +100
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {editAccount.position === "Approver" && (
                 <div className="space-y-3">
                   <label className="text-xs text-muted-foreground block">
                     Manages Teams <span className="text-muted-foreground">(optional)</span>

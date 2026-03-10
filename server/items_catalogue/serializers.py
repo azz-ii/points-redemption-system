@@ -26,7 +26,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'item_code', 'item_name', 'legend', 'category',
             'description', 'purpose', 'specifications',
-            'points', 'price', 'pricing_type',
+            'points', 'price', 'pricing_type', 'points_multiplier',
             'min_order_qty', 'max_order_qty',
             'has_stock', 'stock', 'committed_stock', 'available_stock',
             'mktg_admin', 'mktg_admin_username', 'requires_sales_approval',
@@ -62,7 +62,7 @@ class ProductInventorySerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'item_code', 'item_name', 'legend', 'category',
-            'points', 'price', 'pricing_type',
+            'points', 'price', 'pricing_type', 'points_multiplier',
             'min_order_qty', 'max_order_qty',
             'has_stock', 'stock', 'committed_stock', 'available_stock',
             'stock_status'

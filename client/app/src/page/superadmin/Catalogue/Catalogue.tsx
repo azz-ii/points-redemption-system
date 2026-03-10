@@ -226,6 +226,7 @@ function Catalogue() {
         points: isFixed
           ? parseFloat(newItem.points)
           : parseFloat(newItem.points_multiplier),
+        points_multiplier: isFixed ? null : parseFloat(newItem.points_multiplier),
         price: isFixed
           ? parseFloat(newItem.price)
           : parseFloat(newItem.price_multiplier),
@@ -334,7 +335,7 @@ function Catalogue() {
       stock: item.stock?.toString() || "0",
       has_stock: item.has_stock ?? true,
       requires_sales_approval: item.requires_sales_approval ?? true,
-      points_multiplier: !isFixed ? item.points.toString() : "",
+      points_multiplier: !isFixed ? (item.points_multiplier ?? item.points).toString() : "",
       price_multiplier: !isFixed ? item.price.toString() : "",
       mktg_admin: item.mktg_admin?.toString() || "",
     });
@@ -396,6 +397,7 @@ function Catalogue() {
         points: isFixed
           ? parseFloat(editItem.points)
           : parseFloat(editItem.points_multiplier),
+        points_multiplier: isFixed ? null : parseFloat(editItem.points_multiplier),
         price: isFixed
           ? parseFloat(editItem.price)
           : parseFloat(editItem.price_multiplier),

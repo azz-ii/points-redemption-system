@@ -269,7 +269,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             # Clear entity fields for SELF requests
             data['requested_for'] = None
             data['requested_for_customer'] = None
-            # Force points_deducted_from to SELF (no actual deduction will happen)
+            # Force points_deducted_from to SELF (deducted from approver's own points)
             data['points_deducted_from'] = 'SELF'
         elif requested_for_type == 'DISTRIBUTOR':
             if not requested_for:
