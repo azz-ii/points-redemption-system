@@ -102,11 +102,20 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
     [fetchMyProcessingStatus],
   );
 
-  const handleMarkProcessedConfirm = async (items: ProcessItemData[]) => {
+  const handleMarkProcessedConfirm = async (items: ProcessItemData[], photo?: File) => {
     if (!selectedRequest) return;
 
     try {
       await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
+      // Upload processing photo if provided
+      if (photo) {
+        try {
+          await marketingRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
+        } catch (photoErr) {
+          console.error("Error uploading processing photo:", photoErr);
+          toast.warning("Items processed, but photo upload failed. You can try again later.");
+        }
+      }
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
       setSelectedRequest(null);

@@ -679,3 +679,43 @@ class ItemFulfillmentLog(models.Model):
         verbose_name = "Item Fulfillment Log"
         verbose_name_plural = "Item Fulfillment Logs"
         ordering = ['fulfilled_at']
+
+
+class ProcessingPhoto(models.Model):
+    """Photo proof of handover uploaded during item processing."""
+    id = models.AutoField(primary_key=True)
+    request = models.ForeignKey(
+        RedemptionRequest,
+        on_delete=models.CASCADE,
+        related_name='processing_photos',
+        help_text='The redemption request this photo belongs to'
+    )
+    photo = models.ImageField(
+        upload_to='processing_photos/%Y/%m/',
+        help_text='Photo proof of item handover (max 5MB, PNG/JPG/WebP)'
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processing_photos',
+        help_text='User who uploaded this photo'
+    )
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='Date and time when this photo was uploaded'
+    )
+    caption = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Optional caption or note for this photo'
+    )
+
+    def __str__(self):
+        return f"ProcessingPhoto #{self.id} for request #{self.request_id} by {self.uploaded_by}"
+
+    class Meta:
+        verbose_name = "Processing Photo"
+        verbose_name_plural = "Processing Photos"
+        ordering = ['uploaded_at']

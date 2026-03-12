@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.hashers import check_password
 import logging
-from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus
+from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ProcessingPhoto, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
@@ -64,7 +64,13 @@ def _build_base_queryset():
                     )
                 )
             )
-        )
+        ),
+        Prefetch(
+            'processing_photos',
+            queryset=ProcessingPhoto.objects.select_related(
+                'uploaded_by__profile'
+            )
+        ),
     )
 
 
@@ -1140,6 +1146,65 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 'request_id': redemption_request.id,
             }, target_users=admin_ids)
 
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='upload_processing_photo')
+    def upload_processing_photo(self, request, pk=None):
+        """Upload a handover proof photo during item processing."""
+        redemption_request = self.get_object()
+        user = request.user
+        profile = getattr(user, 'profile', None)
+
+        # Only Marketing or Admin users can upload processing photos
+        if not profile or profile.position not in ['Marketing', 'Admin']:
+            return Response(
+                {'error': 'Permission denied: Only Marketing or Admin users can upload processing photos'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Request must be approved and at least partially processed (or about to be)
+        if redemption_request.status != 'APPROVED':
+            return Response(
+                {'error': 'Only approved requests can have processing photos uploaded'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file is present
+        if 'photo' not in request.FILES:
+            return Response(
+                {'error': 'No file provided. Please upload an image file.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        uploaded_file = request.FILES['photo']
+
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+        if uploaded_file.content_type not in allowed_types:
+            return Response(
+                {'error': 'Invalid file type. Please upload a PNG, JPG, or WebP image.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file size (5MB max)
+        if uploaded_file.size > 5 * 1024 * 1024:
+            return Response(
+                {'error': 'File too large. Maximum size is 5MB.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        caption = request.data.get('caption', '')
+
+        ProcessingPhoto.objects.create(
+            request=redemption_request,
+            photo=uploaded_file,
+            uploaded_by=user,
+            caption=caption,
+        )
+
+        logger.info(f"Processing photo uploaded for request #{redemption_request.id} by {user.username}")
+
+        serializer = self.get_serializer(redemption_request)
         return Response(serializer.data)
 
 

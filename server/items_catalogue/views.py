@@ -77,7 +77,7 @@ class ProductListCreateView(APIView):
 
         paginator = CataloguePagination()
         paginated_products = paginator.paginate_queryset(products, request)
-        serializer = ProductSerializer(paginated_products, many=True)
+        serializer = ProductSerializer(paginated_products, many=True, context={'request': request})
 
         return paginator.get_paginated_response(serializer.data)
     
@@ -125,7 +125,7 @@ class ProductDetailView(APIView):
         """Get a specific product's details"""
         try:
             product = Product.objects.get(id=product_id)
-            serializer = ProductSerializer(product)
+            serializer = ProductSerializer(product, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response({

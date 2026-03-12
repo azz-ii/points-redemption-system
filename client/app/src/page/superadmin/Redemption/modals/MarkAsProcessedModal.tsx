@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { CheckCircle, Loader2, X, Package } from "lucide-react";
+import { useState, useRef } from "react";
+import { CheckCircle, Loader2, X, Package, Camera, Trash2 } from "lucide-react";
 import type { ModalBaseProps, RedemptionItem, RequestItemVariant, ProcessItemData } from "./types";
 
 interface MarkAsProcessedModalProps extends ModalBaseProps {
   item: RedemptionItem | null;
   myItems?: RequestItemVariant[];
   pendingCount?: number;
-  onConfirm: (items: ProcessItemData[]) => Promise<void>;
+  onConfirm: (items: ProcessItemData[], photo?: File) => Promise<void>;
 }
 
 export function MarkAsProcessedModal({
@@ -33,8 +33,33 @@ export function MarkAsProcessedModal({
   };
 
   const [itemStates, setItemStates] = useState<Record<number, ItemState>>(buildInitialState);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen || !item) return null;
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert('Please select a PNG, JPG, or WebP image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File too large. Maximum size is 5MB.');
+      return;
+    }
+    setSelectedPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemovePhoto = () => {
+    setSelectedPhoto(null);
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleConfirm = async () => {
     const selectedItems: ProcessItemData[] = [];
@@ -51,7 +76,7 @@ export function MarkAsProcessedModal({
     if (selectedItems.length === 0) return;
     setIsSubmitting(true);
     try {
-      await onConfirm(selectedItems);
+      await onConfirm(selectedItems, selectedPhoto ?? undefined);
     } finally {
       setIsSubmitting(false);
     }
@@ -214,6 +239,51 @@ export function MarkAsProcessedModal({
             <p className="text-sm text-blue-700 dark:text-blue-300">
               Items marked with partial quantities will remain available for future fulfillment passes.
             </p>
+          </div>
+
+          {/* Processing photo upload */}
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Camera className="h-4 w-4 text-muted-foreground" />
+              <label className="text-sm font-medium">Handover Photo</label>
+              <span className="text-xs text-muted-foreground">(optional)</span>
+            </div>
+            {photoPreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={photoPreview}
+                  alt="Processing photo preview"
+                  className="h-24 w-24 object-cover rounded-lg border border-border"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  disabled={isSubmitting}
+                  className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+                  aria-label="Remove photo"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+                <p className="text-xs text-muted-foreground mt-1 truncate max-w-[6rem]">{selectedPhoto?.name}</p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-3 py-2 text-xs border border-dashed border-border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                <Camera className="h-4 w-4" />
+                Attach photo
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
           </div>
         </div>
 

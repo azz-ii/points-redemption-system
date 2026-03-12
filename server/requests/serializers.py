@@ -1,8 +1,25 @@
 from rest_framework import serializers
-from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, RequestedForType
+from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ProcessingPhoto, RequestedForType
 from items_catalogue.models import Product
 from distributers.models import Distributor
 from customers.models import Customer
+
+
+class ProcessingPhotoSerializer(serializers.ModelSerializer):
+    uploaded_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProcessingPhoto
+        fields = ['id', 'photo', 'uploaded_by', 'uploaded_by_name', 'uploaded_at', 'caption']
+        read_only_fields = ['id', 'uploaded_at']
+
+    def get_uploaded_by_name(self, obj):
+        if obj.uploaded_by:
+            profile = getattr(obj.uploaded_by, 'profile', None)
+            if profile:
+                return profile.full_name or obj.uploaded_by.username
+            return obj.uploaded_by.username
+        return None
 
 
 class ItemFulfillmentLogSerializer(serializers.ModelSerializer):
@@ -95,6 +112,7 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
 
 class RedemptionRequestSerializer(serializers.ModelSerializer):
     items = RedemptionRequestItemSerializer(many=True, read_only=True)
+    processing_photos = ProcessingPhotoSerializer(many=True, read_only=True)
     requested_by_name = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
     requested_for_customer_name = serializers.SerializerMethodField()
@@ -141,7 +159,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'ar_uploaded_by', 'ar_uploaded_by_name', 'ar_uploaded_at',
             # SVC fields
             'svc_date', 'svc_time', 'svc_driver',
-            'items'
+            'items',
+            # Processing photos
+            'processing_photos',
         ]
         read_only_fields = ['id', 'date_requested', 'reviewed_by', 'date_reviewed', 
                             'processed_by', 'date_processed', 'cancelled_by', 'date_cancelled', 'team']

@@ -1,5 +1,6 @@
 import { X, Package, CheckCircle } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
+import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { ModalBaseProps, RequestItem } from "./types";
 
 interface ViewRequestModalProps extends ModalBaseProps {
@@ -168,6 +169,13 @@ export function ViewRequestModal({
               showCancellation={true}
             />
           </div>
+
+          {/* Processing Photos */}
+          {request.processing_photos && request.processing_photos.length > 0 && (
+            <div className="pt-6">
+              <ProcessingPhotosGallery photos={request.processing_photos} />
+            </div>
+          )}
 
           {/* Items */}
           <div className="space-y-4 pt-6">

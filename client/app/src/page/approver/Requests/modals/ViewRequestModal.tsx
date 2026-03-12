@@ -1,6 +1,7 @@
 import { getStatusClasses } from "@/components/ui/status-badge";
 import { X } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
+import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { ModalBaseProps, RequestItem } from "./types";
 
 interface ViewRequestModalProps extends ModalBaseProps {
@@ -106,6 +107,11 @@ return (
             showProcessing={true}
             showCancellation={true}
           />
+
+          {/* Processing Photos */}
+          {request.processing_photos && request.processing_photos.length > 0 && (
+            <ProcessingPhotosGallery photos={request.processing_photos} />
+          )}
 
           {/* Items */}
           <div className="space-y-4">

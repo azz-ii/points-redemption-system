@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
+import { validatePasswordStrength } from "@/lib/password-validation";
+import { PasswordStrengthIndicator } from "@/components/ui/PasswordStrengthIndicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,8 +48,9 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
+    const pwError = validatePasswordStrength(newPassword);
+    if (pwError) {
+      setError(pwError);
       return;
     }
 
@@ -198,6 +201,7 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
                   )}
                 </button>
               </div>
+              <PasswordStrengthIndicator password={newPassword} />
             </div>
 
             <div className="space-y-2">
@@ -229,6 +233,9 @@ function ActivateAccount({ username, onActivationComplete, onAutoLogin }: Activa
                   )}
                 </button>
               </div>
+              {confirmPassword && confirmPassword !== newPassword && (
+                <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+              )}
             </div>
 
             <Button

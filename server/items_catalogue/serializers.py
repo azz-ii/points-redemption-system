@@ -1,8 +1,25 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from .models import Product, StockAuditLog
 
 User = get_user_model()
+
+
+class RelativeImageField(serializers.ImageField):
+    """Always return a relative URL (/media/...) instead of an absolute one.
+
+    DRF's default ImageField builds absolute URLs using the request host,
+    which resolves to localhost:8000 behind the IIS reverse proxy.  Remote
+    browsers can't reach that address, so images break.  Returning a
+    host-relative path lets the browser resolve it against the current
+    origin (e.g. points-redemption.n01tb.com).
+    """
+
+    def to_representation(self, value):
+        if not value:
+            return None
+        return f"{settings.MEDIA_URL}{value.name}"
 
 
 class UserRelatedField(serializers.PrimaryKeyRelatedField):
@@ -20,6 +37,7 @@ class ProductSerializer(serializers.ModelSerializer):
     available_stock = serializers.IntegerField(read_only=True)
     request_count = serializers.IntegerField(read_only=True, default=0)
     mktg_admin_username = serializers.SerializerMethodField()
+    image = RelativeImageField(required=False, allow_null=True)
     
     class Meta:
         model = Product

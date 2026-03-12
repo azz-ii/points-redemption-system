@@ -1,6 +1,7 @@
 import { getStatusClasses } from "@/components/ui/status-badge";
 import { X, Package, CheckCircle } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
+import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { RequestHistoryItem } from "./types";
 
 interface ViewRequestModalProps {
@@ -134,6 +135,11 @@ return (
                 />
               </div>
             </div>
+          )}
+
+          {/* Processing Photos */}
+          {item.processing_photos && item.processing_photos.length > 0 && (
+            <ProcessingPhotosGallery photos={item.processing_photos} />
           )}
 
           {/* Items */}

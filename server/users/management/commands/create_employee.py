@@ -49,8 +49,7 @@ class Command(BaseCommand):
             position=position,
             full_name=full_name or username,
             email=email,
-            is_activated=True,
-            is_banned=False
+            is_activated=True
         )
 
         self.stdout.write(self.style.SUCCESS(

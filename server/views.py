@@ -1,6 +1,7 @@
 # server/views.py
 from django.contrib.auth import authenticate, login, logout as auth_logout
 from django.contrib.sessions.models import Session
+from utils.validators import validate_password_strength
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.utils import timezone
@@ -31,8 +32,18 @@ class LoginView(APIView):
     def _get_client_ip(self, request):
         x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded:
-            return x_forwarded.split(',')[0].strip()
-        return request.META.get('REMOTE_ADDR')
+            ip = x_forwarded.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        
+        # Strip port number if present (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+        if ip and ':' in ip:
+            # Handle IPv6 addresses (contain multiple colons)
+            # For IPv4:port, split and take first part
+            if ip.count(':') == 1:  # IPv4 with port
+                ip = ip.split(':')[0]
+        
+        return ip
 
     def _kill_other_sessions(self, user, current_session_key=None):
         """Delete every other Django session that belongs to *user*.
@@ -328,9 +339,10 @@ class ChangePasswordView(APIView):
                 "error": "Username and new password are required"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        if len(new_password) < 6:
+        pw_error = validate_password_strength(new_password)
+        if pw_error:
             return Response({
-                "error": "Password must be at least 6 characters long"
+                "error": pw_error
             }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
@@ -367,9 +379,10 @@ class ActivateAccountView(APIView):
                 "error": "Username and new password are required"
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        if len(new_password) < 6:
+        pw_error = validate_password_strength(new_password)
+        if pw_error:
             return Response({
-                "error": "Password must be at least 6 characters long"
+                "error": pw_error
             }, status=status.HTTP_400_BAD_REQUEST)
         
         try:

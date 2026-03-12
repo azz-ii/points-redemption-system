@@ -36,6 +36,8 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
+    "192.168.26.4",  # IIS server LAN IP (OPC-WebSvr)
+    "OPC-WebSvr",  # IIS server hostname
     "52.163.243.237",  # Server IP
     "points.n01tb.com",  # Production subdomain
     "points-redemption.n01tb.com",  # Correct subdomain with hyphen
@@ -124,6 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -162,6 +165,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",  # IIS frontend (localhost)
     "http://127.0.0.1:3000",
+    "http://192.168.26.4",  # IIS server LAN IP
+    "http://OPC-WebSvr",  # IIS server hostname
+    "http://localhost",  # IIS default site (port 80)
     "http://points.n01tb.com",  # Production subdomain (HTTP)
     "https://points.n01tb.com",  # Production subdomain (HTTPS)
     "http://points-redemption.n01tb.com",  # Production subdomain HTTP
@@ -176,6 +182,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",  # IIS frontend (localhost)
     "http://127.0.0.1:3000",
+    "http://192.168.26.4",  # IIS server LAN IP
+    "http://OPC-WebSvr",  # IIS server hostname
+    "http://localhost",  # IIS default site (port 80)
     "http://points.n01tb.com",  # Production subdomain (HTTP)
     "https://points.n01tb.com",  # Production subdomain (HTTPS)
     "http://points-redemption.n01tb.com",  # Production subdomain HTTP

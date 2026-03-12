@@ -58,7 +58,7 @@ function Accounts() {
     email: "",
     position: "",
     points: 0,
-    is_activated: true,
+    is_activated: false,
     can_self_request: false,
   });
 
@@ -152,6 +152,11 @@ function Accounts() {
       return;
     }
 
+    if (newAccount.password.length < 8) {
+      setFormError("Password must be at least 8 characters long");
+      return;
+    }
+
     // Capture before reset so the background calls use the intended values
     const capturedTeamId = selectedTeamId;
     const capturedMemberTeamId = selectedMemberTeamId;
@@ -167,7 +172,7 @@ function Accounts() {
       email: "",
       position: "",
       points: 0,
-      is_activated: true,
+      is_activated: false,
       can_self_request: false,
     });
     setSelectedTeamId(null);

@@ -220,6 +220,14 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     const transformedItems = activeItems.map(transformProductToRedeemItem);
     console.log("[API] Transformed items:", transformedItems);
 
+    // Log image diagnostics
+    const withImage = transformedItems.filter(i => i.image);
+    const withoutImage = transformedItems.filter(i => !i.image);
+    console.log(`[API] Image summary: ${withImage.length} with image, ${withoutImage.length} without`);
+    if (withoutImage.length > 0) {
+      console.warn("[API] Items missing images:", withoutImage.map(i => `${i.name} (id=${i.id})`));
+    }
+
     return transformedItems;
   } catch (error) {
     console.error("[API] Error fetching products:", error);
@@ -379,6 +387,15 @@ export interface RedemptionRequestResponse {
   ar_uploaded_by: number | null;
   ar_uploaded_by_name: string | null;
   ar_uploaded_at: string | null;
+  // Processing photos
+  processing_photos?: Array<{
+    id: number;
+    photo: string;
+    uploaded_by: number | null;
+    uploaded_by_name: string | null;
+    uploaded_at: string;
+    caption: string | null;
+  }>;
 }
 
 export const redemptionRequestsApi = {
@@ -404,7 +421,7 @@ export const redemptionRequestsApi = {
   },
 
   async getRequests(params?: { notProcessed?: boolean; processed?: boolean }): Promise<RedemptionRequestResponse[]> {
-    const url = new URL(`${API_BASE_URL}/redemption-requests/`);
+    const url = new URL(`${API_BASE_URL}/redemption-requests/`, window.location.origin);
     if (params?.notProcessed) url.searchParams.set('not_processed', '1');
     else if (params?.processed) url.searchParams.set('processed', '1');
     const response = await fetch(url.toString(), {
@@ -624,6 +641,38 @@ export const marketingRequestsApi = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || 'Failed to mark items as processed');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Upload a processing photo (handover proof) for a request.
+   * Can be called by Marketing or Admin users during item processing.
+   */
+  async uploadProcessingPhoto(requestId: number, file: File, caption?: string): Promise<RedemptionRequestResponse> {
+    const formData = new FormData();
+    formData.append('photo', file);
+    if (caption) {
+      formData.append('caption', caption);
+    }
+
+    const csrfToken = getCookie('csrftoken');
+    const headers: HeadersInit = {};
+    if (csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/upload_processing_photo/`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to upload processing photo');
     }
 
     return response.json();

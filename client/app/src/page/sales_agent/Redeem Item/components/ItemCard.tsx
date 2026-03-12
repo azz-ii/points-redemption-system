@@ -25,7 +25,13 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
           alt={item.name}
           onLoad={() => setImageLoading(false)}
           onError={(e) => {
-            console.error(`Failed to load image for ${item.name}:`, item.image);
+            const src = e.currentTarget.src;
+            console.error(
+              `[ItemCard] Image failed to load\n` +
+              `  Item: ${item.name} (id=${item.id})\n` +
+              `  Image field: ${item.image ?? '(empty)'}\n` +
+              `  Resolved URL: ${src}`
+            );
             e.currentTarget.src = "/images/tshirt.png";
             setImageLoading(false);
           }}

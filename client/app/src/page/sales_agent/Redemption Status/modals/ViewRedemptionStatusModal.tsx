@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { RequestTimeline } from "@/components/modals";
+import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { StatusChip } from "../components/StatusChip";
 import { UploadARModal } from "./UploadARModal";
@@ -338,6 +339,11 @@ export function ViewRedemptionStatusModal({
                   />
                 </div>
               </div>
+            )}
+
+            {/* Processing Photos */}
+            {request.processing_photos && request.processing_photos.length > 0 && (
+              <ProcessingPhotosGallery photos={request.processing_photos} />
             )}
           </div>
 

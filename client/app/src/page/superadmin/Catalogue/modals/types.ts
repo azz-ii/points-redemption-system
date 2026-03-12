@@ -35,6 +35,7 @@ export interface Product {
   requires_sales_approval?: boolean;
   mktg_admin: number | null;
   mktg_admin_username: string | null;
+  points_multiplier?: number | string | null;
 }
 
 export const LEGEND_OPTIONS = [

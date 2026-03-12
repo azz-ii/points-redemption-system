@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
+import { validatePasswordStrength } from "@/lib/password-validation";
+import { PasswordStrengthIndicator } from "@/components/ui/PasswordStrengthIndicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,8 +161,9 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
+    const pwError = validatePasswordStrength(newPassword);
+    if (pwError) {
+      setError(pwError);
       return;
     }
 
@@ -324,7 +327,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               {currentStep === 2 &&
                 "Enter the 6-digit code sent to your email."}
               {currentStep === 3 &&
-                "Enter your new password below. Passwords must be at least 6 characters long."}
+                "Enter your new password. Must be at least 8 characters with uppercase, lowercase, number and special character."}
             </p>
           </div>
 
@@ -358,6 +361,9 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     placeholder="Enter your email address"
                   />
                 </div>
+                {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                  <p className="text-xs text-red-500 mt-1">Please enter a valid email address.</p>
+                )}
               </div>
 
               <Button
@@ -472,6 +478,7 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     )}
                   </button>
                 </div>
+                <PasswordStrengthIndicator password={newPassword} />
               </div>
 
               <div className="space-y-2">
@@ -503,6 +510,9 @@ function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
                     )}
                   </button>
                 </div>
+                {confirmPassword && confirmPassword !== newPassword && (
+                  <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                )}
               </div>
 
               <div className="flex gap-3">

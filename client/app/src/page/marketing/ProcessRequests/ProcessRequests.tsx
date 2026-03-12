@@ -122,12 +122,21 @@ function ProcessRequests() {
     }
   };
 
-  const handleMarkProcessedConfirm = async (items: ProcessItemData[]) => {
+  const handleMarkProcessedConfirm = async (items: ProcessItemData[], photo?: File) => {
     if (!selectedRequest) return;
 
     setIsSubmitting(true);
     try {
       await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
+      // Upload processing photo if provided (separate call, non-blocking on success)
+      if (photo) {
+        try {
+          await marketingRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
+        } catch (photoErr) {
+          console.error("Error uploading processing photo:", photoErr);
+          toast.warning("Items processed, but photo upload failed. You can try again later.");
+        }
+      }
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
       setSelectedItem(null);

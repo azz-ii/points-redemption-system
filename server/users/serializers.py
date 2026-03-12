@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile, LoginAttempt
 from teams.models import Team
+from utils.validators import validate_password_min_length
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for UserProfile model"""
@@ -36,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
     position = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
     full_name = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
     email = serializers.EmailField(write_only=True, required=False, allow_null=True)
-    is_activated = serializers.BooleanField(write_only=True, required=False, default=True)
+    is_activated = serializers.BooleanField(write_only=True, required=False, default=False)
     uses_points = serializers.BooleanField(write_only=True, required=False, default=False)
     points = serializers.IntegerField(write_only=True, required=False, default=0)
     can_self_request = serializers.BooleanField(write_only=True, required=False, default=False)
@@ -71,7 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'detail': 'position, full_name and email are required when creating a user.'
             })
-        is_activated = validated_data.pop('is_activated', True)
+        is_activated = validated_data.pop('is_activated', False)
         validated_data.pop('uses_points', None)  # derived from position, ignore any client-supplied value
         uses_points = (position in ('Sales Agent', 'Approver'))
         points = validated_data.pop('points', 0)
@@ -80,7 +81,12 @@ class UserSerializer(serializers.ModelSerializer):
         if position != 'Approver':
             can_self_request = False
         password = validated_data.pop('password')
-        
+
+        # Superadmin create path: only minimum length required (no complexity rules)
+        pw_error = validate_password_min_length(password, min_length=8)
+        if pw_error:
+            raise serializers.ValidationError({'password': pw_error})
+
         # Create user
         username = validated_data.pop('username')
         user = User.objects.create_user(username=username, password=password, **validated_data)

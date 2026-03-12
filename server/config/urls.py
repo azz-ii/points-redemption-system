@@ -73,7 +73,10 @@ urlpatterns = [
     path('api/sse/events/', sse_events_view, name='sse_events'),
 ]
 
-# Serve static and media files in development
+# Serve static files only in development (production uses IIS/collectstatic)
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Always serve media files — images must be available regardless of DEBUG mode.
+# In production IIS serves them directly, but this keeps Django as a fallback.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

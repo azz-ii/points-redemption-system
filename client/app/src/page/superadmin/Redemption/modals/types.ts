@@ -82,6 +82,15 @@ export interface RedemptionItem {
   ar_status?: string | null;
   ar_uploaded_by_name?: string | null;
   ar_uploaded_at?: string | null;
+  // Processing photos
+  processing_photos?: Array<{
+    id: number;
+    photo: string;
+    uploaded_by: number | null;
+    uploaded_by_name: string | null;
+    uploaded_at: string;
+    caption: string | null;
+  }>;
   points_deducted_from?: string;
   points_deducted_from_display?: string;
   items: RequestItemVariant[];

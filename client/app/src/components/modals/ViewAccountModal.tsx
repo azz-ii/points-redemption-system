@@ -3,6 +3,8 @@ import { X, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
+import { validatePasswordStrength } from "@/lib/password-validation";
+import { PasswordStrengthIndicator } from "@/components/ui/PasswordStrengthIndicator";
 import type { ModalBaseProps } from "./types";
 import { FormSkeleton } from "@/components/shared/form-skeleton";
 
@@ -87,8 +89,9 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
       setChangeError("All fields are required");
       return;
     }
-    if (newPassword.length < 6) {
-      setChangeError("New password must be at least 6 characters");
+    const pwError = validatePasswordStrength(newPassword);
+    if (pwError) {
+      setChangeError(pwError);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -257,7 +260,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                           type={showNewPw ? "text" : "password"}
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="At least 6 characters"
+                          placeholder="At least 8 chars, upper, lower, number, special"
                           className="w-full px-3 py-2 pr-10 rounded border border-border bg-card focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                         />
                         <button
@@ -270,6 +273,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                           {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
+                      <PasswordStrengthIndicator password={newPassword} />
                     </div>
 
                     {/* Confirm New Password */}
@@ -293,6 +297,9 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                           {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
+                      {confirmPassword && confirmPassword !== newPassword && (
+                        <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                      )}
                     </div>
 
                     {/* Inline error */}

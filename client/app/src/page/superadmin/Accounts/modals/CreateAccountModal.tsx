@@ -173,6 +173,9 @@ export function CreateAccountModal({
                   placeholder="Enter email address"
                   aria-required="true"
                 />
+                {newAccount.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newAccount.email) && (
+                  <p className="mt-1 text-xs text-red-500">Please enter a valid email address.</p>
+                )}
               </div>
             </div>
           </div>

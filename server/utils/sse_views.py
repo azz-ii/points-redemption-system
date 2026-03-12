@@ -8,6 +8,7 @@ import asyncio
 import json
 import logging
 
+from asgiref.sync import sync_to_async
 from django.http import StreamingHttpResponse
 
 from utils.sse import sse_bus
@@ -26,10 +27,13 @@ async def sse_events_view(request):
     SessionMiddleware, so no manual session parsing is needed.
     The browser's EventSource API auto-reconnects on disconnect.
     """
-    if not request.user.is_authenticated:
+    # Session/user lookup hits the ORM synchronously — must use sync_to_async
+    # inside an async view to avoid SynchronousOnlyOperation errors.
+    is_authenticated = await sync_to_async(lambda: request.user.is_authenticated)()
+    if not is_authenticated:
         return StreamingHttpResponse("Unauthorized", status=401)
 
-    user_id = request.user.pk
+    user_id = await sync_to_async(lambda: request.user.pk)()
     # subscribe() captures the running event loop so publish() can use
     # call_soon_threadsafe() safely from sync view threads.
     queue = sse_bus.subscribe(user_id)

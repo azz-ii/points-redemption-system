@@ -1,5 +1,6 @@
 import { X, Package, CheckCircle, Clock } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
+import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types";
 
 interface ViewRedemptionModalProps extends ModalBaseProps {
@@ -153,6 +154,11 @@ export function ViewRedemptionModal({
             showProcessing={true}
             showCancellation={true}
           />
+
+          {/* Processing Photos */}
+          {item.processing_photos && item.processing_photos.length > 0 && (
+            <ProcessingPhotosGallery photos={item.processing_photos} />
+          )}
 
           {/* Items */}
           <div className="space-y-4">

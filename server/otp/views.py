@@ -10,6 +10,7 @@ import logging
 from .models import OTP
 from users.models import UserProfile
 from utils.email_service import send_otp_email, send_password_changed_email
+from utils.validators import validate_password_strength
 
 logger = logging.getLogger('email')
 
@@ -130,9 +131,10 @@ class ResetPasswordWithOTPView(APIView):
                 'error': 'Email, OTP code, and new password are required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        if len(new_password) < 6:
+        pw_error = validate_password_strength(new_password)
+        if pw_error:
             return Response({
-                'error': 'Password must be at least 6 characters long'
+                'error': pw_error
             }, status=status.HTTP_400_BAD_REQUEST)
         
         try:
