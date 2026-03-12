@@ -15,6 +15,7 @@ function normalizeMediaUrl(url: string): string {
 }
 import { StatusChip } from "../components/StatusChip";
 import { UploadARModal } from "./UploadARModal";
+import { PrintARDialog } from "./PrintARDialog";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export interface WithdrawConfirmationModalProps {
@@ -138,6 +139,7 @@ export function ViewRedemptionStatusModal({
 }: ViewRedemptionStatusModalProps & { onRequestWithdrawn?: () => void }) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showUploadARModal, setShowUploadARModal] = useState(false);
+  const [showPrintARDialog, setShowPrintARDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
@@ -152,6 +154,9 @@ export function ViewRedemptionStatusModal({
 
   // Check if AR upload is needed
   const canUploadAR = request.ar_status === "PENDING";
+
+  // Check if AR can be printed (available from APPROVED onward)
+  const canPrintAR = normalizedStatus === "APPROVED";
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
@@ -376,6 +381,14 @@ export function ViewRedemptionStatusModal({
                   Cancel Request
                 </button>
               )}
+              {canPrintAR && (
+                <button
+                  onClick={() => setShowPrintARDialog(true)}
+                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Print AR
+                </button>
+              )}
               {canUploadAR && (
                 <button
                   onClick={() => setShowUploadARModal(true)}
@@ -394,6 +407,12 @@ export function ViewRedemptionStatusModal({
           onConfirm={handleWithdraw}
           requestId={request.id}
           isSubmitting={isSubmitting}
+        />
+
+        <PrintARDialog
+          isOpen={showPrintARDialog}
+          onClose={() => setShowPrintARDialog(false)}
+          request={request}
         />
 
         <UploadARModal
