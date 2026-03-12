@@ -370,7 +370,7 @@ function Accounts() {
         if (editAccount.position === "Sales Agent") {
           const shouldRemove =
             oldTeamId != null &&
-            (capturedEditTeamId === "REMOVE" || capturedEditTeamId === null);
+            capturedEditTeamId !== oldTeamId;
           const shouldAssign =
             typeof capturedEditTeamId === "number" &&
             capturedEditTeamId !== oldTeamId;
@@ -404,6 +404,7 @@ function Accounts() {
                 const teamErr = await teamRes.json().catch(() => ({}));
                 toast.warning(
                   `Account updated but team assignment failed: ${
+                    teamErr?.user_id?.[0] ??
                     teamErr?.user?.[0] ??
                     teamErr?.detail ??
                     teamErr?.error ??
@@ -466,7 +467,7 @@ function Accounts() {
           const oldMemberTeamId = editingAccount.team_id ?? null;
           const shouldRemoveMembership =
             oldMemberTeamId != null &&
-            (capturedEditTeamId === "REMOVE" || capturedEditTeamId === null);
+            capturedEditTeamId !== oldMemberTeamId;
           const shouldAssignMembership =
             typeof capturedEditTeamId === "number" &&
             capturedEditTeamId !== oldMemberTeamId;
