@@ -4,6 +4,15 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import { fetchWithCsrf } from "@/lib/csrf";
+
+function normalizeMediaUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return url;
+  }
+}
 import { StatusChip } from "../components/StatusChip";
 import { UploadARModal } from "./UploadARModal";
 import type { ViewRedemptionStatusModalProps } from "./types";
@@ -333,7 +342,7 @@ export function ViewRedemptionStatusModal({
                 </h3>
                 <div className="border rounded-lg overflow-hidden border-border inline-block">
                   <img
-                    src={request.acknowledgement_receipt}
+                    src={normalizeMediaUrl(request.acknowledgement_receipt)}
                     alt="Acknowledgement Receipt"
                     className="max-w-full max-h-64 object-contain"
                   />

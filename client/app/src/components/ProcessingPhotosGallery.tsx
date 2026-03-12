@@ -9,6 +9,23 @@ export interface ProcessingPhotoData {
   caption: string | null;
 }
 
+/**
+ * Normalize a media URL returned by Django so it always uses the current
+ * page's origin. DRF builds absolute URLs using Django's internal host
+ * (e.g. http://localhost/media/...) which is unreachable from the browser
+ * when running behind a reverse proxy. We keep only the path so the browser
+ * resolves it against the public-facing origin.
+ */
+function normalizeMediaUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    // Already a relative URL – let the browser resolve it normally
+    return url;
+  }
+}
+
 interface ProcessingPhotosGalleryProps {
   photos: ProcessingPhotoData[];
 }
@@ -23,16 +40,18 @@ export function ProcessingPhotosGallery({ photos }: ProcessingPhotosGalleryProps
         Processing Photos ({photos.length})
       </h3>
       <div className="flex flex-wrap gap-3">
-        {photos.map((photo) => (
+        {photos.map((photo) => {
+          const src = normalizeMediaUrl(photo.photo);
+          return (
           <div key={photo.id} className="space-y-1">
             <a
-              href={photo.photo}
+              href={src}
               target="_blank"
               rel="noopener noreferrer"
               className="block border rounded-lg overflow-hidden border-border hover:ring-2 hover:ring-primary transition-all"
             >
               <img
-                src={photo.photo}
+                src={src}
                 alt={photo.caption || "Processing photo"}
                 className="h-24 w-24 object-cover"
               />
@@ -49,7 +68,8 @@ export function ProcessingPhotosGallery({ photos }: ProcessingPhotosGalleryProps
               </p>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
