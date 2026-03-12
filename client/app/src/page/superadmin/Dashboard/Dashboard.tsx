@@ -88,9 +88,14 @@ function Dashboard() {
     <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-6">
       {/* ── Header row ── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-xl font-semibold">Dashboard</h2>
+        <div>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Overview of system activity and analytics.
+          </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <DateRangeSelector value={dateRange} onChange={setDateRange} />

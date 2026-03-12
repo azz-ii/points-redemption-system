@@ -10,7 +10,7 @@ export function RedeemItemHeader({
   return (
     <div className="flex justify-between items-start mb-4 md:mb-6">
       <div>
-        <h1 className="text-2xl md:text-4xl font-bold mb-1">
+        <h1 className="text-xl md:text-2xl font-semibold mb-1">
           Redeem Items
         </h1>
         <p

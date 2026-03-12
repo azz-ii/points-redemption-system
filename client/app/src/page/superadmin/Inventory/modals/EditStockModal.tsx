@@ -1,6 +1,17 @@
-import { X } from "lucide-react";
+import { useState } from "react";
+import { X, AlertTriangle } from "lucide-react";
 import type { InventoryItem, ModalBaseProps } from "./types";
 import { getStatusColor, getLegendColor } from "./types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type AdjustmentAction = "add" | "decrease";
 
@@ -29,6 +40,8 @@ export function EditStockModal({
   error,
   onConfirm,
 }: EditStockModalProps) {
+  const [showWarning, setShowWarning] = useState(false);
+
   if (!isOpen || !item) return null;
 
   const qty = parseInt(data.quantity) || 0;
@@ -45,6 +58,14 @@ export function EditStockModal({
   const previewStatus = getPreviewStatus();
   const isDecreaseWithoutReason = data.action === "decrease" && !data.reason.trim();
   const isQuantityEmpty = !data.quantity || qty === 0;
+
+  const handleConfirmClick = () => {
+    if (data.action === "decrease" && previewStock < item.committed_stock) {
+      setShowWarning(true);
+    } else {
+      onConfirm();
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
@@ -207,8 +228,8 @@ export function EditStockModal({
                 </p>
               )}
               {data.action === "decrease" && qty > 0 && previewStock < item.committed_stock && (
-                <p className="text-xs mt-1 text-red-500">
-                  Cannot decrease below committed stock ({item.committed_stock})
+                <p className="text-xs mt-1 text-orange-400">
+                  ⚠ New total will fall below committed stock ({item.committed_stock})
                 </p>
               )}
             </div>
@@ -258,12 +279,11 @@ export function EditStockModal({
             </button>
 
             <button
-              onClick={onConfirm}
+              onClick={handleConfirmClick}
               disabled={
                 updating ||
                 isQuantityEmpty ||
-                (data.action === "decrease" && isDecreaseWithoutReason) ||
-                (data.action === "decrease" && previewStock < item.committed_stock)
+                (data.action === "decrease" && isDecreaseWithoutReason)
               }
               className={`px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
                 data.action === "decrease"
@@ -280,6 +300,39 @@ export function EditStockModal({
           </div>
         </div>
       </div>
+      <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Stock Below Committed
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Decreasing stock to{" "}
+                  <span className="font-semibold text-foreground">{previewStock}</span> will
+                  fall below the committed stock of{" "}
+                  <span className="font-semibold text-orange-500">{item.committed_stock}</span>.
+                  Pending orders may not be fulfillable.
+                </p>
+                <p>Do you want to proceed anyway?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border border-border bg-card hover:bg-accent text-foreground">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setShowWarning(false); onConfirm(); }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Proceed Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

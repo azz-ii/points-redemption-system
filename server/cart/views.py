@@ -35,6 +35,10 @@ class CartView(APIView):
             return err
 
         cart = self._get_or_create_cart(request.user)
+
+        # Auto-remove cart items whose product has been archived
+        cart.items.filter(product__is_archived=True).delete()
+
         items = cart.items.select_related('product').all()
         serializer = CartItemSerializer(items, many=True)
         return Response({"items": serializer.data})

@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, Pencil, Trash2, ArrowUpDown, MoreHorizontal } from "lucide-react"
+import { Eye, Pencil, Trash2, ArrowUpDown, MoreHorizontal, ArchiveRestore } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -130,25 +130,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
     },
   },
   {
-    accessorKey: "price",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Price
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const price = row.getValue("price") as string
-      return <div className="font-medium">₱{price}</div>
-    },
-  },
-  {
     accessorKey: "stock",
     header: "Stock",
     cell: ({ row }) => {
@@ -157,24 +138,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
         <div>
           {product.available_stock} / {product.stock}
         </div>
-      )
-    },
-  },
-  {
-    accessorKey: "is_archived",
-    header: "Status",
-    cell: ({ row }) => {
-      const isArchived = row.getValue("is_archived") as boolean
-      return (
-        <span
-          className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${
-            isArchived
-              ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-              : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-          }`}
-        >
-          {isArchived ? "Archived" : "Active"}
-        </span>
       )
     },
   },
@@ -197,15 +160,24 @@ export const createColumns = (context: ColumnContext): ColumnDef<Product>[] => [
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => context.onEdit(product)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
+              {!product.is_archived && (
+                <DropdownMenuItem onClick={() => context.onEdit(product)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => context.onArchive(product)} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Archive
-              </DropdownMenuItem>
+              {product.is_archived ? (
+                <DropdownMenuItem onClick={() => context.onUnarchive(product)}>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Restore
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => context.onArchive(product)} className="text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Archive
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

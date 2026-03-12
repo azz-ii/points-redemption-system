@@ -200,7 +200,7 @@ function MarketingDashboard() {
       <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
         {/* Header */}
         <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
+          <h1 className="text-xl font-semibold mb-1">Dashboard</h1>
           <p className="text-xs text-muted-foreground">
             Manage points, track redemptions and process items
           </p>
@@ -285,7 +285,7 @@ function MarketingDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">Welcome, Marketing</h1>
+            <h1 className="text-2xl font-semibold">Welcome, Marketing</h1>
             <p className="text-sm text-muted-foreground">
               Manage points, track redemptions and process items
             </p>

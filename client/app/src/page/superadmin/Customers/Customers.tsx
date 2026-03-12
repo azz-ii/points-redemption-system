@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { Search, Plus } from "lucide-react";
 import { useCustomersPage } from "@/hooks/queries/useCustomers";
 import { useQueryClient } from "@tanstack/react-query";
@@ -221,7 +222,7 @@ function Customers() {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error archiving customer:", err);
-      alert("Failed to archive customer. Please try again.");
+      toast.error("Failed to archive customer. Please try again.");
     } finally {
       setMutationLoading(false);
     }
@@ -246,7 +247,7 @@ function Customers() {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error unarchiving customer:", err);
-      alert(err instanceof Error ? err.message : "Failed to unarchive customer. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to unarchive customer. Please try again.");
     } finally {
       setMutationLoading(false);
     }
@@ -287,15 +288,15 @@ function Customers() {
       setBulkArchiveTargets([]);
 
       if (failCount === 0) {
-        alert(`Successfully archived ${successCount} customer(s)`);
+        toast.success(`Successfully archived ${successCount} customer(s)`);
       } else {
-        alert(`Archived ${successCount} of ${bulkArchiveTargets.length} customer(s). ${failCount} failed.`);
+        toast.warning(`Archived ${successCount} of ${bulkArchiveTargets.length} customer(s). ${failCount} failed.`);
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error archiving customers:", err);
-      alert("Error archiving some customers");
+      toast.error("Error archiving some customers");
     } finally {
       setMutationLoading(false);
     }
@@ -309,7 +310,7 @@ function Customers() {
         <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold">Customers</h1>
+              <h1 className="text-2xl font-semibold">Customers</h1>
               <p
                 className="text-sm text-muted-foreground"
               >
@@ -360,7 +361,7 @@ function Customers() {
 
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-          <h2 className="text-2xl font-semibold mb-2">Customers</h2>
+          <h2 className="text-xl font-semibold mb-2">Customers</h2>
           <p
             className="text-xs mb-4 text-muted-foreground"
           >

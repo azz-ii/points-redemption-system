@@ -236,7 +236,7 @@ function ProcessRequests() {
       <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
         {/* Header */}
         <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-1">Process Requests</h1>
+          <h1 className="text-xl font-semibold mb-1">Process Requests</h1>
           <p className="text-xs text-muted-foreground">
             View and process approved redemption requests for your assigned items
           </p>
@@ -296,8 +296,8 @@ function ProcessRequests() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-4xl font-bold mb-1">Process Requests</h1>
-          <p className="text-base text-muted-foreground">
+          <h1 className="text-2xl font-semibold mb-1">Process Requests</h1>
+          <p className="text-sm text-muted-foreground">
             View and process approved redemption requests for your assigned items
           </p>
         </div>
@@ -333,6 +333,25 @@ function ProcessRequests() {
         }}
         request={selectedRequest}
         myItems={myProcessingStatus?.items}
+        onMarkItemProcessed={() => {
+          setShowViewModal(false);
+          if (myProcessingStatus && myProcessingStatus.pending_items > 0) {
+            setShowProcessModal(true);
+          } else {
+            toast.info("All your items have already been processed");
+            setSelectedItem(null);
+            setSelectedRequest(null);
+            setMyProcessingStatus(null);
+          }
+        }}
+        onCancelRequest={() => {
+          setShowViewModal(false);
+          setSelectedCancelRequest(selectedRequest);
+          setSelectedItem(null);
+          setMyProcessingStatus(null);
+          setSelectedRequest(null);
+          setShowCancelModal(true);
+        }}
       />
 
       <MarkItemsProcessedModal

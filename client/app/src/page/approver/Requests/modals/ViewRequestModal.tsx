@@ -6,12 +6,16 @@ import type { ModalBaseProps, RequestItem } from "./types";
 
 interface ViewRequestModalProps extends ModalBaseProps {
   request: RequestItem | null;
+  onApprove?: (request: RequestItem) => void;
+  onReject?: (request: RequestItem) => void;
 }
 
 export function ViewRequestModal({
   isOpen,
   onClose,
   request,
+  onApprove,
+  onReject,
 }: ViewRequestModalProps) {
   if (!isOpen || !request) return null;
 
@@ -141,14 +145,26 @@ return (
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"
-          >
-            Close
-          </button>
-        </div>
+        {request.status === "PENDING" && (onApprove || onReject) && (
+          <div className="p-8 flex gap-3 justify-end">
+            {onReject && (
+              <button
+                onClick={() => { onClose(); onReject(request); }}
+                className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
+              >
+                Reject
+              </button>
+            )}
+            {onApprove && (
+              <button
+                onClick={() => { onClose(); onApprove(request); }}
+                className="px-6 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition-colors"
+              >
+                Approve
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

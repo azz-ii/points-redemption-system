@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, TrendingUp, ChevronLeft, ChevronRight, Search, Info } from "lucide-react";
+import { toast } from "sonner";
 import type { Distributor } from "./types";
 import { distributorsApi, type SalesVolumeTier } from "@/lib/distributors-api";
 import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
@@ -136,7 +137,7 @@ export function SalesVolumeAllocationModal({
     });
 
     if (allocations.length === 0) {
-      alert("Please enter a sales volume for at least one distributor.");
+      toast.error("Please enter a sales volume for at least one distributor.");
       return;
     }
 
@@ -144,7 +145,7 @@ export function SalesVolumeAllocationModal({
     for (const alloc of allocations) {
       const rate = getRateForVolume(alloc.sales_volume, tiers);
       if (rate === null) {
-        alert(`Sales volume ${alloc.sales_volume.toLocaleString()} is out of the valid range (1–500,000).`);
+        toast.error(`Sales volume ${alloc.sales_volume.toLocaleString()} is out of the valid range (1–500,000).`);
         return;
       }
     }

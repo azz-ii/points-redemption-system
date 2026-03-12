@@ -16,7 +16,6 @@ import type {
   ApproverOption,
 } from "./types";
 import { fetchWithCsrf } from "@/lib/csrf";
-import { SearchableSelect } from "@/components/ui/searchable-select";
 import { TableSkeleton } from "@/components/shared/table-skeleton";
 
 interface EditTeamModalProps extends ModalBaseProps {
@@ -48,12 +47,20 @@ export function EditTeamModal({
   const [availableSalesAgents, setAvailableSalesAgents] = useState<
     SalesAgentOption[]
   >([]);
+  const [availableApproverMembers, setAvailableApproverMembers] = useState<
+    Array<{ id: number; full_name: string; email: string; points: number; team_id: number | null; team_name: string | null }>
+  >([]);
   const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(
     null
   );
   const [memberLoading, setMemberLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [confirmReassign, setConfirmReassign] = useState<{
+    userId: number;
+    userName: string;
+    fromTeam: string;
+  } | null>(null);
   const [availableApprovers, setAvailableApprovers] = useState<ApproverOption[]>([]);
   const [errorDialog, setErrorDialog] = useState<{
     show: boolean;
@@ -124,22 +131,46 @@ export function EditTeamModal({
       });
 
       if (response.ok && Array.isArray(data)) {
-        // Filter to exclude those already in other teams
-        const salesAgents = data.filter(
-          (user: { team_id: number | null }) => !user.team_id || user.team_id === team?.id
-        );
-
         console.log("DEBUG EditTeamModal: Sales agents filtered", {
-          total: salesAgents.length,
+          total: data.length,
           currentTeamId: team?.id,
         });
 
-        setAvailableSalesAgents(salesAgents);
+        setAvailableSalesAgents(data);
       }
     } catch (err) {
       console.error("DEBUG EditTeamModal: Error fetching sales agents", err);
     }
   }, [team?.id]);
+
+  const fetchAvailableApproverMembers = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/?position=Approver`, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json();
+      if (response.ok && data.results) {
+        const approvers = data.results.filter(
+          (u: { is_archived: boolean; can_self_request: boolean }) =>
+            !u.is_archived && u.can_self_request,
+        );
+        setAvailableApproverMembers(
+          approvers.map((u: { id: number; full_name: string; email: string; points: number; team_id: number | null; team_name: string | null }) => ({
+            id: u.id,
+            full_name: u.full_name,
+            email: u.email,
+            points: u.points,
+            team_id: u.team_id,
+            team_name: u.team_name,
+          })),
+        );
+      }
+    } catch (err) {
+      console.error("DEBUG EditTeamModal: Error fetching approver members", err);
+    }
+  }, []);
 
   const fetchAvailableApprovers = useCallback(async () => {
     try {
@@ -175,11 +206,37 @@ export function EditTeamModal({
       return;
     }
 
+    // Find the selected user across both lists
+    const agentEntry = availableSalesAgents.find((a) => a.id === selectedSalesAgent);
+    const approverEntry = availableApproverMembers.find((a) => a.id === selectedSalesAgent);
+    const selectedEntry = agentEntry ?? approverEntry;
+    const selectedTeamId = agentEntry
+      ? (agentEntry as SalesAgentOption & { team_id?: number | null }).team_id ?? null
+      : approverEntry?.team_id ?? null;
+    const selectedTeamName = agentEntry
+      ? (agentEntry as SalesAgentOption & { team_name?: string | null }).team_name ?? null
+      : approverEntry?.team_name ?? null;
+
+    // If user belongs to another team, ask for confirmation first
+    if (selectedTeamId !== null && selectedTeamId !== team.id) {
+      setConfirmReassign({
+        userId: selectedSalesAgent,
+        userName: selectedEntry?.full_name ?? String(selectedSalesAgent),
+        fromTeam: selectedTeamName ?? "another team",
+      });
+      return;
+    }
+
+    await doAddMember(selectedSalesAgent);
+  };
+
+  const doAddMember = async (userId: number) => {
+    if (!team) return;
     try {
       setActionLoading(true);
       console.log("DEBUG EditTeamModal: Adding member", {
         teamId: team.id,
-        userId: selectedSalesAgent,
+        userId,
       });
 
       const response = await fetchWithCsrf(
@@ -190,7 +247,7 @@ export function EditTeamModal({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ user_id: selectedSalesAgent }),
+          body: JSON.stringify({ user_id: userId }),
         }
       );
 
@@ -204,8 +261,10 @@ export function EditTeamModal({
         // Refresh team details and available agents
         await fetchTeamDetails();
         await fetchAvailableSalesAgents();
+        await fetchAvailableApproverMembers();
         setShowAddMember(false);
         setSelectedSalesAgent(null);
+        setConfirmReassign(null);
         onRefresh(); // Refresh parent teams list
       } else {
         console.error("DEBUG EditTeamModal: Failed to add member", data);
@@ -267,6 +326,7 @@ export function EditTeamModal({
         // Refresh team details and available agents
         await fetchTeamDetails();
         await fetchAvailableSalesAgents();
+        await fetchAvailableApproverMembers();
         onRefresh(); // Refresh parent teams list
       } else {
         console.error("DEBUG EditTeamModal: Failed to remove member", data);
@@ -297,14 +357,16 @@ export function EditTeamModal({
       fetchTeamDetails();
       fetchAvailableSalesAgents();
       fetchAvailableApprovers();
+      fetchAvailableApproverMembers();
     } else if (!isOpen) {
       // Reset state when modal closes
       setTeamDetails(null);
       setShowAddMember(false);
       setSelectedSalesAgent(null);
+      setConfirmReassign(null);
       setErrorDialog({ show: false, title: "", message: "" });
     }
-  }, [isOpen, team, fetchTeamDetails, fetchAvailableSalesAgents, fetchAvailableApprovers]);
+  }, [isOpen, team, fetchTeamDetails, fetchAvailableSalesAgents, fetchAvailableApprovers, fetchAvailableApproverMembers]);
 
   if (!isOpen || !team) return null;
 
@@ -312,6 +374,9 @@ export function EditTeamModal({
   const memberUserIds = teamDetails?.members?.map((m) => m.user) || [];
   const filteredSalesAgents = availableSalesAgents.filter(
     (agent) => !memberUserIds.includes(agent.id)
+  );
+  const filteredApproverMembers = availableApproverMembers.filter(
+    (a) => !memberUserIds.includes(a.id)
   );
 
   const handleSubmit = () => {
@@ -408,7 +473,7 @@ export function EditTeamModal({
               <button
                 onClick={() => setShowAddMember(!showAddMember)}
                 disabled={actionLoading}
-                className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-card text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+                className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <UserPlus className="h-3 w-3" />
                 {showAddMember ? "Cancel" : "Add Member"}
@@ -419,25 +484,43 @@ export function EditTeamModal({
             {showAddMember && (
               <div className="mb-4 p-4 rounded border border-border bg-muted">
                 <label className="text-xs text-muted-foreground mb-2 block">
-                  Select Sales Agent
+                  Select Member
                 </label>
                 <div className="flex gap-2">
-                  <SearchableSelect
-                    options={filteredSalesAgents}
-                    value={selectedSalesAgent}
-                    onChange={(value) => {
-                      const numValue = value ? Number(value) : null;
-                      console.log(
-                        "DEBUG EditTeamModal: Sales agent selected",
-                        numValue
-                      );
+                  <select
+                    value={selectedSalesAgent ?? ""}
+                    onChange={(e) => {
+                      const numValue = e.target.value ? Number(e.target.value) : null;
+                      console.log("DEBUG EditTeamModal: Member selected", numValue);
                       setSelectedSalesAgent(numValue);
                     }}
-                    placeholder="Search or select an agent..."
-                    displayFormat={(agent) => `${agent.full_name} (${agent.email}) - ${agent.points} pts`}
-                    searchKeys={['full_name', 'email', 'username']}
-                    className="flex-1"
-                  />
+                    className="flex-1 px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-ring text-sm"
+                  >
+                    <option value="">Select a member...</option>
+                    {filteredSalesAgents.length > 0 && (
+                      <optgroup label="Sales Agents">
+                        {filteredSalesAgents.map((agent) => {
+                          const a = agent as SalesAgentOption & { team_name?: string | null };
+                          return (
+                            <option key={agent.id} value={agent.id}>
+                              {agent.full_name}
+                              {a.team_name ? ` — In Team: ${a.team_name}` : ""}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    )}
+                    {filteredApproverMembers.length > 0 && (
+                      <optgroup label="Approvers (Self-Request)">
+                        {filteredApproverMembers.map((approver) => (
+                          <option key={approver.id} value={approver.id}>
+                            {approver.full_name}
+                            {approver.team_name ? ` — In Team: ${approver.team_name}` : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
                   <button
                     onClick={handleAddMember}
                     disabled={!selectedSalesAgent || actionLoading}
@@ -457,8 +540,9 @@ export function EditTeamModal({
                 showToolbar={false}
                 columnConfig={[
                   { width: 150, type: "text" },     // Name
-                  { width: 180, type: "text" },     // Email
+                  { width: 100, type: "text" },     // Position
                   { width: 80, type: "text" },      // Points
+                  { width: 100, type: "text" },     // Joined
                   { width: 100, align: "right", type: "actions" }, // Actions
                 ]}
               />
@@ -480,10 +564,13 @@ export function EditTeamModal({
                           Full Name
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold">
-                          Email
+                          Position
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold">
                           Points
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold">
+                          Joined
                         </th>
                         <th className="px-4 py-3 text-right text-xs font-semibold">
                           Actions
@@ -500,10 +587,21 @@ export function EditTeamModal({
                             {member.user_details.full_name}
                           </td>
                           <td className="px-4 py-3 text-sm">
-                            {member.user_details.email}
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                member.user_details.position === "Approver"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-green-100 text-green-700"
+                              }`}
+                            >
+                              {member.user_details.position ?? "Sales Agent"}
+                            </span>
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {member.user_details.points}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {new Date(member.joined_at).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3 text-right">
                             <button
@@ -545,6 +643,59 @@ export function EditTeamModal({
           </button>
         </div>
       </div>
+
+      {/* Reassign Confirmation Dialog */}
+      {confirmReassign && (
+        <div className="fixed inset-0 flex items-center justify-center z-60 p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border">
+            <div className="flex justify-between items-center p-6 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-yellow-500 bg-opacity-20">
+                  <AlertCircle className="h-5 w-5 text-yellow-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">Reassign Member?</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This user is already in another team
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setConfirmReassign(null)}
+                className="hover:opacity-70 transition-opacity"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm">
+                <span className="font-semibold">{confirmReassign.userName}</span> is currently
+                a member of <span className="font-semibold">{confirmReassign.fromTeam}</span>.
+                Moving them here will remove them from that team.
+              </p>
+            </div>
+            <div className="p-6 border-t border-border flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmReassign(null)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-card hover:bg-accent text-foreground border border-border transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const userId = confirmReassign.userId;
+                  setConfirmReassign(null);
+                  doAddMember(userId);
+                }}
+                disabled={actionLoading}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-yellow-500 hover:bg-yellow-600 text-white transition-colors disabled:opacity-50"
+              >
+                Yes, Move
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error Dialog Overlay */}
       {errorDialog.show && (

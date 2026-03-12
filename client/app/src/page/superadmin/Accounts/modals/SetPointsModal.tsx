@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { toast } from "sonner";
 import type { Account } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
 import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
@@ -145,7 +146,7 @@ export function SetPointsModal({
     });
     
     if (updates.length === 0) {
-      alert("No changes to save. Please add or subtract points for at least one account.");
+      toast.error("No changes to save. Please add or subtract points for at least one account.");
       return;
     }
     
@@ -155,11 +156,11 @@ export function SetPointsModal({
   const handleBulkSubmit = () => {
     if (!onBulkSubmit) return;
     if (!confirmBulkUpdate) {
-      alert("Please confirm that you understand this will affect all accounts.");
+      toast.error("Please confirm that you understand this will affect all accounts.");
       return;
     }
     if (bulkPointsDelta === 0) {
-      alert("Points delta cannot be 0.");
+      toast.error("Points delta cannot be 0.");
       return;
     }
     // Open confirmation modal

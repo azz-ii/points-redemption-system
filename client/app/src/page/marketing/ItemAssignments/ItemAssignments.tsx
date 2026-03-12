@@ -57,7 +57,7 @@ function ItemAssignments() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">Item Assignments</h1>
+            <h1 className="text-2xl font-semibold">Item Assignments</h1>
             <p className="text-sm text-muted-foreground">
               View items assigned to you for processing.
             </p>
@@ -90,7 +90,7 @@ function ItemAssignments() {
 
       {/* Mobile Layout */}
       <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-        <h2 className="text-2xl font-semibold mb-2">Item Assignments</h2>
+        <h2 className="text-xl font-semibold mb-2">Item Assignments</h2>
         <p className="text-xs mb-4 text-muted-foreground">
           Items assigned to you for processing
         </p>

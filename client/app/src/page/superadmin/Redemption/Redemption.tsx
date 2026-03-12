@@ -13,6 +13,7 @@ import { queryKeys } from "@/lib/query-keys";
 import {
   ViewRedemptionModal,
   MarkAsProcessedModal,
+  CancelRequestModal,
   ExportModal,
   type RedemptionItem,
   type MyProcessingStatus,
@@ -38,6 +39,8 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   const [myProcessingStatus, setMyProcessingStatus] =
     useState<MyProcessingStatus | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCancelRequest, setSelectedCancelRequest] = useState<RedemptionItem | null>(null);
 
   const handleManualRefresh = useCallback(() => {
     queryClient.resetQueries({ queryKey: queryKeys.requests.all });
@@ -131,6 +134,20 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
     }
   };
 
+  const handleCancelConfirm = async (reason: string, remarks: string) => {
+    if (!selectedCancelRequest) return;
+    try {
+      await marketingRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      toast.success("Request cancelled successfully");
+      setShowCancelModal(false);
+      setSelectedCancelRequest(null);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
+    } catch (err) {
+      console.error("Error cancelling request:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to cancel request");
+    }
+  };
+
   // Check if the current user can mark this request's items as processed
   const canMarkProcessed = useCallback((request: RedemptionItem): boolean => {
     // Only approved requests that aren't cancelled can be processed
@@ -149,7 +166,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
         <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold">Process Requests</h1>
+              <h1 className="text-2xl font-semibold">Process Requests</h1>
               <p
                 className="text-sm text-muted-foreground"
               >
@@ -195,6 +212,12 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto pb-20">
           <div className="p-4">
+            {/* Header */}
+            <h1 className="text-xl font-semibold mb-1">Process Requests</h1>
+            <p className="text-xs text-muted-foreground mb-4">
+              Process approved redemption requests
+            </p>
+
             {/* Search */}
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -256,6 +279,23 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
         }}
         item={selectedRequest}
         myItems={myProcessingStatus?.items}
+        onMarkItemProcessed={() => {
+          setShowViewModal(false);
+          if (myProcessingStatus && myProcessingStatus.pending_items > 0) {
+            setShowProcessModal(true);
+          } else {
+            toast.info("All your items have already been processed");
+            setSelectedRequest(null);
+            setMyProcessingStatus(null);
+          }
+        }}
+        onCancelRequest={() => {
+          setShowViewModal(false);
+          setSelectedCancelRequest(selectedRequest);
+          setSelectedRequest(null);
+          setMyProcessingStatus(null);
+          setShowCancelModal(true);
+        }}
       />
 
       <MarkAsProcessedModal
@@ -269,6 +309,16 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
         myItems={myProcessingStatus?.items || []}
         pendingCount={myProcessingStatus?.pending_items || 0}
         onConfirm={handleMarkProcessedConfirm}
+      />
+
+      <CancelRequestModal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSelectedCancelRequest(null);
+        }}
+        item={selectedCancelRequest}
+        onConfirm={handleCancelConfirm}
       />
 
       <ExportModal

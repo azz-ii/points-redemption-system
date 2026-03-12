@@ -21,15 +21,21 @@ class SalesAgentOptionSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='profile.email', read_only=True)
     points = serializers.IntegerField(source='profile.points', read_only=True)
     team_id = serializers.SerializerMethodField()
+    team_name = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'full_name', 'email', 'points', 'team_id']
+        fields = ['id', 'username', 'full_name', 'email', 'points', 'team_id', 'team_name']
     
     def get_team_id(self, obj):
         """Get team ID if user is in a team"""
         membership = obj.team_memberships.first()
         return membership.team.id if membership else None
+
+    def get_team_name(self, obj):
+        """Get team name if user is in a team"""
+        membership = obj.team_memberships.first()
+        return membership.team.name if membership else None
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model with profile"""

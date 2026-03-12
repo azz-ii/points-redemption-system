@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { InventoryItem, StockStatus } from "../modals/types";
-import { getStatusColor, getLegendColor } from "../modals/types";
+import { getStatusColor } from "../modals/types";
 
 interface ColumnContext {
   onViewItem: (item: InventoryItem) => void;
@@ -21,24 +21,6 @@ interface ColumnContext {
 export const createColumns = (
   context: ColumnContext
 ): ColumnDef<InventoryItem>[] => [
-  {
-    accessorKey: "item_name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Item Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("item_name") || "N/A"}</div>
-    ),
-  },
   {
     accessorKey: "item_code",
     header: ({ column }) => {
@@ -60,7 +42,7 @@ export const createColumns = (
     ),
   },
   {
-    accessorKey: "category",
+    accessorKey: "item_name",
     header: ({ column }) => {
       return (
         <Button
@@ -68,40 +50,14 @@ export const createColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="px-0 hover:bg-transparent"
         >
-          Category
+          Item Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => {
-      const category = row.getValue("category") as string | null;
-      return <div>{category || "-"}</div>;
-    },
-  },
-  {
-    accessorKey: "legend",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Legend
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const legend = row.getValue("legend") as string;
-      return (
-        <span
-          className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getLegendColor(legend)}`}
-        >
-          {legend.replace(/_/g, " ")}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("item_name") || "N/A"}</div>
+    ),
   },
   {
     accessorKey: "stock",

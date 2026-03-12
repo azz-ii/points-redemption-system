@@ -3,6 +3,7 @@ import logging
 import os
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.db.models import Q, Case, When, Value, CharField, F, Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -215,12 +216,49 @@ class ProductDetailView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
     
     def delete(self, request, product_id):
-        """Delete a product"""
+        """Soft-archive a product (sets is_archived=True instead of deleting)"""
         try:
             product = Product.objects.get(id=product_id)
-            product.delete()
+            if product.is_archived:
+                return Response({
+                    "message": "Product is already archived"
+                }, status=status.HTTP_200_OK)
+            product.is_archived = True
+            product.date_archived = timezone.now()
+            product.archived_by = request.user if request.user.is_authenticated else None
+            product.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+
+            # Auto-remove this product from all carts
+            from cart.models import CartItem
+            removed_count = CartItem.objects.filter(product=product).delete()[0]
+            if removed_count:
+                logger.info(f"Removed {removed_count} cart entries for archived product {product_id}")
+
             return Response({
-                "message": "Product deleted successfully"
+                "message": "Product archived successfully"
+            }, status=status.HTTP_200_OK)
+        except Product.DoesNotExist:
+            return Response({
+                "error": "Product not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class ProductUnarchiveView(APIView):
+    """Restore an archived product"""
+
+    def post(self, request, product_id):
+        try:
+            product = Product.objects.get(id=product_id)
+            if not product.is_archived:
+                return Response({
+                    "message": "Product is not archived"
+                }, status=status.HTTP_200_OK)
+            product.is_archived = False
+            product.date_archived = None
+            product.archived_by = None
+            product.save(update_fields=['is_archived', 'date_archived', 'archived_by'])
+            return Response({
+                "message": "Product restored successfully"
             }, status=status.HTTP_200_OK)
         except Product.DoesNotExist:
             return Response({

@@ -2,7 +2,7 @@ import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { X, UserPlus, Trash2, AlertCircle } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import type { ModalBaseProps, NewTeamData, Team, SalesAgentOption, ApproverOption } from "./types";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+
 
 interface CreateTeamModalProps extends ModalBaseProps {
   newTeam: NewTeamData;
@@ -29,17 +29,15 @@ export function CreateTeamModal({
   const [selectedMembers, setSelectedMembers] = useState<SalesAgentOption[]>([]);
   const [selectedSalesAgent, setSelectedSalesAgent] = useState<number | null>(null);
   const [showAddMember, setShowAddMember] = useState(false);
-  const [allUsers, setAllUsers] = useState<Array<{ id: number; team: number | null }>>([]);
   const [availableApprovers, setAvailableApprovers] = useState<ApproverOption[]>([]);
-  const [errorDialog, setErrorDialog] = useState<{
-    show: boolean;
-    title: string;
-    message: string;
-  }>({
-    show: false,
-    title: "",
-    message: "",
-  });
+  const [availableApproverMembers, setAvailableApproverMembers] = useState<
+    Array<{ id: number; full_name: string; email: string; points: number; team_id: number | null; team_name: string | null }>
+  >([]);
+  const [confirmReassign, setConfirmReassign] = useState<{
+    userId: number;
+    userName: string;
+    fromTeam: string;
+  } | null>(null);
 
   const fetchAvailableSalesAgents = async () => {
     try {
@@ -60,20 +58,8 @@ export function CreateTeamModal({
       });
 
       if (response.ok && Array.isArray(data)) {
-        // Store all users for team membership checking
-        setAllUsers(data.map((u: { id: number; team_id: number | null }) => ({ id: u.id, team: u.team_id })));
-        
-        // Filter to exclude those already in teams
-        const salesAgents = data.filter(
-          (user: { team_id: number | null }) => !user.team_id
-        );
-        
-        console.log("DEBUG CreateTeamModal: Sales agents filtered", {
-          total: salesAgents.length,
-          totalBeforeTeamFilter: data.length,
-        });
-        
-        setAvailableSalesAgents(salesAgents);
+        console.log("DEBUG CreateTeamModal: Sales agents fetched", { total: data.length });
+        setAvailableSalesAgents(data);
       }
     } catch (err) {
       console.error("DEBUG CreateTeamModal: Error fetching sales agents", err);
@@ -105,17 +91,48 @@ export function CreateTeamModal({
     }
   };
 
+  const fetchAvailableApproverMembers = async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/?position=Approver`, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json();
+      if (response.ok && data.results) {
+        setAvailableApproverMembers(
+          data.results
+            .filter(
+              (u: { can_self_request: boolean; is_archived: boolean }) =>
+                u.can_self_request && !u.is_archived
+            )
+            .map((u: { id: number; full_name: string; email: string; points: number; team_id: number | null; team_name: string | null }) => ({
+              id: u.id,
+              full_name: u.full_name,
+              email: u.email,
+              points: u.points,
+              team_id: u.team_id,
+              team_name: u.team_name,
+            }))
+        );
+      }
+    } catch (err) {
+      console.error("DEBUG CreateTeamModal: Error fetching approver members", err);
+    }
+  };
+
   // Fetch available sales agents when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchAvailableSalesAgents();
       fetchAvailableApprovers();
+      fetchAvailableApproverMembers();
     } else {
       // Reset state when modal closes
       setSelectedMembers([]);
       setShowAddMember(false);
       setSelectedSalesAgent(null);
-      setErrorDialog({ show: false, title: "", message: "" });
+      setConfirmReassign(null);
     }
   }, [isOpen]);
 
@@ -125,39 +142,56 @@ export function CreateTeamModal({
       return;
     }
 
-    const agent = availableSalesAgents.find(a => a.id === selectedSalesAgent);
-    if (!agent) {
-      console.warn("DEBUG CreateTeamModal: Agent not found", selectedSalesAgent);
+    const agentEntry = availableSalesAgents.find((a) => a.id === selectedSalesAgent);
+    const approverEntry = availableApproverMembers.find((a) => a.id === selectedSalesAgent);
+    const entry = agentEntry || approverEntry;
+
+    if (!entry) {
+      console.warn("DEBUG CreateTeamModal: User not found", selectedSalesAgent);
       return;
     }
 
-    // Check if this user is already in a team
-    const userInTeam = allUsers.find(u => u.id === selectedSalesAgent && u.team !== null);
-    if (userInTeam) {
-      const teamName = teams.find(t => t.id === userInTeam.team)?.name || "another team";
-      console.log("DEBUG CreateTeamModal: User already in team", {
+    // Check if already staged
+    if (selectedMembers.find((m) => m.id === entry.id)) {
+      console.warn("DEBUG CreateTeamModal: User already staged", entry.id);
+      return;
+    }
+
+    // Check if already in a team
+    const teamName = agentEntry
+      ? (agentEntry as SalesAgentOption & { team_name?: string | null }).team_name
+      : approverEntry!.team_name;
+
+    if (teamName) {
+      console.log("DEBUG CreateTeamModal: User in team, requesting confirmation", {
         userId: selectedSalesAgent,
-        userName: agent.full_name,
-        teamId: userInTeam.team,
-        teamName,
+        userName: entry.full_name,
+        fromTeam: teamName,
       });
-      
-      setErrorDialog({
-        show: true,
-        title: "Cannot Add Member",
-        message: `${agent.full_name} is already a member of ${teamName}. A user can only belong to one team at a time.`,
-      });
+      setConfirmReassign({ userId: selectedSalesAgent, userName: entry.full_name, fromTeam: teamName });
       return;
     }
 
-    // Check if already selected
-    if (selectedMembers.find(m => m.id === agent.id)) {
-      console.warn("DEBUG CreateTeamModal: Agent already selected", agent.id);
-      return;
-    }
+    doStageMember(selectedSalesAgent);
+  };
 
-    console.log("DEBUG CreateTeamModal: Adding member to list", agent.full_name);
-    setSelectedMembers([...selectedMembers, agent]);
+  const doStageMember = (userId: number) => {
+    const agentEntry = availableSalesAgents.find((a) => a.id === userId);
+    const approverEntry = availableApproverMembers.find((a) => a.id === userId);
+    const entry = agentEntry || approverEntry;
+    if (!entry) return;
+
+    const memberToAdd: SalesAgentOption = {
+      id: entry.id,
+      username: (entry as SalesAgentOption & { username?: string }).username ?? "",
+      full_name: entry.full_name,
+      email: entry.email,
+      points: entry.points,
+      position: agentEntry ? "Sales Agent" : "Approver",
+    };
+
+    console.log("DEBUG CreateTeamModal: Staging member", memberToAdd.full_name);
+    setSelectedMembers((prev) => [...prev, memberToAdd]);
     setSelectedSalesAgent(null);
     setShowAddMember(false);
   };
@@ -167,10 +201,13 @@ export function CreateTeamModal({
     setSelectedMembers(selectedMembers.filter(m => m.id !== memberId));
   };
 
-  // Filter out already selected members
-  const selectedMemberIds = selectedMembers.map(m => m.id);
+  // Filter out already staged members
+  const selectedMemberIds = selectedMembers.map((m) => m.id);
   const filteredSalesAgents = availableSalesAgents.filter(
-    agent => !selectedMemberIds.includes(agent.id)
+    (agent) => !selectedMemberIds.includes(agent.id)
+  );
+  const filteredApproverMembers = availableApproverMembers.filter(
+    (approver) => !selectedMemberIds.includes(approver.id)
   );
 
   if (!isOpen) return null;
@@ -179,7 +216,7 @@ export function CreateTeamModal({
     console.log("DEBUG CreateTeamModal: Closing modal");
     onClose();
     setError("");
-    setErrorDialog({ show: false, title: "", message: "" });
+    setConfirmReassign(null);
   };
 
   const handleSubmit = () => {
@@ -271,7 +308,7 @@ export function CreateTeamModal({
               </h3>
               <button
                 onClick={() => setShowAddMember(!showAddMember)}
-                className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-card text-foreground hover:bg-accent transition-colors"
+                className="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <UserPlus className="h-3 w-3" />
                 {showAddMember ? "Cancel" : "Add Member"}
@@ -282,22 +319,43 @@ export function CreateTeamModal({
             {showAddMember && (
               <div className="mb-4 p-4 rounded border border-border bg-muted">
                 <label className="text-xs text-muted-foreground mb-2 block">
-                  Select Sales Agent
+                  Select Member
                 </label>
                 <div className="flex gap-2">
-                  <SearchableSelect
-                    options={filteredSalesAgents}
-                    value={selectedSalesAgent}
-                    onChange={(value) => {
-                      const numValue = value ? Number(value) : null;
-                      console.log("DEBUG CreateTeamModal: Sales agent selected", numValue);
+                  <select
+                    value={selectedSalesAgent ?? ""}
+                    onChange={(e) => {
+                      const numValue = e.target.value ? Number(e.target.value) : null;
+                      console.log("DEBUG CreateTeamModal: Member selected", numValue);
                       setSelectedSalesAgent(numValue);
                     }}
-                    placeholder="Search or select an agent..."
-                    displayFormat={(agent) => `${agent.full_name} (${agent.email}) - ${agent.points} pts`}
-                    searchKeys={['full_name', 'email', 'username']}
-                    className="flex-1"
-                  />
+                    className="flex-1 px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-ring text-sm"
+                  >
+                    <option value="">Select a member...</option>
+                    {filteredSalesAgents.length > 0 && (
+                      <optgroup label="Sales Agents">
+                        {filteredSalesAgents.map((agent) => {
+                          const a = agent as SalesAgentOption & { team_name?: string | null };
+                          return (
+                            <option key={agent.id} value={agent.id}>
+                              {agent.full_name}
+                              {a.team_name ? ` — In Team: ${a.team_name}` : ""}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    )}
+                    {filteredApproverMembers.length > 0 && (
+                      <optgroup label="Approvers (Self-Request)">
+                        {filteredApproverMembers.map((approver) => (
+                          <option key={approver.id} value={approver.id}>
+                            {approver.full_name}
+                            {approver.team_name ? ` — In Team: ${approver.team_name}` : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
                   <button
                     onClick={handleAddMember}
                     disabled={!selectedSalesAgent}
@@ -327,7 +385,7 @@ export function CreateTeamModal({
                         Full Name
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold">
-                        Email
+                        Position
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold">
                         Points
@@ -344,7 +402,17 @@ export function CreateTeamModal({
                         className="hover:bg-card transition-colors"
                       >
                         <td className="px-4 py-3 text-sm">{member.full_name}</td>
-                        <td className="px-4 py-3 text-sm">{member.email}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              (member as SalesAgentOption & { position?: string }).position === "Approver"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {(member as SalesAgentOption & { position?: string }).position ?? "Sales Agent"}
+                          </span>
+                        </td>
                         <td className="px-4 py-3 text-sm">{member.points}</td>
                         <td className="px-4 py-3 text-right">
                           <button
@@ -380,48 +448,52 @@ export function CreateTeamModal({
         </div>
       </div>
 
-      {/* Member Assignment Error Dialog */}
-      {errorDialog.show && (
+      {/* Reassign Confirmation Dialog */}
+      {confirmReassign && (
         <div className="fixed inset-0 flex items-center justify-center z-60 p-4 bg-black/50 backdrop-blur-sm">
-          <div
-            className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border"
-          >
+          <div className="bg-card rounded-lg shadow-2xl max-w-md w-full border border-border">
             <div className="flex justify-between items-center p-6 border-b border-border">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-red-500 bg-opacity-20">
-                  <AlertCircle className="h-5 w-5 text-red-500" />
+                <div className="p-2 rounded-full bg-yellow-500 bg-opacity-20">
+                  <AlertCircle className="h-5 w-5 text-yellow-500" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">{errorDialog.title}</h2>
+                  <h2 className="text-lg font-semibold">Reassign Member?</h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Some members could not be added
+                    This user is already in another team
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => {
-                  console.log("DEBUG CreateTeamModal: Closing error dialog");
-                  setErrorDialog({ show: false, title: "", message: "" });
-                }}
+                onClick={() => setConfirmReassign(null)}
                 className="hover:opacity-70 transition-opacity"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-
             <div className="p-6">
-              <p className="text-sm">{errorDialog.message}</p>
+              <p className="text-sm">
+                <span className="font-semibold">{confirmReassign.userName}</span> is currently
+                a member of <span className="font-semibold">{confirmReassign.fromTeam}</span>.
+                Adding them here will remove them from that team when this team is created.
+              </p>
             </div>
-
-            <div className="p-6 border-t border-border flex justify-end">
+            <div className="p-6 border-t border-border flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmReassign(null)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-card hover:bg-accent text-foreground border border-border transition-colors"
+              >
+                Cancel
+              </button>
               <button
                 onClick={() => {
-                  console.log("DEBUG CreateTeamModal: Closing error dialog");
-                  setErrorDialog({ show: false, title: "", message: "" });
+                  const userId = confirmReassign.userId;
+                  setConfirmReassign(null);
+                  doStageMember(userId);
                 }}
-                className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-yellow-500 hover:bg-yellow-600 text-white transition-colors"
               >
-                Got it
+                Yes, Add
               </button>
             </div>
           </div>

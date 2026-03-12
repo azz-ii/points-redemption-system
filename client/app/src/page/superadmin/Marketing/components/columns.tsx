@@ -60,22 +60,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
     size: 40,
   },
   {
-    accessorKey: "username",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Username
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("username") || "N/A"}</div>,
-  },
-  {
     accessorKey: "full_name",
     header: ({ column }) => {
       return (
@@ -90,22 +74,6 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
       )
     },
     cell: ({ row }) => <div>{row.getValue("full_name") || "N/A"}</div>,
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("email") || "N/A"}</div>,
   },
   {
     accessorKey: "position",

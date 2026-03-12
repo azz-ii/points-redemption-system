@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Upload, X, Package } from "lucide-react";
+import { toast } from "sonner";
 
 interface CatalogueImageUploadProps {
   currentImage?: string | null;
@@ -21,11 +22,11 @@ export function CatalogueImageUpload({
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        alert("Please select an image file");
+        toast.error("Please select an image file");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size must be less than 5MB");
+        toast.error("Image size must be less than 5MB");
         return;
       }
       onImageSelect(file);
@@ -50,11 +51,11 @@ export function CatalogueImageUpload({
     const file = e.dataTransfer.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        alert("Please select an image file");
+        toast.error("Please select an image file");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size must be less than 5MB");
+        toast.error("Image size must be less than 5MB");
         return;
       }
       onImageSelect(file);

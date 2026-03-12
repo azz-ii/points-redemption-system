@@ -98,7 +98,12 @@ function Marketing() {
         {/* Desktop Layout */}
         <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold">Marketing Users</h1>
+            <div>
+              <h1 className="text-2xl font-semibold">Item Handlers</h1>
+              <p className="text-sm text-muted-foreground">
+                View and manage item handler assignments.
+              </p>
+            </div>
           </div>
 
           <div className="flex-1 min-h-0">
@@ -129,7 +134,12 @@ function Marketing() {
         {/* Mobile Layout */}
         <div className="md:hidden flex flex-col flex-1 p-4 mb-16">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Marketing Users</h1>
+          <div>
+            <h1 className="text-xl font-semibold">Item Handlers</h1>
+            <p className="text-xs text-muted-foreground">
+              Manage item handlers
+            </p>
+          </div>
             <button
               onClick={() => refetch()}
               disabled={loading}

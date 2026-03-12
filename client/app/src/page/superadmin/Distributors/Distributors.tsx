@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { Search, Plus } from "lucide-react";
 import { useDistributorsPage } from "@/hooks/queries/useDistributors";
 import { useQueryClient } from "@tanstack/react-query";
@@ -226,7 +227,7 @@ function Distributors() {
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error archiving distributor:", err);
-      alert("Failed to archive distributor. Please try again.");
+      toast.error("Failed to archive distributor. Please try again.");
     } finally {
       setMutationLoading(false);
     }
@@ -251,7 +252,7 @@ function Distributors() {
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error unarchiving distributor:", err);
-      alert(err instanceof Error ? err.message : "Failed to unarchive distributor. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to unarchive distributor. Please try again.");
     } finally {
       setMutationLoading(false);
     }
@@ -280,15 +281,15 @@ function Distributors() {
       setBulkArchiveTargets([]);
 
       if (failCount === 0) {
-        alert(`Successfully archived ${successCount} distributor(s)`);
+        toast.success(`Successfully archived ${successCount} distributor(s)`);
       } else {
-        alert(`Archived ${successCount} of ${bulkArchiveTargets.length} distributor(s). ${failCount} failed.`);
+        toast.warning(`Archived ${successCount} of ${bulkArchiveTargets.length} distributor(s). ${failCount} failed.`);
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error archiving distributors:", err);
-      alert("Error archiving some distributors");
+      toast.error("Error archiving some distributors");
     } finally {
       setMutationLoading(false);
     }
@@ -315,15 +316,15 @@ function Distributors() {
         setUpdateProgress(null);
 
         if (result.success) {
-          alert(
+          toast.success(
             `Successfully updated points for ${result.totalUpdated} distributor(s)`,
           );
         } else if (result.partialSuccess) {
-          alert(
+          toast.warning(
             `Updated ${result.totalUpdated} of ${updates.length} distributor(s). ${result.totalFailed} failed.`,
           );
         } else {
-          alert(
+          toast.error(
             `Failed to update points. ${result.totalFailed} distributor(s) failed.`,
           );
         }
@@ -334,11 +335,11 @@ function Distributors() {
         setShowSetPointsModal(false);
 
         if (result.failed_count === 0) {
-          alert(
+          toast.success(
             `Successfully updated points for ${result.updated_count} distributor(s)`,
           );
         } else {
-          alert(
+          toast.warning(
             `Updated ${result.updated_count} of ${updates.length} distributor(s). ${result.failed_count} failed.`,
           );
         }
@@ -348,7 +349,7 @@ function Distributors() {
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error updating points:", err);
-      alert("Error updating points");
+      toast.error("Error updating points");
     } finally {
       setSettingPoints(false);
       setUpdateProgress(null);
@@ -384,18 +385,18 @@ function Distributors() {
       console.log("[DEBUG] Response data:", data);
 
       if (!response.ok) {
-        alert(data.error || "Failed to update points");
+        toast.error(data.error || "Failed to update points");
         return;
       }
 
       setShowSetPointsModal(false);
-      alert(
+      toast.success(
         `Successfully updated points for ${data.updated_count} distributor(s)`,
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("[DEBUG] Error bulk updating points:", err);
-      alert("Error updating points. Please try again.");
+      toast.error("Error updating points. Please try again.");
     } finally {
       setSettingPoints(false);
     }
@@ -430,18 +431,18 @@ function Distributors() {
       console.log("[DEBUG] Reset response data:", data);
 
       if (!response.ok) {
-        alert(data.error || "Failed to reset points");
+        toast.error(data.error || "Failed to reset points");
         return;
       }
 
       setShowSetPointsModal(false);
-      alert(
+      toast.success(
         `Successfully reset points for ${data.updated_count} distributor(s)`,
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("[DEBUG] Error resetting points:", err);
-      alert("Error resetting points. Please try again.");
+      toast.error("Error resetting points. Please try again.");
     } finally {
       setSettingPoints(false);
     }
@@ -459,9 +460,9 @@ function Distributors() {
       setShowSalesVolumeModal(false);
 
       if (result.failed_count === 0) {
-        alert(`Successfully allocated points for ${result.updated_count} distributor(s)`);
+        toast.success(`Successfully allocated points for ${result.updated_count} distributor(s)`);
       } else {
-        alert(
+        toast.warning(
           `Allocated points for ${result.updated_count} distributor(s). ${result.failed_count} failed.`
         );
       }
@@ -469,7 +470,7 @@ function Distributors() {
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error allocating sales volume points:", err);
-      alert(err instanceof Error ? err.message : "Error allocating points. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Error allocating points. Please try again.");
     } finally {
       setAllocatingVolume(false);
     }
@@ -483,7 +484,7 @@ function Distributors() {
         <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-semibold">Distributors</h1>
+              <h1 className="text-2xl font-semibold">Distributors</h1>
               <p className="text-sm text-muted-foreground">
                 View and manage distributor information.
               </p>
@@ -515,7 +516,6 @@ function Distributors() {
             onRefresh={handleManualRefresh}
             refreshing={refreshing}
             onExport={() => setShowExportModal(true)}
-            onSetPoints={() => setShowSetPointsModal(true)}
             onAllocateSalesVolume={() => setShowSalesVolumeModal(true)}
             onViewPointsHistory={(distributor) => {
               setPointsHistoryTarget(distributor);
@@ -537,7 +537,7 @@ function Distributors() {
 
         {/* Mobile Layout */}
         <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-          <h2 className="text-2xl font-semibold mb-2">Distributors</h2>
+          <h2 className="text-xl font-semibold mb-2">Distributors</h2>
           <p
             className="text-xs mb-4 text-muted-foreground"
           >

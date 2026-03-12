@@ -111,6 +111,13 @@ class TeamViewSet(viewsets.ModelViewSet):
             user_id = serializer.validated_data['user_id']
             user = get_object_or_404(User, id=user_id)
             
+            # Auto-reassign: remove from existing team if any
+            old_team_name = None
+            existing = TeamMembership.objects.filter(user=user).first()
+            if existing:
+                old_team_name = existing.team.name
+                existing.delete()
+            
             # Create team membership
             membership = TeamMembership.objects.create(team=team, user=user)
             
@@ -126,10 +133,13 @@ class TeamViewSet(viewsets.ModelViewSet):
             else:
                 logger.warning(f"⚠ Failed to send agent addition email for {user.username}")
             
-            return Response({
+            response_data = {
                 'message': f'User {user.profile.full_name} successfully added to {team.name}',
-                'membership': TeamMembershipSerializer(membership).data
-            }, status=status.HTTP_201_CREATED)
+                'membership': TeamMembershipSerializer(membership).data,
+            }
+            if old_team_name:
+                response_data['reassigned_from'] = old_team_name
+            return Response(response_data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

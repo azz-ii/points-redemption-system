@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { toast } from "sonner";
 import type { InventoryItem } from "./types";
 import { SetInventoryConfirmationModal } from "./SetInventoryConfirmationModal";
 import { PaginatedTableSkeleton } from "@/components/shared/paginated-table-skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PaginatedInventoryResponse {
   count: number;
@@ -56,6 +67,11 @@ export function SetInventoryModal({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmationType, setConfirmationType] = useState<"bulk" | "reset">("bulk");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Below-committed warning state
+  const [showBatchWarning, setShowBatchWarning] = useState(false);
+  const [pendingUpdates, setPendingUpdates] = useState<{ id: number; adjustment: number; reason: string }[]>([]);
+  const [batchWarningItems, setBatchWarningItems] = useState<string[]>([]);
 
   // No filtering needed - backend already filters has_stock=True
   const trackedItems = items;
@@ -155,46 +171,47 @@ export function SetInventoryModal({
     });
     
     if (missingReasons.length > 0) {
-      alert(`Reason is required when decreasing stock for: ${missingReasons.join(', ')}`);
+      toast.error(`Reason is required when decreasing stock for: ${missingReasons.join(', ')}`);
       return;
     }
     
     if (updates.length === 0) {
-      alert("No changes to save. Please add or subtract stock for at least one item.");
+      toast.error("No changes to save. Please add or subtract stock for at least one item.");
       return;
     }
-    
+
+    // Check if any decrease would fall below committed stock
+    const belowCommittedItems: string[] = [];
+    updates.forEach(({ id, adjustment }) => {
+      if (adjustment < 0) {
+        const affectedItem = trackedItems.find((i) => i.id === id);
+        if (affectedItem) {
+          const newTotal = Math.max(0, affectedItem.stock + adjustment);
+          if (newTotal < affectedItem.committed_stock) {
+            belowCommittedItems.push(
+              `${affectedItem.item_name} (new: ${newTotal}, committed: ${affectedItem.committed_stock})`
+            );
+          }
+        }
+      }
+    });
+
+    if (belowCommittedItems.length > 0) {
+      setPendingUpdates(updates);
+      setBatchWarningItems(belowCommittedItems);
+      setShowBatchWarning(true);
+      return;
+    }
+
     onSubmit(updates);
   };
-
   const handleBulkSubmit = () => {
     if (!onBulkSubmit) return;
-    if (!confirmBulkUpdate) {
-      alert("Please confirm that you understand this will affect all inventory-tracked items.");
-      return;
-    }
-    if (bulkStockDelta === 0) {
-      alert("Stock delta cannot be 0.");
-      return;
-    }
-    // Require reason for decreases
-    if (bulkStockDelta < 0 && !bulkReason.trim()) {
-      alert("Reason is required when decreasing stock.");
-      return;
-    }
-    // Open confirmation modal
     setConfirmationType("bulk");
     setShowConfirmModal(true);
   };
-
   const handleResetAll = () => {
     if (!onResetAll) return;
-    // Reason is required for reset
-    if (!bulkReason.trim()) {
-      alert("Reason is required for resetting all stock.");
-      return;
-    }
-    // Open confirmation modal
     setConfirmationType("reset");
     setShowConfirmModal(true);
   };
@@ -538,7 +555,8 @@ export function SetInventoryModal({
                     disabled={
                       loading ||
                       !confirmBulkUpdate ||
-                      bulkStockDelta === 0
+                      bulkStockDelta === 0 ||
+                      (bulkStockDelta < 0 && !bulkReason.trim())
                     }
                     className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-orange-600 text-foreground hover:bg-orange-700"
                   >
@@ -562,7 +580,7 @@ export function SetInventoryModal({
                       
                       <button
                         onClick={handleResetAll}
-                        disabled={loading}
+                        disabled={loading || !bulkReason.trim()}
                         className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-destructive text-foreground hover:bg-destructive/90"
                       >
                         <AlertTriangle className="h-4 w-4" />
@@ -613,6 +631,46 @@ export function SetInventoryModal({
         password={confirmPassword}
         onPasswordChange={setConfirmPassword}
       />
+
+      {/* Below-committed stock warning */}
+      <AlertDialog open={showBatchWarning} onOpenChange={setShowBatchWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Stock Below Committed
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  The following item{batchWarningItems.length > 1 ? "s" : ""} will have stock
+                  fall below their committed stock. Pending orders may not be fulfillable:
+                </p>
+                <ul className="space-y-1">
+                  {batchWarningItems.map((name, i) => (
+                    <li key={i} className="text-sm text-foreground font-medium">• {name}</li>
+                  ))}
+                </ul>
+                <p>Do you want to proceed anyway?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border border-border bg-card hover:bg-accent text-foreground">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowBatchWarning(false);
+                onSubmit(pendingUpdates);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Proceed Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

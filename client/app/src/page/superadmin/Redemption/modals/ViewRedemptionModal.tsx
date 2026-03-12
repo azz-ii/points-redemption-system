@@ -1,4 +1,4 @@
-import { X, Package, CheckCircle, Clock } from "lucide-react";
+import { X, Package, CheckCircle, Clock, XCircle } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types";
@@ -6,6 +6,8 @@ import type { ModalBaseProps, RedemptionItem, RequestItemVariant } from "./types
 interface ViewRedemptionModalProps extends ModalBaseProps {
   item: RedemptionItem | null;
   myItems?: RequestItemVariant[];
+  onMarkItemProcessed?: () => void;
+  onCancelRequest?: () => void;
 }
 
 export function ViewRedemptionModal({
@@ -13,8 +15,22 @@ export function ViewRedemptionModal({
   onClose,
   item,
   myItems,
+  onMarkItemProcessed,
+  onCancelRequest,
 }: ViewRedemptionModalProps) {
   if (!isOpen || !item) return null;
+
+  const canProcess =
+    !!onMarkItemProcessed &&
+    item.status === "APPROVED" &&
+    item.processing_status !== "CANCELLED" &&
+    item.processing_status !== "PROCESSED";
+
+  const canCancel =
+    !!onCancelRequest &&
+    item.status === "APPROVED" &&
+    item.processing_status !== "CANCELLED" &&
+    item.processing_status !== "PROCESSED";
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -245,14 +261,30 @@ export function ViewRedemptionModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 rounded-lg font-semibold transition-colors bg-card hover:bg-accent text-foreground border border-border"
-          >
-            Close
-          </button>
-        </div>
+        {(canProcess || canCancel) && (
+          <div className="p-8 flex justify-end gap-3">
+            {canCancel && (
+              <button
+                onClick={onCancelRequest}
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-2 font-medium"
+                aria-label="Cancel request"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancel Request
+              </button>
+            )}
+            {canProcess && (
+              <button
+                onClick={onMarkItemProcessed}
+                className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors flex items-center gap-2 font-medium"
+                aria-label="Mark items as processed"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Process
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

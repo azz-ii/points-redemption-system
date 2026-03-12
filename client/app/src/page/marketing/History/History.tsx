@@ -94,7 +94,7 @@ export default function MarketingHistory() {
       <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
         {/* Header */}
         <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-1">History</h1>
+          <h1 className="text-xl font-semibold mb-1">History</h1>
           <p className="text-xs text-muted-foreground">
             View your processed redemption requests
           </p>
@@ -152,8 +152,8 @@ export default function MarketingHistory() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-4xl font-bold mb-1">History</h1>
-          <p className="text-base text-muted-foreground">
+          <h1 className="text-2xl font-semibold mb-1">History</h1>
+          <p className="text-sm text-muted-foreground">
             View your processed redemption requests
           </p>
         </div>

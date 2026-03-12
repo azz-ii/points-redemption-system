@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { toast } from "sonner";
 import type { Distributor } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
 import type { ChunkedUpdateProgress } from "@/lib/distributors-api";
@@ -147,7 +148,7 @@ export function SetPointsModal({
     });
     
     if (updates.length === 0) {
-      alert("No changes to save. Please add or subtract points for at least one distributor.");
+      toast.error("No changes to save. Please add or subtract points for at least one distributor.");
       return;
     }
     
@@ -157,11 +158,11 @@ export function SetPointsModal({
   const handleBulkSubmit = () => {
     if (!onBulkSubmit) return;
     if (!confirmBulkUpdate) {
-      alert("Please confirm that you understand this will affect all distributors.");
+      toast.error("Please confirm that you understand this will affect all distributors.");
       return;
     }
     if (bulkPointsDelta === 0) {
-      alert("Points delta cannot be 0.");
+      toast.error("Points delta cannot be 0.");
       return;
     }
     // Open confirmation modal

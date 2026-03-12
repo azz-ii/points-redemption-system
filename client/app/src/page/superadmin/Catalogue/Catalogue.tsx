@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { API_URL } from "@/lib/config";
 import { fetchWithCsrf } from "@/lib/csrf";
 import {
@@ -498,12 +499,13 @@ function Catalogue() {
       console.log("[Catalogue] DELETE response status:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to archive product");
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || "Failed to archive product");
       }
 
       const data = await response.json();
       if (data.warning) {
-        alert(data.warning);
+        toast.warning(data.warning);
       }
 
       setShowArchiveModal(false);
@@ -511,7 +513,7 @@ function Catalogue() {
       queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error archiving product:", err);
-      alert("Failed to archive product. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to archive product. Please try again.");
     } finally {
       setArchiving(false);
     }
@@ -527,7 +529,8 @@ function Catalogue() {
       console.log("[Catalogue] Unarchive response status:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to restore product");
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || "Failed to restore product");
       }
 
       setShowUnarchiveModal(false);
@@ -535,7 +538,7 @@ function Catalogue() {
       queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error restoring product:", err);
-      alert("Failed to restore product. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to restore product. Please try again.");
     } finally {
       setArchiving(false);
     }
@@ -549,7 +552,8 @@ function Catalogue() {
           method: "DELETE",
         });
         if (!response.ok) {
-          throw new Error(`Failed to archive product ${item.item_name}`);
+          const body = await response.json().catch(() => null);
+          throw new Error(body?.error || `Failed to archive product ${item.item_name}`);
         }
       }
       setShowBulkArchiveModal(false);
@@ -557,7 +561,7 @@ function Catalogue() {
       queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error bulk archiving products:", err);
-      alert("Failed to archive some products. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to archive some products. Please try again.");
     } finally {
       setArchiving(false);
     }
@@ -569,7 +573,7 @@ function Catalogue() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">Catalogue</h1>
+            <h1 className="text-2xl font-semibold">Catalogue</h1>
             <p className="text-sm text-muted-foreground">
               View and manage the catalogue of redeemable items.
             </p>
@@ -619,7 +623,7 @@ function Catalogue() {
 
       {/* Mobile Layout */}
       <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-        <h2 className="text-2xl font-semibold mb-2">Catalogue</h2>
+        <h2 className="text-xl font-semibold mb-2">Catalogue</h2>
         <p className="text-xs mb-4 text-muted-foreground">
           Manage catalogue items
         </p>

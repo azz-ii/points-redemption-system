@@ -30,19 +30,11 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
         user = data.get('user')
         team = data.get('team')
         
-        # Check if user is a Sales Agent
+        # Check if user is a Sales Agent or Approver
         if user and hasattr(user, 'profile'):
-            if user.profile.position != 'Sales Agent':
+            if user.profile.position not in ('Sales Agent', 'Approver'):
                 raise serializers.ValidationError({
-                    'user': 'Only Sales Agents can be added to teams.'
-                })
-        
-        # Check if user is already in another team (for create operations)
-        if user and not self.instance:
-            existing_membership = TeamMembership.objects.filter(user=user).first()
-            if existing_membership:
-                raise serializers.ValidationError({
-                    'user': f'This user is already a member of {existing_membership.team.name}. Remove them from that team first.'
+                    'user': 'Only Sales Agents and Approvers can be added to teams.'
                 })
         
         return data
@@ -124,14 +116,6 @@ class AssignMemberSerializer(serializers.Serializer):
         
         if user.profile.position not in ('Sales Agent', 'Approver'):
             raise serializers.ValidationError('Only Sales Agents and Approvers can be added to teams.')
-        
-        # Check if user is already in a team
-        existing_membership = TeamMembership.objects.filter(user=user).first()
-        if existing_membership:
-            raise serializers.ValidationError(
-                f'User is already a member of {existing_membership.team.name}. '
-                'Remove them from that team first.'
-            )
         
         return value
 

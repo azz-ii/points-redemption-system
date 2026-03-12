@@ -642,9 +642,9 @@ export default function CartModal({
               </button>
               <button
                 onClick={() => setStep("details")}
-                disabled={items.length === 0 || remainingPoints < 0}
+                disabled={items.length === 0}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
-                  items.length === 0 || remainingPoints < 0
+                  items.length === 0
                     ? "bg-muted cursor-not-allowed"
                     : "bg-primary hover:bg-primary/90"
                 }`}
@@ -1666,9 +1666,9 @@ export default function CartModal({
           <div className="flex flex-col gap-2 p-4 border-t border-border">
             <button
               onClick={() => setStep("details")}
-              disabled={items.length === 0 || remainingPoints < 0}
+              disabled={items.length === 0}
               className={`w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground ${
-                items.length === 0 || remainingPoints < 0
+                items.length === 0
                   ? "bg-muted cursor-not-allowed"
                   : "bg-primary hover:bg-primary/90"
               }`}

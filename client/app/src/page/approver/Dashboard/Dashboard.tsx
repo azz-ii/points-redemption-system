@@ -94,6 +94,12 @@ function ApproverDashboard() {
       {/* Mobile Layout */}
       <div className="md:hidden flex-1 overflow-y-auto pb-20">
         <div className="p-4">
+          {/* Header */}
+          <h1 className="text-xl font-semibold mb-1">Dashboard</h1>
+          <p className="text-xs text-muted-foreground mb-4">
+            Review and approve redemption requests
+          </p>
+
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="p-4 rounded-lg border bg-card border-border">
@@ -170,7 +176,7 @@ function ApproverDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">Dashboard</h1>
+            <h1 className="text-2xl font-semibold">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               {stats?.team_count
                 ? `Managing ${stats.team_count} team${stats.team_count > 1 ? "s" : ""}: ${stats.team_names.join(", ")}`

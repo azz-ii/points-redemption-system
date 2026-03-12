@@ -65,7 +65,7 @@ function ApproverTeam() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Team</h1>
+          <h1 className="text-2xl font-semibold">Team</h1>
           <p className="text-muted-foreground text-sm mt-1">
             View your team membership and managed teams
           </p>

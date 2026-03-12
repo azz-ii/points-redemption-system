@@ -57,6 +57,12 @@ function ApproverHistory() {
       {/* Mobile Layout */}
       <div className="md:hidden flex-1 overflow-y-auto pb-20">
         <div className="p-4">
+          {/* Header */}
+          <h1 className="text-xl font-semibold mb-1">History</h1>
+          <p className="text-xs text-muted-foreground mb-4">
+            View your processed redemption requests
+          </p>
+
           {/* Search */}
           <div className="relative mb-6">
             <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
@@ -109,7 +115,7 @@ function ApproverHistory() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">History</h1>
+            <h1 className="text-2xl font-semibold">History</h1>
             <p className="text-sm text-muted-foreground">
               View and manage the complete history of point redemptions.
             </p>

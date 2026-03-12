@@ -79,6 +79,16 @@ function ApproverRequests() {
     setShowRejectModal(true);
   };
 
+  const handleApproveFromView = (request: RequestItem) => {
+    setSelectedRequest(request);
+    setShowApproveModal(true);
+  };
+
+  const handleRejectFromView = (request: RequestItem) => {
+    setSelectedRequest(request);
+    setShowRejectModal(true);
+  };
+
   const handleApproveConfirm = async (remarks: string) => {
     if (!selectedRequest) return;
 
@@ -130,6 +140,12 @@ function ApproverRequests() {
       {/* Mobile Layout */}
       <div className="md:hidden flex-1 overflow-y-auto pb-20">
         <div className="p-4">
+          {/* Header */}
+          <h1 className="text-xl font-semibold mb-1">Redemption Requests</h1>
+          <p className="text-xs text-muted-foreground mb-4">
+            Review and approve incoming requests
+          </p>
+
           {/* Search */}
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -183,7 +199,7 @@ function ApproverRequests() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">Redemption Requests</h1>
+            <h1 className="text-2xl font-semibold">Redemption Requests</h1>
             <p className="text-sm text-muted-foreground">
               Review and approve incoming redemption requests
             </p>
@@ -211,6 +227,8 @@ function ApproverRequests() {
           setSelectedRequest(null);
         }}
         request={selectedRequest}
+        onApprove={handleApproveFromView}
+        onReject={handleRejectFromView}
       />
 
       <ApproveRequestModal

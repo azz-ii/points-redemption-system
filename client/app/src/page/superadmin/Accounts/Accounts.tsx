@@ -768,7 +768,7 @@ function Accounts() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-semibold">Accounts</h1>
+            <h1 className="text-2xl font-semibold">Accounts</h1>
             <p className="text-sm text-muted-foreground">
               View and manage user accounts.
             </p>
@@ -841,7 +841,7 @@ function Accounts() {
 
       {/* Mobile Layout */}
       <div className="md:hidden flex flex-col flex-1 p-4 mb-16">
-        <h1 className="text-2xl font-semibold mb-2">Accounts</h1>
+        <h1 className="text-xl font-semibold mb-2">Accounts</h1>
         <p className="text-xs text-muted-foreground mb-4">
           Manage user accounts
         </p>

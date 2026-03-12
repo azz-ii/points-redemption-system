@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CheckCircle, Loader2, X, Package, Camera, Trash2 } from "lucide-react";
 import type { ModalBaseProps, RequestItem, RequestItemVariant, ProcessItemData } from "./types";
 
@@ -36,6 +36,12 @@ export function MarkItemsProcessedModal({
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setItemStates(buildInitialState());
+    }
+  }, [isOpen, myItems]);
 
   if (!isOpen || !request) return null;
 
@@ -129,6 +135,12 @@ export function MarkItemsProcessedModal({
           <p className="text-sm text-muted-foreground">
             Select the items to fulfill and adjust quantities as needed.
           </p>
+
+          <div className="rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              Items marked with partial quantities will remain available for future fulfillment passes.
+            </p>
+          </div>
 
           {pendingItems.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
@@ -234,12 +246,6 @@ export function MarkItemsProcessedModal({
               })}
             </div>
           )}
-
-          <div className="rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              Items marked with partial quantities will remain available for future fulfillment passes.
-            </p>
-          </div>
 
           {/* Processing photo upload */}
           <div className="rounded-lg border border-border p-4 space-y-3">

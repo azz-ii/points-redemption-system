@@ -320,10 +320,6 @@ class RedemptionRequest(models.Model):
         # Check if sufficient points are available
         if self.points_deducted_from == 'SELF':
             user_profile = self.requested_by.profile
-            if user_profile.points < self.total_points:
-                raise ValueError(
-                    f'Insufficient points: User has {user_profile.points} points but needs {self.total_points} points'
-                )
             previous_points = user_profile.points
             user_profile.points -= self.total_points
             user_profile.save()
