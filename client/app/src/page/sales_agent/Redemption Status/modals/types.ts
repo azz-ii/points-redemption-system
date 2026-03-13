@@ -77,6 +77,12 @@ export interface RedemptionRequest {
   ar_uploaded_by?: number | null;
   ar_uploaded_by_name?: string | null;
   ar_uploaded_at?: string | null;
+  // E-signature fields
+  received_by_signature?: string | null;
+  received_by_signature_method?: "DRAWN" | "PHOTO" | null;
+  received_by_signature_method_display?: string | null;
+  received_by_name?: string | null;
+  received_by_date?: string | null;
   // Processing photos
   processing_photos?: Array<{
     id: number;

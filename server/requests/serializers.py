@@ -135,6 +135,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     # Acknowledgement Receipt fields
     ar_status_display = serializers.CharField(source='get_ar_status_display', read_only=True)
     ar_uploaded_by_name = serializers.SerializerMethodField()
+    received_by_signature_method_display = serializers.SerializerMethodField()
 
     class Meta:
         model = RedemptionRequest
@@ -157,6 +158,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             # Acknowledgement Receipt fields
             'ar_status', 'ar_status_display', 'acknowledgement_receipt',
             'ar_uploaded_by', 'ar_uploaded_by_name', 'ar_uploaded_at',
+            # E-signature fields
+            'received_by_signature', 'received_by_signature_method', 
+            'received_by_signature_method_display', 'received_by_name', 'received_by_date',
             # SVC fields
             'svc_date', 'svc_time', 'svc_driver',
             'items',
@@ -229,6 +233,14 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
                 return profile.full_name or obj.ar_uploaded_by.username
             return obj.ar_uploaded_by.username
         return None
+
+    def get_received_by_signature_method_display(self, obj):
+        """Get human-readable signature method display"""
+        method_map = {
+            'DRAWN': 'Digital Signature Pad',
+            'PHOTO': 'Photo Upload'
+        }
+        return method_map.get(obj.received_by_signature_method, obj.received_by_signature_method)
 
     def get_marketing_processing_status(self, obj):
         """Get the marketing processing status for this request"""

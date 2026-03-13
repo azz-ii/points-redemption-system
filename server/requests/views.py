@@ -1074,7 +1074,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='upload_acknowledgement_receipt')
     def upload_acknowledgement_receipt(self, request, pk=None):
-        """Upload an acknowledgement receipt photo for a customer request."""
+        """Upload an acknowledgement receipt photo and customer signature for a customer request."""
         redemption_request = self.get_object()
         user = request.user
 
@@ -1098,41 +1098,85 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate file is present
+        # Validate AR receipt file is present
         if 'acknowledgement_receipt' not in request.FILES:
             return Response(
-                {'error': 'No file provided. Please upload an image file.'},
+                {'error': 'No acknowledgement receipt file provided. Please upload an image file.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        uploaded_file = request.FILES['acknowledgement_receipt']
+        # Validate signature file is present
+        if 'received_by_signature' not in request.FILES:
+            return Response(
+                {'error': 'No signature file provided. Please capture or upload a signature.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Validate file type
+        # Validate signature method is provided
+        signature_method = request.POST.get('received_by_signature_method')
+        if signature_method not in ['DRAWN', 'PHOTO']:
+            return Response(
+                {'error': 'Invalid signature method. Must be either DRAWN or PHOTO.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate received_by_name is provided
+        received_by_name = request.POST.get('received_by_name', '').strip()
+        if not received_by_name:
+            return Response(
+                {'error': 'Received by name is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        ar_file = request.FILES['acknowledgement_receipt']
+        sig_file = request.FILES['received_by_signature']
+
+        # Validate AR file type
         allowed_types = ['image/jpeg', 'image/png', 'image/webp']
-        if uploaded_file.content_type not in allowed_types:
+        if ar_file.content_type not in allowed_types:
             return Response(
-                {'error': 'Invalid file type. Please upload a PNG, JPG, or WebP image.'},
+                {'error': 'Invalid AR file type. Please upload a PNG, JPG, or WebP image.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate file size (5MB max)
-        if uploaded_file.size > 5 * 1024 * 1024:
+        # Validate AR file size (5MB max)
+        if ar_file.size > 5 * 1024 * 1024:
             return Response(
-                {'error': 'File too large. Maximum size is 5MB.'},
+                {'error': 'AR file too large. Maximum size is 5MB.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Delete old file if replacing
+        # Validate signature file type
+        if sig_file.content_type not in allowed_types:
+            return Response(
+                {'error': 'Invalid signature file type. Please use PNG, JPG, or WebP.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate signature file size (5MB max)
+        if sig_file.size > 5 * 1024 * 1024:
+            return Response(
+                {'error': 'Signature file too large. Maximum size is 5MB.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Delete old files if replacing
         if redemption_request.acknowledgement_receipt:
             redemption_request.acknowledgement_receipt.delete(save=False)
+        if redemption_request.received_by_signature:
+            redemption_request.received_by_signature.delete(save=False)
 
-        redemption_request.acknowledgement_receipt = uploaded_file
+        redemption_request.acknowledgement_receipt = ar_file
+        redemption_request.received_by_signature = sig_file
+        redemption_request.received_by_signature_method = signature_method
+        redemption_request.received_by_name = received_by_name
+        redemption_request.received_by_date = timezone.now()
         redemption_request.ar_status = AcknowledgementReceiptStatus.UPLOADED
         redemption_request.ar_uploaded_by = user
         redemption_request.ar_uploaded_at = timezone.now()
         redemption_request.save()
 
-        logger.info(f"AR uploaded for request #{redemption_request.id} by {user.username}")
+        logger.info(f"AR with signature uploaded for request #{redemption_request.id} by {user.username}. Signature method: {signature_method}")
 
         serializer = self.get_serializer(redemption_request)
 

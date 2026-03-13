@@ -255,6 +255,32 @@ class RedemptionRequest(models.Model):
         help_text='Date and time when the acknowledgement receipt was uploaded'
     )
 
+    # E-signature fields (for customer acknowledgement)
+    received_by_signature = models.ImageField(
+        upload_to='signatures/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text='Digital or photo signature of the customer (received by field)'
+    )
+    received_by_signature_method = models.CharField(
+        max_length=10,
+        choices=[('DRAWN', 'Digital Signature Pad'), ('PHOTO', 'Photo Upload')],
+        blank=True,
+        null=True,
+        help_text='Method used to capture the signature'
+    )
+    received_by_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text='Printed name of the person who received the items'
+    )
+    received_by_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Date and time when the items were received'
+    )
+
     def __str__(self):
         entity_name = self.get_requested_for_name()
         return f"Request #{self.id} by {self.requested_by.username} for {entity_name}"
