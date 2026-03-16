@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - copilot/overwrite-main-with-prod
+  workflow_dispatch:
 
 jobs:
   overwrite-main:
