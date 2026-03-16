@@ -78,8 +78,14 @@ export function SetPointsModal({
     try {
       setIsLoadingPage(true);
       const data = await onFetchPage(currentPage, itemsPerPage, debouncedSearchQuery);
-      setAccounts(data.results || []);
-      setTotalCount(data.count || 0);
+      // Filter results for points-eligible users (Sales Agent or Approver with can_self_request)
+      const eligibleAccounts = (data.results || []).filter(
+        (account) =>
+          account.position === "Sales Agent" ||
+          (account.position === "Approver" && account.can_self_request)
+      );
+      setAccounts(eligibleAccounts);
+      setTotalCount(eligibleAccounts.length);
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
       setAccounts([]);

@@ -48,29 +48,17 @@ class UserViewSet(viewsets.ModelViewSet):
         Optionally filter based on query parameters.
         """
         queryset = User.objects.filter(is_superuser=False).select_related('profile')
-        
-        # Apply archived filter - toggle between active and archived views
-        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
-        if show_archived:
-            # Show ONLY archived accounts
-            queryset = queryset.filter(profile__is_archived=True)
-            logger.info(f"Showing archived users only - Found {queryset.count()} archived users")
-        else:
-            # Show ONLY active (non-archived) accounts
-            queryset = queryset.filter(profile__is_archived=False)
-            logger.info(f"Showing active users only - Found {queryset.count()} active users")
-        
-        # Apply position filter if provided (comma-separated positions supported)
-        position = self.request.query_params.get('position', None)
-        if position:
-            positions = [p.strip() for p in position.split(',') if p.strip()]
-            if positions:
-                queryset = queryset.filter(profile__position__in=positions)
-                logger.info(f"Filtering users by positions: {positions} - Found {queryset.count()} users")
-        
+        # Only show active (non-archived) accounts
+        queryset = queryset.filter(profile__is_archived=False)
+        # Filter for Sales Agents OR Approvers with can_self_request
+        queryset = queryset.filter(
+            (
+                models.Q(profile__position='Sales Agent') |
+                (models.Q(profile__position='Approver') & models.Q(profile__can_self_request=True))
+            )
+        )
         # Apply search filter if provided
         search = self.request.query_params.get('search', None)
-        
         if search:
             queryset = (queryset.filter(
                 username__icontains=search
@@ -80,7 +68,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 profile__email__icontains=search
             )).distinct()
             logger.info(f"Filtering users by search: '{search}' - Found {queryset.count()} users")
-        
         return queryset.order_by('username')
     
     def get_serializer_class(self):
