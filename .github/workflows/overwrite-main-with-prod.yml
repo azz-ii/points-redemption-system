@@ -1,0 +1,29 @@
+name: Overwrite main with prod
+
+on:
+  push:
+    branches:
+      - copilot/overwrite-main-with-prod
+  workflow_dispatch:
+
+jobs:
+  overwrite-main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Force push prod to main
+        run: |
+          git fetch origin prod:prod
+          git push --force origin prod:main
