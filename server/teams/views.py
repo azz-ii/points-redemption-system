@@ -76,8 +76,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         elif position == 'Approver':
             return Team.objects.filter(approver=user)
         
-        # Marketing - global access
-        elif position == 'Marketing':
+        # Handler - global access
+        elif position == 'Handler':
             return Team.objects.all()
         
         # Unspecified positions - no access
@@ -235,8 +235,8 @@ class TeamMembershipViewSet(viewsets.ModelViewSet):
             managed_teams = Team.objects.filter(approver=user)
             return TeamMembership.objects.filter(team__in=managed_teams)
         
-        # Marketing - global access
-        elif position == 'Marketing':
+        # Handler - global access
+        elif position == 'Handler':
             return TeamMembership.objects.all()
         
         # Unspecified positions - no access

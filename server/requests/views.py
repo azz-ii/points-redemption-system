@@ -116,8 +116,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(processing_status='PROCESSED')
             return qs
 
-        # Marketing - see only APPROVED requests with items assigned to them
-        elif profile.position == 'Marketing':
+        # Handler - see only APPROVED requests with items assigned to them
+        elif profile.position == 'Handler':
             return self._base_queryset().filter(
                 status='APPROVED',
                 items__product__mktg_admin=user
@@ -488,13 +488,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if all Marketing users have processed their items
+        # Check if all Handler users have processed their items
         if not redemption_request.is_marketing_processing_complete():
             processing_status = redemption_request.get_marketing_processing_status()
             return Response(
                 {
-                    'error': 'Not all Marketing users have processed their items',
-                    'detail': 'All assigned Marketing users must process their items before Admin can mark the request as processed',
+                    'error': 'Not all Handler users have processed their items',
+                    'detail': 'All assigned Handler users must process their items before Admin can mark the request as processed',
                     'marketing_processing_status': processing_status
                 },
                 status=status.HTTP_400_BAD_REQUEST
@@ -562,9 +562,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
         
-        if not profile or profile.position not in ['Admin', 'Marketing']:
+        if not profile or profile.position not in ['Admin', 'Handler']:
             return Response(
-                {'error': 'Permission denied: Only superadmins and marketing users can cancel requests'},
+                {'error': 'Permission denied: Only superadmins and handler users can cancel requests'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
@@ -824,9 +824,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
 
-        if not profile or profile.position not in ['Marketing', 'Admin']:
+        if not profile or profile.position not in ['Handler', 'Admin']:
             return Response(
-                {'error': 'Permission denied: Only Marketing or Admin users can process items'},
+                {'error': 'Permission denied: Only Handler or Admin users can process items'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -857,7 +857,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
 
             product = item.product
             # Authorization check per item
-            if profile.position == 'Marketing':
+            if profile.position == 'Handler':
                 if not product or product.mktg_admin != user:
                     return Response(
                         {'error': f'Item {item_id} is not assigned to you'},
@@ -866,7 +866,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             else:  # Admin
                 if product and product.mktg_admin is not None and product.mktg_admin != user:
                     return Response(
-                        {'error': f'Item {item_id} is assigned to a Marketing user, not you'},
+                        {'error': f'Item {item_id} is assigned to a Handler user, not you'},
                         status=status.HTTP_403_FORBIDDEN
                     )
 
@@ -1048,9 +1048,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
 
-        if not profile or profile.position not in ['Marketing', 'Admin']:
+        if not profile or profile.position not in ['Handler', 'Admin']:
             return Response(
-                {'error': 'This endpoint is for Marketing or Admin users only'},
+                {'error': 'This endpoint is for Handler or Admin users only'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -1199,10 +1199,10 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
 
-        # Only Marketing or Admin users can upload processing photos
-        if not profile or profile.position not in ['Marketing', 'Admin']:
+        # Only Handler or Admin users can upload processing photos
+        if not profile or profile.position not in ['Handler', 'Admin']:
             return Response(
-                {'error': 'Permission denied: Only Marketing or Admin users can upload processing photos'},
+                {'error': 'Permission denied: Only Handler or Admin users can upload processing photos'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -1574,18 +1574,18 @@ class ProcessedRequestHistoryView(APIView):
 
 
 class MarketingHistoryView(APIView):
-    """View for getting processed requests where the current marketing user has processed items"""
+    """View for getting processed requests where the current handler user has processed items"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """Get all requests where the current marketing user has processed items"""
+        """Get all requests where the current handler user has processed items"""
         user = request.user
         profile = getattr(user, 'profile', None)
         
-        # Only allow Marketing position users
-        if profile and profile.position != 'Marketing':
+        # Only allow Handler position users
+        if profile and profile.position != 'Handler':
             return Response({
-                'error': 'Access denied. Marketing role required.'
+                'error': 'Access denied. Handler role required.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         # Get all requests where this user has processed at least one item

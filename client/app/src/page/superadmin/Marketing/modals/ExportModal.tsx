@@ -36,10 +36,10 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
       setFetchingUsers(true);
       setError("");
       try {
-        // Fetch all Marketing/Admin users with filters
+        // Fetch all Handler/Admin users with filters
         const users = await usersApi.getAllAccounts({
           search: searchQuery,
-          position: 'Marketing,Admin',
+          position: 'Handler,Admin',
         });
 
         // Fetch legend assignments

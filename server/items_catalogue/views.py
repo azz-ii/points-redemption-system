@@ -439,9 +439,9 @@ class BulkAssignMarketingView(APIView):
             try:
                 mktg_admin = User.objects.get(id=mktg_admin_id)
                 profile = getattr(mktg_admin, 'profile', None)
-                if not profile or profile.position not in ['Marketing', 'Admin']:
+                if not profile or profile.position not in ['Handler', 'Admin']:
                     return Response({
-                        "error": "The specified user is not a Marketing or Admin user"
+                        "error": "The specified user is not a Handler or Admin user"
                     }, status=status.HTTP_400_BAD_REQUEST)
             except User.DoesNotExist:
                 return Response({

@@ -51,7 +51,7 @@ function DashboardRouter() {
       return <Navigate to="/sales/dashboard" replace />;
     case "Approver":
       return <Navigate to="/approver/dashboard" replace />;
-    case "Marketing":
+    case "Handler":
       return <Navigate to="/marketing/dashboard" replace />;
     case "Admin":
     case "SuperAdmin":
@@ -68,7 +68,7 @@ function HistoryRouter() {
   switch (userPosition) {
     case "Approver":
       return <Navigate to="/approver/history" replace />;
-    case "Marketing":
+    case "Handler":
       return <Navigate to="/marketing/history" replace />;
     case "Admin":
     case "SuperAdmin":
@@ -136,8 +136,8 @@ export function AppRoutes() {
             />
           </Route>
 
-          {/* Marketing routes */}
-          <Route element={<ProtectedRoute allowedRoles={["Marketing"]} />}>
+          {/* Handler routes */}
+          <Route element={<ProtectedRoute allowedRoles={["Handler"]} />}>
             <Route path="/marketing/dashboard" element={<MarketingDashboard />} />
             <Route
               path="/marketing/process-requests"

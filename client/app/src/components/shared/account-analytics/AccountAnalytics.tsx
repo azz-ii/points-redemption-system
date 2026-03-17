@@ -10,7 +10,7 @@ interface AccountAnalyticsProps {
   position: string;
 }
 
-const SUPPORTED_POSITIONS = ["Sales Agent", "Approver", "Marketing"];
+const SUPPORTED_POSITIONS = ["Sales Agent", "Approver", "Handler"];
 
 export function AccountAnalytics({ accountId, position }: AccountAnalyticsProps) {
   const [data, setData] = useState<UserAnalyticsResponse | null>(null);
@@ -95,7 +95,7 @@ export function AccountAnalytics({ accountId, position }: AccountAnalyticsProps)
       {data.position === "Approver" && (
         <ApproverStats stats={data.stats} recentActivity={data.recent_activity} />
       )}
-      {data.position === "Marketing" && (
+      {data.position === "Handler" && (
         <MarketingStats stats={data.stats} recentActivity={data.recent_activity} />
       )}
     </div>
