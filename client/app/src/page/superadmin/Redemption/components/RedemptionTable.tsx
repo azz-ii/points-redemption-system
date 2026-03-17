@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import type { RedemptionItem } from "../modals/types";
 import { DataTable } from "@/components/shared/data-table";
 import { createColumns } from "./columns";
@@ -24,7 +24,7 @@ export function RedemptionTable({
   onMarkAsProcessed,
   canMarkProcessed = () => true,
   onEdit: _onEdit,
-  onCancelRequest: _onCancelRequest,
+  onCancelRequest,
   onRefresh,
   refreshing,
   onExport,
@@ -36,8 +36,9 @@ export function RedemptionTable({
         onViewRedemption: onView,
         onMarkAsProcessed,
         canMarkProcessed,
+        onCancelRequest: onCancelRequest ?? (() => {}),
       }),
-    [onView, onMarkAsProcessed, canMarkProcessed]
+    [onView, onMarkAsProcessed, canMarkProcessed, onCancelRequest]
   );
 
   return (

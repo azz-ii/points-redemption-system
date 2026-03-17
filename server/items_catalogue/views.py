@@ -37,7 +37,7 @@ class ProductListCreateView(APIView):
 
         products = Product.objects.all()
 
-        # Optional: filter to products assigned to the current marketing user
+        # Optional: filter to products assigned to the current handler user
         mktg_admin_filter = request.query_params.get('mktg_admin', '').strip()
         if mktg_admin_filter == 'me' and request.user.is_authenticated:
             products = products.filter(mktg_admin=request.user)
@@ -402,12 +402,12 @@ class InventoryDetailView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-class BulkAssignMarketingView(APIView):
-    """Assign mktg_admin (Marketing user) to products — item-level or bulk by legend"""
+class BulkAssignHandlerView(APIView):
+    """Assign mktg_admin (Handler user) to products — item-level or bulk by legend"""
     
     def post(self, request):
         """
-        Assign a Marketing user to specific products (item-level) or all products of a legend (bulk).
+        Assign a Handler user to specific products (item-level) or all products of a legend (bulk).
         
         Item-level (preferred):
         {
@@ -439,9 +439,9 @@ class BulkAssignMarketingView(APIView):
             try:
                 mktg_admin = User.objects.get(id=mktg_admin_id)
                 profile = getattr(mktg_admin, 'profile', None)
-                if not profile or profile.position not in ['Marketing', 'Admin']:
+                if not profile or profile.position not in ['Handler', 'Admin']:
                     return Response({
-                        "error": "The specified user is not a Marketing or Admin user"
+                        "error": "The specified user is not a Handler or Admin user"
                     }, status=status.HTTP_400_BAD_REQUEST)
             except User.DoesNotExist:
                 return Response({
@@ -469,7 +469,7 @@ class BulkAssignMarketingView(APIView):
         }, status=status.HTTP_200_OK)
     
     def get(self, request):
-        """Get per-product marketing assignments with optional legend filter."""
+        """Get per-product handler assignments with optional legend filter."""
         legend_filter = request.query_params.get('legend', '').strip()
         
         products_qs = Product.objects.filter(is_archived=False).select_related('mktg_admin')

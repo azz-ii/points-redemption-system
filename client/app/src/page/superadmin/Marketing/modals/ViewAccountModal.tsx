@@ -21,7 +21,7 @@ export function ViewAccountModal({
     if (!account) return;
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, {
+      const response = await fetch(`${API_URL}/catalogue/bulk-assign-handler/`, {
         credentials: "include",
       });
       const data = await response.json();
@@ -91,7 +91,7 @@ export function ViewAccountModal({
         <div className="flex justify-between items-center p-8">
           <div>
             <h2 id="view-account-title" className="text-xl font-semibold">
-              Marketing User Details
+              Handler User Details
             </h2>
             <p className="text-sm text-muted-foreground mt-1">{account.full_name}</p>
           </div>

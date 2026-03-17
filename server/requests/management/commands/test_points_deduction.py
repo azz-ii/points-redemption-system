@@ -1,7 +1,7 @@
 """
 Management command to test points deduction across both deduction paths
 (SELF, DISTRIBUTOR), both auto-approve and manual-approve flows,
-cancellation refunds (admin + marketing), and insufficient-points rejection.
+cancellation refunds (admin + handler), and insufficient-points rejection.
 
 Usage:
     python manage.py test_points_deduction
@@ -176,14 +176,14 @@ class Command(BaseCommand):
 
         # 4. Marketing user
         marketing_profile = UserProfile.objects.filter(
-            position='Marketing', is_archived=False, user__is_active=True
+            position='Handler', is_archived=False, user__is_active=True
         ).select_related('user').first()
         if marketing_profile:
             data['marketing'] = marketing_profile.user
-            self.stdout.write(f'  Marketing: {data["marketing"].username} (id={data["marketing"].id})')
+            self.stdout.write(f'  Handler: {data["marketing"].username} (id={data["marketing"].id})')
         else:
             data['marketing'] = None
-            self.stdout.write(self.style.WARNING('  Marketing: (none found, marketing cancel test will be skipped)'))
+            self.stdout.write(self.style.WARNING('  Handler: (none found, handler cancel test will be skipped)'))
 
         # 5. Distributor with points
         data['distributor'] = Distributor.objects.filter(is_archived=False).order_by('-points').first()
@@ -531,8 +531,8 @@ class Command(BaseCommand):
             self._pass(f'Points fully refunded: {after_deduct} → {after_refund} (+{points_cost}), audit logged')
 
     def _test_marketing_cancel(self, data):
-        """Test 5: Marketing user cancels an approved request and verifies refund."""
-        self.stdout.write('\n── Test 5: Cancellation refund (Marketing) ──')
+        """Test 5: Handler user cancels an approved request and verifies refund."""
+        self.stdout.write('\n── Test 5: Cancellation refund (Handler) ──')
         product = data.get('auto_product')
         agent = data['agent']
         marketing = data.get('marketing')
@@ -542,7 +542,7 @@ class Command(BaseCommand):
             self._skip('No auto-approve product found')
             return
         if not marketing:
-            self._skip('No marketing user found')
+            self._skip('No handler user found')
             return
         if not dist:
             self._skip('No distributor found')
@@ -576,18 +576,18 @@ class Command(BaseCommand):
         after_deduct = self._get_agent_points(agent)
         self.stdout.write(f'    Agent points after deduction: {after_deduct}')
 
-        # Cancel as marketing user
+        # Cancel as handler user
         audit_marker = self._last_audit_id()
         self._set_temp_password(marketing)
         if not self._login(marketing):
-            self._fail('Could not login as marketing')
+            self._fail('Could not login as handler')
             return
 
-        resp, body = self._cancel_request(request_id, 'Marketing cancellation test')
+        resp, body = self._cancel_request(request_id, 'Handler cancellation test')
         self._logout()
 
         if resp.status_code != 200:
-            self._fail(f'Marketing cancel failed: {resp.status_code} — {json.dumps(body)[:300]}')
+            self._fail(f'Handler cancel failed: {resp.status_code} — {json.dumps(body)[:300]}')
             return
 
         after_refund = self._get_agent_points(agent)
@@ -606,10 +606,10 @@ class Command(BaseCommand):
             self._fail(f'Request processing_status should be CANCELLED, got {req.processing_status}')
             ok = False
         if req.cancelled_by_id != marketing.id:
-            self._fail(f'cancelled_by should be marketing user ({marketing.id}), got {req.cancelled_by_id}')
+            self._fail(f'cancelled_by should be handler user ({marketing.id}), got {req.cancelled_by_id}')
             ok = False
         if ok:
-            self._pass(f'Marketing cancel succeeded: {after_deduct} → {after_refund} (+{points_cost}), audit logged, cancelled_by=marketing')
+            self._pass(f'Handler cancel succeeded: {after_deduct} → {after_refund} (+{points_cost}), audit logged, cancelled_by=handler')
 
     def _test_insufficient_points(self, data):
         """Test 6: Request should fail when entity has insufficient points."""

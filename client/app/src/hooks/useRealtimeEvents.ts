@@ -47,7 +47,7 @@ function invalidateRequestQueries() {
   queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
   queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.agent });
   queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.approver });
-  queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.marketing });
+  queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.handler });
   queryClient.invalidateQueries({ queryKey: ["dashboard", "superadmin"] });
 }
 

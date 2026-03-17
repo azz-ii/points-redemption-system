@@ -34,7 +34,7 @@ from views import (
     ChangePasswordView,
     ActivateAccountView,
 )
-from items_catalogue.views import ProductListCreateView, ProductDetailView, ProductUnarchiveView, InventoryListView, InventoryDetailView, BulkAssignMarketingView, BulkUpdateStockView, BatchUpdateStockView, StockAuditLogListView
+from items_catalogue.views import ProductListCreateView, ProductDetailView, ProductUnarchiveView, InventoryListView, InventoryDetailView, BulkAssignHandlerView, BulkUpdateStockView, BatchUpdateStockView, StockAuditLogListView
 from utils.sse_views import sse_events_view
 
 urlpatterns = [
@@ -54,7 +54,7 @@ urlpatterns = [
     path('api/catalogue/', ProductListCreateView.as_view(), name='catalogue_list_create'),
     path('api/catalogue/<int:product_id>/', ProductDetailView.as_view(), name='catalogue_detail'),
     path('api/catalogue/<int:product_id>/unarchive/', ProductUnarchiveView.as_view(), name='catalogue_unarchive'),
-    path('api/catalogue/bulk-assign-marketing/', BulkAssignMarketingView.as_view(), name='bulk_assign_marketing'),
+    path('api/catalogue/bulk-assign-handler/', BulkAssignHandlerView.as_view(), name='bulk_assign_handler'),
     # Inventory Management API
     path('api/inventory/', InventoryListView.as_view(), name='inventory_list'),
     path('api/inventory/bulk_update_stock/', BulkUpdateStockView.as_view(), name='bulk_update_stock'),

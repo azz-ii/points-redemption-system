@@ -4,7 +4,7 @@ export const queryKeys = {
     list: (filters?: Record<string, unknown>) => ['requests', 'list', filters] as const,
     detail: (id: number) => ['requests', 'detail', id] as const,
     history: ['requests', 'history'] as const,
-    marketingHistory: ['requests', 'marketing-history'] as const,
+    handlerHistory: ['requests', 'handler-history'] as const,
   },
   customers: {
     all: ['customers'] as const,
@@ -45,13 +45,13 @@ export const queryKeys = {
   dashboard: {
     agent: ['dashboard', 'agent'] as const,
     approver: ['dashboard', 'approver'] as const,
-    marketing: ['dashboard', 'marketing'] as const,
+    handler: ['dashboard', 'handler'] as const,
     superadmin: (range: string) => ['dashboard', 'superadmin', range] as const,
   },
-  marketing: {
-    all: ['marketing'] as const,
+  handler: {
+    all: ['handler'] as const,
     page: (page: number, pageSize: number, search: string) =>
-      ['marketing', 'page', { page, pageSize, search }] as const,
-    bulkAssign: ['marketing', 'bulk-assign'] as const,
+      ['handler', 'page', { page, pageSize, search }] as const,
+    bulkAssign: ['handler', 'bulk-assign'] as const,
   },
 };

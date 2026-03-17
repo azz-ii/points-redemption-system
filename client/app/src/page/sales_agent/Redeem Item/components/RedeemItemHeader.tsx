@@ -21,7 +21,11 @@ export function RedeemItemHeader({
       </div>
       <div className="flex items-center gap-3">
         <div
-          className="text-sm font-semibold flex items-center gap-2 px-3 py-2 rounded-lg bg-muted text-yellow-600 dark:text-yellow-300"
+          className={`text-sm font-semibold flex items-center gap-2 px-3 py-2 rounded-lg bg-muted ${
+            userPoints < 0
+              ? "text-red-600 dark:text-red-400"
+              : "text-yellow-600 dark:text-yellow-300"
+          }`}
         >
           {userLoading ? "Points: 999,999,999" : `Points: ${userPoints.toLocaleString()}`}
         </div>

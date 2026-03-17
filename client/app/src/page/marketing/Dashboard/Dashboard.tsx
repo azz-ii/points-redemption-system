@@ -2,8 +2,8 @@ import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { marketingRequestsApi } from "@/lib/api";
-import { useMarketingRequests, useMarketingHistory } from "@/hooks/queries/useMarketingRequests";
+import { handlerRequestsApi } from "@/lib/api";
+import { useHandlerRequests, useHandlerHistory } from "@/hooks/queries/useMarketingRequests";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -33,8 +33,8 @@ function MarketingDashboard() {
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: requests = [], isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useMarketingRequests(5000);
-  const { data: historyRequests = [], isLoading: historyLoading } = useMarketingHistory(10000);
+  const { data: requests = [], isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useHandlerRequests(5000);
+  const { data: historyRequests = [], isLoading: historyLoading } = useHandlerHistory(10000);
 
   const loading = requestsLoading || historyLoading;
   const error = requestsError ? (requestsError instanceof Error ? requestsError.message : "Failed to load dashboard data") : null;
@@ -45,7 +45,7 @@ function MarketingDashboard() {
 
   const fetchMyProcessingStatus = async (requestId: number) => {
     try {
-      const status = await marketingRequestsApi.getMyProcessingStatus(requestId);
+      const status = await handlerRequestsApi.getMyProcessingStatus(requestId);
       setMyProcessingStatus(status as unknown as MyProcessingStatus);
       return status;
     } catch (err) {
@@ -125,7 +125,7 @@ function MarketingDashboard() {
     setIsSubmitting(true);
     try {
       const items = (myProcessingStatus?.items ?? []).map((item) => ({ item_id: item.id }));
-      await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
+      await handlerRequestsApi.markItemsProcessed(selectedRequest.id, items);
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
       setSelectedItem(null);
@@ -165,7 +165,7 @@ function MarketingDashboard() {
 
       const results = await Promise.allSettled(
         Object.keys(requestGroups).map((requestId) =>
-          marketingRequestsApi.markItemsProcessed(
+          handlerRequestsApi.markItemsProcessed(
             Number(requestId),
             requestGroups[Number(requestId)].map((item) => ({ item_id: item.id }))
           )
@@ -285,7 +285,7 @@ function MarketingDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-semibold">Welcome, Marketing</h1>
+            <h1 className="text-2xl font-semibold">Welcome, Handler</h1>
             <p className="text-sm text-muted-foreground">
               Manage points, track redemptions and process items
             </p>

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { X, FileText, FileSpreadsheet, ArrowUp, ArrowDown, Download, Loader2 } from "lucide-react";
 import type { MarketingUser, LegendAssignment } from "../components/types";
 import {
-  exportMarketingUsers,
+  exportHandlerUsers,
   DEFAULT_EXPORT_COLUMNS,
   type ExportColumn,
   type SortField,
@@ -39,12 +39,12 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
         // Fetch all Marketing/Admin users with filters
         const users = await usersApi.getAllAccounts({
           search: searchQuery,
-          position: 'Marketing,Admin',
+          position: 'Handler,Admin',
         });
 
         // Fetch legend assignments
         const assignmentsResponse = await fetch(
-          `${API_URL}/catalogue/bulk-assign-marketing/`,
+          `${API_URL}/catalogue/bulk-assign-handler/`,
           { credentials: 'include' }
         );
 
@@ -116,7 +116,7 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
     }
 
     if (allUsers.length === 0) {
-      setError("No marketing users to export");
+      setError("No handler users to export");
       return;
     }
 
@@ -125,9 +125,9 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
 
     try {
       const timestamp = new Date().toISOString().split("T")[0];
-      const filename = `marketing_users_export_${timestamp}`;
+      const filename = `handler_users_export_${timestamp}`;
       
-      exportMarketingUsers(allUsers, {
+      exportHandlerUsers(allUsers, {
         columns,
         sortField,
         sortDirection,
@@ -172,7 +172,7 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
         <div className="flex justify-between items-center p-6">
           <div>
             <h2 id="export-modal-title" className="text-xl font-semibold">
-              Export Marketing Users
+              Export Handler Users
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               {fetchingUsers ? (
@@ -375,7 +375,7 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
         {/* Footer */}
         <div className="p-6">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-4 p-3 g-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded text-sm">
               {error}
             </div>
           )}

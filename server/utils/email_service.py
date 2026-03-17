@@ -15,6 +15,18 @@ from django.conf import settings
 logger = logging.getLogger('email')
 
 
+def _should_send_email(user):
+    """Check if a user has email notifications enabled.
+    Returns True if the user opted in or if the user/profile can't be resolved
+    (fail-open for safety so emails aren't silently dropped)."""
+    if user is None:
+        return True
+    profile = getattr(user, 'profile', None)
+    if profile is None:
+        return True
+    return profile.email_notifications_enabled
+
+
 def send_email_notification(subject, message, recipient_list, html_message=None):
     """
     Send email notification using Django's built-in email system
@@ -135,6 +147,10 @@ def send_request_approved_email(request_obj, distributor, approved_by):
         bool: True if email sent successfully, False otherwise
     """
     try:
+        if not _should_send_email(request_obj.requested_by):
+            logger.info(f"⏭ Skipping approval email for request #{request_obj.id} — user opted out")
+            return False
+
         recipient_email = request_obj.requested_by.profile.email
         
         if not recipient_email:
@@ -195,6 +211,10 @@ def send_request_rejected_email(request_obj, distributor, rejected_by):
         bool: True if email sent successfully, False otherwise
     """
     try:
+        if not _should_send_email(request_obj.requested_by):
+            logger.info(f"⏭ Skipping rejection email for request #{request_obj.id} — user opted out")
+            return False
+
         recipient_email = request_obj.requested_by.profile.email
         
         if not recipient_email:
@@ -255,6 +275,10 @@ def send_request_processed_email(request_obj, distributor, processed_by):
         bool: True if email sent successfully, False otherwise
     """
     try:
+        if not _should_send_email(request_obj.requested_by):
+            logger.info(f"⏭ Skipping processed email for request #{request_obj.id} — user opted out")
+            return False
+
         recipient_email = request_obj.requested_by.profile.email
         
         if not recipient_email:
@@ -328,6 +352,10 @@ def send_ar_required_email(request_obj):
         bool: True if email sent successfully, False otherwise
     """
     try:
+        if not _should_send_email(request_obj.requested_by):
+            logger.info(f"⏭ Skipping AR required email for request #{request_obj.id} — user opted out")
+            return False
+
         recipient_email = request_obj.requested_by.profile.email
         
         if not recipient_email:
@@ -534,7 +562,7 @@ def send_approved_request_notification_to_admin(request_obj, distributor, approv
         
         # Get all superadmin (Admin) emails
         admin_profiles = UserProfile.objects.filter(position='Admin')
-        admin_emails = [profile.email for profile in admin_profiles if profile.email]
+        admin_emails = [profile.email for profile in admin_profiles if profile.email and profile.email_notifications_enabled]
         
         if not admin_emails:
             logger.warning(f"No admin emails found for request #{request_obj.id} approval notification")
@@ -600,8 +628,18 @@ def send_request_submitted_email(request_obj, distributor, approvers_emails):
         bool: True if email sent successfully, False otherwise
     """
     try:
+        # Filter out approvers who have opted out of email notifications
+        from users.models import UserProfile
+        opted_out_emails = set(
+            UserProfile.objects.filter(
+                email__in=approvers_emails,
+                email_notifications_enabled=False,
+            ).values_list('email', flat=True)
+        )
+        approvers_emails = [e for e in approvers_emails if e not in opted_out_emails]
+
         if not approvers_emails:
-            logger.warning(f"No approver emails provided for request #{request_obj.id}")
+            logger.warning(f"No approver emails provided for request #{request_obj.id} (or all opted out)")
             return False
         
         logger.debug(f"Preparing submission notification email for request #{request_obj.id}")
@@ -678,6 +716,10 @@ def send_agent_added_to_team_email(team, agent, added_by):
         bool: True if email sent successfully, False otherwise
     """
     try:
+        if not _should_send_email(agent):
+            logger.info(f"⏭ Skipping team addition email for {agent.username} — user opted out")
+            return False
+
         if not hasattr(agent, 'profile') or not agent.profile.email:
             logger.warning(f"No email address found for agent {agent.username}")
             return False
@@ -731,7 +773,10 @@ def send_request_withdrawn_email(request_obj, distributor, withdrawn_by):
     try:
         # Send to all approvers
         from users.models import UserProfile
-        approver_profiles = UserProfile.objects.filter(position='Approver').exclude(email__isnull=True).exclude(email='')
+        approver_profiles = UserProfile.objects.filter(
+            position='Approver',
+            email_notifications_enabled=True,
+        ).exclude(email__isnull=True).exclude(email='')
         recipient_emails = list(approver_profiles.values_list('email', flat=True))
 
         if not recipient_emails:
@@ -801,6 +846,10 @@ def send_request_withdrawn_confirmation_email(request_obj, distributor, withdraw
         bool: True if email sent successfully, False otherwise
     """
     try:
+        if not _should_send_email(withdrawn_by):
+            logger.info(f"⏭ Skipping withdrawal confirmation email — user {withdrawn_by.username} opted out")
+            return False
+
         # Send to the sales agent who withdrew
         if not hasattr(withdrawn_by, 'profile') or not withdrawn_by.profile.email:
             logger.warning(f"No email address found for sales agent {withdrawn_by.username}")

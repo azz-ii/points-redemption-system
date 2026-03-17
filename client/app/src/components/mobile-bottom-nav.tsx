@@ -57,7 +57,7 @@ export function MobileBottomNavSuperAdmin({
     if (path.includes("/teams")) return "accounts";
     if (path.includes("/redemption")) return "catalogue";
     if (path.includes("/request-history")) return "dashboard";
-    if (path.includes("/marketing")) return "accounts";
+    if (path.includes("/handler") || path.includes("/marketing")) return "accounts";
     return "dashboard";
   };
 
@@ -144,19 +144,19 @@ export function MobileBottomNavMarketing({
       id: "dashboard",
       icon: Home,
       label: "Dashboard",
-      path: "/marketing/dashboard",
+      path: "/handler/dashboard",
     },
     {
       id: "process-requests",
       icon: ClipboardCheck,
       label: "Requests",
-      path: "/marketing/process-requests",
+      path: "/handler/process-requests",
     },
     {
       id: "history",
       icon: HistoryIcon,
       label: "History",
-      path: "/marketing/history",
+      path: "/handler/history",
     },
     { id: "logout", icon: LogOut, label: "Logout", action: handleLogout },
   ] as const;

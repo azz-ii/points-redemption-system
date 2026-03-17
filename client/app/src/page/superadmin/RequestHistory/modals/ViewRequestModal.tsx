@@ -1,5 +1,5 @@
 import { getStatusClasses } from "@/components/ui/status-badge";
-import { X, Package, CheckCircle } from "lucide-react";
+import { X, Package, CheckCircle, FileText, ExternalLink } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { RequestHistoryItem } from "./types";
@@ -130,19 +130,32 @@ return (
             showCancellation={true}
           />
 
-          {/* Acknowledgement Receipt Image */}
+          {/* Acknowledgement Receipt */}
           {item.ar_status === "UPLOADED" && item.acknowledgement_receipt && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                 Acknowledgement Receipt
               </h3>
-              <div className="border rounded-lg overflow-hidden border-border inline-block">
-                <img
-                  src={normalizeMediaUrl(item.acknowledgement_receipt)}
-                  alt="Acknowledgement Receipt"
-                  className="max-w-full max-h-64 object-contain"
-                />
-              </div>
+              {item.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
+                <a
+                  href={normalizeMediaUrl(item.acknowledgement_receipt)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                >
+                  <FileText className="w-5 h-5 text-primary" />
+                  <span>View Signed AR Document</span>
+                  <ExternalLink className="w-4 h-4 ml-1 text-muted-foreground" />
+                </a>
+              ) : (
+                <div className="border rounded-lg overflow-hidden border-border inline-block">
+                  <img
+                    src={normalizeMediaUrl(item.acknowledgement_receipt)}
+                    alt="Acknowledgement Receipt"
+                    className="max-w-full max-h-64 object-contain"
+                  />
+                </div>
+              )}
             </div>
           )}
 

@@ -1,11 +1,12 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, ArrowUpDown, CheckCircle, MoreHorizontal } from "lucide-react";
+import { Eye, ArrowUpDown, CheckCircle, XCircle, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface ColumnContext {
   onViewRedemption: (redemption: RedemptionItem) => void;
   onMarkAsProcessed: (redemption: RedemptionItem) => void;
   canMarkProcessed: (redemption: RedemptionItem) => boolean;
+  onCancelRequest: (redemption: RedemptionItem) => void;
 }
 
 export const createColumns = (
@@ -162,6 +164,10 @@ export const createColumns = (
     cell: ({ row }) => {
       const redemption = row.original;
       const showProcessButton = context.canMarkProcessed?.(redemption) ?? false;
+      const canCancel =
+        redemption.status === "APPROVED" &&
+        redemption.processing_status !== "CANCELLED" &&
+        redemption.processing_status !== "PROCESSED";
 
       return (
         <div className="flex justify-end">
@@ -181,6 +187,15 @@ export const createColumns = (
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Mark as Processed
                 </DropdownMenuItem>
+              )}
+              {canCancel && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => context.onCancelRequest(redemption)} className="text-destructive">
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Cancel Request
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

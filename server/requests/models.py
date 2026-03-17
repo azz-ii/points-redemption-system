@@ -1,5 +1,6 @@
 import logging
 from django.db import models
+from django.core.validators import FileExtensionValidator
 from django.utils import timezone
 from django.conf import settings
 from distributers.models import Distributor
@@ -30,7 +31,7 @@ class ProcessingStatus(models.TextChoices):
     CANCELLED = 'CANCELLED', 'Cancelled'
 
 class ApprovalStatusChoice(models.TextChoices):
-    """Status for individual approval tracks (sales/marketing)"""
+    """Status for individual approval tracks (sales/handler)"""
     NOT_REQUIRED = 'NOT_REQUIRED', 'Not Required'
     PENDING = 'PENDING', 'Pending'
     APPROVED = 'APPROVED', 'Approved'
@@ -235,11 +236,12 @@ class RedemptionRequest(models.Model):
         default=AcknowledgementReceiptStatus.NOT_REQUIRED,
         help_text='Status of acknowledgement receipt upload (only for customer requests)'
     )
-    acknowledgement_receipt = models.ImageField(
+    acknowledgement_receipt = models.FileField(
         upload_to='acknowledgement_receipts/%Y/%m/',
         blank=True,
         null=True,
-        help_text='Photo of the acknowledgement receipt (max 5MB, PNG/JPG/WebP)'
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'png', 'jpg', 'jpeg', 'webp'])],
+        help_text='Photo or PDF of the acknowledgement receipt (max 5MB)'
     )
     ar_uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -417,9 +419,9 @@ class RedemptionRequest(models.Model):
             pending.append('sales')
         return pending
 
-    def get_required_marketing_users(self):
+    def get_required_handler_users(self):
         """
-        Get set of unique Marketing users (mktg_admin) required to process this request.
+        Get set of unique Handler users (mktg_admin) required to process this request.
         Returns User objects for all items that have a mktg_admin assigned.
         """
         users = set()
@@ -428,9 +430,9 @@ class RedemptionRequest(models.Model):
                 users.add(item.product.mktg_admin)
         return users
 
-    def get_items_for_marketing_user(self, user):
+    def get_items_for_handler_user(self, user):
         """
-        Get items assigned to a specific Marketing user.
+        Get items assigned to a specific Handler user.
         Returns QuerySet of RedemptionRequestItem where the item's product mktg_admin == user.
         """
         return self.items.filter(product__mktg_admin=user)
@@ -445,7 +447,7 @@ class RedemptionRequest(models.Model):
 
     def get_items_pending_processing(self, user):
         """
-        Get items assigned to this Marketing user that haven't been processed yet.
+        Get items assigned to this Handler user that haven't been processed yet.
         """
         return self.items.filter(
             product__mktg_admin=user,
@@ -464,7 +466,7 @@ class RedemptionRequest(models.Model):
         Promote request processing_status after a fulfillment pass.
         Returns the new processing_status value.
         """
-        if self.is_marketing_processing_complete():
+        if self.is_handler_processing_complete():
             if self.processing_status != ProcessingStatus.PROCESSED:
                 self.processing_status = ProcessingStatus.PROCESSED
                 self.processed_by = processed_by_user
@@ -486,7 +488,7 @@ class RedemptionRequest(models.Model):
             return ProcessingStatus.PARTIALLY_PROCESSED
         return self.processing_status
 
-    def is_marketing_processing_complete(self):
+    def is_handler_processing_complete(self):
         """
         Check if all items with assigned mktg_admin have been processed.
         Returns True if:
@@ -502,9 +504,9 @@ class RedemptionRequest(models.Model):
         unprocessed = items_with_mktg.filter(item_processed_by__isnull=True)
         return not unprocessed.exists()
 
-    def get_marketing_processing_status(self):
+    def get_handler_processing_status(self):
         """
-        Get detailed status of marketing processing.
+        Get detailed status of handler processing.
         Uses Python-level filtering over prefetched items to avoid N+1 queries.
         self.items.all() hits the prefetch cache when this is called during a
         list request (via _base_queryset); falls back to a single DB query
@@ -550,7 +552,7 @@ class RedemptionRequest(models.Model):
             models.Index(fields=['date_requested'], name='req_date_requested_idx'),
             # Filtered in every role branch (APPROVED, PENDING, etc.)
             models.Index(fields=['status'], name='req_status_idx'),
-            # Filtered by Admin / Marketing processing views
+            # Filtered by Admin / Handler processing views
             models.Index(fields=['processing_status'], name='req_processing_status_idx'),
             # Composite for the Approver query: filter(team=X, status=Y)
             models.Index(fields=['team', 'status'], name='req_team_status_idx'),
@@ -618,7 +620,7 @@ class RedemptionRequestItem(models.Model):
         null=True,
         blank=True,
         related_name='processed_request_items',
-        help_text='Marketing user who fully processed this specific item'
+        help_text='Handler user who fully processed this specific item'
     )
     item_processed_at = models.DateTimeField(
         null=True,

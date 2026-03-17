@@ -486,7 +486,7 @@ export function EditTeamModal({
                 <label className="text-xs text-muted-foreground mb-2 block">
                   Select Member
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 min-w-0">
                   <select
                     value={selectedSalesAgent ?? ""}
                     onChange={(e) => {
@@ -494,7 +494,7 @@ export function EditTeamModal({
                       console.log("DEBUG EditTeamModal: Member selected", numValue);
                       setSelectedSalesAgent(numValue);
                     }}
-                    className="flex-1 px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-ring text-sm"
+                    className="flex-1 min-w-0 truncate px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-ring text-sm"
                   >
                     <option value="">Select a member...</option>
                     {filteredSalesAgents.length > 0 && (
@@ -630,7 +630,7 @@ export function EditTeamModal({
         {/* Footer */}
         <div className="p-8 flex justify-end">
           {error && (
-            <div className="w-full mb-3 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-3 p-2 g-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded text-sm">
               {error}
             </div>
           )}

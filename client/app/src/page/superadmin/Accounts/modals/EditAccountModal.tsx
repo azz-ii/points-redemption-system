@@ -501,7 +501,7 @@ export function EditAccountModal({
         {/* Footer */}
         <div className="p-8 border-t">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-4 p-3 g-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded text-sm">
               {error}
             </div>
           )}

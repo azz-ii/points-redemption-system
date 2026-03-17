@@ -51,8 +51,8 @@ function DashboardRouter() {
       return <Navigate to="/sales/dashboard" replace />;
     case "Approver":
       return <Navigate to="/approver/dashboard" replace />;
-    case "Marketing":
-      return <Navigate to="/marketing/dashboard" replace />;
+    case "Handler":
+      return <Navigate to="/handler/dashboard" replace />;
     case "Admin":
     case "SuperAdmin":
     case "admin":
@@ -68,8 +68,8 @@ function HistoryRouter() {
   switch (userPosition) {
     case "Approver":
       return <Navigate to="/approver/history" replace />;
-    case "Marketing":
-      return <Navigate to="/marketing/history" replace />;
+    case "Handler":
+      return <Navigate to="/handler/history" replace />;
     case "Admin":
     case "SuperAdmin":
     case "admin":
@@ -110,7 +110,7 @@ export function AppRoutes() {
             <Route path="/admin/redemption" element={<Redemption />} />
             <Route path="/admin/request-history" element={<RequestHistory />} />
             <Route path="/admin/inventory" element={<Inventory />} />
-            <Route path="/admin/marketing" element={<Marketing />} />
+            <Route path="/admin/handler" element={<Marketing />} />
             <Route path="/admin/distributors" element={<Distributors />} />
             <Route path="/admin/customers" element={<Customers />} />
             <Route path="/admin/teams" element={<Teams />} />
@@ -136,15 +136,15 @@ export function AppRoutes() {
             />
           </Route>
 
-          {/* Marketing routes */}
-          <Route element={<ProtectedRoute allowedRoles={["Marketing"]} />}>
-            <Route path="/marketing/dashboard" element={<MarketingDashboard />} />
+          {/* Handler routes */}
+          <Route element={<ProtectedRoute allowedRoles={["Handler"]} />}>
+            <Route path="/handler/dashboard" element={<MarketingDashboard />} />
             <Route
-              path="/marketing/process-requests"
+              path="/handler/process-requests"
               element={<MarketingProcessRequests />}
             />
-            <Route path="/marketing/history" element={<MarketingHistory />} />
-            <Route path="/marketing/item-assignments" element={<ItemAssignments />} />
+            <Route path="/handler/history" element={<MarketingHistory />} />
+            <Route path="/handler/item-assignments" element={<ItemAssignments />} />
           </Route>
 
 

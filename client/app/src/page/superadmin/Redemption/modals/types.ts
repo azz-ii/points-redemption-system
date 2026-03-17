@@ -1,4 +1,4 @@
-﻿export type { ModalBaseProps } from "@/components/modals";
+export type { ModalBaseProps } from "@/components/modals";
 
 export interface ItemFulfillmentLog {
   id: number;
@@ -61,7 +61,7 @@ export interface RedemptionItem {
   sales_approved_by_name?: string | null;
   sales_approval_date?: string | null;
   sales_rejection_reason?: string | null;
-  // Dual approval - Marketing
+  // Dual approval - Handler
   requires_marketing_approval?: boolean;
   marketing_approval_status?: string | null;
   marketing_approved_by?: number | null;

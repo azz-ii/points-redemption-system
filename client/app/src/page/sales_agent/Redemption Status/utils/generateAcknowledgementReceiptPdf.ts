@@ -10,11 +10,21 @@ function formatArDate(date: Date): string {
   return `${day}-${month}-${year}`;
 }
 
-export function generateAcknowledgementReceiptPdf(
+/**
+ * Generates the AR PDF. Optionally embeds a signature image in the 'Received by' block if provided.
+ * @param request RedemptionRequest object
+ * @param arNumber AR number string
+ * @param arDate Date object
+ * @param signatureDataUrl Optional: base64 or data URL of signature image
+ * @param receiverName Optional: Printed name to show below the signature line
+ */
+export async function generateAcknowledgementReceiptPdf(
   request: RedemptionRequest,
   arNumber: string,
-  arDate: Date
-): void {
+  arDate: Date,
+  signatureDataUrl?: string | null,
+  receiverName?: string | null
+): Promise<Blob> {
   // A5 landscape: 210 x 148 mm
   const doc = new jsPDF({
     orientation: "landscape",
@@ -131,6 +141,7 @@ export function generateAcknowledgementReceiptPdf(
   doc.line(marginLeft + 24, y + 1, pageWidth - marginRight, y + 1);
   y += 10;
 
+
   // ── Signature block ──
   const colCount = 4;
   const colWidth = contentWidth / colCount;
@@ -151,8 +162,34 @@ export function generateAcknowledgementReceiptPdf(
     doc.line(colX, lineY, colX + colWidth - 6, lineY);
   });
 
+  // Insert signature image in 'Received by' block if provided
+  if (signatureDataUrl) {
+    try {
+      // Place signature image above the line in the 'Received by' column (index 2)
+      const sigCol = 2;
+      const sigX = marginLeft + sigCol * colWidth + 2;
+      const sigY = signatureY + 2;
+      const sigWidth = colWidth - 10;
+      const sigHeight = 12;
+      doc.addImage(signatureDataUrl, 'PNG', sigX, sigY, sigWidth, sigHeight, undefined, 'FAST');
+    } catch (_) {
+      // Fallback: ignore image if it fails
+      // Optionally log error
+    }
+  }
+
   // "PRINTED NAME & SIGNATURE" labels
   const captionY = lineY + 4;
+  
+  // Receiver name above the "PRINTED NAME & SIGNATURE" text if provided
+  if (receiverName) {
+    const rx = marginLeft + 2 * colWidth; // "Received by" column
+    // Try to center the text above the line if it is short, otherwise print from left
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(receiverName.toUpperCase(), rx + colWidth / 2 - 3, captionY - 5, { align: "center" });
+  }
+
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   labels.forEach((label, i) => {
@@ -162,6 +199,6 @@ export function generateAcknowledgementReceiptPdf(
     }
   });
 
-  // ── Save ──
-  doc.save(`AR-${arNumber || request.id}-${request.requested_for_name}.pdf`);
+  // ── Return Blob instead of saving directly ──
+  return doc.output("blob");
 }

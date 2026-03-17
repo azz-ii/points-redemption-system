@@ -1,27 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
-import { marketingRequestsApi, type RedemptionRequestResponse, type MarketingProcessingStatus } from '@/lib/api';
+import { handlerRequestsApi, type RedemptionRequestResponse, type HandlerProcessingStatus } from '@/lib/api';
 
-export function useMarketingRequests(refetchInterval: number | false = 30_000) {
+export function useHandlerRequests(refetchInterval: number | false = 30_000) {
   return useQuery<RedemptionRequestResponse[]>({
-    queryKey: queryKeys.requests.list({ role: 'marketing' }),
-    queryFn: () => marketingRequestsApi.getRequests(),
+    queryKey: queryKeys.requests.list({ role: 'handler' }),
+    queryFn: () => handlerRequestsApi.getRequests(),
     refetchInterval,
   });
 }
 
-export function useMarketingHistory(refetchInterval: number | false = 30_000) {
+export function useHandlerHistory(refetchInterval: number | false = 30_000) {
   return useQuery<RedemptionRequestResponse[]>({
-    queryKey: queryKeys.requests.marketingHistory,
-    queryFn: () => marketingRequestsApi.getHistory(),
+    queryKey: queryKeys.requests.handlerHistory,
+    queryFn: () => handlerRequestsApi.getHistory(),
     refetchInterval,
   });
 }
 
-export function useMarketingProcessingStatus(requestId: number, enabled = true) {
-  return useQuery<MarketingProcessingStatus>({
+export function useHandlerProcessingStatus(requestId: number, enabled = true) {
+  return useQuery<HandlerProcessingStatus>({
     queryKey: [...queryKeys.requests.detail(requestId), 'processing-status'] as const,
-    queryFn: () => marketingRequestsApi.getMyProcessingStatus(requestId),
+    queryFn: () => handlerRequestsApi.getMyProcessingStatus(requestId),
     enabled,
   });
 }

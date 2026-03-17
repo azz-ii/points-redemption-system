@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('username', type=str, help='Username for the new employee')
         parser.add_argument('password', type=str, help='Password for the new employee')
-        parser.add_argument('--position', type=str, default='Admin', help='Position/role (e.g., Admin, Marketing, Sales Agent)')
+        parser.add_argument('--position', type=str, default='Admin', help='Position/role (e.g., Admin, Handler, Sales Agent)')
         parser.add_argument('--full-name', type=str, default='', help='Full name of the employee')
         parser.add_argument('--email', type=str, help='Email address (required)', required=True)
         parser.add_argument('--is-staff', action='store_true', help='Grant staff privileges (can access admin panel)')

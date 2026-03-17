@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { marketingRequestsApi } from "@/lib/api";
+import { handlerRequestsApi } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -7,7 +7,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from "lucide-react";
-import { useMarketingRequests } from "@/hooks/queries/useMarketingRequests";
+import { useHandlerRequests } from "@/hooks/queries/useMarketingRequests";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import {
@@ -26,7 +26,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
 
-  const { data: rawRequests, isLoading: loading, isFetching: refreshing, error: queryError } = useMarketingRequests(30_000);
+  const { data: rawRequests, isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerRequests(30_000);
   const requests = (rawRequests ?? []) as unknown as RedemptionItem[];
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load requests") : null;
 
@@ -49,7 +49,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   const fetchMyProcessingStatus = useCallback(async (requestId: number) => {
     try {
       const status =
-        await marketingRequestsApi.getMyProcessingStatus(requestId);
+        await handlerRequestsApi.getMyProcessingStatus(requestId);
       setMyProcessingStatus(status);
       return status;
     } catch (err) {
@@ -109,11 +109,11 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
     if (!selectedRequest) return;
 
     try {
-      await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
+      await handlerRequestsApi.markItemsProcessed(selectedRequest.id, items);
       // Upload processing photo if provided
       if (photo) {
         try {
-          await marketingRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
+          await handlerRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
         } catch (photoErr) {
           console.error("Error uploading processing photo:", photoErr);
           toast.warning("Items processed, but photo upload failed. You can try again later.");
@@ -137,7 +137,7 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
   const handleCancelConfirm = async (reason: string, remarks: string) => {
     if (!selectedCancelRequest) return;
     try {
-      await marketingRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
       toast.success("Request cancelled successfully");
       setShowCancelModal(false);
       setSelectedCancelRequest(null);
@@ -200,6 +200,10 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
                 onView={handleViewClick}
                 onMarkAsProcessed={handleMarkProcessedClick}
                 canMarkProcessed={canMarkProcessed}
+                onCancelRequest={(item) => {
+                  setSelectedCancelRequest(item);
+                  setShowCancelModal(true);
+                }}
                 onRefresh={handleManualRefresh}
                 refreshing={refreshing}
                 onExport={() => setShowExportModal(true)}
@@ -242,6 +246,10 @@ function Redemption() {  const [currentPage, setCurrentPage] = useState(1);
               onView={handleViewClick}
               onMarkProcessed={handleMarkProcessedClick}
               canMarkProcessed={canMarkProcessed}
+              onCancelRequest={(item) => {
+                setSelectedCancelRequest(item);
+                setShowCancelModal(true);
+              }}
             />
 
             {/* Mobile Pagination */}

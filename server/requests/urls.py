@@ -8,7 +8,7 @@ from .views import (
     AgentDashboardStatsView,
     ApproverDashboardStatsView,
     ProcessedRequestHistoryView,
-    MarketingHistoryView
+    HandlerHistoryView
 )
 from .analytics import (
     AnalyticsOverviewView,
@@ -29,7 +29,7 @@ router.register(r'redemption-requests', RedemptionRequestViewSet, basename='rede
 
 urlpatterns = [
     path('redemption-requests/history/', ProcessedRequestHistoryView.as_view(), name='processed-request-history'),
-    path('redemption-requests/marketing-history/', MarketingHistoryView.as_view(), name='marketing-history'),
+    path('redemption-requests/handler-history/', HandlerHistoryView.as_view(), name='handler-history'),
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('dashboard/redemption-requests/', DashboardRedemptionRequestsView.as_view(), name='dashboard-redemption-requests'),
     path('dashboard/reset-all-points/', ResetAllPointsView.as_view(), name='dashboard-reset-all-points'),

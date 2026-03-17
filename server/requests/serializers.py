@@ -111,7 +111,7 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
 
 
 class RedemptionRequestSerializer(serializers.ModelSerializer):
-    items = RedemptionRequestItemSerializer(many=True, read_only=True)
+    items = serializers.SerializerMethodField()
     processing_photos = ProcessingPhotoSerializer(many=True, read_only=True)
     requested_by_name = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
@@ -129,7 +129,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     sales_approved_by_name = serializers.SerializerMethodField()
     pending_approvals = serializers.SerializerMethodField()
     
-    # Marketing processing status
+    # Handler processing status
     marketing_processing_status = serializers.SerializerMethodField()
 
     # Acknowledgement Receipt fields
@@ -177,6 +177,28 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
                 return profile.full_name or obj.requested_by.username
             return obj.requested_by.username
         return None
+
+    def get_items(self, obj):
+        """
+        Return serialized items, filtered by handler assignment.
+        Handler users only see items where product.mktg_admin == themselves.
+        All other roles see every item in the request.
+        Uses Python-level filtering over the prefetch cache to avoid extra queries.
+        """
+        request = self.context.get('request')
+        user = request.user if request else None
+        profile = getattr(user, 'profile', None) if user else None
+
+        all_items = obj.items.all()  # hits prefetch cache from _base_queryset
+
+        if profile and profile.position == 'Handler':
+            # Filter to only items assigned to this handler
+            all_items = [
+                item for item in all_items
+                if item.product_id and item.product.mktg_admin_id == user.id
+            ]
+
+        return RedemptionRequestItemSerializer(all_items, many=True).data
 
     def get_requested_for_name(self, obj):
         # Returns name based on the entity type
@@ -243,8 +265,8 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
         return method_map.get(obj.received_by_signature_method, obj.received_by_signature_method)
 
     def get_marketing_processing_status(self, obj):
-        """Get the marketing processing status for this request"""
-        return obj.get_marketing_processing_status()
+        """Get the handler processing status for this request"""
+        return obj.get_handler_processing_status()
 
 
 class CreateRedemptionRequestSerializer(serializers.Serializer):
@@ -286,10 +308,11 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         requested_for_customer = data.get('requested_for_customer')
         points_deducted_from = data.get('points_deducted_from')
         
+        user = self.context['request'].user
+        profile = getattr(user, 'profile', None)
+
         if requested_for_type == 'SELF':
             # Validate that the user is an Approver with can_self_request
-            user = self.context['request'].user
-            profile = getattr(user, 'profile', None)
             if not profile or profile.position != 'Approver':
                 raise serializers.ValidationError({
                     'requested_for_type': 'Only Approvers can create self-requests'
@@ -304,6 +327,13 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             # Force points_deducted_from to SELF (deducted from approver's own points)
             data['points_deducted_from'] = 'SELF'
         elif requested_for_type == 'DISTRIBUTOR':
+            if profile and profile.position == 'Approver':
+                # Approvers with self request can request for distributor
+                if not profile.can_self_request:
+                    raise serializers.ValidationError({
+                        'requested_for_type': 'You are not authorized to create distributor requests.'
+                    })
+
             if not requested_for:
                 raise serializers.ValidationError({
                     'requested_for': 'Distributor is required when requested_for_type is DISTRIBUTOR'
@@ -316,6 +346,11 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             # Clear customer field if type is DISTRIBUTOR
             data['requested_for_customer'] = None
         elif requested_for_type == 'CUSTOMER':
+            if profile and profile.position == 'Approver':
+                raise serializers.ValidationError({
+                    'requested_for_type': 'Approvers cannot create requests for customers.'
+                })
+
             if not requested_for_customer:
                 raise serializers.ValidationError({
                     'requested_for_customer': 'Customer is required when requested_for_type is CUSTOMER'

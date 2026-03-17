@@ -91,7 +91,7 @@ export function Sidebar() {
     },
     {
       id: "marketing",
-      label: "Marketing",
+      label: "Handler",
       icon: Megaphone,
       path: "/admin/marketing",
     },
@@ -292,7 +292,7 @@ export function SidebarSuperAdmin() {
     },
     {
       id: "marketing",
-      label: "Marketing",
+      label: "Handler",
       icon: Megaphone,
       path: "/admin/marketing",
     },
@@ -783,19 +783,19 @@ export function SidebarMarketing() {
       id: "dashboard",
       label: "Dashboard",
       icon: Home,
-      path: "/marketing/dashboard",
+      path: "/handler/dashboard",
     },
     {
       id: "process-requests",
       label: "Process Requests",
       icon: ClipboardList,
-      path: "/marketing/process-requests",
+      path: "/handler/process-requests",
     },
     {
       id: "history",
       label: "History",
       icon: History,
-      path: "/marketing/history",
+      path: "/handler/history",
     },
   ] as const;
 

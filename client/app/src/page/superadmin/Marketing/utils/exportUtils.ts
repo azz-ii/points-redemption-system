@@ -74,7 +74,7 @@ function getCellValue(user: MarketingUser, key: ExportColumn["key"]): string | n
 }
 
 /**
- * Sort marketing users by field and direction
+ * Sort handler users by field and direction
  */
 function sortUsers(
   users: MarketingUser[],
@@ -119,10 +119,10 @@ function sortUsers(
 }
 
 /**
- * Generate PDF export of marketing users
+ * Generate PDF export of handler users
  */
 export function generatePDF(users: MarketingUser[], options: ExportOptions): void {
-  const { columns, sortField, sortDirection, filename = "marketing_users_export" } = options;
+  const { columns, sortField, sortDirection, filename = "handler_users_export" } = options;
   const enabledColumns = columns.filter((col) => col.enabled);
 
   if (enabledColumns.length === 0) {
@@ -146,7 +146,7 @@ export function generatePDF(users: MarketingUser[], options: ExportOptions): voi
   });
 
   // Add title
-  const title = "Marketing Users Export";
+  const title = "Handler Users Export";
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -196,10 +196,10 @@ export function generatePDF(users: MarketingUser[], options: ExportOptions): voi
 }
 
 /**
- * Generate Excel export of marketing users
+ * Generate Excel export of handler users
  */
 export function generateExcel(users: MarketingUser[], options: ExportOptions): void {
-  const { columns, sortField, sortDirection, filename = "marketing_users_export" } = options;
+  const { columns, sortField, sortDirection, filename = "handler_users_export" } = options;
   const enabledColumns = columns.filter((col) => col.enabled);
 
   if (enabledColumns.length === 0) {
@@ -246,7 +246,7 @@ export function generateExcel(users: MarketingUser[], options: ExportOptions): v
 
   // Create workbook and add worksheet
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Marketing Users");
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Handler Users");
 
   // Calculate status summary
   const activeUsers = sortedUsers.filter((u) => !u.is_banned && u.is_activated).length;
@@ -255,7 +255,7 @@ export function generateExcel(users: MarketingUser[], options: ExportOptions): v
 
   // Add metadata sheet
   const metaData = [
-    ["Marketing Users Export Report"],
+    ["Handler Users Export Report"],
     [],
     ["Generated On", new Date().toLocaleString()],
     ["Total Users", sortedUsers.length],
@@ -276,9 +276,9 @@ export function generateExcel(users: MarketingUser[], options: ExportOptions): v
 }
 
 /**
- * Export marketing users using specified options
+ * Export handler users using specified options
  */
-export function exportMarketingUsers(users: MarketingUser[], options: ExportOptions): void {
+export function exportHandlerUsers(users: MarketingUser[], options: ExportOptions): void {
   if (options.format === "pdf") {
     generatePDF(users, options);
   } else {

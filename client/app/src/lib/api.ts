@@ -542,10 +542,10 @@ export const redemptionRequestsApi = {
 };
 
 // ============================================
-// Marketing Requests API (for Marketing users)
+// Handler Requests API (for Handler users)
 // ============================================
 
-export interface MarketingProcessingStatusItem {
+export interface HandlerProcessingStatusItem {
   id: number;
   product: number;
   product_name: string;
@@ -562,14 +562,14 @@ export interface MarketingProcessingStatusItem {
   item_processed_at?: string | null;
 }
 
-export interface MarketingProcessingStatus {
+export interface HandlerProcessingStatus {
   request_id: number;
   total_assigned_items: number;
   pending_items: number;
   processed_items: number;
   all_my_items_processed: boolean;
   overall_processing_complete: boolean;
-  items: MarketingProcessingStatusItem[];
+  items: HandlerProcessingStatusItem[];
 }
 
 export interface MarkItemsProcessedResponse {
@@ -587,9 +587,9 @@ export interface ProcessItemData {
   notes?: string;
 }
 
-export const marketingRequestsApi = {
+export const handlerRequestsApi = {
   /**
-   * Get all redemption requests that have items assigned to the current marketing user.
+   * Get all redemption requests that have items assigned to the current handler user.
    * Backend filters to show only APPROVED requests with items this user is assigned to.
    */
   async getRequests(): Promise<RedemptionRequestResponse[]> {
@@ -611,7 +611,7 @@ export const marketingRequestsApi = {
    * Get the current user's processing status for a specific request.
    * Shows which items are assigned to them and their processed status.
    */
-  async getMyProcessingStatus(requestId: number): Promise<MarketingProcessingStatus> {
+  async getMyProcessingStatus(requestId: number): Promise<HandlerProcessingStatus> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/my_processing_status/`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -648,7 +648,7 @@ export const marketingRequestsApi = {
 
   /**
    * Upload a processing photo (handover proof) for a request.
-   * Can be called by Marketing or Admin users during item processing.
+   * Can be called by Handler or Admin users during item processing.
    */
   async uploadProcessingPhoto(requestId: number, file: File, caption?: string): Promise<RedemptionRequestResponse> {
     const formData = new FormData();
@@ -698,11 +698,11 @@ export const marketingRequestsApi = {
   },
 
   /**
-   * Get the marketing user's history of processed requests.
+   * Get the handler user's history of processed requests.
    * Shows all requests where the current user has processed items.
    */
   async getHistory(): Promise<RedemptionRequestResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/marketing-history/`, {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/handler-history/`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -710,7 +710,7 @@ export const marketingRequestsApi = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch marketing history');
+      throw new Error(errorData.error || 'Failed to fetch handler history');
     }
 
     return response.json();

@@ -11,6 +11,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'full_name', 'email', 'position', 'is_activated',
             'uses_points', 'points', 'can_self_request',
+            'email_notifications_enabled',
             'is_archived', 'date_archived', 'archived_by',
             'created_at', 'updated_at'
         ]
@@ -47,12 +48,14 @@ class UserSerializer(serializers.ModelSerializer):
     uses_points = serializers.BooleanField(write_only=True, required=False, default=False)
     points = serializers.IntegerField(write_only=True, required=False, default=0)
     can_self_request = serializers.BooleanField(write_only=True, required=False, default=False)
+    email_notifications_enabled = serializers.BooleanField(write_only=True, required=False, default=True)
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'password', 'position', 'full_name', 'email',
-            'is_activated', 'uses_points', 'points', 'can_self_request', 'profile', 'is_active', 'date_joined'
+            'is_activated', 'uses_points', 'points', 'can_self_request',
+            'email_notifications_enabled', 'profile', 'is_active', 'date_joined'
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -83,6 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
         uses_points = (position in ('Sales Agent', 'Approver'))
         points = validated_data.pop('points', 0)
         can_self_request = validated_data.pop('can_self_request', False)
+        email_notifications_enabled = validated_data.pop('email_notifications_enabled', True)
         # can_self_request only meaningful for Approvers
         if position != 'Approver':
             can_self_request = False
@@ -108,6 +112,7 @@ class UserSerializer(serializers.ModelSerializer):
             uses_points=uses_points,
             points=points,
             can_self_request=can_self_request,
+            email_notifications_enabled=email_notifications_enabled,
         )
         
         return user
@@ -121,6 +126,7 @@ class UserSerializer(serializers.ModelSerializer):
         uses_points = validated_data.pop('uses_points', None)
         points = validated_data.pop('points', None)
         can_self_request = validated_data.pop('can_self_request', None)
+        email_notifications_enabled = validated_data.pop('email_notifications_enabled', None)
         password = validated_data.pop('password', None)
         
         # Update user fields
@@ -151,6 +157,8 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.profile.can_self_request = can_self_request
             if effective_position != 'Approver':
                 instance.profile.can_self_request = False
+            if email_notifications_enabled is not None:
+                instance.profile.email_notifications_enabled = email_notifications_enabled
             if points is not None:
                 instance.profile.points = points
             instance.profile.save()
@@ -176,6 +184,7 @@ class UserListSerializer(serializers.ModelSerializer):
     uses_points = serializers.BooleanField(source='profile.uses_points', read_only=True)
     points = serializers.IntegerField(source='profile.points', read_only=True)
     can_self_request = serializers.BooleanField(source='profile.can_self_request', read_only=True)
+    email_notifications_enabled = serializers.BooleanField(source='profile.email_notifications_enabled', read_only=True)
     is_archived = serializers.BooleanField(source='profile.is_archived', read_only=True)
     date_archived = serializers.DateTimeField(source='profile.date_archived', read_only=True)
     archived_by = serializers.IntegerField(source='profile.archived_by_id', read_only=True)
@@ -195,6 +204,7 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'username', 'full_name', 'email', 'position', 'is_activated',
             'uses_points', 'points', 'can_self_request',
+            'email_notifications_enabled',
             'is_archived', 'date_archived', 'archived_by', 'archived_by_username',
             'is_active', 'date_joined',
             'team_id', 'team_name', 'is_team_approver', 'approver_teams',

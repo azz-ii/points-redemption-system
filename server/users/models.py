@@ -63,7 +63,7 @@ class UserProfile(models.Model):
         ('Admin', 'Admin'),
         ('Sales Agent', 'Sales Agent'),
         ('Approver', 'Approver'),
-        ('Marketing', 'Marketing'),
+        ('Handler', 'Handler'),
     ]
     
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
@@ -74,6 +74,7 @@ class UserProfile(models.Model):
     uses_points = models.BooleanField(default=False, help_text='Whether this user uses the points system')
     points = models.IntegerField(default=0, help_text='Current points balance for the user (can be negative)')
     can_self_request = models.BooleanField(default=False, help_text='Whether this approver can create redemption requests for themselves')
+    email_notifications_enabled = models.BooleanField(default=True, help_text='Whether this user wants to receive email notifications')
     is_archived = models.BooleanField(default=False, help_text='Whether this user profile is archived')
     date_archived = models.DateTimeField(null=True, blank=True, help_text='Date and time when the user profile was archived')
     archived_by = models.ForeignKey(

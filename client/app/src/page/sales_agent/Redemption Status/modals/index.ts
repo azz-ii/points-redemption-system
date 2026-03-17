@@ -1,7 +1,6 @@
 export { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./ViewRedemptionStatusModal";
 export { BulkWithdrawModal } from "./BulkWithdrawModal";
-export { UploadARModal } from "./UploadARModal";
-export { PrintARDialog } from "./PrintARDialog";
+export { AcknowledgementReceiptModal } from "./AcknowledgementReceiptModal";
 export type { 
   RedemptionRequest,
   RedemptionRequestItem,

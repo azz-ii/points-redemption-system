@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useMarketingHistory } from "@/hooks/queries/useMarketingRequests";
+import { useHandlerHistory } from "@/hooks/queries/useMarketingRequests";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { RequestItem } from "@/page/marketing/ProcessRequests/modals/types";
@@ -25,7 +25,7 @@ export default function MarketingHistory() {
   const [selectedRequests, setSelectedRequests] = useState<RequestItem[]>([]);
   const [isExporting, setIsExporting] = useState(false);
 
-  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useMarketingHistory(30_000);
+  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerHistory(30_000);
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load history") : null;
 
   const handleManualRefresh = useCallback(() => {

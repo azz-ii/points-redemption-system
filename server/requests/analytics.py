@@ -1,4 +1,4 @@
-﻿"""
+"""
 Analytics views for the SuperAdmin dashboard.
 Provides aggregated data for reports: time-series, item popularity,
 agent performance, team performance, turnaround times, and entity analytics.
@@ -688,7 +688,7 @@ class AnalyticsEntitiesView(APIView):
 # 9. Per-User Analytics (for ViewAccountModal)
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class UserAnalyticsView(APIView):
-    """Per-user analytics stats, tailored by position (Sales Agent, Approver, Marketing)."""
+    """Per-user analytics stats, tailored by position (Sales Agent, Approver, Handler)."""
 
     permission_classes = [IsAuthenticated]
 
@@ -717,7 +717,7 @@ class UserAnalyticsView(APIView):
                 return self._sales_agent_stats(target_user)
             elif position == 'Approver':
                 return self._approver_stats(target_user)
-            elif position == 'Marketing':
+            elif position == 'Handler':
                 return self._marketing_stats(target_user)
             else:
                 return Response({
@@ -871,7 +871,7 @@ class UserAnalyticsView(APIView):
         })
 
     def _marketing_stats(self, user):
-        # Items this marketing user has processed
+        # Items this handler user has processed
         items_qs = RedemptionRequestItem.objects.filter(item_processed_by=user)
         total_items = items_qs.count()
 
@@ -918,7 +918,7 @@ class UserAnalyticsView(APIView):
             })
 
         return Response({
-            'position': 'Marketing',
+            'position': 'Handler',
             'stats': {
                 'total_items_processed': total_items,
                 'total_requests_touched': requests_touched,

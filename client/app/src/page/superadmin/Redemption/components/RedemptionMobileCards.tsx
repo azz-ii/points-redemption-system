@@ -1,4 +1,4 @@
-import { Eye, CheckCircle } from "lucide-react";
+import { Eye, CheckCircle, XCircle } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { RedemptionItem } from "../modals/types";
 
@@ -12,6 +12,7 @@ interface RedemptionMobileCardsProps {
   onView: (item: RedemptionItem) => void;
   onMarkProcessed: (item: RedemptionItem) => void;
   canMarkProcessed: (item: RedemptionItem) => boolean;
+  onCancelRequest?: (item: RedemptionItem) => void;
 }
 
 export function RedemptionMobileCards({
@@ -21,6 +22,7 @@ export function RedemptionMobileCards({
   onView,
   onMarkProcessed,
   canMarkProcessed,
+  onCancelRequest,
 }: RedemptionMobileCardsProps) {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -123,6 +125,18 @@ export function RedemptionMobileCards({
                   >
                     <CheckCircle className="h-4 w-4" />
                     Process
+                  </button>
+                )}
+                {onCancelRequest &&
+                  item.status === "APPROVED" &&
+                  item.processing_status !== "CANCELLED" &&
+                  item.processing_status !== "PROCESSED" && (
+                  <button
+                    onClick={() => onCancelRequest(item)}
+                    className="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Cancel
                   </button>
                 )}
               </div>

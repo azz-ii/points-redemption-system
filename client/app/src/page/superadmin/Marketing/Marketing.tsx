@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { X, RotateCw, Download } from "lucide-react";
-import { useMarketingUsersPage } from "@/hooks/queries/useMarketingUsers";
+import { useHandlerUsersPage } from "@/hooks/queries/useMarketingUsers";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import {
@@ -24,7 +24,7 @@ function Marketing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: marketingData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useMarketingUsersPage(
+  const { data: marketingData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useHandlerUsersPage(
     tablePage + 1, pageSize, searchQuery, 10000,
   );
   const marketingUsers = marketingData?.results ?? [];
@@ -41,7 +41,7 @@ function Marketing() {
   const [showExportModal, setShowExportModal] = useState(false);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.marketing.all });
+    queryClient.resetQueries({ queryKey: queryKeys.handler.all });
   }, [queryClient]);
 
   const handleSearch = useCallback((query: string) => {
@@ -89,7 +89,7 @@ function Marketing() {
 
   const handleEditSuccess = () => {
     toast.success("Item legend assignment updated successfully!");
-    queryClient.invalidateQueries({ queryKey: queryKeys.marketing.all });
+    queryClient.invalidateQueries({ queryKey: queryKeys.handler.all });
   };
 
   return (
@@ -153,7 +153,7 @@ function Marketing() {
 
           <Input
             type="text"
-            placeholder="Search marketing users..."
+            placeholder="Search handler users..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);

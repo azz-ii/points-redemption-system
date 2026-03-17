@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, AlertTriangle, Loader2 } from "lucide-react";
+import { X, AlertTriangle, Loader2, FileText, ExternalLink } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
@@ -14,8 +14,7 @@ function normalizeMediaUrl(url: string): string {
   }
 }
 import { StatusChip } from "../components/StatusChip";
-import { UploadARModal } from "./UploadARModal";
-import { PrintARDialog } from "./PrintARDialog";
+import { AcknowledgementReceiptModal } from "./AcknowledgementReceiptModal";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export interface WithdrawConfirmationModalProps {
@@ -138,8 +137,7 @@ export function ViewRedemptionStatusModal({
   onRequestWithdrawn,
 }: ViewRedemptionStatusModalProps & { onRequestWithdrawn?: () => void }) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [showUploadARModal, setShowUploadARModal] = useState(false);
-  const [showPrintARDialog, setShowPrintARDialog] = useState(false);
+  const [showARModal, setShowARModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
@@ -152,11 +150,8 @@ export function ViewRedemptionStatusModal({
     normalizedStatus === "PENDING" &&
     request.sales_approval_status !== "APPROVED";
 
-  // Check if AR upload is needed
-  const canUploadAR = request.ar_status === "PENDING";
-
-  // Check if AR can be printed (available from APPROVED onward)
-  const canPrintAR = normalizedStatus === "APPROVED";
+  // Show AR button when approved (can always print) or when upload is needed
+  const canShowAR = normalizedStatus === "APPROVED" || request.ar_status === "PENDING";
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
@@ -339,19 +334,32 @@ export function ViewRedemptionStatusModal({
               showCancellation={true}
             />
 
-            {/* Acknowledgement Receipt Image */}
+            {/* Acknowledgement Receipt */}
             {request.ar_status === "UPLOADED" && request.acknowledgement_receipt && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   Acknowledgement Receipt
                 </h3>
-                <div className="border rounded-lg overflow-hidden border-border inline-block">
-                  <img
-                    src={normalizeMediaUrl(request.acknowledgement_receipt)}
-                    alt="Acknowledgement Receipt"
-                    className="max-w-full max-h-64 object-contain"
-                  />
-                </div>
+                {request.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
+                  <a
+                    href={normalizeMediaUrl(request.acknowledgement_receipt)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                  >
+                    <FileText className="w-5 h-5 text-primary" />
+                    <span>View Signed AR Document</span>
+                    <ExternalLink className="w-4 h-4 ml-1 text-muted-foreground" />
+                  </a>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden border-border inline-block">
+                    <img
+                      src={normalizeMediaUrl(request.acknowledgement_receipt)}
+                      alt="Acknowledgement Receipt"
+                      className="max-w-full max-h-64 object-contain"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
@@ -381,20 +389,12 @@ export function ViewRedemptionStatusModal({
                   Cancel Request
                 </button>
               )}
-              {canPrintAR && (
+              {canShowAR && (
                 <button
-                  onClick={() => setShowPrintARDialog(true)}
-                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Print AR
-                </button>
-              )}
-              {canUploadAR && (
-                <button
-                  onClick={() => setShowUploadARModal(true)}
+                  onClick={() => setShowARModal(true)}
                   className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-amber-600 hover:bg-amber-700 text-white"
                 >
-                  Upload Acknowledgement Receipt
+                  Acknowledgement Receipt
                 </button>
               )}
             </div>
@@ -409,19 +409,12 @@ export function ViewRedemptionStatusModal({
           isSubmitting={isSubmitting}
         />
 
-        <PrintARDialog
-          isOpen={showPrintARDialog}
-          onClose={() => setShowPrintARDialog(false)}
+        <AcknowledgementReceiptModal
+          isOpen={showARModal}
+          onClose={() => setShowARModal(false)}
           request={request}
-        />
-
-        <UploadARModal
-          isOpen={showUploadARModal}
-          onClose={() => setShowUploadARModal(false)}
-          requestId={request.id}
-          customerName={request.requested_for_name}
           onUploaded={() => {
-            setShowUploadARModal(false);
+            setShowARModal(false);
             onClose();
             onRequestWithdrawn?.();
           }}

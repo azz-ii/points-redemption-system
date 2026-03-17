@@ -42,7 +42,7 @@ export default function CartModal({
   availablePoints,
 }: CartModalProps) {
   const { userPosition, canSelfRequest } = useAuth();
-  const isSelfRequest = userPosition === 'Approver' && canSelfRequest;
+  const isApproverWithSelfRequest = userPosition === 'Approver' && canSelfRequest;
 
   const [step, setStep] = useState<"cart" | "details">("cart");
   const [remarks, setRemarks] = useState("");
@@ -53,7 +53,7 @@ export default function CartModal({
   const [driverName, setDriverName] = useState<string>("");
   
   // Entity type selection (Distributor, Customer, or Self)
-  const [entityType, setEntityType] = useState<RequestedForType>(isSelfRequest ? 'SELF' : 'DISTRIBUTOR');
+  const [entityType, setEntityType] = useState<RequestedForType>(isApproverWithSelfRequest ? 'SELF' : 'DISTRIBUTOR');
   
   // All entities for dropdown (preloaded)
   const [allDistributors, setAllDistributors] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
@@ -89,7 +89,7 @@ export default function CartModal({
 
   // Load all distributors and customers when modal opens or step changes to details
   useEffect(() => {
-    if (!isOpen || isSelfRequest) return;
+    if (!isOpen) return;
     
     const loadEntities = async () => {
       setLoadingEntities(true);
@@ -255,7 +255,7 @@ export default function CartModal({
 
   const handleSubmit = async () => {
     // Validate entity selection based on type (skip for SELF)
-    if (!isSelfRequest) {
+    if (entityType !== 'SELF') {
       if (entityType === 'DISTRIBUTOR' && !selectedDistributor) {
         toast.error("Please select a distributor");
         return;
@@ -283,14 +283,14 @@ export default function CartModal({
 
     // Prepare request data using the correct API structure
     const requestData: CreateRedemptionRequestData = {
-      requested_for_type: isSelfRequest ? 'SELF' : entityType,
-      ...(!isSelfRequest && entityType === 'DISTRIBUTOR' && selectedDistributor 
+      requested_for_type: entityType,
+      ...(entityType === 'DISTRIBUTOR' && selectedDistributor 
         ? { requested_for: selectedDistributor.id }
         : {}),
-      ...(!isSelfRequest && entityType === 'CUSTOMER' && selectedCustomer 
+      ...(entityType === 'CUSTOMER' && selectedCustomer 
         ? { requested_for_customer: selectedCustomer.id }
         : {}),
-      points_deducted_from: isSelfRequest ? 'SELF' : pointsDeductedFrom,
+      points_deducted_from: entityType === 'SELF' ? 'SELF' : pointsDeductedFrom,
       remarks: remarks || undefined,
       items: items.map(item => {
         if (item.pricing_type === 'FIXED') {
@@ -316,7 +316,7 @@ export default function CartModal({
       }),
     };
 
-    const entityName = isSelfRequest
+    const entityName = entityType === 'SELF'
       ? 'yourself'
       : entityType === 'DISTRIBUTOR' 
         ? selectedDistributor?.name 
@@ -334,7 +334,7 @@ export default function CartModal({
     setPlateNumber("");
     setDriverName("");
     setPointsDeductedFrom('SELF');
-    setEntityType(isSelfRequest ? 'SELF' : 'DISTRIBUTOR');
+    setEntityType(isApproverWithSelfRequest ? 'SELF' : 'DISTRIBUTOR');
     onClose();
 
     // Show optimistic success message
@@ -465,9 +465,35 @@ export default function CartModal({
                                 >
                                   −
                                 </button>
-                                <span className="w-8 text-center">
-                                  {item.quantity}
-                                </span>
+                                <input
+                                  type="number"
+                                  min={item.min_order_qty}
+                                  max={item.max_order_qty !== null ? Math.min(item.max_order_qty, item.available_stock) : item.available_stock}
+                                  value={item.quantity}
+                                  onChange={(e) => {
+                                    const raw = parseInt(e.target.value, 10);
+                                    if (!isNaN(raw)) {
+                                      const maxQty = item.max_order_qty !== null
+                                        ? Math.min(item.max_order_qty, item.available_stock)
+                                        : item.available_stock;
+                                      onUpdateQuantity(item.id, Math.min(Math.max(raw, item.min_order_qty), maxQty));
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const raw = parseInt(e.target.value, 10);
+                                    const maxQty = item.max_order_qty !== null
+                                      ? Math.min(item.max_order_qty, item.available_stock)
+                                      : item.available_stock;
+                                    const clamped = isNaN(raw)
+                                      ? item.min_order_qty
+                                      : Math.min(Math.max(raw, item.min_order_qty), maxQty);
+                                    onUpdateQuantity(item.id, clamped);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                  }}
+                                  className="w-12 text-center text-sm rounded border bg-muted border-border outline-none focus:border-ring py-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
                                 <button
                                   onClick={() => {
                                     const maxQty = item.max_order_qty !== null 
@@ -683,29 +709,7 @@ export default function CartModal({
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">Recipient Details</h3>
                   
-                  {isSelfRequest ? (
-                    /* Self-request mode: no entity selection needed */
-                    <div className="mt-4 space-y-4">
-                      <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
-                        <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                          This request is for yourself. No distributor or customer selection is needed.
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <label className={`text-sm text-foreground`}>
-                          Purpose/Remarks
-                        </label>
-                        <textarea
-                          value={remarks}
-                          onChange={(e) => setRemarks(e.target.value)}
-                          placeholder="Enter Purpose or Remarks"
-                          rows={4}
-                          className={`w-full px-3 py-2 rounded-md outline-none resize-none bg-muted border border-border`}
-                        />
-                      </div>
-                    </div>
-                  ) : loadingEntities ? (
+                  {loadingEntities ? (
                     /* Skeleton Loading */
                     <div className="mt-4 space-y-4">
                       {/* Toggle buttons skeleton */}
@@ -730,30 +734,64 @@ export default function CartModal({
                     <>
                       {/* Entity Type Toggle */}
                       <div className="mt-4 flex gap-2">
-                        <button
-                          onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
-                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                            entityType === 'DISTRIBUTOR'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-foreground hover:bg-accent'
-                          }`}
-                        >
-                          Distributor
-                        </button>
-                        <button
-                          onClick={() => handleEntityTypeChange('CUSTOMER')}
-                          className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                            entityType === 'CUSTOMER'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-foreground hover:bg-accent'
-                          }`}
-                        >
-                          Customer
-                        </button>
+                        {isApproverWithSelfRequest ? (
+                          <>
+                            <button
+                              onClick={() => handleEntityTypeChange('SELF')}
+                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                                entityType === 'SELF'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Self
+                            </button>
+                            <button
+                              onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
+                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                                entityType === 'DISTRIBUTOR'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Distributor
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
+                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                                entityType === 'DISTRIBUTOR'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Distributor
+                            </button>
+                            <button
+                              onClick={() => handleEntityTypeChange('CUSTOMER')}
+                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                                entityType === 'CUSTOMER'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Customer
+                            </button>
+                          </>
+                        )}
                       </div>
                       
                       <div className="mt-4 space-y-4">
-                        {entityType === 'DISTRIBUTOR' ? (
+                        {entityType === 'SELF' ? (
+                          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
+                            <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              This request is for yourself. No distributor or customer selection is needed.
+                            </p>
+                          </div>
+                        ) : entityType === 'DISTRIBUTOR' ? (
                           /* Distributor Searchable Combobox */
                           <div className="space-y-1">
                         <label
@@ -919,7 +957,7 @@ export default function CartModal({
               </div>
 
               {/* Points Deduction - hide for self-requests */}
-              {!isSelfRequest && (
+              {entityType !== 'SELF' && (
               <div
                 className={`rounded-lg border border-border`}
               >
@@ -1122,12 +1160,80 @@ export default function CartModal({
                             <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
                               {item.points.toLocaleString()} pts
                             </p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <button
+                                onClick={() =>
+                                  onUpdateQuantity(
+                                    item.id,
+                                    Math.max(item.min_order_qty, item.quantity - 1)
+                                  )
+                                }
+                                disabled={item.quantity <= item.min_order_qty}
+                                className={`w-6 h-6 flex items-center justify-center rounded text-xs ${
+                                  item.quantity <= item.min_order_qty
+                                    ? 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+                                    : 'bg-muted hover:bg-accent'
+                                }`}
+                              >
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min={item.min_order_qty}
+                                max={item.max_order_qty !== null ? Math.min(item.max_order_qty, item.available_stock) : item.available_stock}
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const raw = parseInt(e.target.value, 10);
+                                  if (!isNaN(raw)) {
+                                    const maxQty = item.max_order_qty !== null
+                                      ? Math.min(item.max_order_qty, item.available_stock)
+                                      : item.available_stock;
+                                    onUpdateQuantity(item.id, Math.min(Math.max(raw, item.min_order_qty), maxQty));
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const raw = parseInt(e.target.value, 10);
+                                  const maxQty = item.max_order_qty !== null
+                                    ? Math.min(item.max_order_qty, item.available_stock)
+                                    : item.available_stock;
+                                  const clamped = isNaN(raw)
+                                    ? item.min_order_qty
+                                    : Math.min(Math.max(raw, item.min_order_qty), maxQty);
+                                  onUpdateQuantity(item.id, clamped);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                }}
+                                className="w-10 text-center text-xs rounded border bg-muted border-border outline-none focus:border-ring py-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button
+                                onClick={() => {
+                                  const maxQty = item.max_order_qty !== null
+                                    ? Math.min(item.max_order_qty, item.available_stock)
+                                    : item.available_stock;
+                                  onUpdateQuantity(item.id, Math.min(item.quantity + 1, maxQty));
+                                }}
+                                disabled={
+                                  item.quantity >= item.available_stock ||
+                                  (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
+                                }
+                                className={`w-6 h-6 flex items-center justify-center rounded text-xs ${
+                                  item.quantity >= item.available_stock ||
+                                  (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
+                                    ? 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+                                    : 'bg-muted hover:bg-accent'
+                                }`}
+                              >
+                                +
+                              </button>
+                            </div>
                             <p
-                              className={`text-xs mt-1 ${
+                              className={`text-xs mt-0.5 ${
                                 item.quantity >= item.available_stock ? 'text-amber-500' : 'text-muted-foreground'
                               }`}
                             >
-                              Qty: {item.quantity}/{item.available_stock} available
+                              {item.quantity}/{item.available_stock} available
+                              {item.max_order_qty !== null && ` (max ${item.max_order_qty})`}
                             </p>
                           </>
                         ) : (
@@ -1273,29 +1379,7 @@ export default function CartModal({
                 <div className="p-3">
                   <h3 className="text-sm font-semibold">Recipient Details</h3>
                   
-                  {isSelfRequest ? (
-                    /* Self-request mode: no entity selection needed */
-                    <div className="mt-3 space-y-3">
-                      <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-2">
-                        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
-                        <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">
-                          This request is for yourself. No distributor or customer selection is needed.
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <label className={`text-xs text-foreground`}>
-                          Purpose/Remarks
-                        </label>
-                        <textarea
-                          value={remarks}
-                          onChange={(e) => setRemarks(e.target.value)}
-                          placeholder="Enter Purpose or Remarks"
-                          rows={3}
-                          className={`w-full px-3 py-2 text-sm rounded-md outline-none resize-none bg-muted border border-border`}
-                        />
-                      </div>
-                    </div>
-                  ) : loadingEntities ? (
+                  {loadingEntities ? (
                     /* Skeleton Loading */
                     <div className="mt-3 space-y-3">
                       {/* Toggle buttons skeleton */}
@@ -1320,30 +1404,64 @@ export default function CartModal({
                     <>
                       {/* Entity Type Toggle */}
                       <div className="mt-3 flex gap-2">
-                        <button
-                          onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
-                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                            entityType === 'DISTRIBUTOR'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-foreground hover:bg-accent'
-                          }`}
-                        >
-                          Distributor
-                        </button>
-                        <button
-                          onClick={() => handleEntityTypeChange('CUSTOMER')}
-                          className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                            entityType === 'CUSTOMER'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-foreground hover:bg-accent'
-                          }`}
-                        >
-                          Customer
-                        </button>
+                        {isApproverWithSelfRequest ? (
+                          <>
+                            <button
+                              onClick={() => handleEntityTypeChange('SELF')}
+                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                                entityType === 'SELF'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Self
+                            </button>
+                            <button
+                              onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
+                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                                entityType === 'DISTRIBUTOR'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Distributor
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
+                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                                entityType === 'DISTRIBUTOR'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Distributor
+                            </button>
+                            <button
+                              onClick={() => handleEntityTypeChange('CUSTOMER')}
+                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                                entityType === 'CUSTOMER'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Customer
+                            </button>
+                          </>
+                        )}
                       </div>
                       
                       <div className="mt-3 space-y-3">
-                        {entityType === 'DISTRIBUTOR' ? (
+                        {entityType === 'SELF' ? (
+                          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-2">
+                            <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
+                            <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">
+                              This request is for yourself. No distributor or customer selection is needed.
+                            </p>
+                          </div>
+                        ) : entityType === 'DISTRIBUTOR' ? (
                           /* Distributor Searchable Combobox */
                           <div className="space-y-1">
                             <label
@@ -1521,7 +1639,7 @@ export default function CartModal({
               </div>
 
               {/* Points Deduction - hide for self-requests */}
-              {!isSelfRequest && (
+              {entityType !== 'SELF' && (
               <div
                 className={`rounded-lg border border-border`}
               >

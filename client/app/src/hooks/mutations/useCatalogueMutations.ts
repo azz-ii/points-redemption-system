@@ -9,7 +9,7 @@ function getCsrfToken(): string | null {
   return null;
 }
 
-export function useBulkAssignMarketing() {
+export function useBulkAssignHandler() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
@@ -17,16 +17,16 @@ export function useBulkAssignMarketing() {
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
       if (csrf) headers['X-CSRFToken'] = csrf;
 
-      const res = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, {
+      const res = await fetch(`${API_URL}/catalogue/bulk-assign-handler/`, {
         method: 'POST', headers, credentials: 'include',
         body: JSON.stringify(data),
       });
-      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to assign marketing'); }
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to assign handler'); }
       return res.json();
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.catalogue.all });
-      qc.invalidateQueries({ queryKey: queryKeys.marketing.all });
+      qc.invalidateQueries({ queryKey: queryKeys.handler.all });
     },
   });
 }

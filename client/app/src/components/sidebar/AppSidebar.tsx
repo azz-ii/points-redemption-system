@@ -46,7 +46,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/admin/redemption" },
     { id: "request-history", label: "Request History", icon: History, path: "/admin/request-history" },
     { id: "inventory", label: "Inventory", icon: Warehouse, path: "/admin/inventory" },
-    { id: "marketing", label: "Marketing", icon: Megaphone, path: "/admin/marketing" },
+    { id: "marketing", label: "Handler", icon: Megaphone, path: "/admin/handler" },
   ],
   sales: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/sales/dashboard" },
@@ -59,11 +59,11 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { id: "history", label: "History", icon: History, path: "/approver/history" },
     { id: "team", label: "Team", icon: Users, path: "/approver/team" },
   ],
-  marketing: [
-    { id: "dashboard", label: "Dashboard", icon: Home, path: "/marketing/dashboard" },
-    { id: "item-assignments", label: "Item Assignments", icon: Package, path: "/marketing/item-assignments" },
-    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/marketing/process-requests" },
-    { id: "history", label: "History", icon: History, path: "/marketing/history" },
+  handler: [
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/handler/dashboard" },
+    { id: "item-assignments", label: "Item Assignments", icon: Package, path: "/handler/item-assignments" },
+    { id: "process-requests", label: "Process Requests", icon: ClipboardList, path: "/handler/process-requests" },
+    { id: "history", label: "History", icon: History, path: "/handler/history" },
   ],
 };
 
@@ -81,7 +81,7 @@ export function getNavItemsForRole(position: string, canSelfRequest?: boolean): 
     if (canSelfRequest) return [...NAV_ITEMS.approver, ...APPROVER_SELF_REQUEST_ITEMS];
     return NAV_ITEMS.approver;
   }
-  if (normalized === "marketing") return NAV_ITEMS.marketing;
+  if (normalized === "handler") return NAV_ITEMS.handler;
   return NAV_ITEMS.admin;
 }
 

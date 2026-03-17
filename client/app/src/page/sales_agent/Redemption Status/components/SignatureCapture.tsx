@@ -43,11 +43,11 @@ export function SignatureCapture({ onSignatureCapture, onClear, preview }: Signa
         throttle: 16,
       });
 
-      signaturePadRef.current.onBegin = () => setIsDrawing(true);
-      signaturePadRef.current.onEnd = () => {
+      signaturePadRef.current.addEventListener("beginStroke", () => setIsDrawing(true));
+      signaturePadRef.current.addEventListener("endStroke", () => {
         setIsDrawing(false);
         setHasSignature(!signaturePadRef.current!.isEmpty());
-      };
+      });
     }
   }, [mode]);
 

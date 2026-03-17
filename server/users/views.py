@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -44,30 +45,32 @@ class UserViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """
-        All authenticated users can access all users.
-        Optionally filter based on query parameters.
+        Returns all non-superuser accounts, with optional filtering by
+        position (comma-separated), show_archived, and search.
         """
         queryset = User.objects.filter(is_superuser=False).select_related('profile')
-        # Only show active (non-archived) accounts
-        queryset = queryset.filter(profile__is_archived=False)
-        # Filter for Sales Agents OR Approvers with can_self_request
-        queryset = queryset.filter(
-            (
-                models.Q(profile__position='Sales Agent') |
-                (models.Q(profile__position='Approver') & models.Q(profile__can_self_request=True))
-            )
-        )
-        # Apply search filter if provided
+
+        # Archived filter — by default exclude archived users
+        show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
+        if not show_archived:
+            queryset = queryset.filter(profile__is_archived=False)
+
+        # Position filter — accepts comma-separated values, e.g. ?position=Handler,Admin
+        position = self.request.query_params.get('position', None)
+        if position:
+            positions = [p.strip() for p in position.split(',')]
+            queryset = queryset.filter(profile__position__in=positions)
+
+        # Search filter — matches username, full name, or email
         search = self.request.query_params.get('search', None)
         if search:
-            queryset = (queryset.filter(
-                username__icontains=search
-            ) | queryset.filter(
-                profile__full_name__icontains=search
-            ) | queryset.filter(
-                profile__email__icontains=search
-            )).distinct()
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(profile__full_name__icontains=search) |
+                Q(profile__email__icontains=search)
+            ).distinct()
             logger.info(f"Filtering users by search: '{search}' - Found {queryset.count()} users")
+
         return queryset.order_by('username')
     
     def get_serializer_class(self):
@@ -311,6 +314,8 @@ class UserViewSet(viewsets.ModelViewSet):
             logger.exception("Full traceback:")
             return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+
     @action(detail=True, methods=['post'], url_path='unlock_account')
     def unlock_account(self, request, pk=None):
         """Unlock a locked-out account by clearing its failed login attempts (admin action)"""
@@ -445,6 +450,32 @@ class UnarchiveUserView(APIView):
         return Response({
             "message": "User unarchived successfully",
             "user": UserListSerializer(user).data
+        }, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ToggleEmailNotificationsView(APIView):
+    """Toggle the current user's email notification preference."""
+
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        enabled = request.data.get("enabled")
+        if enabled is None:
+            return Response({"error": "'enabled' field is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        profile = getattr(request.user, 'profile', None)
+        if not profile:
+            return Response({"error": "User has no profile"}, status=status.HTTP_400_BAD_REQUEST)
+
+        profile.email_notifications_enabled = bool(enabled)
+        profile.save(update_fields=['email_notifications_enabled'])
+        logger.info(f"Email notifications {'enabled' if enabled else 'disabled'} for user {request.user.username}")
+
+        return Response({
+            "message": f"Email notifications {'enabled' if enabled else 'disabled'}",
+            "email_notifications_enabled": profile.email_notifications_enabled,
         }, status=status.HTTP_200_OK)
 
 

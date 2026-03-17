@@ -6,8 +6,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMarketingRequests } from "@/hooks/queries/useMarketingRequests";
-import { useMarkItemsProcessed, useMarketingCancelRequest } from "@/hooks/mutations/useMarketingMutations";
+import { useHandlerRequests } from "@/hooks/queries/useMarketingRequests";
+import { useMarkItemsProcessed, useHandlerCancelRequest } from "@/hooks/mutations/useMarketingMutations";
 import {
   ViewRequestModal,
   MarkItemsProcessedModal,
@@ -18,7 +18,7 @@ import {
   type ProcessItemData,
 } from "./modals";
 import { ProcessRequestsTable, ProcessRequestsMobileCards, BulkMarkProcessedModal } from "./components";
-import { marketingRequestsApi } from "@/lib/api";
+import { handlerRequestsApi } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -39,11 +39,11 @@ function ProcessRequests() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
 
-  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useMarketingRequests(30_000);
+  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerRequests(30_000);
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load requests") : null;
 
   const markItemsMutation = useMarkItemsProcessed();
-  const cancelMutation = useMarketingCancelRequest();
+  const cancelMutation = useHandlerCancelRequest();
 
   const handleManualRefresh = useCallback(() => {
     queryClient.resetQueries({ queryKey: queryKeys.requests.all });
@@ -51,7 +51,7 @@ function ProcessRequests() {
 
   const fetchMyProcessingStatus = async (requestId: number) => {
     try {
-      const status = await marketingRequestsApi.getMyProcessingStatus(requestId);
+      const status = await handlerRequestsApi.getMyProcessingStatus(requestId);
       setMyProcessingStatus(status);
       return status;
     } catch (err) {
@@ -127,11 +127,11 @@ function ProcessRequests() {
 
     setIsSubmitting(true);
     try {
-      await marketingRequestsApi.markItemsProcessed(selectedRequest.id, items);
+      await handlerRequestsApi.markItemsProcessed(selectedRequest.id, items);
       // Upload processing photo if provided (separate call, non-blocking on success)
       if (photo) {
         try {
-          await marketingRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
+          await handlerRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
         } catch (photoErr) {
           console.error("Error uploading processing photo:", photoErr);
           toast.warning("Items processed, but photo upload failed. You can try again later.");
@@ -173,7 +173,7 @@ function ProcessRequests() {
     if (!selectedCancelRequest) return;
 
     try {
-      await marketingRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
       toast.success("Request cancelled successfully");
       setShowCancelModal(false);
       setSelectedCancelRequest(null);
@@ -206,7 +206,7 @@ function ProcessRequests() {
               ? { fulfilled_quantity: item.remaining_quantity ?? item.quantity }
               : {}),
           }));
-          return marketingRequestsApi.markItemsProcessed(Number(requestId), items);
+          return handlerRequestsApi.markItemsProcessed(Number(requestId), items);
         })
       );
 

@@ -48,7 +48,7 @@ export function MarketingHandlerSection({
       try {
         setLoading(true);
         const response = await fetch(
-          `${API_URL}/users/?position=Marketing,Admin&page_size=1000`,
+          `${API_URL}/users/?position=Handler,Admin&page_size=1000`,
           { credentials: "include" }
         );
         if (response.ok) {
@@ -72,7 +72,7 @@ export function MarketingHandlerSection({
     try {
       setSaving(true);
       const response = await fetchWithCsrf(
-        `${API_URL}/catalogue/bulk-assign-marketing/`,
+        `${API_URL}/catalogue/bulk-assign-handler/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

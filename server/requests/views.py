@@ -116,8 +116,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(processing_status='PROCESSED')
             return qs
 
-        # Marketing - see only APPROVED requests with items assigned to them
-        elif profile.position == 'Marketing':
+        # Handler - see only APPROVED requests with items assigned to them
+        elif profile.position == 'Handler':
             return self._base_queryset().filter(
                 status='APPROVED',
                 items__product__mktg_admin=user
@@ -172,12 +172,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 "detail": "You must be assigned to a team before creating a redemption request. Please contact your administrator."
             })
         
-        # Approvers may only create SELF-type requests
+        # Approvers may only create SELF or DISTRIBUTOR requests
         approver_profile = getattr(user, 'profile', None)
         if approver_profile and approver_profile.position == 'Approver':
-            if serializer.validated_data.get('requested_for_type') != 'SELF':
+            requested_for_type = serializer.validated_data.get('requested_for_type')
+            if requested_for_type not in ['SELF', 'DISTRIBUTOR']:
                 raise ValidationError({
-                    "detail": "Approvers can only create self-requests."
+                    "detail": "Approvers can only create self or distributor requests."
                 })
         
         # Create the request with team assignment (handled by serializer)
@@ -488,13 +489,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if all Marketing users have processed their items
-        if not redemption_request.is_marketing_processing_complete():
-            processing_status = redemption_request.get_marketing_processing_status()
+        # Check if all Handler users have processed their items
+        if not redemption_request.is_handler_processing_complete():
+            processing_status = redemption_request.get_handler_processing_status()
             return Response(
                 {
-                    'error': 'Not all Marketing users have processed their items',
-                    'detail': 'All assigned Marketing users must process their items before Admin can mark the request as processed',
+                    'error': 'Not all Handler users have processed their items',
+                    'detail': 'All assigned Handler users must process their items before Admin can mark the request as processed',
                     'marketing_processing_status': processing_status
                 },
                 status=status.HTTP_400_BAD_REQUEST
@@ -562,9 +563,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
         
-        if not profile or profile.position not in ['Admin', 'Marketing']:
+        if not profile or profile.position not in ['Admin', 'Handler']:
             return Response(
-                {'error': 'Permission denied: Only superadmins and marketing users can cancel requests'},
+                {'error': 'Permission denied: Only superadmins and handler users can cancel requests'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
@@ -806,13 +807,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def mark_items_processed(self, request, pk=None):
         """
-        Marketing or Admin user partially or fully fulfills their assigned items.
+        Handler or Admin user partially or fully fulfills their assigned items.
 
         Request body:
           { "items": [{ "item_id": int, "fulfilled_quantity": int, "notes": str? }, ...] }
 
         Authorisation per item:
-          - Marketing: product.mktg_admin == request.user
+          - Handler: product.mktg_admin == request.user
           - Admin:     product.mktg_admin is null  OR  product.mktg_admin == request.user
 
         For FIXED pricing: fulfilled_quantity is required and must be <= remaining_quantity.
@@ -824,9 +825,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
 
-        if not profile or profile.position not in ['Marketing', 'Admin']:
+        if not profile or profile.position not in ['Handler', 'Admin']:
             return Response(
-                {'error': 'Permission denied: Only Marketing or Admin users can process items'},
+                {'error': 'Permission denied: Only Handler or Admin users can process items'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -857,7 +858,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
 
             product = item.product
             # Authorization check per item
-            if profile.position == 'Marketing':
+            if profile.position == 'Handler':
                 if not product or product.mktg_admin != user:
                     return Response(
                         {'error': f'Item {item_id} is not assigned to you'},
@@ -866,7 +867,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             else:  # Admin
                 if product and product.mktg_admin is not None and product.mktg_admin != user:
                     return Response(
-                        {'error': f'Item {item_id} is assigned to a Marketing user, not you'},
+                        {'error': f'Item {item_id} is assigned to a Handler user, not you'},
                         status=status.HTTP_403_FORBIDDEN
                     )
 
@@ -1048,16 +1049,16 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
 
-        if not profile or profile.position not in ['Marketing', 'Admin']:
+        if not profile or profile.position not in ['Handler', 'Admin']:
             return Response(
-                {'error': 'This endpoint is for Marketing or Admin users only'},
+                {'error': 'This endpoint is for Handler or Admin users only'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
         if profile.position == 'Admin':
             my_items = redemption_request.get_items_for_admin_user(user)
         else:
-            my_items = redemption_request.get_items_for_marketing_user(user)
+            my_items = redemption_request.get_items_for_handler_user(user)
         # "pending" here means not yet fully processed (item_processed_by is null)
         pending_items = my_items.filter(item_processed_by__isnull=True)
         processed_items = my_items.filter(item_processed_by__isnull=False)
@@ -1068,7 +1069,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             'pending_items': pending_items.count(),
             'processed_items': processed_items.count(),
             'all_my_items_processed': pending_items.count() == 0,
-            'overall_processing_complete': redemption_request.is_marketing_processing_complete(),
+            'overall_processing_complete': redemption_request.is_handler_processing_complete(),
             'items': RedemptionRequestItemSerializer(my_items, many=True).data,
         })
 
@@ -1101,41 +1102,20 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         # Validate AR receipt file is present
         if 'acknowledgement_receipt' not in request.FILES:
             return Response(
-                {'error': 'No acknowledgement receipt file provided. Please upload an image file.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate signature file is present
-        if 'received_by_signature' not in request.FILES:
-            return Response(
-                {'error': 'No signature file provided. Please capture or upload a signature.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate signature method is provided
-        signature_method = request.POST.get('received_by_signature_method')
-        if signature_method not in ['DRAWN', 'PHOTO']:
-            return Response(
-                {'error': 'Invalid signature method. Must be either DRAWN or PHOTO.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate received_by_name is provided
-        received_by_name = request.POST.get('received_by_name', '').strip()
-        if not received_by_name:
-            return Response(
-                {'error': 'Received by name is required.'},
+                {'error': 'No acknowledgement receipt file provided. Please upload a file.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         ar_file = request.FILES['acknowledgement_receipt']
-        sig_file = request.FILES['received_by_signature']
+        sig_file = request.FILES.get('received_by_signature')  # Optional
+        signature_method = request.POST.get('received_by_signature_method')  # Optional
+        received_by_name = request.POST.get('received_by_name', '').strip()  # Optional
 
         # Validate AR file type
-        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
-        if ar_file.content_type not in allowed_types:
+        allowed_types_ar = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+        if ar_file.content_type not in allowed_types_ar:
             return Response(
-                {'error': 'Invalid AR file type. Please upload a PNG, JPG, or WebP image.'},
+                {'error': 'Invalid AR file type. Please upload a PDF, PNG, JPG, or WebP file.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1146,30 +1126,38 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate signature file type
-        if sig_file.content_type not in allowed_types:
-            return Response(
-                {'error': 'Invalid signature file type. Please use PNG, JPG, or WebP.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate signature file size (5MB max)
-        if sig_file.size > 5 * 1024 * 1024:
-            return Response(
-                {'error': 'Signature file too large. Maximum size is 5MB.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Validate signature file if provided
+        if sig_file:
+            allowed_types_sig = ['image/jpeg', 'image/png', 'image/webp']
+            if sig_file.content_type not in allowed_types_sig:
+                return Response(
+                    {'error': 'Invalid signature file type. Please use PNG, JPG, or WebP.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if sig_file.size > 5 * 1024 * 1024:
+                return Response(
+                    {'error': 'Signature file too large. Maximum size is 5MB.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Validate signature method when signature file is provided
+            if signature_method not in ['DRAWN', 'PHOTO']:
+                return Response(
+                    {'error': 'Invalid signature method. Must be either DRAWN or PHOTO.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         # Delete old files if replacing
         if redemption_request.acknowledgement_receipt:
             redemption_request.acknowledgement_receipt.delete(save=False)
-        if redemption_request.received_by_signature:
+        if sig_file and redemption_request.received_by_signature:
             redemption_request.received_by_signature.delete(save=False)
 
         redemption_request.acknowledgement_receipt = ar_file
-        redemption_request.received_by_signature = sig_file
-        redemption_request.received_by_signature_method = signature_method
-        redemption_request.received_by_name = received_by_name
+        if sig_file:
+            redemption_request.received_by_signature = sig_file
+            redemption_request.received_by_signature_method = signature_method
+        if received_by_name:
+            redemption_request.received_by_name = received_by_name
         redemption_request.received_by_date = timezone.now()
         redemption_request.ar_status = AcknowledgementReceiptStatus.UPLOADED
         redemption_request.ar_uploaded_by = user
@@ -1199,10 +1187,10 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         user = request.user
         profile = getattr(user, 'profile', None)
 
-        # Only Marketing or Admin users can upload processing photos
-        if not profile or profile.position not in ['Marketing', 'Admin']:
+        # Only Handler or Admin users can upload processing photos
+        if not profile or profile.position not in ['Handler', 'Admin']:
             return Response(
-                {'error': 'Permission denied: Only Marketing or Admin users can upload processing photos'},
+                {'error': 'Permission denied: Only Handler or Admin users can upload processing photos'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -1573,19 +1561,19 @@ class ProcessedRequestHistoryView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class MarketingHistoryView(APIView):
-    """View for getting processed requests where the current marketing user has processed items"""
+class HandlerHistoryView(APIView):
+    """View for getting processed requests where the current handler user has processed items"""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """Get all requests where the current marketing user has processed items"""
+        """Get all requests where the current handler user has processed items"""
         user = request.user
         profile = getattr(user, 'profile', None)
         
-        # Only allow Marketing position users
-        if profile and profile.position != 'Marketing':
+        # Only allow Handler position users
+        if profile and profile.position != 'Handler':
             return Response({
-                'error': 'Access denied. Marketing role required.'
+                'error': 'Access denied. Handler role required.'
             }, status=status.HTTP_403_FORBIDDEN)
         
         # Get all requests where this user has processed at least one item

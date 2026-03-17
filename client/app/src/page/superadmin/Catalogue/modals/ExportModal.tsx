@@ -175,14 +175,14 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                 onClick={() => setFormat("excel")}
                 className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   format === "excel"
-                    ? "border-green-500 bg-green-500/10"
+                    ? "border-green-200 dark:border-green-800 bg-green-100 dark:bg-green-900/40"
                     : "border-border hover:border-muted-foreground"
                 }`}
               >
                 <FileSpreadsheet
                   className={`h-6 w-6 ${
                     format === "excel"
-                      ? "text-green-500"
+                      ? "text-green-700 dark:text-green-300"
                       : "text-muted-foreground"
                   }`}
                 />
@@ -197,14 +197,14 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
                 onClick={() => setFormat("pdf")}
                 className={`flex items-center justify-center gap-3 p-4 rounded-lg border-2 transition-all ${
                   format === "pdf"
-                    ? "border-red-500 bg-red-500/10"
+                    ? "border-red-200 dark:border-red-800 bg-red-100 dark:bg-red-900/40"
                     : "border-border hover:border-muted-foreground"
                 }`}
               >
                 <FileText
                   className={`h-6 w-6 ${
                     format === "pdf"
-                      ? "text-red-500"
+                      ? "text-red-700 dark:text-red-300"
                       : "text-muted-foreground"
                   }`}
                 />
@@ -338,7 +338,7 @@ export function ExportModal({ isOpen, onClose, searchQuery, showArchived }: Expo
         {/* Footer */}
         <div className="p-6">
           {error && (
-            <div className="w-full mb-4 p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded text-red-500 text-sm">
+            <div className="w-full mb-4 p-3 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded text-sm">
               {error}
             </div>
           )}

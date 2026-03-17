@@ -3,23 +3,23 @@ import { queryKeys } from '@/lib/query-keys';
 import { usersApi } from '@/lib/users-api';
 import type { MarketingUser } from '@/page/superadmin/Marketing/components/types';
 
-export interface PaginatedMarketingUsersResponse {
+export interface PaginatedHandlerUsersResponse {
   count: number;
   results: MarketingUser[];
 }
 
-export function useMarketingUsersPage(
+export function useHandlerUsersPage(
   page: number,
   pageSize: number,
   search: string,
   refetchInterval: number | false = 30_000,
 ) {
-  return useQuery<PaginatedMarketingUsersResponse>({
-    queryKey: queryKeys.marketing.page(page, pageSize, search),
+  return useQuery<PaginatedHandlerUsersResponse>({
+    queryKey: queryKeys.handler.page(page, pageSize, search),
     queryFn: async () => {
       const [usersData, assignmentsData] = await Promise.all([
-        usersApi.getMarketingUsersPage(page, pageSize, search),
-        usersApi.getBulkAssignMarketing(),
+        usersApi.getHandlerUsersPage(page, pageSize, search),
+        usersApi.getBulkAssignHandler(),
       ]);
 
       // Build assignments map by user ID from product-level data

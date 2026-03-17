@@ -51,7 +51,7 @@ export function EditAccountModal({
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/catalogue/bulk-assign-marketing/`, {
+      const response = await fetch(`${API_URL}/catalogue/bulk-assign-handler/`, {
         credentials: "include",
       });
       const data = await response.json();
@@ -91,7 +91,7 @@ export function EditAccountModal({
     try {
       setSaving(true);
 
-      const response = await fetchWithCsrf(`${API_URL}/catalogue/bulk-assign-marketing/`, {
+      const response = await fetchWithCsrf(`${API_URL}/catalogue/bulk-assign-handler/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

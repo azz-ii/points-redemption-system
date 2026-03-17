@@ -423,11 +423,11 @@ export function ViewTeamModal({
                     <label className="text-xs text-muted-foreground mb-2 block">
                       Select Member
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 min-w-0">
                       <select
                         value={selectedSalesAgent ?? ""}
                         onChange={(e) => setSelectedSalesAgent(e.target.value ? Number(e.target.value) : null)}
-                        className="flex-1 px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-ring text-sm"
+                        className="flex-1 min-w-0 truncate px-3 py-2 rounded border bg-background border-border text-foreground focus:outline-none focus:border-ring text-sm"
                       >
                         <option value="">Select a member...</option>
                         {filteredSalesAgents.length > 0 && (

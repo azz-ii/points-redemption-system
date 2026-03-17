@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Eye, EyeOff, KeyRound } from "lucide-react";
+import { X, Eye, EyeOff, KeyRound, Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { API_URL } from "@/lib/config";
@@ -17,6 +17,7 @@ interface UserAccount {
   points: number;
   uses_points: boolean;
   is_activated: boolean;
+  email_notifications_enabled: boolean;
 }
 
 interface ViewAccountModalProps extends ModalBaseProps {}
@@ -36,6 +37,7 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [saving, setSaving] = useState(false);
   const [changeError, setChangeError] = useState("");
+  const [togglingEmail, setTogglingEmail] = useState(false);
 
   // Fetch current user data
   useEffect(() => {
@@ -79,6 +81,30 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
     setError("");
     resetChangePasswordForm();
     onClose();
+  };
+
+  const handleToggleEmailNotifications = async () => {
+    if (!account || togglingEmail) return;
+    const newValue = !account.email_notifications_enabled;
+    setTogglingEmail(true);
+    try {
+      const response = await fetchWithCsrf(`${API_URL}/users/toggle_email_notifications/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: newValue }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setAccount((prev) => prev ? { ...prev, email_notifications_enabled: newValue } : prev);
+        toast.success(newValue ? "Email notifications enabled" : "Email notifications disabled");
+      } else {
+        toast.error(data.error || "Failed to update preference");
+      }
+    } catch {
+      toast.error("Error connecting to server");
+    } finally {
+      setTogglingEmail(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -387,6 +413,47 @@ export function ViewAccountModal({ isOpen, onClose }: ViewAccountModalProps) {
                       className={`w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none`}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Preferences Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Preferences
+                </h3>
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/40">
+                  <div className="flex items-center gap-3">
+                    {account.email_notifications_enabled ? (
+                      <Bell className="h-5 w-5 text-primary" />
+                    ) : (
+                      <BellOff className="h-5 w-5 text-muted-foreground" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">Email Notifications</p>
+                      <p className="text-xs text-muted-foreground">
+                        {account.email_notifications_enabled
+                          ? "You will receive email notifications for request updates and team events."
+                          : "Email notifications are turned off. Security emails will still be sent."}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={account.email_notifications_enabled}
+                    aria-label="Toggle email notifications"
+                    disabled={togglingEmail}
+                    onClick={handleToggleEmailNotifications}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${
+                      account.email_notifications_enabled ? "bg-primary" : "bg-muted-foreground/30"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        account.email_notifications_enabled ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
             </>
