@@ -290,7 +290,7 @@ class AccountsView(APIView):
                     "id": 1,
                     "username": "Raham",
                     "password": "Password",
-                    "position": "Marketing"
+                    "position": "Handler"
                 },
                 {
                     "id": 2,

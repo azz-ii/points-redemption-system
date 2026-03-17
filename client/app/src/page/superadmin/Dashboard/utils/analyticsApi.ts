@@ -194,7 +194,7 @@ export interface MarketingActivity {
 export type UserAnalyticsResponse =
   | { position: "Sales Agent"; stats: SalesAgentStatsData; recent_activity: SalesAgentActivity[] }
   | { position: "Approver"; stats: ApproverStatsData; recent_activity: ApproverActivity[] }
-  | { position: "Marketing"; stats: MarketingStatsData; recent_activity: MarketingActivity[] }
+  | { position: "Handler"; stats: MarketingStatsData; recent_activity: MarketingActivity[] }
   | { position: string; stats: null; recent_activity: [] };
 
 // ── Per-Team Analytics Types ───────────────────────────

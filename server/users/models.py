@@ -63,7 +63,7 @@ class UserProfile(models.Model):
         ('Admin', 'Admin'),
         ('Sales Agent', 'Sales Agent'),
         ('Approver', 'Approver'),
-        ('Marketing', 'Marketing'),
+        ('Handler', 'Handler'),
     ]
     
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')

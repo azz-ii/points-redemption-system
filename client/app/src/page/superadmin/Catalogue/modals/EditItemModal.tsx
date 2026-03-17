@@ -90,7 +90,7 @@ export function EditItemModal({
       try {
         setLoadingUsers(true);
         const response = await fetch(
-          `${API_URL}/users/?position=Marketing,Admin&page_size=1000`,
+          `${API_URL}/users/?position=Handler,Admin&page_size=1000`,
           { credentials: "include" }
         );
         if (response.ok) {

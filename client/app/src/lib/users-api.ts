@@ -135,7 +135,7 @@ export const usersApi = {
     const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
-    url.searchParams.append('position', 'Marketing,Admin');
+    url.searchParams.append('position', 'Handler,Admin');
     if (searchQuery) {
       url.searchParams.append('search', searchQuery);
     }

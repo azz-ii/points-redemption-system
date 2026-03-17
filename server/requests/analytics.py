@@ -717,7 +717,7 @@ class UserAnalyticsView(APIView):
                 return self._sales_agent_stats(target_user)
             elif position == 'Approver':
                 return self._approver_stats(target_user)
-            elif position == 'Marketing':
+            elif position == 'Handler':
                 return self._marketing_stats(target_user)
             else:
                 return Response({
@@ -918,7 +918,7 @@ class UserAnalyticsView(APIView):
             })
 
         return Response({
-            'position': 'Marketing',
+            'position': 'Handler',
             'stats': {
                 'total_items_processed': total_items,
                 'total_requests_touched': requests_touched,
