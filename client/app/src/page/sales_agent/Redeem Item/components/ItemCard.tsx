@@ -3,7 +3,7 @@ import { Plus, Info } from "lucide-react";
 import { DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS } from "@/lib/api";
 import type { ItemCardProps } from "../types";
 
-export function ItemCard({ item, onAddToCart }: ItemCardProps) {
+export function ItemCard({ item, layout = "grid", onAddToCart }: ItemCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -11,12 +11,14 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
   const isDynamicPricing = item.pricing_type && item.pricing_type !== 'FIXED';
   const multiplier = item.points_multiplier || item.points;
 
+  const isList = layout === "list";
+
   return (
     <div
-      className="rounded-lg overflow-hidden border bg-card border-border flex flex-col"
+      className={`rounded-lg overflow-hidden border bg-card border-border flex ${isList ? 'flex-row' : 'flex-col'}`}
     >
       {/* Image */}
-      <div className="h-36 md:h-44 bg-gray-300 overflow-hidden relative flex-shrink-0">
+      <div className={`${isList ? 'w-20 h-20 md:w-28 md:h-28' : 'h-36 md:h-44'} bg-gray-300 overflow-hidden relative flex-shrink-0`}>
         {imageLoading && (
           <div className="absolute inset-0 bg-gray-300 dark:bg-gray-700 animate-pulse" />
         )}
@@ -65,87 +67,54 @@ export function ItemCard({ item, onAddToCart }: ItemCardProps) {
         )}
       </div>
       {/* Info */}
-      <div className="flex-shrink-0 p-2">
-        {imageLoading ? (
-          /* Skeleton state */
-          <div className="flex justify-between items-end">
-            <div className="flex-1 space-y-1">
-              {/* Title skeleton */}
-              <div
-                className="h-3 md:h-4 rounded animate-pulse bg-muted"
-                style={{ width: "70%" }}
-              />
-              {/* Points skeleton */}
-              <div
-                className="h-3 rounded animate-pulse bg-muted"
-                style={{ width: "40%" }}
-              />
-              {/* Stock/category skeleton */}
-              <div
-                className="h-3 rounded animate-pulse bg-muted"
-                style={{ width: "50%" }}
-              />
-              {/* Quantity skeleton */}
-              <div
-                className="h-3 rounded animate-pulse bg-muted"
-                style={{ width: "35%" }}
-              />
-            </div>
-            {/* Button skeleton */}
-            <div
-              className="w-7 h-7 md:w-8 md:h-8 rounded-full flex-shrink-0 animate-pulse bg-muted"
-            />
-          </div>
-        ) : (
-          /* Actual content */
-          <div className="flex justify-between items-end">
-            <div>
-              <h3 className="font-semibold text-xs md:text-sm leading-tight">
-                {item.name}
-              </h3>
-              {isDynamicPricing ? (
-                <p className="text-xs text-primary">
-                  {multiplier.toLocaleString()} pts / {DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
-                </p>
-              ) : (
-                <p
-                  className="text-xs text-muted-foreground"
-                >
-                  {item.points.toLocaleString()} pts
-                </p>
-              )}
+      <div className={`${isList ? 'p-2 md:p-3' : 'p-3 md:p-4'} flex-1 flex flex-col justify-center ${isList ? 'h-full' : ''}`}>
+        <div className={`flex justify-between flex-1 ${isList ? 'items-center' : 'items-end'}`}>
+          <div className={`flex flex-col ${isList ? 'gap-0 md:gap-1' : 'gap-1'}`}>
+            <h3 className={`font-semibold leading-tight ${isList ? 'text-sm md:text-base' : 'text-xs md:text-sm'}`}>
+              {item.name}
+            </h3>
+            {isDynamicPricing ? (
+              <p className={`text-primary ${isList ? 'text-xs md:text-sm' : 'text-xs'}`}>
+                {multiplier.toLocaleString()} pts / {DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
+              </p>
+            ) : (
               <p
-                className={`text-xs ${
-                  !item.has_stock
-                    ? 'text-blue-500 dark:text-blue-400'
-                    : item.available_stock === 0 
-                      ? 'text-red-500 font-medium'
-                      : item.available_stock < 10
-                        ? 'text-amber-500'
-                        : 'text-muted-foreground'
-                }`}
+                className={`text-muted-foreground ${isList ? 'text-xs md:text-sm' : 'text-xs'}`}
               >
-                {!item.has_stock 
-                  ? 'Made to Order' 
+                {item.points.toLocaleString()} pts
+              </p>
+            )}
+            <p
+              className={`text-xs ${isList ? 'md:text-sm' : ''} ${
+                !item.has_stock
+                  ? 'text-blue-500 dark:text-blue-400'
                   : item.available_stock === 0 
-                    ? 'Out of stock' 
-                    : `${item.available_stock} available`} • {item.category}
-              </p>
-              {/* Order quantity limits hint */}
-              <p className="text-xs text-muted-foreground">
-                Qty: {item.min_order_qty ?? 1}{item.max_order_qty ? ` - ${item.max_order_qty}` : '+'}
-              </p>
-            </div>
-            {/* Add button */}
-            <button
-              onClick={() => onAddToCart(item)}
-              className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-400 text-black hover:bg-yellow-300"
-              aria-label={`Add ${item.name}`}
+                    ? 'text-red-500 font-medium'
+                    : item.available_stock < 10
+                      ? 'text-amber-500'
+                      : 'text-muted-foreground'
+              }`}
             >
-              <Plus className="h-3 w-3 md:h-4 md:w-4" />
-            </button>
+              {!item.has_stock 
+                ? 'Made to Order' 
+                : item.available_stock === 0 
+                  ? 'Out of stock' 
+                  : `${item.available_stock} available`} • {item.category}
+            </p>
+            {/* Order quantity limits hint */}
+            <p className={`text-muted-foreground text-xs ${isList ? 'md:text-sm' : ''}`}>
+              Qty: {item.min_order_qty ?? 1}{item.max_order_qty ? ` - ${item.max_order_qty}` : '+'}
+            </p>
           </div>
-        )}
+          {/* Add button */}
+          <button
+            onClick={() => onAddToCart(item)}
+            className={`${isList ? 'w-7 h-7 md:w-8 md:h-8 ml-4' : 'w-7 h-7 md:w-8 md:h-8'} rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-400 text-black hover:bg-yellow-300 transition-colors`}
+            aria-label={`Add ${item.name}`}
+          >
+            <Plus className={`${isList ? 'h-4 w-4' : 'h-3 w-3 md:h-4 md:w-4'}`} />
+          </button>
+        </div>
       </div>
     </div>
   );

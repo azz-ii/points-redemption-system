@@ -1,4 +1,4 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, LayoutGrid, List } from "lucide-react";
 import type { RedeemItemHeaderProps } from "../types";
 
 export function RedeemItemHeader({
@@ -6,6 +6,8 @@ export function RedeemItemHeader({
   userLoading,
   cartItemsCount,
   onCartClick,
+  viewMode,
+  setViewMode,
 }: RedeemItemHeaderProps) {
   return (
     <div className="flex justify-between items-start mb-4 md:mb-6">
@@ -20,6 +22,31 @@ export function RedeemItemHeader({
         </p>
       </div>
       <div className="flex items-center gap-3">
+        <div className="flex bg-muted rounded-lg p-1">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === "grid" 
+                ? "bg-background shadow-sm" 
+                : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"
+            }`}
+            aria-label="Grid view"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === "list" 
+                ? "bg-background shadow-sm" 
+                : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"
+            }`}
+            aria-label="List view"
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
+        
         <div
           className={`text-sm font-semibold flex items-center gap-2 px-3 py-2 rounded-lg bg-muted ${
             userPoints < 0

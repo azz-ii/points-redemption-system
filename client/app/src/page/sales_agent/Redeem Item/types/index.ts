@@ -12,6 +12,8 @@ export interface RedeemItemHeaderProps {
   userLoading: boolean;
   cartItemsCount: number;
   onCartClick: () => void;
+  viewMode: "grid" | "list";
+  setViewMode: (mode: "grid" | "list") => void;
 }
 
 export interface SearchBarProps {
@@ -32,12 +34,14 @@ export interface ItemsGridProps {
   error: string | null;
   searchQuery: string;
   activeCategory: string;
+  viewMode: "grid" | "list";
   onAddToCart: (item: RedeemItem) => void;
   onRetry?: () => void;
 }
 
 export interface ItemCardProps {
   item: RedeemItem;
+  layout?: "grid" | "list";
   onAddToCart: (item: RedeemItem) => void;
 }
 

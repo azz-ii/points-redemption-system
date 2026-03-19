@@ -26,6 +26,7 @@ export default function RedeemItem() {
   const [currentPage_num, setCurrentPage_num] = useState(1);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const itemsPerPage = 12;
 
   // Query hooks for data fetching
@@ -194,6 +195,8 @@ export default function RedeemItem() {
           userLoading={userLoading}
           cartItemsCount={cartItems.length}
           onCartClick={() => setCartOpen(true)}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
         />
 
         <SearchBar
@@ -221,6 +224,7 @@ export default function RedeemItem() {
             error={error}
             searchQuery={searchQuery}
             activeCategory={activeCategory}
+            viewMode={viewMode}
             onAddToCart={handleAddToCart}
           />
         </div>

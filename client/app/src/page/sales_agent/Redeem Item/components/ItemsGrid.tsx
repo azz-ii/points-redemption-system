@@ -10,6 +10,7 @@ export function ItemsGrid({
   error,
   searchQuery,
   activeCategory,
+  viewMode,
   onAddToCart,
   onRetry,
 }: ItemsGridProps) {
@@ -26,9 +27,13 @@ export function ItemsGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+    <div className={
+      viewMode === "grid"
+        ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"
+        : "flex flex-col gap-3"
+    }>
       {items.map((item) => (
-        <ItemCard key={item.id} item={item} onAddToCart={onAddToCart} />
+        <ItemCard key={item.id} item={item} layout={viewMode} onAddToCart={onAddToCart} />
       ))}
     </div>
   );
