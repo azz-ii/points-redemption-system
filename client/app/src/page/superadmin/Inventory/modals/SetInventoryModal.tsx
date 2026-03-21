@@ -151,7 +151,7 @@ export function SetInventoryModal({
   const handleSubmit = () => {
     // Only submit updates for items with non-zero deltas
     const updates: { id: number; adjustment: number; reason: string }[] = [];
-    let missingReasons: string[] = [];
+    const missingReasons: string[] = [];
     
     // Get all item IDs that have stock changes
     Object.entries(stockToAdd).forEach(([idStr, delta]) => {

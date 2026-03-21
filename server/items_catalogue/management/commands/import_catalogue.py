@@ -56,11 +56,11 @@ class Command(BaseCommand):
                     stock_str = row.get('stock', '0').strip()
                     committed_stock_str = row.get('committed_stock', '0').strip()
                     
-                    # Parse pricing_type
-                    pricing_type = row.get('pricing_type', 'FIXED').strip().upper()
-                    if pricing_type not in ['FIXED', 'PER_SQFT', 'PER_INVOICE', 'PER_DAY', 'PER_EU_SRP']:
-                        pricing_type = 'FIXED'
-                    
+                    # Parse pricing_formula
+                    pricing_formula = row.get('pricing_formula', 'NONE').strip().upper()
+                    if pricing_formula not in ['NONE', 'AREA_RATE', 'DRIVER_MULTIPLIER', 'PER_SQFT', 'PER_INVOICE', 'PER_DAY', 'PER_EU_SRP']:
+                        pricing_formula = 'NONE'
+
                     # Parse approval_type
                     approval_type = row.get('approval_type', 'SALES').strip().upper()
                     if approval_type not in ['SALES', 'MARKETING', 'BOTH']:
@@ -127,7 +127,7 @@ class Command(BaseCommand):
                             category=category,
                             points=points,
                             price=price,
-                            pricing_type=pricing_type,
+                            pricing_formula=pricing_formula,
                             stock=stock,
                             committed_stock=committed_stock,
                             approval_type=approval_type,

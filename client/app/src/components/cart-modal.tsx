@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Trash2, X, ChevronDown, Info, Search, UserPlus } from "lucide-react";
 import { distributorsApi } from "@/lib/distributors-api";
 import { customersApi, type Customer as FullCustomer, type SimilarCustomersResponse } from "@/lib/customers-api";
-import { redemptionRequestsApi, clearCartBackend, type CreateRedemptionRequestData, type PricingType, type RequestedForType, DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS, PRICING_TYPE_INPUT_HINTS } from "@/lib/api";
+import { redemptionRequestsApi, clearCartBackend, type CreateRedemptionRequestData, type RequestedForType } from "@/lib/api";
 import { toast } from "sonner";
 import SimilarCustomersDialog from "./similar-customers-dialog";
 import { useAuth } from "@/context/AuthContext";
@@ -14,9 +14,9 @@ export interface CartItem {
   image?: string;
   quantity: number; // For FIXED pricing items
   needs_driver?: boolean;
-  pricing_type: PricingType;
-  points_multiplier?: number | null; // For dynamic items
-  dynamic_quantity?: number; // For dynamic items (sqft, invoice amount, etc.)
+  pricing_formula?: string | null;
+  points_multiplier?: number | null;
+  extra_data?: Record<string, any>;
   available_stock: number; // Available stock for validation
   min_order_qty: number; // Minimum quantity per order
   max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
@@ -27,7 +27,7 @@ interface CartModalProps {
   onClose: () => void;
   items: CartItem[];
   onUpdateQuantity: (itemId: string, quantity: number) => void;
-  onUpdateDynamicQuantity: (itemId: string, dynamicQuantity: number) => void;
+  onUpdateExtraData?: (itemId: string, key: string, value: any) => void;
   onRemoveItem: (itemId: string) => void;
   availablePoints: number;
 }
@@ -37,7 +37,7 @@ export default function CartModal({
   onClose,
   items,
   onUpdateQuantity,
-  onUpdateDynamicQuantity,
+  onUpdateExtraData,
   onRemoveItem,
   availablePoints,
 }: CartModalProps) {
@@ -48,9 +48,7 @@ export default function CartModal({
   const [remarks, setRemarks] = useState("");
   const [svcDate, setSvcDate] = useState<string>("");
   const [svcTime, setSvcTime] = useState<string>("");
-  const [svcDriver, setSvcDriver] = useState<string>("without");
   const [plateNumber, setPlateNumber] = useState<string>("");
-  const [driverName, setDriverName] = useState<string>("");
   
   // Entity type selection (Distributor, Customer, or Self)
   const [entityType, setEntityType] = useState<RequestedForType>(isApproverWithSelfRequest ? 'SELF' : 'DISTRIBUTOR');
@@ -82,10 +80,6 @@ export default function CartModal({
   
   // Points deduction and submission state
   const [pointsDeductedFrom, setPointsDeductedFrom] = useState<'SELF' | 'DISTRIBUTOR'>('SELF');
-  
-  // Validation state for dynamic inputs
-  const [inputErrors, setInputErrors] = useState<Record<string, string>>({});
-  const [showTooltips, setShowTooltips] = useState<Record<string, boolean>>({});
 
   // Load all distributors and customers when modal opens or step changes to details
   useEffect(() => {
@@ -148,38 +142,24 @@ export default function CartModal({
   if (!isOpen) return null;
 
   // Validate dynamic quantity input
-  const validateDynamicQuantity = (value: number, pricingType: PricingType): string => {
-    if (value < 0) return 'Value cannot be negative';
-    if (isNaN(value)) return 'Please enter a valid number';
-    
-    // Type-specific validations
-    if (pricingType === 'PER_EU_SRP') {
-      if (value > 999999.99) return 'Amount too large';
-      // Check for reasonable decimal places (max 2)
-      const decimals = value.toString().split('.')[1];
-      if (decimals && decimals.length > 2) return 'Max 2 decimal places';
-    } else if (pricingType === 'PER_INVOICE') {
-      if (value > 999999) return 'Quantity too large';
-      if (value % 1 !== 0) return 'Must be a whole number';
-    } else if (pricingType === 'PER_SQFT') {
-      if (value > 999999) return 'Area too large';
-    } else if (pricingType === 'PER_DAY') {
-      if (value > 365) return 'Max 365 days';
-      if (value % 1 !== 0) return 'Must be whole days';
-    }
-    
-    return '';
-  };
-  
-  // Calculate points for each item based on pricing type
+  // Calculate points for each item based on pricing formula
   const getItemPoints = (item: CartItem): number => {
-    if (item.pricing_type === 'FIXED') {
+    if (!item.pricing_formula || item.pricing_formula === 'NONE') {
       return item.points * item.quantity;
-    } else {
-      // Dynamic pricing: dynamic_quantity × points_multiplier
-      const multiplier = item.points_multiplier || item.points;
-      return (item.dynamic_quantity || 0) * multiplier;
     }
+    
+    let multiplier_from_formula = 0;
+    if (item.pricing_formula === 'DRIVER_MULTIPLIER') {
+      multiplier_from_formula = item.extra_data?.driver_type === 'WITH_DRIVER' ? 2 : 1;
+    } else if (item.pricing_formula === 'PER_DAY') {
+      multiplier_from_formula = Number(item.extra_data?.days) || 0;
+    } else if (item.pricing_formula === 'PER_SQFT') {
+      multiplier_from_formula = (Number(item.extra_data?.length) || 0) * (Number(item.extra_data?.width) || 0);
+    } else if (item.pricing_formula === 'PER_INVOICE') {
+      multiplier_from_formula = Number(item.extra_data?.invoice_amount) || 0;
+    }
+
+    return item.quantity * item.points * multiplier_from_formula;
   };
 
   const totalPoints = items.reduce(
@@ -253,6 +233,44 @@ export default function CartModal({
     }
   };
 
+  const validateCartItems = (): boolean => {
+    if (items.length === 0) {
+      toast.error("Cart is empty");
+      return false;
+    }
+
+    const missingDynamic = items.find((item) => {
+      if (!item.pricing_formula || item.pricing_formula === 'NONE') return false;
+      if (item.pricing_formula === 'DRIVER_MULTIPLIER') {
+        if (item.extra_data?.driver_type === 'WITH_DRIVER' && (!item.extra_data?.driver_name || !item.extra_data.driver_name.trim())) return true;
+      }
+      if (item.pricing_formula === 'PER_DAY' && !item.extra_data?.days) return true;
+      if (item.pricing_formula === 'PER_SQFT') {
+        const len = Number(item.extra_data?.length);
+        const wid = Number(item.extra_data?.width);
+        if (!item.extra_data?.length || isNaN(len) || len <= 0 || !item.extra_data?.width || isNaN(wid) || wid <= 0) return true;
+      }
+      if (item.pricing_formula === 'PER_INVOICE' && !item.extra_data?.invoice_amount) return true;
+      return false;
+    });
+
+    if (missingDynamic) {
+      if (missingDynamic.pricing_formula === 'DRIVER_MULTIPLIER') {
+        toast.error(`Please provide a driver name for "${missingDynamic.name}"`);
+      } else {
+        toast.error(`Please fill in the required inputs validly for "${missingDynamic.name}"`);
+      }
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateCartItems()) {
+      setStep("details");
+    }
+  };
+
   const handleSubmit = async () => {
     // Validate entity selection based on type (skip for SELF)
     if (entityType !== 'SELF') {
@@ -266,18 +284,7 @@ export default function CartModal({
       }
     }
 
-    if (items.length === 0) {
-      toast.error("Cart is empty");
-      return;
-    }
-
-    // Validate dynamic-pricing items have a quantity entered
-    const missingDynamic = items.filter(
-      item => item.pricing_type !== 'FIXED' && !(item.dynamic_quantity && item.dynamic_quantity > 0)
-    );
-    if (missingDynamic.length > 0) {
-      const label = DYNAMIC_QUANTITY_LABELS[missingDynamic[0].pricing_type as keyof typeof DYNAMIC_QUANTITY_LABELS]?.toLowerCase() ?? 'quantity';
-      toast.error(`Please enter a ${label} for "${missingDynamic[0].name}"`);
+    if (!validateCartItems()) {
       return;
     }
 
@@ -293,16 +300,17 @@ export default function CartModal({
       points_deducted_from: entityType === 'SELF' ? 'SELF' : pointsDeductedFrom,
       remarks: remarks || undefined,
       items: items.map(item => {
-        if (item.pricing_type === 'FIXED') {
+        if (!item.pricing_formula || item.pricing_formula === 'NONE') {
           return {
             product_id: item.id,
             quantity: item.quantity,
           };
         } else {
-          // Dynamic pricing: send dynamic_quantity instead of quantity
+          // Dynamic pricing: send extra_data and quantity
           return {
             product_id: item.id,
-            dynamic_quantity: item.dynamic_quantity || 0,
+            quantity: item.quantity,
+            extra_data: item.extra_data || {},
           };
         }
       }),
@@ -310,9 +318,7 @@ export default function CartModal({
       ...(hasItemsNeedingDriver && svcDate && {
         svc_date: svcDate,
         svc_time: svcTime || undefined,
-        svc_driver: svcDriver === 'with' ? 'WITH_DRIVER' : svcDriver === 'without' ? 'WITHOUT_DRIVER' : undefined,
         plate_number: plateNumber || undefined,
-        driver_name: driverName || undefined,
       }),
     };
 
@@ -330,9 +336,7 @@ export default function CartModal({
     setSelectedCustomerId(null);
     setSvcDate("");
     setSvcTime("");
-    setSvcDriver("without");
     setPlateNumber("");
-    setDriverName("");
     setPointsDeductedFrom('SELF');
     setEntityType(isApproverWithSelfRequest ? 'SELF' : 'DISTRIBUTOR');
     onClose();
@@ -437,153 +441,180 @@ export default function CartModal({
                               <span className="text-sm font-medium">
                                 {item.name}
                               </span>
-                              {item.pricing_type !== 'FIXED' && (
+                              {item.pricing_formula && item.pricing_formula !== 'NONE' && (
                                 <span className={`text-xs text-blue-600 dark:text-blue-400`}>
-                                  {item.points_multiplier || item.points} pts/{DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
+                                  {item.points} pts / {item.pricing_formula.replace('PER_', '').toLowerCase()}
                                 </span>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-center">
-                          {item.pricing_type === 'FIXED' ? (
-                            <div className="flex flex-col items-center gap-1">
-                              <div className="flex items-center justify-center gap-2">
-                                <button
-                                  onClick={() =>
-                                    onUpdateQuantity(
-                                      item.id,
-                                      Math.max(item.min_order_qty, item.quantity - 1)
-                                    )
-                                  }
-                                  disabled={item.quantity <= item.min_order_qty}
-                                  className={`px-2 py-1 rounded ${
-                                    item.quantity <= item.min_order_qty
-                                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                      : "bg-muted hover:bg-accent"
-                                  }`}
-                                >
-                                  −
-                                </button>
-                                <input
-                                  type="number"
-                                  min={item.min_order_qty}
-                                  max={item.max_order_qty !== null ? Math.min(item.max_order_qty, item.available_stock) : item.available_stock}
-                                  value={item.quantity}
-                                  onChange={(e) => {
-                                    const raw = parseInt(e.target.value, 10);
-                                    if (!isNaN(raw)) {
-                                      const maxQty = item.max_order_qty !== null
-                                        ? Math.min(item.max_order_qty, item.available_stock)
-                                        : item.available_stock;
-                                      onUpdateQuantity(item.id, Math.min(Math.max(raw, item.min_order_qty), maxQty));
-                                    }
-                                  }}
-                                  onBlur={(e) => {
-                                    const raw = parseInt(e.target.value, 10);
+                        <td className="py-4 px-4 text-center border-l border-r border-border">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() =>
+                                  onUpdateQuantity(
+                                    item.id,
+                                    Math.max(item.min_order_qty, item.quantity - 1)
+                                  )
+                                }
+                                disabled={item.quantity <= item.min_order_qty}
+                                className={`px-2 py-1 rounded ${
+                                  item.quantity <= item.min_order_qty
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                    : "bg-muted hover:bg-accent"
+                                }`}
+                              >
+                                −
+                              </button>
+                              <input
+                                type="number"
+                                min={item.min_order_qty}
+                                max={item.max_order_qty !== null ? Math.min(item.max_order_qty, item.available_stock) : item.available_stock}
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const raw = parseInt(e.target.value, 10);
+                                  if (!isNaN(raw)) {
                                     const maxQty = item.max_order_qty !== null
                                       ? Math.min(item.max_order_qty, item.available_stock)
                                       : item.available_stock;
-                                    const clamped = isNaN(raw)
-                                      ? item.min_order_qty
-                                      : Math.min(Math.max(raw, item.min_order_qty), maxQty);
-                                    onUpdateQuantity(item.id, clamped);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                                  }}
-                                  className="w-12 text-center text-sm rounded border bg-muted border-border outline-none focus:border-ring py-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                />
-                                <button
-                                  onClick={() => {
-                                    const maxQty = item.max_order_qty !== null 
-                                      ? Math.min(item.max_order_qty, item.available_stock)
-                                      : item.available_stock;
-                                    onUpdateQuantity(item.id, Math.min(item.quantity + 1, maxQty));
-                                  }}
-                                  disabled={
-                                    item.quantity >= item.available_stock || 
-                                    (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
+                                    onUpdateQuantity(item.id, Math.min(Math.max(raw, item.min_order_qty), maxQty));
                                   }
-                                  className={`px-2 py-1 rounded ${
-                                    item.quantity >= item.available_stock || 
-                                    (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
-                                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                      : "bg-muted hover:bg-accent"
-                                  }`}
-                                >
-                                  +
-                                </button>
-                              </div>
-                              <span className={`text-xs ${
-                                item.quantity >= item.available_stock || 
-                                (item.max_order_qty !== null && item.quantity >= item.max_order_qty) 
-                                  ? 'text-amber-500' 
-                                  : 'text-muted-foreground'
-                              }`}>
-                                {item.quantity}/{item.available_stock} available
-                                {item.max_order_qty !== null && ` (max ${item.max_order_qty})`}
-                              </span>
+                                }}
+                                onBlur={(e) => {
+                                  const raw = parseInt(e.target.value, 10);
+                                  const maxQty = item.max_order_qty !== null
+                                    ? Math.min(item.max_order_qty, item.available_stock)
+                                    : item.available_stock;
+                                  const clamped = isNaN(raw)
+                                    ? item.min_order_qty
+                                    : Math.min(Math.max(raw, item.min_order_qty), maxQty);
+                                  onUpdateQuantity(item.id, clamped);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                }}
+                                className="w-12 text-center text-sm rounded border bg-muted border-border outline-none focus:border-ring py-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button
+                                onClick={() => {
+                                  const maxQty = item.max_order_qty !== null 
+                                    ? Math.min(item.max_order_qty, item.available_stock)
+                                    : item.available_stock;
+                                  onUpdateQuantity(item.id, Math.min(item.quantity + 1, maxQty));
+                                }}
+                                disabled={
+                                  item.quantity >= item.available_stock || 
+                                  (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
+                                }
+                                className={`px-2 py-1 rounded ${
+                                  item.quantity >= item.available_stock || 
+                                  (item.max_order_qty !== null && item.quantity >= item.max_order_qty)
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                    : "bg-muted hover:bg-accent"
+                                }`}
+                              >
+                                +
+                              </button>
                             </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 relative">
-                              <div className="flex items-center gap-1">
-                                <label className={`text-xs text-muted-foreground`}>
-                                  {DYNAMIC_QUANTITY_LABELS[item.pricing_type]}
-                                </label>
-                                <button
-                                  onMouseEnter={() => setShowTooltips(prev => ({ ...prev, [item.id]: true }))}
-                                  onMouseLeave={() => setShowTooltips(prev => ({ ...prev, [item.id]: false }))}
-                                  className={`w-4 h-4 rounded-full flex items-center justify-center bg-muted hover:bg-accent`}
-                                >
-                                  <Info className="h-3 w-3" />
-                                </button>
-                              </div>
-                              {showTooltips[item.id] && (
-                                <div className={`absolute top-6 left-1/2 transform -translate-x-1/2 z-50 w-56 p-2 rounded shadow-lg text-xs bg-card text-foreground border border-border`}>
-                                  {PRICING_TYPE_DESCRIPTIONS[item.pricing_type]}
+                            <span className={`text-xs ${
+                              item.quantity >= item.available_stock || 
+                              (item.max_order_qty !== null && item.quantity >= item.max_order_qty) 
+                                ? 'text-amber-500' 
+                                : 'text-muted-foreground'
+                            }`}>
+                              {item.quantity}/{item.available_stock} available
+                              {item.max_order_qty !== null && ` (max ${item.max_order_qty})`}
+                            </span>
+                          </div>
+                          
+                          {item.pricing_formula && item.pricing_formula !== 'NONE' && (
+                            <div className="flex flex-col items-center gap-1 mt-3 pt-3 border-t border-border relative">
+                              <label className={`text-xs font-semibold text-muted-foreground`}>
+                                Formula Details
+                              </label>
+                              
+                              {item.pricing_formula === 'DRIVER_MULTIPLIER' && (
+                                <div className="flex flex-col gap-2 mt-1 w-full max-w-[150px]">
+                                  <select
+                                    value={item.extra_data?.driver_type || 'WITHOUT_DRIVER'}
+                                    onChange={(e) => onUpdateExtraData?.(item.id, 'driver_type', e.target.value)}
+                                    className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                  >
+                                    <option value="WITHOUT_DRIVER">Without Driver</option>
+                                    <option value="WITH_DRIVER">With Driver</option>
+                                  </select>
+                                  {item.extra_data?.driver_type === 'WITH_DRIVER' && (
+                                    <input
+                                      type="text"
+                                      value={item.extra_data?.driver_name || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'driver_name', e.target.value)}
+                                      placeholder="Driver Name"
+                                      className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  )}
                                 </div>
                               )}
-                              <div className="flex items-center gap-1">
-                                {item.pricing_type === 'PER_EU_SRP' && (
-                                  <span className={`text-xs text-muted-foreground`}>$</span>
-                                )}
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step={(item.pricing_type === 'PER_DAY' || item.pricing_type === 'PER_INVOICE') ? '1' : '0.01'}
-                                  value={item.dynamic_quantity || ''}
-                                  onChange={(e) => {
-                                    const val = parseFloat(e.target.value) || 0;
-                                    const error = validateDynamicQuantity(val, item.pricing_type);
-                                    setInputErrors(prev => ({ ...prev, [item.id]: error }));
-                                    onUpdateDynamicQuantity(item.id, val);
-                                  }}
-                                  placeholder={
-                                    item.pricing_type === 'PER_SQFT' ? 'e.g., 150' :
-                                    item.pricing_type === 'PER_EU_SRP' ? 'e.g., 1234.56' :
-                                    item.pricing_type === 'PER_INVOICE' ? 'e.g., 35' :
-                                    item.pricing_type === 'PER_DAY' ? 'e.g., 5' : '0'
-                                  }
-                                  className={`w-28 px-2 py-1 text-center rounded border outline-none ${
-                                    inputErrors[item.id]
-                                      ? 'border-red-500 focus:border-red-600'
-                                      : "bg-muted border-border focus:border-ring"
-                                  }`}
-                                />
-                                {PRICING_TYPE_INPUT_HINTS[item.pricing_type] && (
-                                  <span className={`text-xs text-muted-foreground`}>
-                                    {PRICING_TYPE_INPUT_HINTS[item.pricing_type]}
-                                  </span>
-                                )}
-                              </div>
-                              {inputErrors[item.id] && (
-                                <span className="text-xs text-destructive">{inputErrors[item.id]}</span>
+
+                              {item.pricing_formula === 'PER_DAY' && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-xs">Days:</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={item.extra_data?.days || ''}
+                                    onChange={(e) => onUpdateExtraData?.(item.id, 'days', e.target.value)}
+                                    placeholder="0"
+                                    className="w-20 px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                  />
+                                </div>
                               )}
-                              {!inputErrors[item.id] && item.dynamic_quantity && item.dynamic_quantity > 0 && (
-                                <span className={`text-xs text-muted-foreground`}>
-                                  {item.dynamic_quantity} × {item.points_multiplier || item.points} pts = {getItemPoints(item).toLocaleString()} pts
-                                </span>
+                              
+                              {item.pricing_formula === 'PER_SQFT' && (
+                                <div className="flex flex-col gap-1 mt-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs w-10 text-right">Len:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      value={item.extra_data?.length || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'length', e.target.value)}
+                                      placeholder="0"
+                                      className="w-16 px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs w-10 text-right">Wid:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      value={item.extra_data?.width || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'width', e.target.value)}
+                                      placeholder="0"
+                                      className="w-16 px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {item.pricing_formula === 'PER_INVOICE' && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-xs">Amount:</span>
+                                  <span className="text-xs text-muted-foreground">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={item.extra_data?.invoice_amount || ''}
+                                    onChange={(e) => onUpdateExtraData?.(item.id, 'invoice_amount', e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-20 px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                  />
+                                </div>
                               )}
                             </div>
                           )}
@@ -667,7 +698,7 @@ export default function CartModal({
                 Cancel
               </button>
               <button
-                onClick={() => setStep("details")}
+                onClick={handleNextStep}
                 disabled={items.length === 0}
                 className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
                   items.length === 0
@@ -1057,40 +1088,7 @@ export default function CartModal({
                           className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label
-                          className={`text-sm text-foreground`}
-                        >
-                          Driver
-                        </label>
-                        <select
-                          value={svcDriver}
-                          onChange={(e) => setSvcDriver(e.target.value)}
-                          className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
-                        >
-                          <option value="without">Without Driver</option>
-                          <option value="with">With Driver</option>
-                        </select>
-                      </div>
                     </div>
-                    {svcDriver === 'with' && (
-                      <div className="mt-4">
-                        <div className="space-y-1">
-                          <label
-                            className={`text-sm text-foreground`}
-                          >
-                            Driver Name
-                          </label>
-                          <input
-                            type="text"
-                            value={driverName}
-                            onChange={(e) => setDriverName(e.target.value)}
-                            placeholder="Enter driver name"
-                            className={`w-full px-3 py-2 rounded-md outline-none bg-muted border border-border`}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -1155,7 +1153,7 @@ export default function CartModal({
                       />
                       <div className="flex-1">
                         <h3 className="font-semibold text-sm">{item.name}</h3>
-                        {item.pricing_type === 'FIXED' ? (
+                        {!item.pricing_formula || item.pricing_formula === 'NONE' ? (
                           <>
                             <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
                               {item.points.toLocaleString()} pts
@@ -1239,57 +1237,98 @@ export default function CartModal({
                         ) : (
                           <>
                             <p className={`text-xs text-blue-600 dark:text-blue-400`}>
-                              {item.points_multiplier || item.points} pts/{DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
+                              {item.points} pts / {item.pricing_formula.replace('PER_', '').toLowerCase()}
                             </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <label className={`text-xs text-muted-foreground`}>
-                                {DYNAMIC_QUANTITY_LABELS[item.pricing_type]}:
-                              </label>
-                              {(item.pricing_type === 'PER_INVOICE' || item.pricing_type === 'PER_EU_SRP') && (
-                                <span className={`text-xs text-muted-foreground`}>$</span>
+                            
+                            <div className="flex flex-col gap-1 mt-2">
+                              {item.pricing_formula === 'DRIVER_MULTIPLIER' && (
+                                <div className="flex flex-col gap-2 mt-1">
+                                  <select
+                                    value={item.extra_data?.driver_type || 'WITHOUT_DRIVER'}
+                                    onChange={(e) => onUpdateExtraData?.(item.id, 'driver_type', e.target.value)}
+                                    className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                  >
+                                    <option value="WITHOUT_DRIVER">Without Driver</option>
+                                    <option value="WITH_DRIVER">With Driver</option>
+                                  </select>
+                                  {item.extra_data?.driver_type === 'WITH_DRIVER' && (
+                                    <input
+                                      type="text"
+                                      value={item.extra_data?.driver_name || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'driver_name', e.target.value)}
+                                      placeholder="Driver Name"
+                                      className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  )}
+                                </div>
                               )}
-                              <input
-                                type="number"
-                                min="0"
-                                step={item.pricing_type === 'PER_DAY' ? '1' : '0.01'}
-                                value={item.dynamic_quantity || ''}
-                                onChange={(e) => {
-                                  const val = parseFloat(e.target.value) || 0;
-                                  const error = validateDynamicQuantity(val, item.pricing_type);
-                                  setInputErrors(prev => ({ ...prev, [item.id]: error }));
-                                  onUpdateDynamicQuantity(item.id, val);
-                                }}
-                                placeholder={
-                                  item.pricing_type === 'PER_SQFT' ? 'e.g., 150' :
-                                  item.pricing_type === 'PER_INVOICE' || item.pricing_type === 'PER_EU_SRP' ? 'e.g., 1234.56' :
-                                  item.pricing_type === 'PER_DAY' ? 'e.g., 5' : '0'
-                                }
-                                className={`w-24 px-2 py-1 text-xs rounded border outline-none ${
-                                  inputErrors[item.id]
-                                    ? 'border-red-500 focus:border-red-600'
-                                    : "bg-muted border-border focus:border-ring"
-                                }`}
-                              />
-                              {PRICING_TYPE_INPUT_HINTS[item.pricing_type] && (
-                                <span className={`text-xs text-muted-foreground`}>
-                                  {PRICING_TYPE_INPUT_HINTS[item.pricing_type]}
-                                </span>
+
+                              {item.pricing_formula === 'PER_DAY' && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs w-12">Days:</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={item.extra_data?.days || ''}
+                                    onChange={(e) => onUpdateExtraData?.(item.id, 'days', e.target.value)}
+                                    placeholder="0"
+                                    className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                  />
+                                </div>
+                              )}
+                              
+                              {item.pricing_formula === 'PER_SQFT' && (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs w-12">Length:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      value={item.extra_data?.length || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'length', e.target.value)}
+                                      placeholder="0"
+                                      className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs w-12">Width:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      value={item.extra_data?.width || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'width', e.target.value)}
+                                      placeholder="0"
+                                      className="w-full px-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  </div>
+                                </>
+                              )}
+
+                              {item.pricing_formula === 'PER_INVOICE' && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs w-12">Amount:</span>
+                                  <div className="flex w-full relative">
+                                    <span className="absolute left-2 top-1 text-xs text-muted-foreground">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={item.extra_data?.invoice_amount || ''}
+                                      onChange={(e) => onUpdateExtraData?.(item.id, 'invoice_amount', e.target.value)}
+                                      placeholder="0.00"
+                                      className="w-full pl-5 pr-2 py-1 text-center rounded border outline-none bg-muted border-border focus:border-ring text-xs"
+                                    />
+                                  </div>
+                                </div>
                               )}
                             </div>
-                            {inputErrors[item.id] ? (
-                              <p className="text-xs text-destructive mt-1">
-                                {inputErrors[item.id]}
-                              </p>
-                            ) : (
-                              <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-1">
-                                = {getItemPoints(item).toLocaleString()} pts
-                                {item.dynamic_quantity && item.dynamic_quantity > 0 && (
-                                  <span className={`ml-1 font-normal text-muted-foreground`}>
-                                    ({item.dynamic_quantity} × {item.points_multiplier || item.points})
-                                  </span>
-                                )}
-                              </p>
-                            )}
+                            
+                            <p className="text-xs text-green-600 dark:text-green-400 font-semibold mt-2 border-t border-border pt-1">
+                              Total: {getItemPoints(item).toLocaleString()} pts
+                            </p>
                           </>
                         )}
                       </div>
@@ -1738,40 +1777,7 @@ export default function CartModal({
                           className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label
-                          className={`text-xs text-foreground`}
-                        >
-                          Driver
-                        </label>
-                        <select
-                          value={svcDriver}
-                          onChange={(e) => setSvcDriver(e.target.value)}
-                          className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
-                        >
-                          <option value="without">Without Driver</option>
-                          <option value="with">With Driver</option>
-                        </select>
-                      </div>
                     </div>
-                    {svcDriver === 'with' && (
-                      <div className="mt-3">
-                        <div className="space-y-1">
-                          <label
-                            className={`text-xs text-foreground`}
-                          >
-                            Driver Name
-                          </label>
-                          <input
-                            type="text"
-                            value={driverName}
-                            onChange={(e) => setDriverName(e.target.value)}
-                            placeholder="Enter driver name"
-                            className={`w-full px-3 py-2 text-sm rounded-md outline-none bg-muted border border-border`}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -1783,7 +1789,7 @@ export default function CartModal({
         {step === "cart" ? (
           <div className="flex flex-col gap-2 p-4 border-t border-border">
             <button
-              onClick={() => setStep("details")}
+              onClick={handleNextStep}
               disabled={items.length === 0}
               className={`w-full px-4 py-3 rounded-lg font-semibold text-primary-foreground ${
                 items.length === 0

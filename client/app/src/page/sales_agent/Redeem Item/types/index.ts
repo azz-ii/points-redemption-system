@@ -36,6 +36,7 @@ export interface ItemsGridProps {
   activeCategory: string;
   viewMode: "grid" | "list";
   onAddToCart: (item: RedeemItem) => void;
+  onViewItem?: (item: RedeemItem) => void;
   onRetry?: () => void;
 }
 
@@ -43,6 +44,7 @@ export interface ItemCardProps {
   item: RedeemItem;
   layout?: "grid" | "list";
   onAddToCart: (item: RedeemItem) => void;
+  onViewItem?: (item: RedeemItem) => void;
 }
 
 export interface PaginationProps {

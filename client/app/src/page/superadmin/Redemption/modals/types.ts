@@ -27,6 +27,7 @@ export interface RequestItemVariant {
   item_processed_by?: number | null;
   item_processed_by_name?: string | null;
   item_processed_at?: string | null;
+  extra_data?: Record<string, any> | null;
 }
 
 /** Data sent per-item when calling mark_items_processed */

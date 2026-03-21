@@ -9,7 +9,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
-import { FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { FileSpreadsheet, FileText, Loader2, X } from "lucide-react";
 import type { ItemPopularity } from "../utils/analyticsApi";
 import type { DetailExportItem } from "./ChartExportButton";
 import { exportDataAsExcel, exportDataAsPdf } from "./ChartExportButton";
@@ -35,6 +35,7 @@ const COLORS = [
 
 export function ItemPopularityChart({ data, loading, detailItems }: ItemPopularityChartProps) {
   const [fetchingId, setFetchingId] = useState<string | number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleExport = async (item: DetailExportItem, format: "excel" | "pdf") => {
     try {
@@ -87,7 +88,7 @@ export function ItemPopularityChart({ data, loading, detailItems }: ItemPopulari
     );
   }
 
-  const chartData = data.map((item) => ({
+  const chartData = data.slice(0, 5).map((item) => ({
     ...item,
     shortName:
       item.item_name.length > 20
@@ -95,13 +96,16 @@ export function ItemPopularityChart({ data, loading, detailItems }: ItemPopulari
         : item.item_name,
   }));
 
+  const displayData = data.slice(0, 5);
+
   return (
-    <div className="space-y-4">
-      <ResponsiveContainer width="100%" height={Math.max(250, data.length * 35)}>
-        <BarChart
-          data={chartData}
-          layout="vertical"
-          margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+    <div className="space-y-4 flex flex-col h-full">
+      <div className="shrink-0 h-[250px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={chartData}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
           <XAxis type="number" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
@@ -130,7 +134,8 @@ export function ItemPopularityChart({ data, loading, detailItems }: ItemPopulari
             ))}
           </Bar>
         </BarChart>
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+      </div>
 
       {/* Detail table */}
       <div className="overflow-x-auto">
@@ -149,7 +154,7 @@ export function ItemPopularityChart({ data, loading, detailItems }: ItemPopulari
             </tr>
           </thead>
           <tbody>
-            {data.map((item, i) => {
+            {displayData.map((item, i) => {
               const detail = detailItems?.find((d) => d.id === item.product_id);
               const isFetching = fetchingId === item.product_id;
               return (
@@ -198,6 +203,104 @@ export function ItemPopularityChart({ data, loading, detailItems }: ItemPopulari
           </tbody>
         </table>
       </div>
+
+      {data.length > 5 && (
+        <div className="flex justify-center mt-2 border-t border-border pt-3">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            View All {data.length} Items
+          </button>
+        </div>
+      )}
+
+      {/* ── View All Modal ── */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm bg-background/80">
+          <div className="bg-card w-full max-w-5xl rounded-xl border border-border shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="text-lg font-semibold">All Redeemed Items</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card z-10 shadow-sm">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Item</th>
+                    <th className="text-left py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Code</th>
+                    <th className="text-left py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Category</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Qty</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Points</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Requests</th>
+                    {detailItems && detailItems.length > 0 && (
+                      <th className="text-center py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Export Details</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((item, i) => {
+                    const detail = detailItems?.find((d) => d.id === item.product_id);
+                    const isFetching = fetchingId === item.product_id;
+                    return (
+                      <tr key={item.product_id} className="border-b border-border/50 hover:bg-accent/50 transition-colors">
+                        <td className="py-2.5 px-3 flex items-center gap-3">
+                          <span
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                          />
+                          <span className="font-medium text-foreground">{item.item_name}</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-muted-foreground">{item.item_code}</td>
+                        <td className="py-2.5 px-3 text-muted-foreground">
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-accent text-[11px] font-medium">
+                            {item.legend}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-medium">{item.total_quantity}</td>
+                        <td className="py-2.5 px-3 text-right font-medium">{item.total_points.toLocaleString()}</td>
+                        <td className="py-2.5 px-3 text-right font-medium">{item.request_count}</td>
+                        {detail && (
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center justify-center gap-1">
+                              {isFetching ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleExport(detail, "excel")}
+                                    title={`Export ${item.item_name} as Excel`}
+                                    className="p-1.5 rounded-md border border-border hover:bg-background transition-colors"
+                                  >
+                                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleExport(detail, "pdf")}
+                                    title={`Export ${item.item_name} as PDF`}
+                                    className="p-1.5 rounded-md border border-border hover:bg-background transition-colors"
+                                  >
+                                    <FileText className="h-4 w-4 text-rose-500" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

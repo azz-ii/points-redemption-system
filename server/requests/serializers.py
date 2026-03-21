@@ -43,7 +43,6 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
     product_name = serializers.SerializerMethodField()
     product_code = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
-    pricing_type_display = serializers.SerializerMethodField()
     item_processed_by_name = serializers.SerializerMethodField()
     item_legend = serializers.SerializerMethodField()
     remaining_quantity = serializers.SerializerMethodField()
@@ -54,10 +53,10 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
         model = RedemptionRequestItem
         fields = [
             'id', 'product', 'product_name', 'product_code',
-            'quantity', 'points_per_item', 
+            'quantity', 'points_per_item',
             'total_points', 'image_url',
             # Dynamic pricing fields
-            'pricing_type', 'pricing_type_display', 'dynamic_quantity', 'points_multiplier',
+            'points_multiplier',
             # Partial fulfillment fields
             'fulfilled_quantity', 'remaining_quantity', 'is_fully_fulfilled',
             # Item-level processing fields
@@ -65,6 +64,7 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
             'item_legend',
             # Fulfillment history
             'fulfillment_logs',
+            'extra_data', 'pricing_formula'
         ]
         read_only_fields = ['id']
 
@@ -77,17 +77,6 @@ class RedemptionRequestItemSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         """Product images not implemented yet, return None"""
         return None
-
-    def get_pricing_type_display(self, obj):
-        """Human-readable pricing type"""
-        pricing_labels = {
-            'FIXED': 'Fixed',
-            'PER_SQFT': 'Per Sq Ft',
-            'PER_INVOICE': 'Per Invoice Amount',
-            'PER_DAY': 'Per Day',
-            'PER_EU_SRP': 'Per EU SRP',
-        }
-        return pricing_labels.get(obj.pricing_type, obj.pricing_type) if obj.pricing_type else 'Fixed'
 
     def get_item_processed_by_name(self, obj):
         if obj.item_processed_by:
@@ -389,44 +378,23 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             if product.is_archived:
                 raise serializers.ValidationError(f"Product '{product.item_name}' is archived and cannot be redeemed")
             
-            # Check requirements based on pricing type
-            pricing_type = product.pricing_type or 'FIXED'
-            
-            if pricing_type == 'FIXED':
-                # Fixed pricing requires quantity
-                if 'quantity' not in item:
-                    raise serializers.ValidationError("Each FIXED pricing item must have a quantity")
-                if item['quantity'] <= 0:
-                    raise serializers.ValidationError("Quantity must be greater than 0")
-                
-                # Track quantity for stock validation
-                qty = item['quantity']
-            else:
-                # Dynamic pricing requires dynamic_quantity
-                if 'dynamic_quantity' not in item:
+            # Validate extra data
+            extra_data = item.get('extra_data', {})
+            extra_fields = product.extra_fields.all()
+            for ef in extra_fields:
+                if ef.is_required and ef.field_key not in extra_data:
                     raise serializers.ValidationError(
-                        f"Item '{product.item_name}' uses {pricing_type} pricing and requires a dynamic_quantity value"
+                        f"Missing required extra field '{ef.field_key}' for product '{product.item_name}'"
                     )
-                try:
-                    dq = float(item['dynamic_quantity'])
-                    if dq <= 0:
-                        raise serializers.ValidationError(
-                            f"dynamic_quantity must be greater than 0 for '{product.item_name}'"
-                        )
-                except (ValueError, TypeError):
-                    raise serializers.ValidationError(
-                        f"dynamic_quantity must be a valid number for '{product.item_name}'"
-                    )
-                
-                # Validate that product has points_multiplier set
-                if not product.points_multiplier:
-                    raise serializers.ValidationError(
-                        f"Item '{product.item_name}' has dynamic pricing but no points_multiplier configured"
-                    )
-                
-                # Dynamic pricing items use quantity=1 for stock purposes
-                qty = 1
-            
+
+            # Every item must have a quantity
+            if 'quantity' not in item:
+                raise serializers.ValidationError("Each item must have a quantity")
+            if item['quantity'] <= 0:
+                raise serializers.ValidationError("Quantity must be greater than 0")
+
+            qty = item['quantity']
+
             # Aggregate quantities per product
             product_id = item['product_id']
             if product_id in product_quantities:
@@ -499,54 +467,41 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             total_points = 0
             for item_data in items_data:
                 product = Product.objects.select_for_update().get(id=item_data['product_id'])
-                pricing_type = product.pricing_type or 'FIXED'
+                pricing_formula = product.pricing_formula
+                extra_data = item_data.get('extra_data', {})
+                quantity = item_data.get('quantity', 1)
                 
-                if pricing_type == 'FIXED':
-                    # Fixed pricing: quantity * points_per_item
-                    quantity = item_data['quantity']
-                    try:
-                        points_per_item = int(float(product.points))
-                    except (ValueError, TypeError):
-                        points_per_item = 0
-                    
-                    item_total = quantity * points_per_item
-                    total_points += item_total
-                    
-                    RedemptionRequestItem.objects.create(
-                        request=redemption_request,
-                        product=product,
-                        quantity=quantity,
-                        points_per_item=points_per_item,
-                        total_points=item_total,
-                        pricing_type=pricing_type,
-                        dynamic_quantity=None,
-                        points_multiplier=None
-                    )
-                    
-                    # Commit stock for this item
-                    product.commit_stock(quantity)
-                else:
-                    # Dynamic pricing: dynamic_quantity * points_multiplier
+                try:
+                    base_points_per_item = int(float(product.points))
+                except (ValueError, TypeError):
+                    base_points_per_item = 0
+
+                if pricing_formula and pricing_formula != 'NONE':
+                    from items_catalogue.formulas import FORMULA_REGISTRY
                     from decimal import Decimal
-                    dynamic_qty = Decimal(str(item_data['dynamic_quantity']))
-                    points_multiplier = product.points_multiplier or Decimal('0')
+                    formula_func = FORMULA_REGISTRY.get(pricing_formula)
                     
-                    item_total = int(dynamic_qty * points_multiplier)
-                    total_points += item_total
+                    if not formula_func:
+                        raise serializers.ValidationError(f"Formula '{pricing_formula}' is not registered.")
                     
-                    RedemptionRequestItem.objects.create(
-                        request=redemption_request,
-                        product=product,
-                        quantity=1,  # Default to 1 for dynamic pricing items
-                        points_per_item=None,
-                        total_points=item_total,
-                        pricing_type=pricing_type,
-                        dynamic_quantity=dynamic_qty,
-                        points_multiplier=points_multiplier
-                    )
+                    # Calculate total right from formula, ignoring fixed/dynamic split as formula dictates cost.
+                    item_total = formula_func(Decimal(str(base_points_per_item)), extra_data, product)
+                else:
+                    item_total = quantity * base_points_per_item
                     
-                    # Commit stock for dynamic pricing items (quantity=1)
-                    product.commit_stock(1)
+                total_points += item_total
+                
+                RedemptionRequestItem.objects.create(
+                    request=redemption_request,
+                    product=product,
+                    quantity=quantity,
+                    points_per_item=base_points_per_item,
+                    total_points=item_total,
+                    points_multiplier=product.points_multiplier,
+                    extra_data=extra_data,
+                    pricing_formula=pricing_formula
+                )
+                product.commit_stock(quantity)
             
             # Update total points on the request
             redemption_request.total_points = total_points

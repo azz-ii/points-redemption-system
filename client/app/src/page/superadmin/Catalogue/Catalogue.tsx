@@ -106,12 +106,7 @@ function Catalogue() {
       | "Giveaway"
       | "Asset"
       | "Benefit",
-    pricing_type: "FIXED" as
-      | "FIXED"
-      | "PER_SQFT"
-      | "PER_INVOICE"
-      | "PER_DAY"
-      | "PER_EU_SRP",
+    pricing_formula: null as "NONE" | "DRIVER_MULTIPLIER" | "AREA_RATE" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | null,
     points: "",
     price: "",
     min_order_qty: "1",
@@ -122,6 +117,7 @@ function Catalogue() {
     points_multiplier: "",
     price_multiplier: "",
     mktg_admin: "",
+    extra_fields: [] as any[],
   });
 
   const [editItem, setEditItem] = useState({
@@ -136,12 +132,7 @@ function Catalogue() {
       | "Giveaway"
       | "Asset"
       | "Benefit",
-    pricing_type: "FIXED" as
-      | "FIXED"
-      | "PER_SQFT"
-      | "PER_INVOICE"
-      | "PER_DAY"
-      | "PER_EU_SRP",
+    pricing_formula: null as "NONE" | "DRIVER_MULTIPLIER" | "AREA_RATE" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | null,
     points: "",
     price: "",
     min_order_qty: "1",
@@ -152,6 +143,7 @@ function Catalogue() {
     points_multiplier: "",
     price_multiplier: "",
     mktg_admin: "",
+    extra_fields: [] as any[],
   });
 
   // Modal state for edit/view/archive
@@ -191,7 +183,7 @@ function Catalogue() {
       return;
     }
 
-    const isFixed = newItem.pricing_type === "FIXED";
+    const isFixed = !newItem.pricing_formula || newItem.pricing_formula === "NONE" || newItem.pricing_formula === "DRIVER_MULTIPLIER";
     if (isFixed) {
       if (!newItem.points.trim()) {
         setCreateError("Points is required");
@@ -223,11 +215,10 @@ function Catalogue() {
         purpose: newItem.purpose,
         specifications: newItem.specifications,
         legend: newItem.legend,
-        pricing_type: newItem.pricing_type,
+        pricing_formula: newItem.pricing_formula,
         points: isFixed
           ? parseFloat(newItem.points)
           : parseFloat(newItem.points_multiplier),
-        points_multiplier: isFixed ? null : parseFloat(newItem.points_multiplier),
         price: isFixed
           ? parseFloat(newItem.price)
           : parseFloat(newItem.price_multiplier),
@@ -239,6 +230,7 @@ function Catalogue() {
         has_stock: newItem.has_stock,
         requires_sales_approval: newItem.requires_sales_approval,
         mktg_admin: newItem.mktg_admin ? parseInt(newItem.mktg_admin) : null,
+        extra_fields: JSON.stringify(newItem.extra_fields || []),
       };
 
       // Build FormData for multipart upload (supports image)
@@ -279,7 +271,7 @@ function Catalogue() {
         purpose: "",
         specifications: "",
         legend: "Giveaway",
-        pricing_type: "FIXED",
+        pricing_formula: null,
         points: "",
         price: "",
         min_order_qty: "1",
@@ -290,6 +282,7 @@ function Catalogue() {
         points_multiplier: "",
         price_multiplier: "",
         mktg_admin: "",
+        extra_fields: [],
       });
       setShowCreateModal(false);
       setCreateError(null);
@@ -315,7 +308,7 @@ function Catalogue() {
     setEditError(null);
 
     // Populate edit form with selected product's data
-    const isFixed = item.pricing_type === "FIXED";
+    const isFixed = !item.pricing_formula || item.pricing_formula === "NONE";
     setEditImageFile(null);
     setEditImagePreview(null);
     setEditCurrentImage(item.image || null);
@@ -328,17 +321,18 @@ function Catalogue() {
       purpose: item.purpose,
       specifications: item.specifications,
       legend: item.legend,
-      pricing_type: item.pricing_type || "FIXED",
-      points: isFixed ? item.points.toString() : "",
-      price: isFixed ? item.price.toString() : "",
+      pricing_formula: item.pricing_formula || null,
+      points: isFixed ? item.points?.toString() : "",
+      price: isFixed ? item.price?.toString() : "",
       min_order_qty: (item.min_order_qty ?? 1).toString(),
       max_order_qty: item.max_order_qty?.toString() ?? "",
       stock: item.stock?.toString() || "0",
       has_stock: item.has_stock ?? true,
       requires_sales_approval: item.requires_sales_approval ?? true,
-      points_multiplier: !isFixed ? (item.points_multiplier ?? item.points).toString() : "",
-      price_multiplier: !isFixed ? item.price.toString() : "",
+      points_multiplier: !isFixed ? item.points?.toString() : "",
+      price_multiplier: !isFixed ? item.price?.toString() : "",
       mktg_admin: item.mktg_admin?.toString() || "",
+      extra_fields: (item as any).extra_fields || [],
     });
   };
 
@@ -362,7 +356,7 @@ function Catalogue() {
       return;
     }
 
-    const isFixed = editItem.pricing_type === "FIXED";
+    const isFixed = !editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER";
     if (isFixed) {
       if (!editItem.points.trim()) {
         setEditError("Points is required");
@@ -394,11 +388,10 @@ function Catalogue() {
         purpose: editItem.purpose,
         specifications: editItem.specifications,
         legend: editItem.legend,
-        pricing_type: editItem.pricing_type,
+        pricing_formula: editItem.pricing_formula,
         points: isFixed
           ? parseFloat(editItem.points)
           : parseFloat(editItem.points_multiplier),
-        points_multiplier: isFixed ? null : parseFloat(editItem.points_multiplier),
         price: isFixed
           ? parseFloat(editItem.price)
           : parseFloat(editItem.price_multiplier),
@@ -410,6 +403,7 @@ function Catalogue() {
         has_stock: editItem.has_stock,
         requires_sales_approval: editItem.requires_sales_approval ?? true,
         mktg_admin: editItem.mktg_admin ? parseInt(editItem.mktg_admin) : null,
+        extra_fields: JSON.stringify(editItem.extra_fields || []),
       };
 
       // Build FormData for multipart upload (supports image)

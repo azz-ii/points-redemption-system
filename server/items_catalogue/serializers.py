@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from .models import Product, StockAuditLog
+from .models import Product, StockAuditLog, ProductExtraField
 
 User = get_user_model()
 
@@ -30,6 +30,12 @@ class UserRelatedField(serializers.PrimaryKeyRelatedField):
             return None
 
 
+class ProductExtraFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductExtraField
+        fields = ['field_key', 'label', 'field_type', 'choices_json', 'is_required', 'display_order']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for the flat Product model"""
     added_by = UserRelatedField(read_only=True)
@@ -38,19 +44,20 @@ class ProductSerializer(serializers.ModelSerializer):
     request_count = serializers.IntegerField(read_only=True, default=0)
     mktg_admin_username = serializers.SerializerMethodField()
     image = RelativeImageField(required=False, allow_null=True)
+    extra_fields = ProductExtraFieldSerializer(many=True, required=False)
     
     class Meta:
         model = Product
         fields = [
             'id', 'item_code', 'item_name', 'legend', 'category',
             'description', 'purpose', 'specifications',
-            'points', 'price', 'pricing_type', 'points_multiplier',
+            'points', 'price', 'pricing_formula', 'points_multiplier',
             'min_order_qty', 'max_order_qty',
             'has_stock', 'stock', 'committed_stock', 'available_stock',
             'mktg_admin', 'mktg_admin_username', 'requires_sales_approval',
             'image',
             'date_added', 'added_by', 'is_archived', 'date_archived', 'archived_by',
-            'request_count',
+            'request_count', 'extra_fields'
         ]
         extra_kwargs = {
             'item_code': {'required': True},
@@ -59,10 +66,39 @@ class ProductSerializer(serializers.ModelSerializer):
             'price': {'required': True},
         }
 
+    def to_internal_value(self, data):
+        # Handle FormData where extra_fields could be a stringified JSON array
+        if 'extra_fields' in data and isinstance(data['extra_fields'], str):
+            import json
+            try:
+                # Copy immutable QueryDict if necessary
+                mutable_data = data.copy() if hasattr(data, 'copy') else data
+                mutable_data['extra_fields'] = json.loads(data['extra_fields'])
+                data = mutable_data
+            except (json.JSONDecodeError, TypeError, AttributeError):
+                pass # Unparseable JSON, let DRF validation handle it normally
+        return super().to_internal_value(data)
+
+    def create(self, validated_data):
+        extra_fields_data = validated_data.pop('extra_fields', [])
+        product = super().create(validated_data)
+        for extra_field_data in extra_fields_data:
+            ProductExtraField.objects.create(product=product, **extra_field_data)
+        return product
+
     def update(self, instance, validated_data):
         # Prevent direct stock edits via catalogue endpoint — stock is managed via inventory API
         validated_data.pop('stock', None)
-        return super().update(instance, validated_data)
+        
+        extra_fields_data = validated_data.pop('extra_fields', None)
+        instance = super().update(instance, validated_data)
+
+        if extra_fields_data is not None:
+            instance.extra_fields.all().delete()
+            for extra_field_data in extra_fields_data:
+                ProductExtraField.objects.create(product=instance, **extra_field_data)
+                
+        return instance
 
     def get_mktg_admin_username(self, obj):
         if obj.mktg_admin:
@@ -80,7 +116,7 @@ class ProductInventorySerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'item_code', 'item_name', 'legend', 'category',
-            'points', 'price', 'pricing_type', 'points_multiplier',
+            'points', 'price', 'pricing_formula', 'points_multiplier',
             'min_order_qty', 'max_order_qty',
             'has_stock', 'stock', 'committed_stock', 'available_stock',
             'stock_status'

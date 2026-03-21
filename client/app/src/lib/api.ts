@@ -5,7 +5,6 @@ import { API_URL } from './config';
 const API_BASE_URL = API_URL;
 
 // Backend API Response Types
-export type PricingType = 'FIXED' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | 'PER_EU_SRP';
 export type LegendType = 'Collateral' | 'Giveaway' | 'Asset' | 'Benefit';
 
 export interface Product {
@@ -19,7 +18,7 @@ export interface Product {
   category: string;
   points: string;
   price: string;
-  pricing_type: PricingType;
+  pricing_formula?: 'NONE' | 'DRIVER_MULTIPLIER' | 'AREA_RATE' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | null;
   min_order_qty: number;
   max_order_qty: number | null;
   has_stock: boolean;
@@ -41,38 +40,6 @@ export interface Product {
 export type CatalogueItem = Product;
 export type Variant = Product;
 
-export const PRICING_TYPE_LABELS: Record<PricingType, string> = {
-  FIXED: 'Fixed',
-  PER_SQFT: 'Per Sq Ft',
-  PER_INVOICE: 'Per Invoice Amount',
-  PER_DAY: 'Per Day',
-  PER_EU_SRP: 'Per EU SRP',
-};
-
-export const DYNAMIC_QUANTITY_LABELS: Record<PricingType, string> = {
-  FIXED: 'Quantity',
-  PER_SQFT: 'Total Square Footage',
-  PER_INVOICE: 'Quantity',
-  PER_DAY: 'Number of Days',
-  PER_EU_SRP: 'End User SRP Amount',
-};
-
-export const PRICING_TYPE_DESCRIPTIONS: Record<PricingType, string> = {
-  FIXED: 'Standard fixed-price item. Points are calculated per unit.',
-  PER_SQFT: 'Points calculated based on total square footage. Enter the area measurement to calculate total points.',
-  PER_INVOICE: 'Points calculated per unit/piece. Enter the number of pieces or units to calculate total points.',
-  PER_DAY: 'Points calculated per day. Enter the number of days to calculate total points.',
-  PER_EU_SRP: 'Points calculated as a percentage of End User Suggested Retail Price (EU SRP). Enter the SRP amount to calculate points.',
-};
-
-export const PRICING_TYPE_INPUT_HINTS: Record<PricingType, string> = {
-  FIXED: '',
-  PER_SQFT: 'sq ft',
-  PER_INVOICE: 'pcs',
-  PER_DAY: 'days',
-  PER_EU_SRP: 'USD',
-};
-
 export interface ProductsResponse {
   count: number;
   next: string | null;
@@ -89,16 +56,25 @@ export interface RedeemItemData {
   name: string;
   points: number; // For FIXED items: per-unit points. For dynamic: the multiplier
   category: string;
-  pricing_type: PricingType;
+  pricing_formula?: 'NONE' | 'DRIVER_MULTIPLIER' | 'AREA_RATE' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | null;
   has_stock: boolean; // Whether item tracks inventory or is made-to-order
   available_stock: number; // Available stock (stock - committed)
   min_order_qty: number; // Minimum quantity per order
   max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
   request_count: number; // Number of approved requests containing this item
+  
+  // Rich item details for view modal
+  description?: string;
+  purpose?: string;
+  specifications?: string;
+  item_code?: string;
+  legend?: string;
+
   // Additional fields for cart functionality
   image?: string;
   needs_driver?: boolean;
   points_multiplier?: number | null;
+  extra_fields?: any[];
 }
 
 export interface UserProfile {
@@ -155,20 +131,22 @@ export function transformProductToRedeemItem(product: Product): RedeemItemData {
   // Get category from legend
   const category = legendToCategoryMap[product.legend] || product.legend;
 
-  // Parse pricing type
-  const pricingType: PricingType = (product.pricing_type as PricingType) || 'FIXED';
-
   const transformed: RedeemItemData = {
     id: product.id.toString(),
     name: product.item_name,
     points: pointsValue,
     category: category,
-    pricing_type: pricingType,
+    pricing_formula: product.pricing_formula,
     has_stock: product.has_stock ?? true,
     available_stock: product.available_stock || 0,
     min_order_qty: product.min_order_qty ?? 1,
     max_order_qty: product.max_order_qty ?? null,
     request_count: product.request_count ?? 0,
+    description: product.description,
+    purpose: product.purpose,
+    specifications: product.specifications,
+    item_code: product.item_code,
+    legend: product.legend,
     image: product.image || undefined,
   };
 
@@ -304,15 +282,15 @@ function getHeaders(): HeadersInit {
 
 export interface RedemptionRequestItem {
   product_id: string;
-  quantity?: number; // For FIXED pricing items
-  dynamic_quantity?: number; // For dynamic pricing items (PER_SQFT, etc.)
+  quantity?: number;
+  extra_data?: Record<string, any>;
 }
 
 // Backward compatibility - some older code may still use variant_id
 export interface LegacyRedemptionRequestItem {
   product_id: string; // Now uses product_id
   quantity?: number;
-  dynamic_quantity?: number;
+  extra_data?: Record<string, any>;
 }
 
 export type RequestedForType = 'DISTRIBUTOR' | 'CUSTOMER' | 'SELF';
@@ -378,7 +356,7 @@ export interface RedemptionRequestResponse {
     item_processed_by?: number | null;
     item_processed_by_name?: string | null;
     item_processed_at?: string | null;
-    pricing_type?: string | null;
+    pricing_formula?: string | null;
   }>;
   // Acknowledgement Receipt fields
   ar_status: string | null;
@@ -746,8 +724,8 @@ export const requestHistoryApi = {
 export interface BackendCartItem {
   product_id: string;
   quantity: number;
-  dynamic_quantity: number | null;
-  needs_driver: boolean;
+  needs_driver?: boolean;
+  extra_data?: Record<string, any>;
 }
 
 /**
@@ -778,8 +756,8 @@ export async function saveCart(items: import('@/components/cart-modal').CartItem
   const payload: BackendCartItem[] = items.map(item => ({
     product_id: item.id,
     quantity: item.quantity,
-    dynamic_quantity: item.dynamic_quantity != null ? item.dynamic_quantity : null,
     needs_driver: item.needs_driver ?? false,
+    extra_data: item.extra_data,
   }));
 
   const response = await fetch(`${API_BASE_URL}/cart/`, {

@@ -206,6 +206,26 @@ export function ViewRedemptionModal({
                         <p className="text-xs text-muted-foreground mt-1">
                           Qty: {it.quantity} &times; {it.points_per_item} pts = {it.total_points} pts
                         </p>
+                        {it.extra_data && Object.keys(it.extra_data).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5 border-t border-border/50 pt-2 pb-1">
+                            {Object.entries(it.extra_data).map(([key, value]) => {
+                              if (value === null || value === undefined || value === '') return null;
+                              let displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                              let displayValue = String(value);
+                              if (key === 'driver_type') {
+                                displayKey = 'Driver';
+                                displayValue = value === 'WITH_DRIVER' ? 'With Driver' : 'Without Driver';
+                              } else if (key === 'driver_name') displayKey = 'Driver Name';
+                              else if (key === 'invoice_amount') displayKey = 'Amount';
+                              
+                              return (
+                                <span key={key} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border">
+                                  {displayKey}: {displayValue}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                       {isFullyProcessed ? (
                         <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 shrink-0">

@@ -14,6 +14,7 @@ import {
   ItemsGrid,
   Pagination,
 } from "./components";
+import { ViewItemModal } from "./modals/ViewItemModal";
 import type { SalesPages } from "./types";
 
 export default function RedeemItem() {
@@ -27,6 +28,7 @@ export default function RedeemItem() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedItem, setSelectedItem] = useState<RedeemItemData | null>(null);
   const itemsPerPage = 12;
 
   // Query hooks for data fetching
@@ -60,9 +62,9 @@ export default function RedeemItem() {
             image: live.image,
             quantity: si.quantity ?? minQty,
             needs_driver: si.needs_driver,
-            pricing_type: live.pricing_type,
+            pricing_formula: live.pricing_formula,
             points_multiplier: live.points_multiplier,
-            dynamic_quantity: si.dynamic_quantity != null ? Number(si.dynamic_quantity) : (live.pricing_type === 'FIXED' ? undefined : 0),
+            extra_data: si.extra_data || {},
             available_stock: live.available_stock,
             min_order_qty: minQty,
             max_order_qty: live.max_order_qty,
@@ -126,7 +128,7 @@ export default function RedeemItem() {
       const existingItem = prevItems.find((i) => i.id === item.id);
       if (existingItem) {
         // For FIXED items, increment quantity up to available stock and max order qty
-        if (item.pricing_type === 'FIXED') {
+        if (!item.pricing_formula || item.pricing_formula === 'NONE') {
           const effectiveMax = maxQty !== null 
             ? Math.min(maxQty, item.available_stock) 
             : item.available_stock;
@@ -156,9 +158,9 @@ export default function RedeemItem() {
           image: item.image,
           quantity: minQty,
           needs_driver: item.needs_driver,
-          pricing_type: item.pricing_type,
+          pricing_formula: item.pricing_formula,
           points_multiplier: item.points_multiplier,
-          dynamic_quantity: item.pricing_type === 'FIXED' ? undefined : 0,
+          extra_data: {},
           available_stock: item.available_stock,
           min_order_qty: minQty,
           max_order_qty: maxQty,
@@ -176,9 +178,9 @@ export default function RedeemItem() {
     );
   };
 
-  const handleUpdateDynamicQuantity = (itemId: string, dynamicQuantity: number) => {
+  const handleUpdateExtraData = (itemId: string, key: string, value: any) => {
     setCartItems((prevItems) =>
-      prevItems.map((i) => (i.id === itemId ? { ...i, dynamic_quantity: dynamicQuantity } : i))
+      prevItems.map((i) => (i.id === itemId ? { ...i, extra_data: { ...(i.extra_data || {}), [key]: value } } : i))
     );
   };
 
@@ -226,6 +228,7 @@ export default function RedeemItem() {
             activeCategory={activeCategory}
             viewMode={viewMode}
             onAddToCart={handleAddToCart}
+            onViewItem={setSelectedItem}
           />
         </div>
         <div className="flex-shrink-0 pb-20 md:pb-4">
@@ -243,10 +246,19 @@ export default function RedeemItem() {
         onClose={() => setCartOpen(false)}
         items={cartItems}
         onUpdateQuantity={handleUpdateQuantity}
-        onUpdateDynamicQuantity={handleUpdateDynamicQuantity}
+        onUpdateExtraData={handleUpdateExtraData}
         onRemoveItem={handleRemoveFromCart}
         availablePoints={userPoints}
       />
+
+      {/* View Item Modal */}
+      {selectedItem && (
+        <ViewItemModal
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </div>
   );
 }

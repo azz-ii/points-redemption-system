@@ -199,7 +199,63 @@ export function ViewItemModal({
                   className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
                 />
               </div>
+
+              {/* Pricing Formula */}
+              {product.pricing_formula && product.pricing_formula !== "NONE" && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Pricing Formula</label>
+                  <input
+                    type="text"
+                    value={product.pricing_formula.replace(/_/g, " ")}
+                    disabled
+                    className="w-full px-3 py-2 rounded border cursor-not-allowed bg-muted border-border text-muted-foreground focus:outline-none"
+                  />
+                </div>
+              )}
             </div>
+
+            {/* Custom Fields */}
+            {product.extra_fields && product.extra_fields.length > 0 && (
+              <div className="pt-2">
+                <label className="block text-sm font-medium mb-2">Custom Fields</label>
+                <div className="border rounded-md overflow-hidden bg-card">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-medium text-muted-foreground w-1/3 border-b">Label</th>
+                        <th className="px-4 py-2 text-left font-medium text-muted-foreground w-1/4 border-b">Type</th>
+                        <th className="px-4 py-2 text-left font-medium text-muted-foreground w-1/4 border-b">Required</th>
+                        <th className="px-4 py-2 text-left font-medium text-muted-foreground border-b">Choices</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {product.extra_fields.map((field) => (
+                        <tr key={field.id || field.field_key} className="hover:bg-muted/50">
+                          <td className="px-4 py-2 text-foreground font-medium">{field.label}</td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-accent text-accent-foreground text-xs">
+                              {field.field_type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            {field.is_required ? (
+                              <span className="text-red-500">Yes</span>
+                            ) : (
+                              <span>No</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground truncate max-w-[200px]">
+                            {field.field_type === "CHOICE" && field.choices_json
+                              ? field.choices_json.join(", ")
+                              : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             {product.description && (

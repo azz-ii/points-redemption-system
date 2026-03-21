@@ -51,5 +51,6 @@ export interface HistoryItem {
     quantity: number;
     points_per_item: number;
     total_points: number;
+    extra_data?: Record<string, any> | null;
   }>;
 }

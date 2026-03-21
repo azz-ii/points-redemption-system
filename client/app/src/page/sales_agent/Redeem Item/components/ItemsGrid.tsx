@@ -12,6 +12,7 @@ export function ItemsGrid({
   activeCategory,
   viewMode,
   onAddToCart,
+  onViewItem,
   onRetry,
 }: ItemsGridProps) {
   if (loading) {
@@ -33,7 +34,7 @@ export function ItemsGrid({
         : "flex flex-col gap-3"
     }>
       {items.map((item) => (
-        <ItemCard key={item.id} item={item} layout={viewMode} onAddToCart={onAddToCart} />
+        <ItemCard key={item.id} item={item} layout={viewMode} onAddToCart={onAddToCart} onViewItem={onViewItem} />
       ))}
     </div>
   );

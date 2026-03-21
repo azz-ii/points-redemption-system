@@ -193,16 +193,16 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('  Distrib:  (none found, distributor tests will be skipped)'))
 
-        # 6. Auto-approve product (requires_sales_approval=False, FIXED pricing)
+        # 6. Auto-approve product (requires_sales_approval=False, NONE pricing)
         data['auto_product'] = Product.objects.filter(
             is_archived=False,
             requires_sales_approval=False,
-            pricing_type='FIXED',
+            pricing_formula='NONE',
         ).exclude(points=0).first()
         if not data['auto_product']:
             # Temporarily toggle a manual-approve product for auto-approve tests
             candidate = Product.objects.filter(
-                is_archived=False, pricing_type='FIXED',
+                is_archived=False, pricing_formula='NONE',
             ).exclude(points=0).first()
             if candidate:
                 self._toggled_product_id = candidate.id
@@ -219,12 +219,12 @@ class Command(BaseCommand):
             self.stdout.write(f'  Auto-approve product: {p.item_code} "{p.item_name}" '
                               f'(points={p.points}, stock={p.stock}, has_stock={p.has_stock})')
 
-        # 8. Manual-approve product (requires_sales_approval=True, FIXED pricing)
+        # 8. Manual-approve product (requires_sales_approval=True, NONE pricing)
         #    Must be different from the toggled auto-approve product
         manual_qs = Product.objects.filter(
             is_archived=False,
             requires_sales_approval=True,
-            pricing_type='FIXED',
+            pricing_formula='NONE',
         ).exclude(points=0)
         if self._toggled_product_id:
             manual_qs = manual_qs.exclude(id=self._toggled_product_id)

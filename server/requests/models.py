@@ -198,35 +198,35 @@ class RedemptionRequest(models.Model):
         help_text='Reason for sales approval rejection'
     )
     
-    # Service Vehicle Use fields
+    # Service Vehicle Use fields (Deprecated - Use Generic Items Extra Fields System)
     svc_date = models.DateField(
         blank=True,
         null=True,
-        help_text='Service vehicle use date'
+        help_text='[DEPRECATED] Service vehicle use date'
     )
     svc_time = models.TimeField(
         blank=True,
         null=True,
-        help_text='Service vehicle use time'
+        help_text='[DEPRECATED] Service vehicle use time'
     )
     svc_driver = models.CharField(
         max_length=20,
         choices=SvcDriverChoice.choices,
         blank=True,
         null=True,
-        help_text='Whether the service vehicle includes a driver'
+        help_text='[DEPRECATED] Whether the service vehicle includes a driver'
     )
     plate_number = models.CharField(
         max_length=20,
         blank=True,
         null=True,
-        help_text='Vehicle plate number for service delivery'
+        help_text='[DEPRECATED] Vehicle plate number for service delivery'
     )
     driver_name = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        help_text='Name of the driver for service delivery'
+        help_text='[DEPRECATED] Name of the driver for service delivery'
     )
 
     # Acknowledgement Receipt fields (for customer requests)
@@ -574,31 +574,18 @@ class RedemptionRequestItem(models.Model):
     )
     quantity = models.PositiveIntegerField(
         default=1,
-        help_text='Number of units requested (for FIXED pricing items)'
+        help_text='Number of units requested'
     )
     points_per_item = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text='Points per item at the time of request (snapshot, for FIXED pricing)'
+        help_text='Points per item at the time of request (snapshot)'
     )
     total_points = models.PositiveIntegerField(
         help_text='Total points for this line item'
     )
     
     # Dynamic pricing fields - snapshots from product at request time
-    pricing_type = models.CharField(
-        max_length=20,
-        null=True,
-        blank=True,
-        help_text='Pricing type snapshot (FIXED, PER_SQFT, PER_INVOICE, PER_DAY, PER_EU_SRP)'
-    )
-    dynamic_quantity = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        help_text='User-provided value for dynamic calculation (e.g., sq ft, invoice amount, days)'
-    )
     points_multiplier = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -610,7 +597,7 @@ class RedemptionRequestItem(models.Model):
     # Partial fulfillment tracking
     fulfilled_quantity = models.PositiveIntegerField(
         default=0,
-        help_text='Cumulative units fulfilled across all processing passes (for FIXED pricing items)'
+        help_text='Cumulative units fulfilled across all processing passes'
     )
 
     # Item-level processing by Marketing user
@@ -627,33 +614,32 @@ class RedemptionRequestItem(models.Model):
         blank=True,
         help_text='Date and time when this item was fully processed'
     )
+    
+    extra_data = models.JSONField(
+        blank=True, null=True,
+        help_text='Snapshot of extra field values provided at request time'
+    )
+    pricing_formula = models.CharField(
+        max_length=30, blank=True, null=True,
+        help_text='Snapshot of formula slug used for pricing at request time'
+    )
 
     @property
     def is_fully_fulfilled(self):
-        """True when all units have been fulfilled (FIXED) or item has been marked done (non-FIXED)."""
-        pricing = self.pricing_type or 'FIXED'
-        if pricing == 'FIXED':
+        """True when all units have been fulfilled or item has been marked done."""
+        if self.quantity > 1 or self.pricing_formula in ['NONE', 'STANDARD']:
             return self.fulfilled_quantity >= self.quantity
         return self.item_processed_by is not None
 
     @property
     def remaining_quantity(self):
-        """Remaining units to be fulfilled. Only meaningful for FIXED pricing."""
-        pricing = self.pricing_type or 'FIXED'
-        if pricing == 'FIXED':
-            return max(0, self.quantity - self.fulfilled_quantity)
-        return None
+        """Remaining units to be fulfilled."""
+        return max(0, self.quantity - self.fulfilled_quantity)
 
     def save(self, *args, **kwargs):
-        # Automatically calculate total_points based on pricing type
-        if not self.total_points:
-            if self.pricing_type and self.pricing_type != 'FIXED' and self.dynamic_quantity and self.points_multiplier:
-                # Dynamic pricing: total = dynamic_quantity * points_multiplier
-                from decimal import Decimal
-                self.total_points = int(Decimal(self.dynamic_quantity) * Decimal(self.points_multiplier))
-            elif self.points_per_item:
-                # Fixed pricing: total = quantity * points_per_item
-                self.total_points = self.quantity * self.points_per_item
+        # Ensure total_points is computed if not set (normally done in serializer)
+        if not self.total_points and self.points_per_item:
+            self.total_points = self.quantity * self.points_per_item
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -676,7 +662,7 @@ class ItemFulfillmentLog(models.Model):
     )
     fulfilled_quantity = models.PositiveIntegerField(
         default=0,
-        help_text='Units fulfilled in this pass (for FIXED pricing; 0 for non-FIXED full-process)'
+        help_text='Units fulfilled in this pass'
     )
     fulfilled_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

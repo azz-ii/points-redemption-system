@@ -11,13 +11,14 @@ class ItemLegend(models.TextChoices):
     BENEFIT = 'Benefit', 'Benefit'
 
 
-class PricingType(models.TextChoices):
-    """Pricing types for dynamic point/price calculation"""
-    FIXED = 'FIXED', 'Fixed'
-    PER_SQFT = 'PER_SQFT', 'Per Sq Ft'
-    PER_INVOICE = 'PER_INVOICE', 'Per Invoice'
-    PER_DAY = 'PER_DAY', 'Per Day'
-    PER_EU_SRP = 'PER_EU_SRP', 'Per EU SRP'
+
+class PricingFormula(models.TextChoices):
+    NONE = 'NONE', 'None (use standard pricing)'
+    PER_SQFT = 'PER_SQFT', 'Per Square Foot (sqft × multiplier)'
+    PER_INVOICE = 'PER_INVOICE', 'Per Invoice (amount × multiplier)'
+    PER_DAY = 'PER_DAY', 'Per Day (days × multiplier)'
+    DRIVER_MULTIPLIER = 'DRIVER_MULTIPLIER', 'Driver Multiplier (2x if with driver)'
+    AREA_RATE = 'AREA_RATE', 'Area Rate (L × W × H × rate)'
 
 
 class Product(models.Model):
@@ -61,10 +62,11 @@ class Product(models.Model):
     # Pricing
     points = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    pricing_type = models.CharField(
-        max_length=20,
-        choices=PricingType.choices,
-        default=PricingType.FIXED
+    pricing_formula = models.CharField(
+        max_length=30,
+        choices=PricingFormula.choices,
+        default=PricingFormula.NONE,
+        help_text='Pre-built formula for computing points from extra field inputs'
     )
     points_multiplier = models.DecimalField(
         max_digits=10,
@@ -150,6 +152,28 @@ class Product(models.Model):
         self.stock -= quantity
         self.committed_stock = max(0, self.committed_stock - quantity)
         self.save(update_fields=['stock', 'committed_stock'])
+
+
+class FieldType(models.TextChoices):
+    TEXT = 'TEXT', 'Text'
+    NUMBER = 'NUMBER', 'Number'
+    CHOICE = 'CHOICE', 'Choice (Dropdown)'
+
+
+class ProductExtraField(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='extra_fields')
+    field_key = models.SlugField(max_length=50)       # e.g. "driver_name", "length"
+    label = models.CharField(max_length=100)            # e.g. "Driver Name", "Length (ft)"
+    field_type = models.CharField(max_length=10, choices=FieldType.choices)
+    choices_json = models.JSONField(blank=True, null=True)  # for CHOICE type: ["WITH_DRIVER","WITHOUT_DRIVER"]
+    is_required = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order']
+
+    def __str__(self):
+        return f"{self.product.item_name} - {self.label}"
 
 
 class StockAuditLog(models.Model):

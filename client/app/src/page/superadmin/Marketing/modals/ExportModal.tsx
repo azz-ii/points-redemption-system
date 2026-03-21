@@ -48,7 +48,7 @@ export function ExportModal({ isOpen, onClose, searchQuery }: ExportModalProps) 
           { credentials: 'include' }
         );
 
-        let assignmentsByUser: Record<number, LegendAssignment[]> = {};
+        const assignmentsByUser: Record<number, LegendAssignment[]> = {};
         if (assignmentsResponse.ok) {
           const assignmentsData = await assignmentsResponse.json();
           if (assignmentsData.products) {

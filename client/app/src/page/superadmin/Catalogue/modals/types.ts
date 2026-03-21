@@ -8,6 +8,16 @@ export interface User {
   position: string;
 }
 
+export interface ProductExtraField {
+  id?: number;
+  field_key: string;
+  label: string;
+  field_type: "TEXT" | "NUMBER" | "CHOICE";
+  choices_json?: string[] | null;
+  is_required: boolean;
+  display_order: number;
+}
+
 export interface Product {
   id: number;
   item_code: string;
@@ -19,7 +29,7 @@ export interface Product {
   category: string;
   points: string;
   price: string;
-  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  pricing_formula?: "NONE" | "DRIVER_MULTIPLIER" | "AREA_RATE" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | null;
   min_order_qty: number;
   max_order_qty: number | null;
   has_stock: boolean;
@@ -36,6 +46,7 @@ export interface Product {
   mktg_admin: number | null;
   mktg_admin_username: string | null;
   points_multiplier?: number | string | null;
+  extra_fields?: ProductExtraField[];
 }
 
 export const LEGEND_OPTIONS = [
@@ -45,12 +56,19 @@ export const LEGEND_OPTIONS = [
   { value: "Benefit", label: "Benefit" },
 ] as const;
 
-export const PRICING_TYPE_OPTIONS = [
-  { value: "FIXED", label: "Fixed (Quantity-based)", description: "Standard quantity × points" },
-  { value: "PER_SQFT", label: "Per Square Foot", description: "Square footage × multiplier" },
-  { value: "PER_INVOICE", label: "Per Invoice Amount", description: "Invoice amount × multiplier" },
-  { value: "PER_DAY", label: "Per Day", description: "Number of days × multiplier" },
-  { value: "PER_EU_SRP", label: "Per EU SRP", description: "EU SRP value × multiplier" },
+export const FIELD_TYPE_OPTIONS = [
+  { value: "TEXT", label: "Text" },
+  { value: "NUMBER", label: "Number" },
+  { value: "CHOICE", label: "Choice (Dropdown)" },
+] as const;
+
+export const PRICING_FORMULA_OPTIONS = [
+  { value: "NONE", label: "None (use standard pricing)" },
+  { value: "PER_SQFT", label: "Per Square Foot (sqft × multiplier)" },
+  { value: "PER_INVOICE", label: "Per Invoice Amount (amount × multiplier)" },
+  { value: "PER_DAY", label: "Per Day (days × multiplier)" },
+  { value: "DRIVER_MULTIPLIER", label: "Driver Multiplier (2x if with driver)" },
+  { value: "AREA_RATE", label: "Area Rate (L × W × H × rate)" },
 ] as const;
 
 export const getLegendColor = (legend: string): string => {

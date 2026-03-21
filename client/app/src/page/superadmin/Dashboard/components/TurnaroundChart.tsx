@@ -87,7 +87,7 @@ export function TurnaroundChart({ data, loading }: TurnaroundChartProps) {
       </div>
 
       {/* Trend chart */}
-      {trend.length > 1 && (
+      {trend.length > 0 && (
         <ResponsiveContainer width="100%" height={250}>
           <ComposedChart
             data={trend.map((t) => ({ ...t, month_label: fmtMonth(t.month) }))}

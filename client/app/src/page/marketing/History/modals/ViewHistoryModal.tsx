@@ -204,6 +204,28 @@ export function ViewHistoryModal({
                         Qty: {item.quantity} × {item.points_per_item} pts ={" "}
                         {item.total_points} pts
                       </p>
+                      
+                      {item.extra_data && Object.keys(item.extra_data).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5 border-t border-border/50 pt-2 pb-1">
+                          {Object.entries(item.extra_data).map(([key, value]) => {
+                            if (value === null || value === undefined || value === '') return null;
+                            let displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                            let displayValue = String(value);
+                            if (key === 'driver_type') {
+                              displayKey = 'Driver';
+                              displayValue = value === 'WITH_DRIVER' ? 'With Driver' : 'Without Driver';
+                            } else if (key === 'driver_name') displayKey = 'Driver Name';
+                            else if (key === 'invoice_amount') displayKey = 'Amount';
+                            
+                            return (
+                              <span key={key} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border">
+                                {displayKey}: {displayValue}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       {item.item_processed_by_name && (
                         <p className="text-xs text-muted-foreground mt-1">
                           Processed by: {item.item_processed_by_name}

@@ -77,4 +77,5 @@ export interface RequestHistoryItemVariant {
   item_processed_by?: number | null;
   item_processed_by_name?: string | null;
   item_processed_at?: string | null;
+  extra_data?: Record<string, any> | null;
 }

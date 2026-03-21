@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Loader2 } from "lucide-react";
-import type { ModalBaseProps } from "./types";
-import { PRICING_TYPE_OPTIONS } from "./types";
+import type { ModalBaseProps, ProductExtraField } from "./types";
+import { PRICING_FORMULA_OPTIONS } from "./types";
 import { CatalogueImageUpload } from "../components/CatalogueImageUpload";
+import { ExtraFieldsFormBuilder } from "./ExtraFieldsFormBuilder";
 import { API_URL } from "@/lib/config";
 import {
   AlertDialog,
@@ -29,7 +30,7 @@ interface EditItem {
   purpose: string;
   specifications: string;
   legend: "Collateral" | "Giveaway" | "Asset" | "Benefit";
-  pricing_type: "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP";
+  pricing_formula: "NONE" | "DRIVER_MULTIPLIER" | "AREA_RATE" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | null;
   points: string;
   price: string;
   min_order_qty: string;
@@ -40,6 +41,7 @@ interface EditItem {
   points_multiplier: string;
   price_multiplier: string;
   mktg_admin: string;
+  extra_fields: ProductExtraField[];
 }
 
 interface EditItemModalProps extends ModalBaseProps {
@@ -338,99 +340,101 @@ export function EditItemModal({
               </select>
             </div>
 
-            {/* Pricing Type */}
+            {/* Pricing Formula */}
             <div>
               <label
-                htmlFor="edit-pricing-type"
+                htmlFor="edit-pricing-formula"
                 className="text-xs text-muted-foreground mb-2 block"
               >
-                Pricing Type *
+                Pricing Formula *
               </label>
               <select
-                id="edit-pricing-type"
-                value={editItem.pricing_type}
+                id="edit-pricing-formula"
+                value={editItem.pricing_formula || "NONE"}
                 onChange={(e) =>
                   setEditItem({
                     ...editItem,
-                    pricing_type: e.target.value as "FIXED" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | "PER_EU_SRP",
+                    pricing_formula: (e.target.value === "NONE" ? null : e.target.value) as any,
                   })
                 }
                 className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
                 aria-required="true"
               >
-                {PRICING_TYPE_OPTIONS.map((option) => (
+                {PRICING_FORMULA_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label} - {option.description}
+                    {option.label}
                   </option>
                 ))}
               </select>
             </div>
 
             {/* Points */}
-            <div>
-              <label
-                htmlFor="edit-points"
-                className="text-xs text-muted-foreground mb-2 block"
-              >
-                {editItem.pricing_type === "FIXED"
-                  ? "Points Required *"
-                  : "Points Multiplier *"}
-              </label>
-              <input
-                id="edit-points"
-                type="text"
-                value={editItem.pricing_type === "FIXED" ? editItem.points : editItem.points_multiplier}
-                onChange={(e) =>
-                  setEditItem({
-                    ...editItem,
-                    [editItem.pricing_type === "FIXED" ? "points" : "points_multiplier"]: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
-                placeholder={
-                  editItem.pricing_type === "FIXED"
-                    ? "e.g., 500"
-                    : "e.g., 25 (for 25 points per unit)"
-                }
-                aria-required="true"
-              />
-              {editItem.pricing_type !== "FIXED" && (
-                <p
-                  className="text-xs mt-1 text-muted-foreground"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="edit-points"
+                  className="text-xs text-muted-foreground mb-2 block"
                 >
-                  Points will be calculated: {editItem.pricing_type === "PER_SQFT" ? "sq ft" : editItem.pricing_type === "PER_INVOICE" ? "invoice amount" : editItem.pricing_type === "PER_DAY" ? "days" : "EU SRP"} × multiplier
-                </p>
-              )}
-            </div>
+                  {(!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER")
+                    ? "Points Required *"
+                    : "Points Multiplier *"}
+                </label>
+                <input
+                  id="edit-points"
+                  type="text"
+                  value={(!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER") ? editItem.points : editItem.points_multiplier}
+                  onChange={(e) =>
+                    setEditItem({
+                      ...editItem,
+                      [(!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER") ? "points" : "points_multiplier"]: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
+                  placeholder={
+                    (!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER")
+                      ? "e.g., 500"
+                      : "e.g., 25 (for 25 points per unit)"
+                  }
+                  aria-required="true"
+                />
+                {editItem.pricing_formula && editItem.pricing_formula !== "NONE" && (
+                  <p
+                    className="text-xs mt-1 text-muted-foreground"
+                  >
+                    Points will be calculated based on {PRICING_FORMULA_OPTIONS.find(o => o.value === editItem.pricing_formula)?.label.split('(')[0].trim().toLowerCase() || "formula"}
+                  </p>
+                )}
+              </div>
 
-            {/* Price */}
-            <div>
-              <label
-                htmlFor="edit-price"
-                className="text-xs text-muted-foreground mb-2 block"
-              >
-                {editItem.pricing_type === "FIXED"
-                  ? "Price *"
-                  : "Price Multiplier *"}
-              </label>
-              <input
-                id="edit-price"
-                type="text"
-                value={editItem.pricing_type === "FIXED" ? editItem.price : editItem.price_multiplier}
-                onChange={(e) =>
-                  setEditItem({
-                    ...editItem,
-                    [editItem.pricing_type === "FIXED" ? "price" : "price_multiplier"]: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
-                placeholder={
-                  editItem.pricing_type === "FIXED"
-                    ? "e.g., ₱130.00"
-                    : "e.g., 25.00 (for ₱25.00 per unit)"
-                }
-                aria-required="true"
-              />
+              {/* Price */}
+              <div>
+                <label
+                  htmlFor="edit-price"
+                  className="text-xs text-muted-foreground mb-2 block"
+                >
+                  {(!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER")
+                    ? "Price *"
+                    : "Price Multiplier *"}
+                </label>
+                <input
+                  id="edit-price"
+                  type="text"
+                  value={(!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER") ? editItem.price : editItem.price_multiplier}
+                  onChange={(e) =>
+                    setEditItem({
+                      ...editItem,
+                      [(!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER") ? "price" : "price_multiplier"]: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring text-base"
+                  placeholder={
+                    (!editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER")
+                      ? "e.g., ₱130.00"
+                      : "e.g., 25.00 (for ₱25.00 per unit)"
+                  }
+                  aria-required="true"
+                />
+              </div>
             </div>
 
             {/* Order Quantity Limits */}
@@ -572,6 +576,16 @@ export function EditItemModal({
                     Will be reassigned from {currentMktgAdminUsername} on save
                   </p>
                 )}
+            </div>
+
+            {/* Extra Fields Form Builder */}
+            <div className="pt-4 border-t">
+              <ExtraFieldsFormBuilder
+                extraFields={editItem.extra_fields || []}
+                onChange={(fields) =>
+                  setEditItem({ ...editItem, extra_fields: fields })
+                }
+              />
             </div>
           </div>
         </div>

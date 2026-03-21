@@ -1,14 +1,29 @@
 import { useState } from "react";
 import { Plus, Info } from "lucide-react";
-import { DYNAMIC_QUANTITY_LABELS, PRICING_TYPE_DESCRIPTIONS } from "@/lib/api";
 import type { ItemCardProps } from "../types";
 
-export function ItemCard({ item, layout = "grid", onAddToCart }: ItemCardProps) {
+const FORMULA_LABELS: Record<string, string> = {
+  DRIVER_MULTIPLIER: 'Driver Multiplier',
+  AREA_RATE: 'Area Rate',
+  PER_SQFT: 'Per Sqft',
+  PER_INVOICE: 'Per Invoice',
+  PER_DAY: 'Per Day'
+};
+
+const FORMULA_DESCRIPTIONS: Record<string, string> = {
+  DRIVER_MULTIPLIER: 'Points vary based on driver multiplier.',
+  AREA_RATE: 'Points vary based on area rate.',
+  PER_SQFT: 'Points vary based on square footage.',
+  PER_INVOICE: 'Points vary based on invoice.',
+  PER_DAY: 'Points vary based on duration.'
+};
+
+export function ItemCard({ item, layout = "grid", onAddToCart, onViewItem }: ItemCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Determine if this is a dynamic pricing item
-  const isDynamicPricing = item.pricing_type && item.pricing_type !== 'FIXED';
+  const isDynamicPricing = item.pricing_formula && item.pricing_formula !== 'NONE';
   const multiplier = item.points_multiplier || item.points;
 
   const isList = layout === "list";
@@ -18,7 +33,10 @@ export function ItemCard({ item, layout = "grid", onAddToCart }: ItemCardProps) 
       className={`rounded-lg overflow-hidden border bg-card border-border flex ${isList ? 'flex-row' : 'flex-col'}`}
     >
       {/* Image */}
-      <div className={`${isList ? 'w-20 h-20 md:w-28 md:h-28' : 'h-36 md:h-44'} bg-gray-300 overflow-hidden relative flex-shrink-0`}>
+      <div 
+        className={`${isList ? 'w-20 h-20 md:w-28 md:h-28' : 'h-36 md:h-44'} bg-gray-300 overflow-hidden relative flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity`}
+        onClick={() => onViewItem?.(item)}
+      >
         {imageLoading && (
           <div className="absolute inset-0 bg-gray-300 dark:bg-gray-700 animate-pulse" />
         )}
@@ -46,7 +64,7 @@ export function ItemCard({ item, layout = "grid", onAddToCart }: ItemCardProps) 
         {isDynamicPricing && (
           <div className="absolute top-2 left-2 flex items-center gap-1">
             <div className="px-2 py-0.5 rounded text-xs font-medium bg-primary text-primary-foreground">
-              {DYNAMIC_QUANTITY_LABELS[item.pricing_type]}
+              {item.pricing_formula ? FORMULA_LABELS[item.pricing_formula] : ''}
             </div>
             <div className="relative">
               <button
@@ -59,7 +77,7 @@ export function ItemCard({ item, layout = "grid", onAddToCart }: ItemCardProps) 
               </button>
               {showTooltip && (
                 <div className="absolute top-6 left-0 z-10 w-64 p-2 rounded shadow-lg text-xs bg-card text-foreground border border-border">
-                  {PRICING_TYPE_DESCRIPTIONS[item.pricing_type]}
+                  {item.pricing_formula ? FORMULA_DESCRIPTIONS[item.pricing_formula] : ''}
                 </div>
               )}
             </div>
@@ -70,12 +88,15 @@ export function ItemCard({ item, layout = "grid", onAddToCart }: ItemCardProps) 
       <div className={`${isList ? 'p-2 md:p-3' : 'p-3 md:p-4'} flex-1 flex flex-col justify-center ${isList ? 'h-full' : ''}`}>
         <div className={`flex justify-between flex-1 ${isList ? 'items-center' : 'items-end'}`}>
           <div className={`flex flex-col ${isList ? 'gap-0 md:gap-1' : 'gap-1'}`}>
-            <h3 className={`font-semibold leading-tight ${isList ? 'text-sm md:text-base' : 'text-xs md:text-sm'}`}>
+            <h3 
+              className={`font-semibold leading-tight ${isList ? 'text-sm md:text-base' : 'text-xs md:text-sm'} cursor-pointer hover:text-primary transition-colors`}
+              onClick={() => onViewItem?.(item)}
+            >
               {item.name}
             </h3>
             {isDynamicPricing ? (
               <p className={`text-primary ${isList ? 'text-xs md:text-sm' : 'text-xs'}`}>
-                {multiplier.toLocaleString()} pts / {DYNAMIC_QUANTITY_LABELS[item.pricing_type].toLowerCase()}
+                {multiplier.toLocaleString()} pts / {item.pricing_formula ? FORMULA_LABELS[item.pricing_formula]?.toLowerCase() : ''}
               </p>
             ) : (
               <p

@@ -7,4 +7,4 @@ export { BulkArchiveItemModal } from "./BulkArchiveItemModal";
 export { ExportModal } from "./ExportModal";
 
 export type { Product, CatalogueItem, Variant, CatalogueVariant, User } from "./types";
-export { getLegendColor, LEGEND_OPTIONS, PRICING_TYPE_OPTIONS } from "./types";
+export { getLegendColor, LEGEND_OPTIONS, PRICING_FORMULA_OPTIONS } from "./types";

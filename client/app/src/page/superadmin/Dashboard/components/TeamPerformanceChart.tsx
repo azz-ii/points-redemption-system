@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -8,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { X } from "lucide-react";
 import type { TeamPerformance } from "../utils/analyticsApi";
 
 interface TeamPerformanceChartProps {
@@ -16,6 +18,8 @@ interface TeamPerformanceChartProps {
 }
 
 export function TeamPerformanceChart({ data, loading }: TeamPerformanceChartProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -52,11 +56,15 @@ export function TeamPerformanceChart({ data, loading }: TeamPerformanceChartProp
     );
   }
 
+  const chartData = data.slice(0, 5);
+  const displayData = data.slice(0, 5);
+
   return (
-    <div className="space-y-4">
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+    <div className="space-y-4 flex flex-col h-full">
+      <div className="shrink-0 h-[250px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis
             dataKey="team_name"
             tick={{ fontSize: 11 }}
@@ -74,9 +82,10 @@ export function TeamPerformanceChart({ data, loading }: TeamPerformanceChartProp
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <Bar dataKey="approved_count" name="Approved" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
           <Bar dataKey="rejected_count" name="Rejected" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="processed_count" name="Processed" fill="hsl(221, 83%, 53%)" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+            <Bar dataKey="processed_count" name="Processed" fill="hsl(221, 83%, 53%)" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Detail table */}
       <div className="overflow-x-auto">
@@ -92,7 +101,7 @@ export function TeamPerformanceChart({ data, loading }: TeamPerformanceChartProp
             </tr>
           </thead>
           <tbody>
-            {data.map((t) => (
+            {displayData.map((t) => (
               <tr key={t.team_id} className="border-b border-border/50">
                 <td className="py-1.5 px-2 font-medium">{t.team_name}</td>
                 <td className="py-1.5 px-2 text-right">{t.total_requests}</td>
@@ -117,6 +126,73 @@ export function TeamPerformanceChart({ data, loading }: TeamPerformanceChartProp
           </tbody>
         </table>
       </div>
+
+      {data.length > 5 && (
+        <div className="flex justify-center mt-2 border-t border-border pt-3">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            View All {data.length} Teams
+          </button>
+        </div>
+      )}
+
+      {/* ── View All Modal ── */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm bg-background/80">
+          <div className="bg-card w-full max-w-4xl rounded-xl border border-border shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="text-lg font-semibold">All Team Performance</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card z-10 shadow-sm">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Team</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Total</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Approved</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Rejected</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Rate</th>
+                    <th className="text-right py-3 px-3 font-semibold text-muted-foreground whitespace-nowrap">Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((t) => (
+                    <tr key={t.team_id} className="border-b border-border/50 hover:bg-accent/50 transition-colors">
+                      <td className="py-2.5 px-3 font-medium text-foreground">{t.team_name}</td>
+                      <td className="py-2.5 px-3 text-right">{t.total_requests}</td>
+                      <td className="py-2.5 px-3 text-right">{t.approved_count}</td>
+                      <td className="py-2.5 px-3 text-right">{t.rejected_count}</td>
+                      <td className="py-2.5 px-3 text-right">
+                        <span
+                          className={`font-medium px-2 py-1 rounded-md ${
+                            t.approval_rate >= 75
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : t.approval_rate >= 50
+                                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          }`}
+                        >
+                          {t.approval_rate}%
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold">{t.total_points.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

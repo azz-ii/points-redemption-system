@@ -27,7 +27,7 @@ export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
   { key: "category", label: "Category", enabled: true },
   { key: "points", label: "Points", enabled: true },
   { key: "price", label: "Price", enabled: true },
-  { key: "pricing_type", label: "Pricing Type", enabled: false },
+  { key: "pricing_formula", label: "Pricing Formula", enabled: false },
   { key: "has_stock", label: "Tracks Inventory", enabled: true },
   { key: "stock", label: "Stock", enabled: true },
   { key: "available_stock", label: "Available Stock", enabled: true },
@@ -62,16 +62,17 @@ function getCellValue(item: Product, key: ExportColumn["key"]): string | number 
       return item.is_archived ? "Archived" : "Active";
     case "legend":
       return item.legend;
-    case "pricing_type": {
-      // Format pricing type to be more readable
+    case "pricing_formula": {
+      // Format pricing formula to be more readable
+      if (!item.pricing_formula || item.pricing_formula === "NONE") return "Fixed";
       const pricingMap: Record<string, string> = {
-        FIXED: "Fixed",
+        DRIVER_MULTIPLIER: "Per Driver",
+        AREA_RATE: "Area Rate",
         PER_SQFT: "Per Sq Ft",
         PER_INVOICE: "Per Invoice",
         PER_DAY: "Per Day",
-        PER_EU_SRP: "Per EU SRP",
       };
-      return pricingMap[item.pricing_type || "FIXED"] || item.pricing_type || "Fixed";
+      return pricingMap[item.pricing_formula] || item.pricing_formula;
     }
     case "has_stock":
       return item.has_stock ? "Yes" : "No";
@@ -80,7 +81,10 @@ function getCellValue(item: Product, key: ExportColumn["key"]): string | number 
       if (typeof value === "boolean") {
         return value ? "Yes" : "No";
       }
-      return value ?? "";
+      if (Array.isArray(value)) {
+        return JSON.stringify(value);
+      }
+      return (value as string | number) ?? "";
     }
   }
 }
@@ -256,7 +260,7 @@ export function generateExcel(items: Product[], options: ExportOptions): void {
         return { wch: 10 };
       case "formatted_date":
         return { wch: 12 };
-      case "pricing_type":
+      case "pricing_formula":
         return { wch: 15 };
       case "has_stock":
         return { wch: 15 };

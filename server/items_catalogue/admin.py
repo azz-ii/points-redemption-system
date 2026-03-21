@@ -1,14 +1,20 @@
 from django.contrib import admin
-from .models import Product, StockAuditLog
+from .models import Product, StockAuditLog, ProductExtraField
+
+
+class ProductExtraFieldInline(admin.TabularInline):
+    model = ProductExtraField
+    extra = 1
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['item_code', 'item_name', 'category', 'legend', 'has_stock', 'stock', 'committed_stock', 'points', 'price', 'is_archived']
-    list_filter = ['legend', 'has_stock', 'is_archived', 'pricing_type']
+    list_filter = ['legend', 'has_stock', 'is_archived', 'pricing_formula']
     search_fields = ['item_code', 'item_name', 'description', 'category']
     list_editable = ['has_stock']
     ordering = ['item_name', 'item_code']
+    inlines = [ProductExtraFieldInline]
     
     fieldsets = (
         ('Identification', {
@@ -21,7 +27,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('description', 'purpose', 'specifications')
         }),
         ('Pricing', {
-            'fields': ('points', 'price', 'pricing_type')
+            'fields': ('points', 'price', 'pricing_formula', 'points_multiplier')
         }),
         ('Inventory', {
             'fields': ('has_stock', 'stock', 'committed_stock'),

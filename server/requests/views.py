@@ -601,8 +601,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 # Compute points to refund: only for unfulfilled quantities/items
                 refund_points = 0
                 for item in redemption_request.items.select_related('product').all():
-                    pricing = item.pricing_type or 'FIXED'
-                    if pricing == 'FIXED':
+                    pricing = item.pricing_formula or 'NONE'
+                    if pricing == 'NONE':
                         remaining = max(0, item.quantity - item.fulfilled_quantity)
                         if item.points_per_item and remaining > 0:
                             refund_points += remaining * item.points_per_item
@@ -794,8 +794,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         """
         for item in redemption_request.items.all():
             product = item.product
-            pricing = item.pricing_type or 'FIXED'
-            if pricing == 'FIXED':
+            pricing = item.pricing_formula or 'NONE'
+            if pricing == 'NONE':
                 remaining = max(0, item.quantity - item.fulfilled_quantity)
             else:
                 # Non-FIXED: if fully processed (item_processed_by set), stock already deducted; no uncommit
@@ -871,13 +871,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_403_FORBIDDEN
                     )
 
-            pricing = item.pricing_type or 'FIXED'
+            pricing = item.pricing_formula or 'NONE'
 
-            if pricing == 'FIXED':
+            if pricing == 'NONE':
                 fulfill_qty = entry.get('fulfilled_quantity')
                 if not fulfill_qty:
                     return Response(
-                        {'error': f'fulfilled_quantity is required for FIXED pricing item {item_id}'},
+                        {'error': f'fulfilled_quantity is required for standard items {item_id}'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 remaining = item.remaining_quantity
@@ -893,7 +893,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     )
                 validated_items.append({
                     'item': item,
-                    'pricing': 'FIXED',
+                    'pricing': 'NONE',
                     'fulfill_qty': fulfill_qty,
                     'notes': entry.get('notes') or '',
                 })
@@ -924,7 +924,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     pricing = entry['pricing']
                     notes = entry['notes']
 
-                    if pricing == 'FIXED':
+                    if pricing == 'NONE':
                         fulfill_qty = entry['fulfill_qty']
                         item.fulfilled_quantity += fulfill_qty
                         item.save(update_fields=['fulfilled_quantity'])
