@@ -82,8 +82,8 @@ export function AccountsMobileCards({
                     {account.uses_points && `Points: ${account.points?.toLocaleString() ?? 0}`}
                   </p>
                 </div>
-                <div className="flex flex-col gap-1 ml-2">
-                  <span className="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
+                <div className="flex flex-col gap-1 ml-2 text-right">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {account.position || "N/A"}
                   </span>
                 </div>
@@ -91,17 +91,17 @@ export function AccountsMobileCards({
               <div className="flex justify-between items-center">
                 <div className="flex gap-1">
                   {account.is_archived ? (
-                    <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+                    <span className="px-2 py-1 rounded text-xs font-semibold bg-muted text-[color-mix(in_srgb,var(--color-muted-foreground)_70%,black)] dark:bg-muted dark:text-muted-foreground">
                       Archived
                     </span>
                   ) : (
                     <>
                       {account.is_activated ? (
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:bg-success/20 dark:text-success">
                           Active
                         </span>
                       ) : (
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground">
                           Inactive
                         </span>
                       )}

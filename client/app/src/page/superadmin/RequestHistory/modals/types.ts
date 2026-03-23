@@ -7,6 +7,7 @@ export interface RequestHistoryItem {
   requested_by_name: string;
   requested_for: number;
   requested_for_name: string;
+  requested_for_type?: string | null;
   team?: number | null;
   team_name?: string | null;
   status: string;
@@ -45,6 +46,7 @@ export interface RequestHistoryItem {
   rejection_reason?: string | null;
   // Acknowledgement Receipt fields
   ar_status?: string | null;
+  ar_number?: string | null;
   acknowledgement_receipt?: string | null;
   ar_uploaded_by_name?: string | null;
   ar_uploaded_at?: string | null;

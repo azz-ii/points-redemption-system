@@ -1,33 +1,17 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { useAgentDashboardStats } from "@/hooks/queries/useDashboard";
 import { useRequests } from "@/hooks/queries/useRequests";
 import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-interface RedemptionItem {
-  id: number;
-  requested_by: number;
-  requested_by_name: string;
-  requested_for: number;
-  requested_for_name: string;
-  status: string;
-  processing_status: string;
-  total_points: number;
-  date_requested: string;
-  items: any[];
-}
+import { DashboardTable, type RedemptionItem } from "./components";
+import { ViewRedemptionStatusModal } from "../Redemption Status/modals/ViewRedemptionStatusModal";
 
 function SalesAgentDashboard() {
   const navigate = useNavigate();
+
+  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useAgentDashboardStats(30_000);
   const { data: allRequests = [], isLoading: requestsLoading, isFetching: isRefreshing, refetch } = useRequests(30_000);
@@ -168,10 +152,10 @@ function SalesAgentDashboard() {
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           request.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            ? "bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-800/50 dark:text-yellow-300"
                             : request.status === "APPROVED"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                              ? "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300"
+                              : "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300"
                         }`}
                       >
                         {request.status}
@@ -318,104 +302,32 @@ function SalesAgentDashboard() {
           </div>
 
           {/* Pending Requests Table */}
-          <div
-            className="rounded-lg border overflow-hidden border-border"
-          >
-            <Table className="w-full">
-              <TableHeader className="bg-muted">
-                <TableRow
-                  className="border-b border-border"
-                >
-                  <TableHead
-                    className="font-semibold text-muted-foreground"
-                  >
-                    Request ID
-                  </TableHead>
-                  <TableHead
-                    className="font-semibold text-muted-foreground"
-                  >
-                    Requested By
-                  </TableHead>
-                  <TableHead
-                    className="font-semibold text-muted-foreground"
-                  >
-                    Distributor
-                  </TableHead>
-                  <TableHead
-                    className="font-semibold text-muted-foreground"
-                  >
-                    Total Points
-                  </TableHead>
-                  <TableHead
-                    className="font-semibold text-muted-foreground"
-                  >
-                    Date Requested
-                  </TableHead>
-                  <TableHead
-                    className="font-semibold text-muted-foreground"
-                  >
-                    Status
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {!requestsLoading && requests.length > 0 ? (
-                  [...requests].sort(
-                    (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
-                  ).map((request) => (
-                    <TableRow
-                      key={request.id}
-                      className="border-b border-border hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/sales/request/${request.id}`)}
-                    >
-                      <TableCell className="font-medium">
-                        #{request.id}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {request.requested_by_name}
-                      </TableCell>
-                      <TableCell>{request.requested_for_name}</TableCell>
-                      <TableCell className="font-semibold">
-                        {request.total_points.toLocaleString()}
-                      </TableCell>
-                      <TableCell
-                        className="text-muted-foreground"
-                      >
-                        {new Date(
-                          request.date_requested,
-                        ).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          {request.status}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : !requestsLoading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No pending requests found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      Loading...
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <DashboardTable
+            items={requests}
+            loading={requestsLoading}
+            onRefresh={handleRefreshRequests}
+            refreshing={isRefreshing}
+            onViewRequest={(item) => {
+              const fullRequest = allRequests.find((req: any) => req.id === item.id);
+              if (fullRequest) {
+                setSelectedRequest(fullRequest);
+                setShowViewModal(true);
+              }
+            }}
+          />
         </div>
       </div>
+      
+      <ViewRedemptionStatusModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedRequest(null);
+        }}
+        item={selectedRequest?.items?.[0] || null}
+        request={selectedRequest}
+        onRequestWithdrawn={() => refetch()}
+      />
     </div>
   );
 }

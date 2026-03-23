@@ -74,8 +74,18 @@ export function CustomersMobileCards({
                 <div>
                   <h3 className="font-semibold text-sm">{customer.name}</h3>
                   {customer.is_archived && (
-                    <span className="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:text-destructive">
                       Archived
+                    </span>
+                  )}
+                  {!customer.is_archived && customer.is_prospect && (
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/15 text-[color-mix(in_srgb,var(--color-blue-500)_70%,black)] dark:text-blue-300">
+                      Prospect
+                    </span>
+                  )}
+                  {!customer.is_archived && !customer.is_prospect && (
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:text-success">
+                      Active
                     </span>
                   )}
                 </div>

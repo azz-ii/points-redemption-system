@@ -32,6 +32,7 @@ export interface RedemptionRequest {
   requested_by_name: string;
   requested_for: number | null;
   requested_for_name: string;
+  requested_for_type: "SELF" | "DISTRIBUTOR" | "CUSTOMER";
   team: number | null;
   team_name: string | null;
   points_deducted_from: "SELF" | "DISTRIBUTOR";
@@ -74,6 +75,7 @@ export interface RedemptionRequest {
   // Acknowledgement Receipt fields
   ar_status?: string | null;
   ar_status_display?: string | null;
+  ar_number?: string | null;
   acknowledgement_receipt?: string | null;
   ar_uploaded_by?: number | null;
   ar_uploaded_by_name?: string | null;
@@ -99,6 +101,10 @@ export interface ViewRedemptionStatusModalProps extends ModalBaseProps {
   item: RedemptionRequestItem | null;
   request: RedemptionRequest | null;
   onRequestWithdrawn?: () => void;
+  username?: string | null;
+  userPosition?: string | null;
+  onApprove?: (request: RedemptionRequest) => void;
+  onReject?: (request: RedemptionRequest) => void;
 }
 
 export interface WithdrawConfirmationModalProps {

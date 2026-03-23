@@ -135,20 +135,19 @@ function Login() {
       ) : (
         <div className="flex min-h-screen">
       {/* Left side - Image section */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-muted transition-colors">
-        {/* Building backdrop with low opacity */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-black transition-colors">
         <div className="absolute inset-0">
           <img
             src={buildingImage}
             alt="Building exterior"
-            className="object-cover w-full h-full opacity-15 dark:opacity-25 transition-opacity"
+            className="object-cover w-full h-full transition-opacity"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           />
         </div>
         {/* Overlay */}
-        <div className="absolute inset-0 bg-background/60 dark:bg-background/80 z-10 transition-colors" />
+        <div className="absolute inset-0 bg-black/15 dark:bg-black/40 z-10 transition-colors" />
 
         {/* Centered Oracle Logo */}
         <div className="absolute inset-0 flex items-center justify-center z-20">

@@ -4,6 +4,7 @@ export interface HistoryItem {
   requested_by_name: string;
   requested_for: number | null;
   requested_for_name: string;
+  requested_for_type?: string | null;
   team: number | null;
   team_name: string | null;
   status: string;
@@ -42,6 +43,9 @@ export interface HistoryItem {
   rejection_reason?: string | null;
   points_deducted_from: string;
   points_deducted_from_display: string;
+  ar_status?: string | null;
+  ar_uploaded_by_name?: string | null;
+  ar_uploaded_at?: string | null;
   items: Array<{
     id: number;
     product: number;

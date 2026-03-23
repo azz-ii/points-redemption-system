@@ -90,6 +90,8 @@ interface DataTableProps<TData, TValue> {
 
   // Server-side pagination
   manualPagination?: boolean
+  manualSorting?: boolean
+  onSortingChange?: (sorting: SortingState) => void
   pageCount?: number
   totalResults?: number
   currentPage?: number
@@ -143,7 +145,9 @@ export function DataTable<TData, TValue>({
   onFieldChange,
   fieldErrors = {},
   manualPagination = false,
-  pageCount,
+    manualSorting = false,
+    onSortingChange: externalOnSortingChange,
+    pageCount,
   totalResults,
   currentPage,
   onPageChange,
@@ -152,7 +156,15 @@ export function DataTable<TData, TValue>({
   onPageSizeChange,
   fillHeight = false,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>(initialSorting)
+  const [sorting, setInternalSorting] = React.useState<SortingState>(initialSorting)
+
+  const handleSortingChange = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+    const newSorting = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+    setInternalSorting(newSorting)
+    if (externalOnSortingChange) {
+      externalOnSortingChange(newSorting)
+    }
+  }
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility)
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
@@ -191,7 +203,8 @@ export function DataTable<TData, TValue>({
     },
     enableRowSelection,
     ...(enableRowSelection ? { onRowSelectionChange: setRowSelection } : {}),
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
+    manualSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     ...(manualPagination

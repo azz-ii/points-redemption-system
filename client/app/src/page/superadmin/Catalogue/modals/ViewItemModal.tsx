@@ -148,8 +148,8 @@ export function ViewItemModal({
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                     product.has_stock
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                      ? "bg-emerald-500/15 text-[color-mix(in_srgb,var(--color-emerald-500)_70%,black)] dark:text-emerald-300"
+                      : "bg-blue-500/15 text-[color-mix(in_srgb,var(--color-blue-500)_70%,black)] dark:text-blue-300"
                   }`}
                 >
                   {product.has_stock ? "Tracks Stock" : "Made to Order"}

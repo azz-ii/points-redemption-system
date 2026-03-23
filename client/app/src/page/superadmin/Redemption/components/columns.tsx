@@ -93,10 +93,10 @@ export const createColumns = (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
             status === "APPROVED"
-              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+              ? "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300"
               : status === "REJECTED"
-              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+              ? "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300"
+              : "bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-800/50 dark:text-yellow-300"
           }`}
         >
           {row.original.status_display || status}
@@ -126,12 +126,12 @@ export const createColumns = (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
             statusUpper === "PROCESSED"
-              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+              ? "bg-info/15 text-[color-mix(in_srgb,var(--color-info)_70%,black)] dark:bg-info/20 dark:text-info"
               : statusUpper === "PARTIALLY_PROCESSED"
-              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+              ? "bg-warning/20 text-[color-mix(in_srgb,var(--color-warning)_70%,black)] dark:bg-warning/20 dark:text-warning"
               : statusUpper === "CANCELLED"
-              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-              : "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+              ? "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground"
+              : "bg-muted text-[color-mix(in_srgb,var(--color-muted-foreground)_70%,black)] dark:bg-muted dark:text-muted-foreground"
           }`}
         >
           {row.original.processing_status_display || processingStatus?.replace(/_/g, ' ') || "Not Processed"}

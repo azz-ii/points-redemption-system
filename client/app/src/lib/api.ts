@@ -2,6 +2,15 @@
 // Import API URL from central configuration
 import { API_URL } from './config';
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+
+
 const API_BASE_URL = API_URL;
 
 // Backend API Response Types
@@ -701,8 +710,22 @@ export const requestHistoryApi = {
    * Get all processed redemption requests (Admin only).
    * Returns all requests with processing_status='PROCESSED' regardless of assignment.
    */
-  async getProcessedRequests(): Promise<RedemptionRequestResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/history/`, {
+  async getProcessedRequests(params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    ordering?: string;
+  }): Promise<PaginatedResponse<RedemptionRequestResponse>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.ordering) queryParams.append('ordering', params.ordering);
+
+    const qs = queryParams.toString();
+    const url = `${API_BASE_URL}/redemption-requests/history/${qs ? '?' + qs : ''}`;
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -135,6 +135,10 @@ export function ViewRedemptionStatusModal({
   item,
   request,
   onRequestWithdrawn,
+  username,
+  userPosition,
+  onApprove,
+  onReject,
 }: ViewRedemptionStatusModalProps & { onRequestWithdrawn?: () => void }) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showARModal, setShowARModal] = useState(false);
@@ -144,14 +148,22 @@ export function ViewRedemptionStatusModal({
   if (!isOpen || !request) return null;
 
   const normalizedStatus = request.status.toUpperCase();
+  const isOwnRequest = request.requested_by_name === username;
 
   // Check if request can be withdrawn
   const canWithdraw =
     normalizedStatus === "PENDING" &&
-    request.sales_approval_status !== "APPROVED";
+    request.sales_approval_status !== "APPROVED" &&
+    isOwnRequest;
 
-  // Show AR button when approved (can always print) or when upload is needed
-  const canShowAR = normalizedStatus === "APPROVED" || request.ar_status === "PENDING";
+  // Check if request can be approved/rejected
+  const canApproveReject =
+    normalizedStatus === "PENDING" &&
+    userPosition?.toLowerCase() === "approver" &&
+    !isOwnRequest;
+
+  // Show AR button when AR needs to be uploaded or is already uploaded (Customer only)
+  const canShowAR = request.processing_status === "PROCESSED" && request.requested_for_type === "CUSTOMER" && request.ar_status === "PENDING";
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
@@ -349,6 +361,7 @@ export function ViewRedemptionStatusModal({
                 ar_status: request.ar_status,
                 ar_uploaded_by_name: request.ar_uploaded_by_name,
                 ar_uploaded_at: request.ar_uploaded_at,
+                requested_for_type: request.requested_for_type,
               }}
               showProcessing={true}
               showCancellation={true}
@@ -358,7 +371,7 @@ export function ViewRedemptionStatusModal({
             {request.ar_status === "UPLOADED" && request.acknowledgement_receipt && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Acknowledgement Receipt
+                  Acknowledgement Receipt {request.ar_number ? `(${request.ar_number})` : ''}
                 </h3>
                 {request.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
                   <a
@@ -395,6 +408,28 @@ export function ViewRedemptionStatusModal({
               <p className="text-destructive text-sm mb-3">{withdrawError}</p>
             )}
             <div className="flex gap-3 justify-end">
+              {canApproveReject && onReject && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    setTimeout(() => onReject(request), 0);
+                  }}
+                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white"
+                >
+                  Reject
+                </button>
+              )}
+              {canApproveReject && onApprove && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    setTimeout(() => onApprove(request), 0);
+                  }}
+                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Approve
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-muted hover:bg-accent text-foreground border border-border"

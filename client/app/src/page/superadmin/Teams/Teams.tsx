@@ -435,7 +435,7 @@ function Teams() {
                         </p>
                       </div>
                       <div className="flex flex-col gap-1 ml-2">
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-center">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300 text-center">
                           {team.member_count}{" "}
                           {team.member_count === 1 ? "member" : "members"}
                         </span>

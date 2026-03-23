@@ -30,7 +30,6 @@ export function AcknowledgementReceiptModal({
   const [activeTab, setActiveTab] = useState<TabMode>("print-esig");
 
   // Print fields (shared between print-esig and print-blank)
-  const [arNumber, setArNumber] = useState("");
   const [arDate, setArDate] = useState(toDateInputValue(new Date()));
   const [receiverName, setReceiverName] = useState(request.requested_for_name || "");
 
@@ -51,7 +50,7 @@ export function AcknowledgementReceiptModal({
 
   if (!isOpen) return null;
 
-  const canUploadAR = request.ar_status === "PENDING";
+  const canUploadAR = request.processing_status === "PROCESSED" && request.ar_status === "PENDING" && request.requested_for_type === "CUSTOMER";
 
   // --- Signature handlers ---
   const handleSignatureCapture = (file: File, method: "DRAWN" | "PHOTO") => {
@@ -108,16 +107,33 @@ export function AcknowledgementReceiptModal({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const getOrReserveArNumber = async (): Promise<string> => {
+    // If we already have it in the request data, use it
+    if (request.ar_number) return request.ar_number;
+
+    const response = await fetch(`/api/redemption-requests/${request.id}/reserve_ar_number/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to reserve AR Number from server");
+    }
+    const data = await response.json();
+    return data.ar_number;
+  };
+
   // --- Submit ---
   const handleSubmit = async () => {
     setError(null);
 
     if (activeTab === "print-esig") {
-      if (!arNumber.trim()) { setError("Please enter the AR number"); return; }
       if (!signatureFile) { setError("Please capture a signature"); return; }
 
       setIsSubmitting(true);
       try {
+        const reservedArNumber = await getOrReserveArNumber();
+
         // Convert signature to data URL
         const signatureDataUrl = await new Promise<string>((resolve) => {
           const reader = new FileReader();
@@ -130,17 +146,17 @@ export function AcknowledgementReceiptModal({
         // Generate PDF with signature
         const pdfBlob = await generateAcknowledgementReceiptPdf(
           request,
-          arNumber.trim(),
+          reservedArNumber,
           new Date(arDate + "T00:00:00"),
           signatureDataUrl,
           finalName,
         );
 
         // Auto-upload if AR is pending and processed
-        if (request.processing_status === "PROCESSED" && canUploadAR) {
+        if (canUploadAR) {
           const pdfFile = new File(
             [pdfBlob],
-            `AR-${arNumber.trim()}-${request.requested_for_name}.pdf`,
+            `AR-${reservedArNumber}-${request.requested_for_name}.pdf`,
             { type: "application/pdf" },
           );
           const formData = new FormData();
@@ -156,7 +172,12 @@ export function AcknowledgementReceiptModal({
           if (response.ok) {
             onUploaded();
           } else {
-            console.error("Failed to auto-upload AR to system.");
+            const data = await response.json();
+            console.error("Failed to auto-upload AR to system:", data);
+            setError(data.error || "Failed to auto-upload the AR to the system.");
+            // We should stop here instead of continuing since it failed.
+            setIsSubmitting(false);
+            return;
           }
         }
 
@@ -164,7 +185,7 @@ export function AcknowledgementReceiptModal({
         const url = URL.createObjectURL(pdfBlob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `AR-${arNumber.trim() || request.id}-${request.requested_for_name}.pdf`;
+        link.download = `AR-${reservedArNumber}-${request.requested_for_name}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -178,14 +199,14 @@ export function AcknowledgementReceiptModal({
         setIsSubmitting(false);
       }
     } else if (activeTab === "print-blank") {
-      if (!arNumber.trim()) { setError("Please enter the AR number"); return; }
-
       setIsSubmitting(true);
       try {
+        const reservedArNumber = await getOrReserveArNumber();
+
         // Generate PDF without signature (blank for physical fill)
         const pdfBlob = await generateAcknowledgementReceiptPdf(
           request,
-          arNumber.trim(),
+          reservedArNumber,
           new Date(arDate + "T00:00:00"),
           null,
           null,
@@ -195,7 +216,7 @@ export function AcknowledgementReceiptModal({
         const url = URL.createObjectURL(pdfBlob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `AR-${arNumber.trim() || request.id}-${request.requested_for_name}.pdf`;
+        link.download = `AR-${reservedArNumber}-${request.requested_for_name}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -242,7 +263,6 @@ export function AcknowledgementReceiptModal({
     if (signaturePreview) URL.revokeObjectURL(signaturePreview);
     setFile(null);
     setPreview(null);
-    setArNumber("");
     setArDate(toDateInputValue(new Date()));
     setReceiverName(request.requested_for_name || "");
     setSignatureFile(null);
@@ -256,8 +276,7 @@ export function AcknowledgementReceiptModal({
   const isPrintTab = activeTab === "print-esig" || activeTab === "print-blank";
   const submitDisabled =
     isSubmitting ||
-    (activeTab === "print-esig" && (!arNumber.trim() || !signatureFile)) ||
-    (activeTab === "print-blank" && !arNumber.trim()) ||
+    (activeTab === "print-esig" && !signatureFile) ||
     (activeTab === "upload-image" && !file);
 
   const submitLabel = isSubmitting
@@ -327,22 +346,6 @@ export function AcknowledgementReceiptModal({
           {/* Print fields — shown for both print tabs */}
           {isPrintTab && (
             <div className="space-y-4">
-              <div>
-                <label htmlFor="ar-number" className="block text-sm font-medium mb-1.5 text-foreground">
-                  AR Number <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="ar-number"
-                  type="text"
-                  value={arNumber}
-                  onChange={(e) => setArNumber(e.target.value)}
-                  placeholder="e.g., 26-0007"
-                  className="w-full px-3 py-2 rounded-lg border text-sm bg-card border-border text-foreground placeholder-muted-foreground"
-                  autoFocus
-                  disabled={isSubmitting}
-                />
-              </div>
-
               <div>
                 <label htmlFor="ar-date" className="block text-sm font-medium mb-1.5 text-foreground">
                   Date

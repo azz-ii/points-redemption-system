@@ -121,7 +121,7 @@ export function MergeCustomerModal({
             <label className="block text-sm font-medium mb-2">Source (Prospect)</label>
             <div className="w-full px-3 py-2 rounded border bg-muted border-border text-muted-foreground">
               {customer.name}
-              <span className="ml-2 px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+              <span className="ml-2 px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300">
                 Prospect
               </span>
             </div>

@@ -198,10 +198,10 @@ return (
       const isPartial = !isProcessed && fulfilledQty > 0;
 
 return isProcessed ? (
-        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Item Processed
+        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:bg-success/20 dark:text-success">Item Processed
         </span>
       ) : isPartial ? (
-        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-warning/20 text-[color-mix(in_srgb,var(--color-warning)_70%,black)] dark:bg-warning/20 dark:text-warning">
           Partial ({fulfilledQty}/{totalQty})
         </span>
       ) : (

@@ -34,6 +34,7 @@ export interface RequestTimelineData {
   ar_status?: string | null;
   ar_uploaded_by_name?: string | null;
   ar_uploaded_at?: string | null;
+  requested_for_type?: string | null;
 }
 
 interface RequestTimelineProps {
@@ -113,11 +114,11 @@ export function RequestTimeline({
   const getApprovalStatusColor = (status: string | null | undefined) => {
     switch (status?.toUpperCase()) {
       case "APPROVED":
-        return "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400";
+        return "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300 dark:bg-green-900/50 dark:text-green-400";
       case "REJECTED":
-        return "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400";
+        return "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300 dark:bg-red-900/50 dark:text-red-400";
       case "PENDING":
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400";
+        return "bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-800/50 dark:text-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-400";
       default:
         return "bg-muted text-muted-foreground";
     }
@@ -255,7 +256,7 @@ export function RequestTimeline({
         )}
 
         {/* Acknowledgement Receipt */}
-        {data.ar_status && data.ar_status !== "NOT_REQUIRED" && (
+        {data.processing_status === "PROCESSED" && data.requested_for_type === "CUSTOMER" && data.ar_status && data.ar_status !== "NOT_REQUIRED" && (
           <TimelineItem
             icon={data.ar_status === "UPLOADED" ? Upload : Package}
             iconColor={

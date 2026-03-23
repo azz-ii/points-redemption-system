@@ -125,6 +125,7 @@ return (
               ar_status: item.ar_status,
               ar_uploaded_by_name: item.ar_uploaded_by_name,
               ar_uploaded_at: item.ar_uploaded_at,
+              requested_for_type: item.requested_for_type,
             }}
             showProcessing={true}
             showCancellation={true}
@@ -134,7 +135,7 @@ return (
           {item.ar_status === "UPLOADED" && item.acknowledgement_receipt && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Acknowledgement Receipt
+                Acknowledgement Receipt {item.ar_number ? `(${item.ar_number})` : ''}
               </h3>
               {item.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
                 <a

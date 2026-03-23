@@ -105,7 +105,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
       if (isArchived) {
         return (
           <div className="flex gap-1">
-            <span className="px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:text-destructive">
               Archived
             </span>
           </div>
@@ -115,7 +115,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
       if (isProspect) {
         return (
           <div className="flex gap-1">
-            <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-[color-mix(in_srgb,var(--color-blue-500)_70%,black)] dark:text-blue-300">
               Prospect
             </span>
           </div>
@@ -124,7 +124,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<Customer>[] => 
 
       return (
         <div className="flex gap-1">
-          <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:text-success">
             Active
           </span>
         </div>

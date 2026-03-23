@@ -507,8 +507,8 @@ export function ViewTeamModal({
                             <td className="px-4 py-3 text-sm">
                               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                                 member.user_details.position === "Approver"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-green-100 text-green-700"
+                                  ? "bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300"
+                                  : "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300"
                               }`}>
                                 {member.user_details.position}
                               </span>

@@ -16,11 +16,11 @@ export function HistoryMobileCards({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+        return "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300";
       case "REJECTED":
-        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+        return "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+        return "bg-slate-100 border border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700/50 dark:text-slate-300";
     }
   };
 

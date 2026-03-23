@@ -13,8 +13,8 @@ interface ApproverStatsProps {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  APPROVED: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  REJECTED: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  APPROVED: "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300",
+  REJECTED: "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300",
 };
 
 type Filter = "all" | "APPROVED" | "REJECTED";

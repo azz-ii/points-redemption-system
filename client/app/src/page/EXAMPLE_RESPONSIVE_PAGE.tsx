@@ -245,8 +245,8 @@ function ResponsivePageExample() {
                         <span
                           className={`inline-block px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
                             item.status === "active"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              ? "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300"
+                              : "bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-800/50 dark:text-yellow-300"
                           }`}
                         >
                           {item.status}

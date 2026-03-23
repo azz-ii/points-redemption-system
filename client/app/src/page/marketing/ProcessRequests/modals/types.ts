@@ -60,6 +60,7 @@ export interface RequestItem {
   requested_by_name: string;
   requested_for: number | null;
   requested_for_name: string;
+  requested_for_type?: string | null;
   team: number | null;
   team_name: string | null;
   status: string;

@@ -132,8 +132,8 @@ export function ViewAssignedItemModal({
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                     product.has_stock
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                      ? "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300"
+                      : "bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300"
                   }`}
                 >
                   {product.has_stock ? "Tracks Stock" : "Made to Order"}

@@ -74,8 +74,13 @@ export function DistributorsMobileCards({
                 <div>
                   <h3 className="font-semibold text-sm">{distributor.name}</h3>
                   {distributor.is_archived && (
-                    <span className="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold bg-slate-600 text-white">
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:text-destructive">
                       Archived
+                    </span>
+                  )}
+                  {!distributor.is_archived && (
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:text-success">
+                      Active
                     </span>
                   )}
                 </div>

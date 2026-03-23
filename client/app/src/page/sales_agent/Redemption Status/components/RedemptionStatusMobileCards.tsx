@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle as XCircleIcon } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import { StatusChip } from "./StatusChip";
 import type { RedemptionRequest } from "../modals/types";
@@ -12,6 +12,11 @@ interface RedemptionStatusMobileCardsProps {
   onPageChange: (page: number) => void;
   loading: boolean;
   error: string | null;
+  onCancelRequest?: (request: RedemptionRequest) => void;
+  onApprove?: (request: RedemptionRequest) => void;
+  onReject?: (request: RedemptionRequest) => void;
+  username?: string | null;
+  userPosition?: string | null;
 }
 
 export function RedemptionStatusMobileCards({
@@ -23,6 +28,11 @@ export function RedemptionStatusMobileCards({
   onPageChange,
   loading,
   error,
+  onCancelRequest,
+  onApprove,
+  onReject,
+  username,
+  userPosition,
 }: RedemptionStatusMobileCardsProps) {
   // Show skeleton during initial load
   if (loading && requests.length === 0) {
@@ -77,14 +87,47 @@ export function RedemptionStatusMobileCards({
                     {formattedDate}
                   </p>
                 </div>
-                
-                <button
-                  onClick={() => onViewRequest(request)}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
-                  aria-label={`View details for request #${request.id}`}
-                >
-                  View Details
-                </button>
+
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => onViewRequest(request)}
+                    className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+                    aria-label={`View details for request #${request.id}`}
+                  >
+                    View Details
+                  </button>
+                  {request.status.toUpperCase() === "PENDING" && request.sales_approval_status !== "APPROVED" && request.requested_by_name === username && onCancelRequest && (
+                    <button
+                      onClick={() => onCancelRequest(request)}
+                      className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-1"
+                    >
+                      <XCircleIcon className="h-4 w-4" />
+                      Cancel
+                    </button>
+                  )}
+                  {request.status.toUpperCase() === "PENDING" && userPosition?.toLowerCase() === "approver" && request.requested_by_name !== username && (
+                    <>
+                      {onApprove && (
+                        <button
+                          onClick={() => onApprove(request)}
+                          className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-1"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Approve
+                        </button>
+                      )}
+                      {onReject && (
+                        <button
+                          onClick={() => onReject(request)}
+                          className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-1"
+                        >
+                          <XCircleIcon className="h-4 w-4" />
+                          Reject
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             );
           })}

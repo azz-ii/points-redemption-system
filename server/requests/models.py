@@ -230,6 +230,13 @@ class RedemptionRequest(models.Model):
     )
 
     # Acknowledgement Receipt fields (for customer requests)
+    ar_number = models.CharField(
+        max_length=20,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='Auto-generated AR number (PRS-XXXX)'
+    )
     ar_status = models.CharField(
         max_length=20,
         choices=AcknowledgementReceiptStatus.choices,

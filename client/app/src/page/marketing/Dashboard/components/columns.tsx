@@ -193,7 +193,7 @@ return (
       const isProcessed = !!row.original.item_processed_by;
 
 return isProcessed ? (
-        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Item Processed
+        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300">Item Processed
         </span>
       ) : (
         <span

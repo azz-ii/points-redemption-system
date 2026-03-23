@@ -126,10 +126,10 @@ export function CatalogueMobileCards({
             <div className="col-span-2">
               <span className="text-muted-foreground">Status:</span>
               <span
-                className={`ml-2 px-1 py-0.5 rounded-full text-xs font-semibold ${
+                className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
                   product.is_archived
-                    ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                    ? "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:text-destructive"
+                    : "bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:text-success"
                 }`}
               >
                 {product.is_archived ? "Archived" : "Active"}

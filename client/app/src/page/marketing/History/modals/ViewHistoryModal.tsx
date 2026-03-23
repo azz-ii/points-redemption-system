@@ -17,26 +17,26 @@ export function ViewHistoryModal({
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "PENDING":
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
+        return "bg-yellow-100 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:border-yellow-800/50 dark:text-yellow-300";
       case "APPROVED":
-        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
+        return "bg-emerald-100 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-800/50 dark:text-emerald-300";
       case "REJECTED":
-        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+        return "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+        return "bg-slate-100 border border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700/50 dark:text-slate-300";
     }
   };
 
   const getProcessingStatusColor = (status: string) => {
     switch (status) {
       case "NOT_PROCESSED":
-        return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
+        return "bg-zinc-100 border border-zinc-200 text-zinc-800 dark:bg-zinc-900/40 dark:border-zinc-800/50 dark:text-zinc-300";
       case "PROCESSED":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
+        return "bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300";
       case "CANCELLED":
-        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+        return "bg-rose-100 border border-rose-200 text-rose-800 dark:bg-rose-900/40 dark:border-rose-800/50 dark:text-rose-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+        return "bg-slate-100 border border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700/50 dark:text-slate-300";
     }
   };
 
@@ -167,6 +167,7 @@ export function ViewHistoryModal({
                 ar_status: request.ar_status,
                 ar_uploaded_by_name: request.ar_uploaded_by_name,
                 ar_uploaded_at: request.ar_uploaded_at,
+                requested_for_type: request.requested_for_type,
               }}
               showProcessing={true}
               showCancellation={true}

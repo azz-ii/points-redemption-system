@@ -107,6 +107,7 @@ return (
               ar_status: request.ar_status,
               ar_uploaded_by_name: request.ar_uploaded_by_name,
               ar_uploaded_at: request.ar_uploaded_at,
+              requested_for_type: request.requested_for_type,
             }}
             showProcessing={true}
             showCancellation={true}

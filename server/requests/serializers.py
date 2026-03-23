@@ -123,6 +123,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
 
     # Acknowledgement Receipt fields
     ar_status_display = serializers.CharField(source='get_ar_status_display', read_only=True)
+    ar_number = serializers.CharField(read_only=True)
     ar_uploaded_by_name = serializers.SerializerMethodField()
     received_by_signature_method_display = serializers.SerializerMethodField()
 
@@ -145,7 +146,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'sales_approval_date', 'sales_rejection_reason',
             'pending_approvals', 'marketing_processing_status',
             # Acknowledgement Receipt fields
-            'ar_status', 'ar_status_display', 'acknowledgement_receipt',
+            'ar_status', 'ar_status_display', 'ar_number', 'acknowledgement_receipt',
             'ar_uploaded_by', 'ar_uploaded_by_name', 'ar_uploaded_at',
             # E-signature fields
             'received_by_signature', 'received_by_signature_method', 

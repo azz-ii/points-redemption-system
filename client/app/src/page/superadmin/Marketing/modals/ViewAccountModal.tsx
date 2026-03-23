@@ -66,15 +66,15 @@ export function ViewAccountModal({
   const getLegendColor = (legend: string) => {
     switch (legend) {
       case "Collateral":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+        return "bg-red-500/15 text-[color-mix(in_srgb,var(--color-red-500)_70%,black)] dark:text-red-300";
       case "Giveaway":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+        return "bg-blue-500/15 text-[color-mix(in_srgb,var(--color-blue-500)_70%,black)] dark:text-blue-300";
       case "Asset":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        return "bg-amber-500/15 text-[color-mix(in_srgb,var(--color-amber-500)_70%,black)] dark:text-amber-300";
       case "Benefit":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+        return "bg-emerald-500/15 text-[color-mix(in_srgb,var(--color-emerald-500)_70%,black)] dark:text-emerald-300";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+        return "bg-slate-500/15 text-[color-mix(in_srgb,var(--color-slate-500)_70%,black)] dark:text-slate-300";
     }
   };
 

@@ -2,24 +2,24 @@ import { cn } from "@/lib/utils";
 
 const STATUS_CLASSES: Record<string, string> = {
   // Approval statuses
-  APPROVED: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  ACTIVE: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
-  PENDING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
-  REJECTED: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-  INACTIVE: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  ARCHIVED: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  WITHDRAWN: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  APPROVED: "bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:bg-success/20 dark:text-success",
+  ACTIVE: "bg-success/15 text-[color-mix(in_srgb,var(--color-success)_70%,black)] dark:bg-success/20 dark:text-success",
+  PENDING: "bg-warning/20 text-[color-mix(in_srgb,var(--color-warning)_70%,black)] dark:bg-warning/20 dark:text-warning",
+  REJECTED: "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground",
+  INACTIVE: "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground",
+  ARCHIVED: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
+  WITHDRAWN: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
 
   // Processing statuses
-  PROCESSED: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  COMPLETED: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  NOT_PROCESSED: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  PARTIALLY_PROCESSED: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  CANCELLED: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300",
-  AWAITING_AR: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  PROCESSED: "bg-info/15 text-[color-mix(in_srgb,var(--color-info)_70%,black)] dark:bg-info/20 dark:text-info",
+  COMPLETED: "bg-info/15 text-[color-mix(in_srgb,var(--color-info)_70%,black)] dark:bg-info/20 dark:text-info",
+  NOT_PROCESSED: "bg-muted text-[color-mix(in_srgb,var(--color-muted-foreground)_70%,black)] dark:bg-muted dark:text-muted-foreground",
+  PARTIALLY_PROCESSED: "bg-warning/20 text-[color-mix(in_srgb,var(--color-warning)_70%,black)] dark:bg-warning/20 dark:text-warning",
+  CANCELLED: "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground",
+  AWAITING_AR: "bg-warning/20 text-[color-mix(in_srgb,var(--color-warning)_70%,black)] dark:bg-warning/20 dark:text-warning",
 };
 
-const DEFAULT_CLASSES = "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+const DEFAULT_CLASSES = "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground";
 
 /**
  * Returns dark-mode-safe Tailwind classes for a given status string.

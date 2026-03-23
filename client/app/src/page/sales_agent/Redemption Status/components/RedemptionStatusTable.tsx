@@ -6,6 +6,10 @@ interface RedemptionStatusTableProps {
   requests: RedemptionRequest[];
   onViewRequest: (request: RedemptionRequest) => void;
   onCancelRequest: (request: RedemptionRequest) => void;
+  onApprove?: (request: RedemptionRequest) => void;
+  onReject?: (request: RedemptionRequest) => void;
+  username?: string | null;
+  userPosition?: string | null;
   onBulkCancel?: (requests: RedemptionRequest[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -18,6 +22,10 @@ export function RedemptionStatusTable({
   requests,
   onViewRequest,
   onCancelRequest,
+  onApprove,
+  onReject,
+  username,
+  userPosition,
   onBulkCancel,
   onRefresh,
   refreshing = false,
@@ -28,6 +36,10 @@ export function RedemptionStatusTable({
   const columns = createColumns({
     onViewRequest,
     onCancelRequest,
+    onApprove,
+    onReject,
+    username,
+    userPosition,
   });
 
   // Custom global filter function that searches across multiple fields

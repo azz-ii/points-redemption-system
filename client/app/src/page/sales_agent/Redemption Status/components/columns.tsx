@@ -13,10 +13,15 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { RedemptionRequest } from "../modals/types"
 import { StatusChip } from "./StatusChip"
+import { CheckCircle, XCircle as XCircleIcon } from "lucide-react"
 
 interface ColumnContext {
   onViewRequest: (request: RedemptionRequest) => void
   onCancelRequest: (request: RedemptionRequest) => void
+  onApprove?: (request: RedemptionRequest) => void
+  onReject?: (request: RedemptionRequest) => void
+  username?: string | null
+  userPosition?: string | null
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<RedemptionRequest>[] => [
@@ -144,9 +149,17 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionReque
     cell: ({ row }) => {
       const request = row.original
       const normalizedStatus = request.status.toUpperCase()
+      const isOwnRequest = request.requested_by_name === context.username;
+
       const canCancel = 
         normalizedStatus === "PENDING" &&
-        request.sales_approval_status !== "APPROVED"
+        request.sales_approval_status !== "APPROVED" &&
+        isOwnRequest;
+
+      const canApproveReject = 
+        normalizedStatus === "PENDING" &&
+        context.userPosition?.toLowerCase() === "approver" &&
+        !isOwnRequest;
       
       return (
         <div className="flex justify-end">
@@ -167,6 +180,19 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionReque
                   <DropdownMenuItem onClick={() => context.onCancelRequest(request)} className="text-destructive">
                     <XCircle className="mr-2 h-4 w-4" />
                     Cancel
+                  </DropdownMenuItem>
+                </>
+              )}
+              {canApproveReject && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => context.onApprove?.(request)} className="text-green-600">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Approve
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => context.onReject?.(request)} className="text-destructive">
+                    <XCircleIcon className="mr-2 h-4 w-4" />
+                    Reject
                   </DropdownMenuItem>
                 </>
               )}

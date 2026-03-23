@@ -143,6 +143,10 @@ export function ViewHistoryModal({
               rejection_reason: item.rejection_reason,
               status: item.status,
               processing_status: item.processing_status,
+              ar_status: item.ar_status,
+              ar_uploaded_by_name: item.ar_uploaded_by_name,
+              ar_uploaded_at: item.ar_uploaded_at,
+              requested_for_type: item.requested_for_type,
             }}
             showProcessing={true}
             showCancellation={true}

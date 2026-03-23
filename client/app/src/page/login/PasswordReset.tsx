@@ -256,18 +256,18 @@ function PasswordReset() {
   return (
     <div className="flex min-h-screen">
       {/* Left side - Image section */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-linear-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950 transition-colors">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-black transition-colors">
         <div className="absolute inset-0">
           <img
             src={buildingImage}
             alt="Building exterior"
-            className="object-cover w-full h-full opacity-20 dark:opacity-30 transition-opacity"
+            className="object-cover w-full h-full transition-opacity"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           />
         </div>
-        <div className="absolute inset-0 bg-linear-to-br from-slate-200/50 to-slate-300/50 dark:from-slate-900/80 dark:to-slate-900/90 z-10 transition-colors" />
+        <div className="absolute inset-0 bg-black/15 dark:bg-black/40 z-10 transition-colors" />
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <img
             src={oracleLogo}

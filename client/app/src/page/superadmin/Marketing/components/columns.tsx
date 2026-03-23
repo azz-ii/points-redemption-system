@@ -20,15 +20,15 @@ interface ColumnContext {
 const getLegendColor = (legend: string) => {
   switch (legend) {
     case "Collateral":
-      return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+      return "bg-red-500/15 text-[color-mix(in_srgb,var(--color-red-500)_70%,black)] dark:text-red-300"
     case "Giveaway":
-      return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+      return "bg-blue-500/15 text-[color-mix(in_srgb,var(--color-blue-500)_70%,black)] dark:text-blue-300"
     case "Asset":
-      return "bg-yellow-500 text-black"
+      return "bg-amber-500/15 text-[color-mix(in_srgb,var(--color-amber-500)_70%,black)] dark:text-amber-300"
     case "Benefit":
-      return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+      return "bg-emerald-500/15 text-[color-mix(in_srgb,var(--color-emerald-500)_70%,black)] dark:text-emerald-300"
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+      return "bg-slate-500/15 text-[color-mix(in_srgb,var(--color-slate-500)_70%,black)] dark:text-slate-300"
   }
 }
 
@@ -92,9 +92,9 @@ export const createColumns = (context: ColumnContext): ColumnDef<MarketingUser>[
     cell: ({ row }) => {
       const position = row.getValue("position") as string
       return (
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
+        <div>
           {position || "N/A"}
-        </span>
+        </div>
       )
     },
   },

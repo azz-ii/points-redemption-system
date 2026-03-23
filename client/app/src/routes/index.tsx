@@ -7,7 +7,7 @@ import Login from "../page/login/Login";
 import PasswordReset from "../page/login/PasswordReset";
 
 // Dashboard pages
-import SalesDashboard from "../page/sales_agent/Dashboard";
+import SalesDashboard from "../page/sales_agent/Dashboard/Dashboard";
 import MarketingDashboard from "../page/marketing/Dashboard/Dashboard";
 import SuperAdminDashboard from "../page/superadmin/Dashboard";
 
