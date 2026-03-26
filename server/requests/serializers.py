@@ -337,9 +337,11 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             data['requested_for_customer'] = None
         elif requested_for_type == 'CUSTOMER':
             if profile and profile.position == 'Approver':
-                raise serializers.ValidationError({
-                    'requested_for_type': 'Approvers cannot create requests for customers.'
-                })
+                # Approvers with self request can request for customer
+                if not profile.can_self_request:
+                    raise serializers.ValidationError({
+                        'requested_for_type': 'You are not authorized to create customer requests.'
+                    })
 
             if not requested_for_customer:
                 raise serializers.ValidationError({

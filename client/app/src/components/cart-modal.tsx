@@ -787,6 +787,16 @@ export default function CartModal({
                             >
                               Distributor
                             </button>
+                            <button
+                              onClick={() => handleEntityTypeChange('CUSTOMER')}
+                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
+                                entityType === 'CUSTOMER'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Customer
+                            </button>
                           </>
                         ) : (
                           <>
@@ -1464,6 +1474,16 @@ export default function CartModal({
                               }`}
                             >
                               Distributor
+                            </button>
+                            <button
+                              onClick={() => handleEntityTypeChange('CUSTOMER')}
+                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
+                                entityType === 'CUSTOMER'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-foreground hover:bg-accent'
+                              }`}
+                            >
+                              Customer
                             </button>
                           </>
                         ) : (

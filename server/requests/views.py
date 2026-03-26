@@ -172,13 +172,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 "detail": "You must be assigned to a team before creating a redemption request. Please contact your administrator."
             })
         
-        # Approvers may only create SELF or DISTRIBUTOR requests
+        # Approvers may only create SELF, DISTRIBUTOR, or CUSTOMER requests
         approver_profile = getattr(user, 'profile', None)
         if approver_profile and approver_profile.position == 'Approver':
             requested_for_type = serializer.validated_data.get('requested_for_type')
-            if requested_for_type not in ['SELF', 'DISTRIBUTOR']:
+            if requested_for_type not in ['SELF', 'DISTRIBUTOR', 'CUSTOMER']:
                 raise ValidationError({
-                    "detail": "Approvers can only create self or distributor requests."
+                    "detail": "Approvers can only create self, distributor, or customer requests."
                 })
         
         # Create the request with team assignment (handled by serializer)
