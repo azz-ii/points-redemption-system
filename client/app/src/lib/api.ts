@@ -321,6 +321,7 @@ export interface RedemptionRequestResponse {
   id: number;
   requested_by: number;
   requested_by_name: string;
+  requested_by_username: string;
   requested_for: number | null;
   requested_for_name: string;
   requested_for_customer: number | null;
