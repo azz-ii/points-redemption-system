@@ -455,7 +455,7 @@ export function SidebarSales() {
     },
     {
       id: "redemption-status",
-      label: "Redemption Status",
+      label: "My Requests",
       icon: CheckCircle,
       path: "/sales/redemption-status",
     },

@@ -50,7 +50,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
   ],
   sales: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/sales/dashboard" },
-    { id: "redemption-status", label: "Redemption Status", icon: CheckCircle, path: "/sales/redemption-status" },
+    { id: "redemption-status", label: "My Requests", icon: CheckCircle, path: "/sales/redemption-status" },
     { id: "redeem-items", label: "Redeem Items", icon: Gift, path: "/sales/redeem-items" },
   ],
   approver: [
@@ -68,7 +68,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 };
 
 const APPROVER_SELF_REQUEST_ITEMS: NavItem[] = [
-  { id: "redemption-status", label: "Redemption Status", icon: CheckCircle, path: "/approver/redemption-status" },
+  { id: "redemption-status", label: "My Requests", icon: CheckCircle, path: "/approver/redemption-status" },
   { id: "redeem-items", label: "Redeem Items", icon: Gift, path: "/approver/redeem-items" },
 ];
 
