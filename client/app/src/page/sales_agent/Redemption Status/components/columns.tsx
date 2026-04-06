@@ -149,7 +149,7 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionReque
     cell: ({ row }) => {
       const request = row.original
       const normalizedStatus = request.status.toUpperCase()
-      const isOwnRequest = request.requested_by_name === context.username;
+      const isOwnRequest = request.requested_by_username === context.username;
 
       const canCancel = 
         normalizedStatus === "PENDING" &&

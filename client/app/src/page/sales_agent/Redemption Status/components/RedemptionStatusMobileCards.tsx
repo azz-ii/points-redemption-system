@@ -96,7 +96,7 @@ export function RedemptionStatusMobileCards({
                   >
                     View Details
                   </button>
-                  {request.status.toUpperCase() === "PENDING" && request.sales_approval_status !== "APPROVED" && request.requested_by_name === username && onCancelRequest && (
+                  {request.status.toUpperCase() === "PENDING" && request.sales_approval_status !== "APPROVED" && request.requested_by_username === username && onCancelRequest && (
                     <button
                       onClick={() => onCancelRequest(request)}
                       className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-1"
@@ -105,7 +105,7 @@ export function RedemptionStatusMobileCards({
                       Cancel
                     </button>
                   )}
-                  {request.status.toUpperCase() === "PENDING" && userPosition?.toLowerCase() === "approver" && request.requested_by_name !== username && (
+                  {request.status.toUpperCase() === "PENDING" && userPosition?.toLowerCase() === "approver" && request.requested_by_username !== username && (
                     <>
                       {onApprove && (
                         <button

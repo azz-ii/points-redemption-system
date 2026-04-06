@@ -597,13 +597,13 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 # Compute points to refund: only for unfulfilled quantities/items
                 refund_points = 0
                 for item in redemption_request.items.select_related('product').all():
-                    pricing = item.pricing_type or 'FIXED'
-                    if pricing == 'FIXED':
+                    is_fixed = item.pricing_formula in (None, 'NONE')
+                    if is_fixed:
                         remaining = max(0, item.quantity - item.fulfilled_quantity)
                         if item.points_per_item and remaining > 0:
                             refund_points += remaining * item.points_per_item
                     else:
-                        # Non-FIXED: refund full item points only if not yet processed
+                        # Dynamic pricing: refund full item points only if not yet processed
                         if not item.item_processed_by:
                             refund_points += item.total_points
 
@@ -790,11 +790,11 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         """
         for item in redemption_request.items.all():
             product = item.product
-            pricing = item.pricing_type or 'FIXED'
-            if pricing == 'FIXED':
+            is_fixed = item.pricing_formula in (None, 'NONE')
+            if is_fixed:
                 remaining = max(0, item.quantity - item.fulfilled_quantity)
             else:
-                # Non-FIXED: if fully processed (item_processed_by set), stock already deducted; no uncommit
+                # Dynamic pricing: if fully processed (item_processed_by set), stock already deducted; no uncommit
                 remaining = 0 if item.item_processed_by else item.quantity
             if remaining > 0:
                 product.uncommit_stock(remaining)
@@ -867,7 +867,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_403_FORBIDDEN
                     )
 
-            pricing = item.pricing_type or 'FIXED'
+            pricing = 'FIXED' if item.pricing_formula in (None, 'NONE') else item.pricing_formula
 
             if pricing == 'FIXED':
                 fulfill_qty = entry.get('fulfilled_quantity')

@@ -148,7 +148,7 @@ export function ViewRedemptionStatusModal({
   if (!isOpen || !request) return null;
 
   const normalizedStatus = request.status.toUpperCase();
-  const isOwnRequest = request.requested_by_name === username;
+  const isOwnRequest = request.requested_by_username === username;
 
   // Check if request can be withdrawn
   const canWithdraw =

@@ -103,6 +103,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
     processing_photos = ProcessingPhotoSerializer(many=True, read_only=True)
     requested_by_name = serializers.SerializerMethodField()
+    requested_by_username = serializers.SerializerMethodField()
     requested_for_name = serializers.SerializerMethodField()
     requested_for_customer_name = serializers.SerializerMethodField()
     requested_for_customer_is_prospect = serializers.SerializerMethodField()
@@ -130,7 +131,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = RedemptionRequest
         fields = [
-            'id', 'requested_by', 'requested_by_name', 'requested_for', 
+            'id', 'requested_by', 'requested_by_name', 'requested_by_username', 'requested_for', 
             'requested_for_name', 'requested_for_customer', 'requested_for_customer_name',
             'requested_for_customer_is_prospect',
             'requested_for_type', 'team', 'team_name', 'points_deducted_from', 
@@ -165,6 +166,11 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             profile = getattr(obj.requested_by, 'profile', None)
             if profile:
                 return profile.full_name or obj.requested_by.username
+            return obj.requested_by.username
+        return None
+
+    def get_requested_by_username(self, obj):
+        if obj.requested_by:
             return obj.requested_by.username
         return None
 
@@ -271,7 +277,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         allow_null=True
     )
     requested_for_type = serializers.ChoiceField(
-        choices=['DISTRIBUTOR', 'CUSTOMER'],
+        choices=['DISTRIBUTOR', 'CUSTOMER', 'SELF'],
         default='DISTRIBUTOR'
     )
     points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR'])
@@ -301,9 +307,24 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         user = self.context['request'].user
         profile = getattr(user, 'profile', None)
 
-        if requested_for_type == 'DISTRIBUTOR':
-            # Approvers must have can_self_request enabled to create any requests
+        if requested_for_type == 'SELF':
+            # Validate that the user is an Approver with can_self_request
+            if not profile or profile.position != 'Approver':
+                raise serializers.ValidationError({
+                    'requested_for_type': 'Only Approvers can create self-requests'
+                })
+            if not profile.can_self_request:
+                raise serializers.ValidationError({
+                    'requested_for_type': 'You are not authorized to create self-requests. Please contact your administrator.'
+                })
+            # Clear entity fields for SELF requests
+            data['requested_for'] = None
+            data['requested_for_customer'] = None
+            # Force points_deducted_from to SELF (deducted from approver's own points)
+            data['points_deducted_from'] = 'SELF'
+        elif requested_for_type == 'DISTRIBUTOR':
             if profile and profile.position == 'Approver':
+                # Approvers with self request can request for distributor
                 if not profile.can_self_request:
                     raise serializers.ValidationError({
                         'requested_for_type': 'You are not authorized to create distributor requests.'
@@ -321,12 +342,10 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             # Clear customer field if type is DISTRIBUTOR
             data['requested_for_customer'] = None
         elif requested_for_type == 'CUSTOMER':
-            # Approvers must have can_self_request enabled to create any requests
             if profile and profile.position == 'Approver':
-                if not profile.can_self_request:
-                    raise serializers.ValidationError({
-                        'requested_for_type': 'You are not authorized to create customer requests.'
-                    })
+                raise serializers.ValidationError({
+                    'requested_for_type': 'Approvers cannot create requests for customers.'
+                })
 
             if not requested_for_customer:
                 raise serializers.ValidationError({
