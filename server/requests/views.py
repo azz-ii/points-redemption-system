@@ -93,13 +93,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             # Super admin without profile sees only approved requests
             return self._base_queryset().filter(status='APPROVED')
 
-        # Sales Agent - team-scoped access (single query via JOIN, no pre-check)
+        # Sales Agent - only see their own requests
         if profile.position == 'Sales Agent':
-            # Q(team__memberships__user=user): requests from the agent's team
-            # Q(requested_by=user): fallback for agents not yet assigned to a team
-            return self._base_queryset().filter(
-                Q(team__memberships__user=user) | Q(requested_by=user)
-            ).distinct()
+            return self._base_queryset().filter(requested_by=user)
 
         # Approver - see requests from teams they manage + their own self-requests
         elif profile.position == 'Approver':
@@ -1450,13 +1446,8 @@ class AgentDashboardStatsView(APIView):
             # Get agent's team membership
             membership = TeamMembership.objects.filter(user=user).first()
             
-            if membership:
-                agent_team = membership.team
-                # Get requests from the agent's team
-                team_requests = RedemptionRequest.objects.filter(team=agent_team)
-            else:
-                # If not in a team, only count own requests
-                team_requests = RedemptionRequest.objects.filter(requested_by=user)
+            # Always count only the agent's own requests, regardless of team membership.
+            team_requests = RedemptionRequest.objects.filter(requested_by=user)
             
             # Single aggregate query instead of three separate COUNT queries
             stats = team_requests.aggregate(
