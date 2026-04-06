@@ -21,4 +21,5 @@ export interface DistributorFormData {
   name: string;
   brand: string;
   sales_channel: string;
+  points?: number;
 }

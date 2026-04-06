@@ -271,7 +271,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         allow_null=True
     )
     requested_for_type = serializers.ChoiceField(
-        choices=['DISTRIBUTOR', 'CUSTOMER', 'SELF'],
+        choices=['DISTRIBUTOR', 'CUSTOMER'],
         default='DISTRIBUTOR'
     )
     points_deducted_from = serializers.ChoiceField(choices=['SELF', 'DISTRIBUTOR'])
@@ -301,24 +301,9 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
         user = self.context['request'].user
         profile = getattr(user, 'profile', None)
 
-        if requested_for_type == 'SELF':
-            # Validate that the user is an Approver with can_self_request
-            if not profile or profile.position != 'Approver':
-                raise serializers.ValidationError({
-                    'requested_for_type': 'Only Approvers can create self-requests'
-                })
-            if not profile.can_self_request:
-                raise serializers.ValidationError({
-                    'requested_for_type': 'You are not authorized to create self-requests. Please contact your administrator.'
-                })
-            # Clear entity fields for SELF requests
-            data['requested_for'] = None
-            data['requested_for_customer'] = None
-            # Force points_deducted_from to SELF (deducted from approver's own points)
-            data['points_deducted_from'] = 'SELF'
-        elif requested_for_type == 'DISTRIBUTOR':
+        if requested_for_type == 'DISTRIBUTOR':
+            # Approvers must have can_self_request enabled to create any requests
             if profile and profile.position == 'Approver':
-                # Approvers with self request can request for distributor
                 if not profile.can_self_request:
                     raise serializers.ValidationError({
                         'requested_for_type': 'You are not authorized to create distributor requests.'
@@ -336,8 +321,8 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
             # Clear customer field if type is DISTRIBUTOR
             data['requested_for_customer'] = None
         elif requested_for_type == 'CUSTOMER':
+            # Approvers must have can_self_request enabled to create any requests
             if profile and profile.position == 'Approver':
-                # Approvers with self request can request for customer
                 if not profile.can_self_request:
                     raise serializers.ValidationError({
                         'requested_for_type': 'You are not authorized to create customer requests.'

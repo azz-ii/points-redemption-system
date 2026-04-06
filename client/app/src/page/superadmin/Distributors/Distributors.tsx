@@ -8,6 +8,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 import { distributorsApi, type Distributor, type ChunkedUpdateProgress } from "@/lib/distributors-api";
 import { API_URL } from "@/lib/config";
+import { fetchWithCsrf } from "@/lib/csrf";
 import {
   CreateDistributorModal,
   EditDistributorModal,
@@ -19,6 +20,7 @@ import {
   SetPointsModal,
   SalesVolumeAllocationModal,
 } from "./modals";
+import type { DistributorFormData } from "./modals/types";
 import { DistributorsTable, DistributorsMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
@@ -81,10 +83,11 @@ function Distributors() {
     sales_channel: "",
   });
 
-  const [editDistributor, setEditDistributor] = useState({
+  const [editDistributor, setEditDistributor] = useState<DistributorFormData>({
     name: "",
     brand: "",
     sales_channel: "",
+    points: 0,
   });
 
   // Modal state for edit/view/delete
@@ -156,6 +159,7 @@ function Distributors() {
       name: distributor.name,
       brand: distributor.brand ?? "",
       sales_channel: distributor.sales_channel ?? "",
+      points: distributor.points ?? 0,
     });
     setShowEditModal(true);
     setEditError(null);
@@ -183,10 +187,27 @@ function Distributors() {
 
     try {
       setUpdating(true);
-      const updatedDistributor = await distributorsApi.updateDistributor(
-        editingDistributorId,
-        editDistributor,
+
+      const formData = new FormData();
+      Object.entries(editDistributor).forEach(([key, value]) => {
+        formData.append(key, String(value ?? ""));
+      });
+
+      const response = await fetchWithCsrf(
+        `${API_URL}/distributors/${editingDistributorId}/`,
+        {
+          method: "PUT",
+          body: formData,
+        },
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setEditError(data?.error || data?.detail || "Failed to update distributor. Please try again.");
+        return;
+      }
+
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
       setShowEditModal(false);
       setEditingDistributorId(null);
@@ -516,6 +537,7 @@ function Distributors() {
             onRefresh={handleManualRefresh}
             refreshing={refreshing}
             onExport={() => setShowExportModal(true)}
+            onSetPoints={() => setShowSetPointsModal(true)}
             onAllocateSalesVolume={() => setShowSalesVolumeModal(true)}
             onViewPointsHistory={(distributor) => {
               setPointsHistoryTarget(distributor);

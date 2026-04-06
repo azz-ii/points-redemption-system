@@ -109,6 +109,52 @@ export function EditDistributorModal({
                 placeholder="Enter sales channel"
               />
             </div>
+
+            {/* Points */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Points *</label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  min="0"
+                  value={editDistributor.points ?? 0}
+                  onChange={(e) =>
+                    setEditDistributor({
+                      ...editDistributor,
+                      points: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="flex-1 px-3 py-2 rounded border bg-card border-border text-foreground focus:outline-none focus:border-ring"
+                  placeholder="Enter points"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditDistributor({
+                      ...editDistributor,
+                      points: (editDistributor.points ?? 0) + 10,
+                    })
+                  }
+                  aria-label="Add 10 points"
+                  className="px-4 py-2 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                >
+                  +10
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditDistributor({
+                      ...editDistributor,
+                      points: (editDistributor.points ?? 0) + 100,
+                    })
+                  }
+                  aria-label="Add 100 points"
+                  className="px-4 py-2 rounded border font-semibold text-sm transition-colors bg-muted border-border hover:bg-accent text-foreground"
+                >
+                  +100
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

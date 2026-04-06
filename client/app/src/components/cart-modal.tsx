@@ -50,8 +50,8 @@ export default function CartModal({
   const [svcTime, setSvcTime] = useState<string>("");
   const [plateNumber, setPlateNumber] = useState<string>("");
   
-  // Entity type selection (Distributor, Customer, or Self)
-  const [entityType, setEntityType] = useState<RequestedForType>(isApproverWithSelfRequest ? 'SELF' : 'DISTRIBUTOR');
+  // Entity type selection (Distributor or Customer)
+  const [entityType, setEntityType] = useState<RequestedForType>('DISTRIBUTOR');
   
   // All entities for dropdown (preloaded)
   const [allDistributors, setAllDistributors] = useState<{id: number; name: string; brand: string; sales_channel: string}[]>([]);
@@ -297,7 +297,7 @@ export default function CartModal({
       ...(entityType === 'CUSTOMER' && selectedCustomer 
         ? { requested_for_customer: selectedCustomer.id }
         : {}),
-      points_deducted_from: entityType === 'SELF' ? 'SELF' : pointsDeductedFrom,
+      points_deducted_from: pointsDeductedFrom,
       remarks: remarks || undefined,
       items: items.map(item => {
         if (!item.pricing_formula || item.pricing_formula === 'NONE') {
@@ -338,7 +338,7 @@ export default function CartModal({
     setSvcTime("");
     setPlateNumber("");
     setPointsDeductedFrom('SELF');
-    setEntityType(isApproverWithSelfRequest ? 'SELF' : 'DISTRIBUTOR');
+    setEntityType('DISTRIBUTOR');
     onClose();
 
     // Show optimistic success message
@@ -765,18 +765,6 @@ export default function CartModal({
                     <>
                       {/* Entity Type Toggle */}
                       <div className="mt-4 flex gap-2">
-                        {isApproverWithSelfRequest ? (
-                          <>
-                            <button
-                              onClick={() => handleEntityTypeChange('SELF')}
-                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                                entityType === 'SELF'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-accent'
-                              }`}
-                            >
-                              Self
-                            </button>
                             <button
                               onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
                               className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
@@ -797,42 +785,10 @@ export default function CartModal({
                             >
                               Customer
                             </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
-                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                                entityType === 'DISTRIBUTOR'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-accent'
-                              }`}
-                            >
-                              Distributor
-                            </button>
-                            <button
-                              onClick={() => handleEntityTypeChange('CUSTOMER')}
-                              className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm transition ${
-                                entityType === 'CUSTOMER'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-accent'
-                              }`}
-                            >
-                              Customer
-                            </button>
-                          </>
-                        )}
                       </div>
                       
                       <div className="mt-4 space-y-4">
-                        {entityType === 'SELF' ? (
-                          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
-                            <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
-                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              This request is for yourself. No distributor or customer selection is needed.
-                            </p>
-                          </div>
-                        ) : entityType === 'DISTRIBUTOR' ? (
+                        {entityType === 'DISTRIBUTOR' ? (
                           /* Distributor Searchable Combobox */
                           <div className="space-y-1">
                         <label
@@ -997,8 +953,8 @@ export default function CartModal({
                 </div>
               </div>
 
-              {/* Points Deduction - hide for self-requests */}
-              {entityType !== 'SELF' && (
+              {/* Points Deduction */}
+              {(
               <div
                 className={`rounded-lg border border-border`}
               >
@@ -1453,18 +1409,6 @@ export default function CartModal({
                     <>
                       {/* Entity Type Toggle */}
                       <div className="mt-3 flex gap-2">
-                        {isApproverWithSelfRequest ? (
-                          <>
-                            <button
-                              onClick={() => handleEntityTypeChange('SELF')}
-                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                                entityType === 'SELF'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-accent'
-                              }`}
-                            >
-                              Self
-                            </button>
                             <button
                               onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
                               className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
@@ -1485,42 +1429,10 @@ export default function CartModal({
                             >
                               Customer
                             </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEntityTypeChange('DISTRIBUTOR')}
-                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                                entityType === 'DISTRIBUTOR'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-accent'
-                              }`}
-                            >
-                              Distributor
-                            </button>
-                            <button
-                              onClick={() => handleEntityTypeChange('CUSTOMER')}
-                              className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition ${
-                                entityType === 'CUSTOMER'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground hover:bg-accent'
-                              }`}
-                            >
-                              Customer
-                            </button>
-                          </>
-                        )}
                       </div>
                       
                       <div className="mt-3 space-y-3">
-                        {entityType === 'SELF' ? (
-                          <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-2">
-                            <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Self Request</p>
-                            <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">
-                              This request is for yourself. No distributor or customer selection is needed.
-                            </p>
-                          </div>
-                        ) : entityType === 'DISTRIBUTOR' ? (
+                        {entityType === 'DISTRIBUTOR' ? (
                           /* Distributor Searchable Combobox */
                           <div className="space-y-1">
                             <label
@@ -1697,8 +1609,8 @@ export default function CartModal({
                 </div>
               </div>
 
-              {/* Points Deduction - hide for self-requests */}
-              {entityType !== 'SELF' && (
+              {/* Points Deduction */}
+              {(
               <div
                 className={`rounded-lg border border-border`}
               >
