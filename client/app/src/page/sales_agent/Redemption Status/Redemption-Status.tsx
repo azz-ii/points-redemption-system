@@ -198,7 +198,7 @@ export default function RedemptionStatus() {
       <div className="md:hidden flex flex-col flex-1 p-4 pb-20">
         {/* Header */}
         <div className="mb-4">
-          <h1 className="text-xl font-semibold mb-1">Redemption Status</h1>
+          <h1 className="text-xl font-semibold mb-1">My Requests</h1>
           <p className="text-xs text-muted-foreground">
             See exactly where your rewards are
           </p>
@@ -241,7 +241,7 @@ export default function RedemptionStatus() {
       <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold mb-1">Redemption Status</h1>
+          <h1 className="text-2xl font-semibold mb-1">My Requests</h1>
           <p className="text-sm text-muted-foreground">
             See exactly where your rewards are
           </p>
