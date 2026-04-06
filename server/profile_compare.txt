@@ -1,0 +1,5 @@
+ROD:
+{'_state': <django.db.models.base.ModelState object at 0x0000021CB0B25450>, 'id': 52, 'user_id': 62, 'position': 'Sales Agent', 'full_name': 'Rodelio Cuizon', 'email': 'rpcuizon@oraclepetroleum.net', 'is_activated': True, 'uses_points': True, 'points': 105, 'can_self_request': False, 'email_notifications_enabled': True, 'is_archived': False, 'date_archived': None, 'archived_by_id': None, 'created_at': datetime.datetime(2026, 2, 12, 8, 12, 30, 531909, tzinfo=datetime.timezone.utc), 'updated_at': datetime.datetime(2026, 4, 6, 9, 41, 49, 334530, tzinfo=datetime.timezone.utc)}
+
+LAURO:
+{'_state': <django.db.models.base.ModelState object at 0x0000021CB0A6BA80>, 'id': 61, 'user_id': 71, 'position': 'Sales Agent', 'full_name': 'Lauro Cruz', 'email': 'larrycruz9999@gmail.com', 'is_activated': True, 'uses_points': True, 'points': 4475, 'can_self_request': False, 'email_notifications_enabled': True, 'is_archived': False, 'date_archived': None, 'archived_by_id': None, 'created_at': datetime.datetime(2026, 2, 12, 8, 23, 17, 744289, tzinfo=datetime.timezone.utc), 'updated_at': datetime.datetime(2026, 4, 5, 13, 35, 0, 229762, tzinfo=datetime.timezone.utc)}

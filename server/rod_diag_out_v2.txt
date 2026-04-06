@@ -1,0 +1,63 @@
+============================================================
+1. USER ACCOUNT (id=62, Rod)
+============================================================
+  username          : Rod
+  is_active         : True
+  is_staff          : False
+  date_joined       : 2026-02-12 08:12:29.754267+00:00
+  last_login        : 2026-04-06 07:49:46.427027+00:00
+
+============================================================
+2. PROFILE
+============================================================
+  full_name         : Rodelio Cuizon
+  position          : Sales Agent
+  points            : 145
+  is_activated      : True
+  is_archived       : False
+  uses_points       : True
+  can_self_request  : False
+
+============================================================
+3. TEAM MEMBERSHIP  <-- most common blocker
+============================================================
+  [OK] In team id=15  name=LOUIE JAY DONATO
+  team members      : ['Lauro', 'Gabby', 'Edsel', 'Jonathan', 'Patrick', 'Ted', 'Mark', 'Rogen', 'Cherry', 'Rod', 'hosted_agent']
+  team approver     : hosted_approver
+  team is_archived  : False
+
+============================================================
+4. DISTRIBUTORS (global, any agent can request for any)
+============================================================
+  Total active distributors: 14
+
+============================================================
+5. CUSTOMER: BASILIO MOTORSHOP
+============================================================
+  [BLOCK] Customer 'BASILIO MOTORSHOP' NOT FOUND in database!
+  Similar (icontains 'basilio'): ['BASILIO MOTOR SHOP']
+
+============================================================
+6. PRODUCT: Personal Vehicle Fuel
+============================================================
+  id                     : 94
+  item_name              : PERSONAL VEHICLE FUEL
+  item_code              : FUEL
+  points                 : 40.00
+  is_archived            : False
+  has_stock              : False
+  requires_sales_approval: True
+  pricing_formula        : NONE
+  required extra fields  : []
+  optional extra fields  : []
+
+============================================================
+7. ALL REDEMPTION REQUESTS BY ROD (last 10)
+============================================================
+  Total requests ever: 0
+
+============================================================
+8. SUMMARY / LIKELY ROOT CAUSE
+============================================================
+  No obvious account/team issues.
+  Check above sections for: archived customer/product, zero stock, missing extra fields.
