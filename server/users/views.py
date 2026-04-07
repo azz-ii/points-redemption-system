@@ -372,17 +372,19 @@ class UserViewSet(viewsets.ModelViewSet):
                     "error": "User has no email address configured"
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Derive frontend URL from request origin or referer
+            # Use the production frontend URL as the authoritative base.
+            # Fallback to request origin/referer only for local dev convenience.
+            PRODUCTION_FRONTEND_URL = 'http://points-redemption.n01tb.com'
             origin = request.META.get('HTTP_ORIGIN', '')
             referer = request.META.get('HTTP_REFERER', '')
-            if origin:
+            if origin and 'localhost' not in origin and '127.0.0.1' not in origin:
                 frontend_url = origin
-            elif referer:
+            elif referer and 'localhost' not in referer and '127.0.0.1' not in referer:
                 from urllib.parse import urlparse
                 parsed = urlparse(referer)
                 frontend_url = f"{parsed.scheme}://{parsed.netloc}"
             else:
-                frontend_url = 'http://localhost:5173'
+                frontend_url = PRODUCTION_FRONTEND_URL
             
             from urllib.parse import quote
             reset_url = f"{frontend_url}/password-reset?email={quote(email)}"
