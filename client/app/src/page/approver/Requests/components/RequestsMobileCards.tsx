@@ -9,6 +9,7 @@ interface RequestsMobileCardsProps {
   onView: (request: RequestItem) => void;
   onApprove: (request: RequestItem) => void;
   onReject: (request: RequestItem) => void;
+  currentUserUsername?: string;
 }
 
 export function RequestsMobileCards({
@@ -17,6 +18,7 @@ export function RequestsMobileCards({
   onView,
   onApprove,
   onReject,
+  currentUserUsername,
 }: RequestsMobileCardsProps) {
 
 if (loading) {
@@ -86,7 +88,7 @@ if (loading) {
               <Eye className="h-4 w-4" />
               View
             </button>
-            {request.status === "PENDING" && (
+            {request.status === "PENDING" && request.requested_by_username !== currentUserUsername && (
               <>
                 <button
                   onClick={() => onApprove(request)}

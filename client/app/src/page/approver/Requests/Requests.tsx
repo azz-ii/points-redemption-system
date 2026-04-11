@@ -168,6 +168,7 @@ function ApproverRequests() {
             onView={handleViewClick}
             onApprove={handleApproveClick}
             onReject={handleRejectClick}
+            currentUserUsername={username}
           />
 
           {/* Mobile Pagination */}
