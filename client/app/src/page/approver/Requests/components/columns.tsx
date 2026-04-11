@@ -23,6 +23,7 @@ interface ColumnContext {
   onView: (request: RequestItem) => void;
   onApprove: (request: RequestItem) => void;
   onReject: (request: RequestItem) => void;
+  currentUserUsername?: string;
 }
 
 export const createColumns = (
@@ -139,6 +140,7 @@ export const createColumns = (
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
       const request = row.original;
+      const isOwnRequest = request.requested_by_username === context.currentUserUsername;
       return (
         <div className="flex justify-end">
           <DropdownMenu>
@@ -152,7 +154,7 @@ export const createColumns = (
                 <Eye className="mr-2 h-4 w-4" />
                 View
               </DropdownMenuItem>
-              {request.status === "PENDING" && (
+              {request.status === "PENDING" && !isOwnRequest && (
                 <>
                   <DropdownMenuItem onClick={() => context.onApprove(request)}>
                     <CheckCircle className="mr-2 h-4 w-4" />

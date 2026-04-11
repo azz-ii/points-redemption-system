@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { useRequests } from "@/hooks/queries/useRequests";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
@@ -15,6 +16,7 @@ import { RequestsTable, RequestsMobileCards } from "./components";
 
 function ApproverRequests() {
   const queryClient = useQueryClient();
+  const { username } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -216,6 +218,7 @@ function ApproverRequests() {
             onRefresh={handleManualRefresh}
             refreshing={refreshing}
             fillHeight
+            currentUserUsername={username}
           />
         </div>
       </div>
@@ -229,6 +232,7 @@ function ApproverRequests() {
         request={selectedRequest}
         onApprove={handleApproveFromView}
         onReject={handleRejectFromView}
+        currentUserUsername={username}
       />
 
       <ApproveRequestModal

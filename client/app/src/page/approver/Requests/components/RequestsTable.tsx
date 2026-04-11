@@ -12,6 +12,7 @@ interface RequestsTableProps {
   onRefresh?: () => void;
   refreshing?: boolean;
   fillHeight?: boolean;
+  currentUserUsername?: string;
 }
 
 export function RequestsTable({
@@ -23,10 +24,11 @@ export function RequestsTable({
   onRefresh,
   refreshing,
   fillHeight,
+  currentUserUsername,
 }: RequestsTableProps) {
   const columns = useMemo(
-    () => createColumns({ onView, onApprove, onReject }),
-    [onView, onApprove, onReject]
+    () => createColumns({ onView, onApprove, onReject, currentUserUsername }),
+    [onView, onApprove, onReject, currentUserUsername]
   );
 
   return (
