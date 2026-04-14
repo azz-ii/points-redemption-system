@@ -10,6 +10,7 @@ import type {
   RequestItem,
   FlattenedRequestItem,
   MyProcessingStatus,
+  ProcessItemData,
 } from "../ProcessRequests/modals/types";
 import {
   ViewRequestModal,
@@ -119,12 +120,11 @@ function MarketingDashboard() {
     }
   };
 
-  const handleMarkProcessedConfirm = async () => {
+  const handleMarkProcessedConfirm = async (items: ProcessItemData[], photo?: File) => {
     if (!selectedRequest) return;
 
     setIsSubmitting(true);
     try {
-      const items = (myProcessingStatus?.items ?? []).map((item) => ({ item_id: item.id }));
       await handlerRequestsApi.markItemsProcessed(selectedRequest.id, items);
       toast.success("Items marked as processed successfully");
       setShowProcessModal(false);
@@ -164,12 +164,20 @@ function MarketingDashboard() {
       }, {} as Record<number, FlattenedRequestItem[]>);
 
       const results = await Promise.allSettled(
-        Object.keys(requestGroups).map((requestId) =>
-          handlerRequestsApi.markItemsProcessed(
-            Number(requestId),
-            requestGroups[Number(requestId)].map((item) => ({ item_id: item.id }))
-          )
-        )
+        Object.keys(requestGroups).map((requestId) => {
+          const items = requestGroups[Number(requestId)].map((item) => {
+            const isFixed = !item.pricing_type || item.pricing_type === "FIXED";
+            const remaining = item.remaining_quantity ?? item.quantity;
+            
+            const processItem: ProcessItemData = {
+              item_id: item.id,
+              ...(isFixed ? { fulfilled_quantity: remaining } : {}),
+            };
+            return processItem;
+          });
+
+          return handlerRequestsApi.markItemsProcessed(Number(requestId), items);
+        })
       );
 
       const succeeded = results.filter((r) => r.status === "fulfilled").length;
