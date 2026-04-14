@@ -2,11 +2,12 @@
 import { getStatusClasses } from "@/components/ui/status-badge";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, CheckCircle, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { Eye, CheckCircle, ArrowUpDown, XCircle, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import type { FlattenedRequestItem } from "../../ProcessRequests/modals/types";
 interface ColumnContext {
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
+  onCancelRequest: (item: FlattenedRequestItem) => void;
 }
 
 export const createColumns = (
@@ -216,6 +218,10 @@ return isProcessed ? (
         item.request_status === "APPROVED" &&
         item.request_processing_status !== "CANCELLED" &&
         !isProcessed;
+      const canCancel =
+        item.request_status === "APPROVED" &&
+        item.request_processing_status !== "CANCELLED" &&
+        item.request_processing_status !== "PROCESSED";
 
       return (
         <div className="flex justify-end">
@@ -235,6 +241,15 @@ return isProcessed ? (
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Mark as Processed
                 </DropdownMenuItem>
+              )}
+              {canCancel && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => context.onCancelRequest(item)} className="text-destructive">
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Cancel Request
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

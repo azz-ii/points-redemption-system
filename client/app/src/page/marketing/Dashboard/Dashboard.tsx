@@ -15,6 +15,7 @@ import type {
 import {
   ViewRequestModal,
   MarkItemsProcessedModal,
+  CancelRequestModal,
 } from "../ProcessRequests/modals";
 import { BulkMarkProcessedModal } from "../ProcessRequests/components";
 import { DashboardTable, DashboardMobileCards } from "./components";
@@ -33,6 +34,8 @@ function MarketingDashboard() {
   const [bulkProcessTargets, setBulkProcessTargets] = useState<FlattenedRequestItem[]>([]);
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
 
   const { data: requests = [], isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useHandlerRequests(5000);
   const { data: historyRequests = [], isLoading: historyLoading } = useHandlerHistory(10000);
@@ -202,6 +205,26 @@ function MarketingDashboard() {
     }
   };
 
+  const handleCancelClick = (item: FlattenedRequestItem) => {
+    setSelectedCancelRequest(item.request);
+    setShowCancelModal(true);
+  };
+
+  const handleCancelConfirm = async (reason: string, remarks: string) => {
+    if (!selectedCancelRequest) return;
+
+    try {
+      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      toast.success("Request cancelled successfully");
+      setShowCancelModal(false);
+      setSelectedCancelRequest(null);
+      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
+    } catch (err) {
+      console.error("Error cancelling request:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to cancel request");
+    }
+  };
+
   return (
     <>
       {/* Mobile Layout */}
@@ -260,6 +283,7 @@ function MarketingDashboard() {
           loading={loading}
           onViewRequest={handleViewClick}
           onMarkItemProcessed={handleMarkItemProcessedClick}
+          onCancelRequest={handleCancelClick}
         />
 
         {/* Mobile Pagination */}
@@ -343,6 +367,7 @@ function MarketingDashboard() {
               loading={loading}
               onViewRequest={handleViewClick}
               onMarkItemProcessed={handleMarkItemProcessedClick}
+              onCancelRequest={handleCancelClick}
               onBulkMarkProcessed={handleBulkMarkProcessed}
               onRefresh={handleManualRefresh}
               refreshing={refreshing}
@@ -390,6 +415,16 @@ function MarketingDashboard() {
           isSubmitting={isSubmitting}
         />
       )}
+
+      <CancelRequestModal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSelectedCancelRequest(null);
+        }}
+        item={selectedCancelRequest}
+        onConfirm={handleCancelConfirm}
+      />
     </>
   );
 }

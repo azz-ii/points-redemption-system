@@ -1,4 +1,4 @@
-import { Eye, CheckCircle } from "lucide-react";
+import { Eye, CheckCircle, XCircle } from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import type { FlattenedRequestItem } from "../../ProcessRequests/modals/types";
 
@@ -7,6 +7,7 @@ interface DashboardMobileCardsProps {
   loading: boolean;
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
+  onCancelRequest: (item: FlattenedRequestItem) => void;
 }
 
 export function DashboardMobileCards({
@@ -14,6 +15,7 @@ export function DashboardMobileCards({
   loading,
   onViewRequest,
   onMarkItemProcessed,
+  onCancelRequest,
 }: DashboardMobileCardsProps) {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -48,6 +50,10 @@ export function DashboardMobileCards({
           item.request_status === "APPROVED" &&
           item.request_processing_status !== "CANCELLED" &&
           !isProcessed;
+        const canCancel =
+          item.request_status === "APPROVED" &&
+          item.request_processing_status !== "CANCELLED" &&
+          item.request_processing_status !== "PROCESSED";
 
         return (
           <div
@@ -122,6 +128,15 @@ export function DashboardMobileCards({
                 >
                   <CheckCircle className="h-4 w-4" />
                   Process
+                </button>
+              )}
+              {canCancel && (
+                <button
+                  onClick={() => onCancelRequest(item)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Cancel
                 </button>
               )}
             </div>

@@ -9,6 +9,7 @@ interface DashboardTableProps {
   loading: boolean;
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
+  onCancelRequest: (item: FlattenedRequestItem) => void;
   onBulkMarkProcessed?: (items: FlattenedRequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -20,6 +21,7 @@ export function DashboardTable({
   loading,
   onViewRequest,
   onMarkItemProcessed,
+  onCancelRequest,
   onBulkMarkProcessed,
   onRefresh,
   refreshing = false,
@@ -30,8 +32,9 @@ export function DashboardTable({
       createColumns({
         onViewRequest,
         onMarkItemProcessed,
+        onCancelRequest,
       }),
-    [onViewRequest, onMarkItemProcessed]
+    [onViewRequest, onMarkItemProcessed, onCancelRequest]
   );
 
   const globalFilterFn = (row: Row<FlattenedRequestItem>, _columnId: string, filterValue: string) => {

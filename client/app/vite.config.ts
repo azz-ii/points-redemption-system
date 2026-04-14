@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Your App Name',
-        short_name: 'App',
+        name: 'OPC PRS',
+        short_name: 'OPC PRS',
         description: 'Your app description',
         theme_color: '#ffffff',
         icons: [
