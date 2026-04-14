@@ -225,6 +225,17 @@ function MarketingDashboard() {
     }
   };
 
+  const handleViewModalMarkProcessed = () => {
+    setShowViewModal(false);
+    setShowProcessModal(true);
+  };
+
+  const handleViewModalCancel = () => {
+    setShowViewModal(false);
+    setSelectedCancelRequest(selectedRequest);
+    setShowCancelModal(true);
+  };
+
   return (
     <>
       {/* Mobile Layout */}
@@ -387,6 +398,8 @@ function MarketingDashboard() {
         }}
         request={selectedRequest}
         myItems={myProcessingStatus?.items}
+        onMarkItemProcessed={handleViewModalMarkProcessed}
+        onCancelRequest={handleViewModalCancel}
       />
 
       <MarkItemsProcessedModal
