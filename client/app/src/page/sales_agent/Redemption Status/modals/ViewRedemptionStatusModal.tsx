@@ -148,7 +148,7 @@ export function ViewRedemptionStatusModal({
   if (!isOpen || !request) return null;
 
   const normalizedStatus = request.status.toUpperCase();
-  const isOwnRequest = request.requested_by_username === username;
+  const isOwnRequest = request.requested_by_name === username;
 
   // Check if request can be withdrawn
   const canWithdraw =
@@ -163,7 +163,7 @@ export function ViewRedemptionStatusModal({
     !isOwnRequest;
 
   // Show AR button when AR needs to be uploaded or is already uploaded (Customer only)
-  const canShowAR = request.processing_status === "PROCESSED" && request.requested_for_type === "CUSTOMER" && request.ar_status === "PENDING";
+  const canShowAR = request.processing_status === "PROCESSED" && request.requested_for_type === "CUSTOMER" && (request.ar_status === "PENDING" || request.ar_status === "UPLOADED");
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
