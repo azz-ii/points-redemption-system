@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.hashers import check_password
 import logging
-from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ProcessingPhoto, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus
+from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ProcessingPhoto, ApprovalStatusChoice, RequestStatus, RequestedForType, AcknowledgementReceiptStatus, ProcessingStatus
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
@@ -1558,6 +1558,7 @@ class HandlerHistoryView(APIView):
     
     def get(self, request):
         """Get all requests where the current handler user has processed items"""
+        from django.db.models import Q
         user = request.user
         profile = getattr(user, 'profile', None)
         
@@ -1567,11 +1568,16 @@ class HandlerHistoryView(APIView):
                 'error': 'Access denied. Handler role required.'
             }, status=status.HTTP_403_FORBIDDEN)
         
-        # Get all requests where this user has processed at least one item
-        # This shows history regardless of current item legend assignment
-        # (item_processed_by tracks who actually processed the item)
+        # Get all requests where handler is involved (assigned or processed items)
+        # filtered to show PARTIALLY_PROCESSED, PROCESSED, or CANCELLED status
+        # (Shows history of all requests handler has worked on or is assigned to)
         processed_requests = _build_base_queryset().filter(
-            items__item_processed_by=user
+            Q(items__product__mktg_admin=user) | Q(items__item_processed_by=user),
+            processing_status__in=[
+                ProcessingStatus.PARTIALLY_PROCESSED,
+                ProcessingStatus.PROCESSED,
+                ProcessingStatus.CANCELLED
+            ]
         ).distinct().order_by('-date_requested')
         serializer = RedemptionRequestSerializer(processed_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

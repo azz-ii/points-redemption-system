@@ -66,8 +66,9 @@ export default function MarketingHistory() {
   };
 
   // Mobile pagination - filter and paginate for mobile cards only
-  const { filteredRequests, totalPages, safePage, paginatedRequests } = useMemo(() => {
+  const { totalPages, safePage, paginatedRequests } = useMemo(() => {
     const filtered = requests.filter((request) => {
+      // Filter by search query
       if (!searchQuery.trim()) return true;
       const query = searchQuery.toLowerCase();
       return (
@@ -81,7 +82,6 @@ export default function MarketingHistory() {
     const safe = Math.min(currentPage, pages);
     const start = (safe - 1) * pageSize;
     return {
-      filteredRequests: filtered,
       totalPages: pages,
       safePage: safe,
       paginatedRequests: filtered.slice(start, start + pageSize),
