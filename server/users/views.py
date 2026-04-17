@@ -80,13 +80,46 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserListSerializer
     
     def list(self, request, *args, **kwargs):
-        """Override list to add debug info to response"""
+        """Override list to support fetching all accounts or return paginated results"""
         # Log query parameters for debugging
         position = request.query_params.get('position', None)
         search = request.query_params.get('search', None)
         show_archived = request.query_params.get('show_archived', 'false')
-        logger.info(f"UserViewSet.list called - position: {position}, search: {search}, show_archived: {show_archived}")
+        all_accounts = request.query_params.get('all_accounts', 'false').lower() == 'true'
         
+        logger.info(f"UserViewSet.list called - position: {position}, search: {search}, show_archived: {show_archived}, all_accounts: {all_accounts}")
+        
+        # If all_accounts=true, return all filtered results without pagination
+        if all_accounts:
+            queryset = self.filter_queryset(self.get_queryset())
+            
+            # Safety limit to prevent memory exhaustion
+            MAX_ALL_ACCOUNTS = 5000
+            if queryset.count() > MAX_ALL_ACCOUNTS:
+                logger.warning(f"all_accounts request would return {queryset.count()} accounts, exceeding limit of {MAX_ALL_ACCOUNTS}")
+                return Response({
+                    'error': f'Too many accounts ({queryset.count()}). Maximum {MAX_ALL_ACCOUNTS} allowed. Please use pagination or refine your search.',
+                    'count': queryset.count(),
+                    'results': []
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer = self.get_serializer(queryset, many=True)
+            response_data = {
+                'count': queryset.count(),
+                'next': None,
+                'previous': None,
+                'results': serializer.data,
+                '_debug': {
+                    'position_filter': position,
+                    'search_filter': search,
+                    'show_archived': show_archived,
+                    'all_accounts': True,
+                    'total_results': queryset.count()
+                }
+            }
+            return Response(response_data)
+        
+        # Otherwise, return paginated results
         response = super().list(request, *args, **kwargs)
         
         # Add debug info to response
@@ -95,6 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 'position_filter': position,
                 'search_filter': search,
                 'show_archived': show_archived,
+                'all_accounts': False,
                 'total_results': response.data.get('count', 0)
             }
         

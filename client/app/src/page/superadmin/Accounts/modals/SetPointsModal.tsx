@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Save, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { X, Save, AlertTriangle, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Account } from "./types";
 import { SetPointsConfirmationModal } from "./SetPointsConfirmationModal";
@@ -43,10 +43,6 @@ export function SetPointsModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
-  
   // Advanced section state
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [bulkPointsDelta, setBulkPointsDelta] = useState<number>(0);
@@ -57,10 +53,8 @@ export function SetPointsModal({
   const [confirmationType, setConfirmationType] = useState<"bulk" | "reset">("bulk");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Calculate pagination
+  // Calculate total accounts
   const activeAccounts = accounts || [];
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
 
   // Debounce search query
   useEffect(() => {
@@ -71,13 +65,14 @@ export function SetPointsModal({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch page data when page or search changes
+  // Fetch all accounts data when modal opens or search changes
   const fetchPageData = useCallback(async () => {
     if (!isOpen) return;
     
     try {
       setIsLoadingPage(true);
-      const data = await onFetchPage(currentPage, itemsPerPage, debouncedSearchQuery);
+      // Fetch all eligible accounts in one request using a large page size
+      const data = await onFetchPage(1, 9999, debouncedSearchQuery);
       // Filter results for points-eligible users (Sales Agent or Approver with can_self_request)
       const eligibleAccounts = (data.results || []).filter(
         (account) =>
@@ -93,7 +88,7 @@ export function SetPointsModal({
     } finally {
       setIsLoadingPage(false);
     }
-  }, [isOpen, currentPage, itemsPerPage, debouncedSearchQuery, onFetchPage]);
+  }, [isOpen, debouncedSearchQuery, onFetchPage]);
 
   useEffect(() => {
     fetchPageData();
@@ -109,18 +104,12 @@ export function SetPointsModal({
       setShowAdvanced(false);
       setBulkPointsDelta(0);
       setConfirmBulkUpdate(false);
-      // Reset pagination and search
-      setCurrentPage(1);
+      // Reset search
       setSearchQuery("");
       setDebouncedSearchQuery("");
       setReason("");
     }
   }, [isOpen]);
-
-  // Reset to page 1 when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchQuery]);
 
   const handlePointsChange = (accountId: number, value: string) => {
     // Allow empty string, minus sign, or valid numbers
@@ -337,41 +326,6 @@ export function SetPointsModal({
             </div>
           )}
         </div>
-
-        {/* Pagination Controls */}
-        {totalCount > itemsPerPage && (
-          <div
-            className="flex items-center justify-between px-6 py-4 border-t border-border"
-          >
-            <div
-              className="text-sm text-muted-foreground"
-            >
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, totalCount)} of {totalCount} accounts
-              {searchQuery && ` (search: "${searchQuery}")`}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1 || loading || isLoadingPage}
-                className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <span
-                className="text-sm px-3 text-foreground"
-              >
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages || loading || isLoadingPage}
-                className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent text-foreground"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Advanced Section */}
         {onBulkSubmit && (

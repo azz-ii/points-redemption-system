@@ -37,6 +37,41 @@ export interface BatchUpdateResponse {
 
 export const usersApi = {
   getAccountsPage: async (page: number = 1, pageSize: number = 20, searchQuery: string = '', showArchived?: boolean): Promise<PaginatedAccountsResponse> => {
+    // If pageSize is very large (9999), fetch all accounts by iterating through pages
+    if (pageSize > 500) {
+      let allResults: Account[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
+        url.searchParams.append('page', currentPage.toString());
+        url.searchParams.append('page_size', '100'); // Use max allowed per page
+        if (searchQuery) {
+          url.searchParams.append('search', searchQuery);
+        }
+        if (showArchived) {
+          url.searchParams.append('show_archived', 'true');
+        }
+        
+        const response = await fetch(url.toString(), {
+          credentials: 'include',
+        });
+        if (!response.ok) throw new Error('Failed to fetch accounts');
+        
+        const data = await response.json();
+        const results = Array.isArray(data) ? data : (data.results || []);
+        allResults = [...allResults, ...results];
+        
+        // Check if there are more pages
+        hasMore = !Array.isArray(data) && data.next !== null;
+        currentPage++;
+      }
+      
+      return { count: allResults.length, next: null, previous: null, results: allResults };
+    }
+
+    // Standard pagination for normal page sizes
     const url = new URL(`${API_BASE_URL}/users/`, window.location.origin);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('page_size', pageSize.toString());
