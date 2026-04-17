@@ -202,10 +202,17 @@ export function ViewRedemptionStatusModal({
           {/* Header */}
           <div className="flex justify-between items-center p-6">
             <div>
-              <h2 id="view-redemption-status-title" className="text-xl font-semibold">
-                Request Details
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
+              <div className="flex items-center gap-3 mb-1">
+                <h2 id="view-redemption-status-title" className="text-xl font-semibold">
+                  Request Details
+                </h2>
+                <StatusChip 
+                  status={request.status as any} 
+                  processingStatus={request.processing_status as any}
+                  arStatus={request.ar_status}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
                 Request #{request.id} • {new Date(request.date_requested).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
@@ -321,18 +328,6 @@ export function ViewRedemptionStatusModal({
               </p>
             </div>
 
-            {/* Status */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Current Status
-              </h3>
-              <StatusChip 
-                status={request.status as any} 
-                processingStatus={request.processing_status as any}
-                arStatus={request.ar_status}
-              />
-            </div>
-
             {/* Request Timeline */}
             <RequestTimeline
               data={{
@@ -340,16 +335,12 @@ export function ViewRedemptionStatusModal({
                 date_requested: request.date_requested,
                 reviewed_by_name: request.reviewed_by_name,
                 date_reviewed: request.date_reviewed,
-                requires_sales_approval: request.requires_sales_approval,
-                sales_approval_status: request.sales_approval_status,
-                sales_approved_by_name: request.sales_approved_by_name,
-                sales_approval_date: request.sales_approval_date,
-                sales_rejection_reason: request.sales_rejection_reason,
                 requires_marketing_approval: request.requires_marketing_approval,
                 marketing_approval_status: request.marketing_approval_status,
                 marketing_approved_by_name: request.marketing_approved_by_name,
                 marketing_approval_date: request.marketing_approval_date,
                 marketing_rejection_reason: request.marketing_rejection_reason,
+                withdrawal_reason: request.withdrawal_reason,
                 processed_by_name: request.processed_by_name,
                 date_processed: request.date_processed,
                 cancelled_by_name: request.cancelled_by_name,

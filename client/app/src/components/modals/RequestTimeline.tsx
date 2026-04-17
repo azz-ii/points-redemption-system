@@ -7,18 +7,14 @@ export interface RequestTimelineData {
   // Legacy review fields (used when dual approval not enabled)
   reviewed_by_name?: string | null;
   date_reviewed?: string | null;
-  // Dual approval - Sales
-  requires_sales_approval?: boolean;
-  sales_approval_status?: string | null;
-  sales_approved_by_name?: string | null;
-  sales_approval_date?: string | null;
-  sales_rejection_reason?: string | null;
   // Dual approval - Marketing
   requires_marketing_approval?: boolean;
   marketing_approval_status?: string | null;
   marketing_approved_by_name?: string | null;
   marketing_approval_date?: string | null;
   marketing_rejection_reason?: string | null;
+  // Withdrawal fields
+  withdrawal_reason?: string | null;
   // Processing fields
   processed_by_name?: string | null;
   date_processed?: string | null;
@@ -64,6 +60,7 @@ function TimelineItem({
   title,
   person,
   date,
+  remarks,
   extraInfo,
 }: {
   icon: React.ElementType;
@@ -71,6 +68,7 @@ function TimelineItem({
   title: string;
   person: string | null | undefined;
   date: string | null | undefined;
+  remarks?: string | null;
   extraInfo?: React.ReactNode;
 }) {
   return (
@@ -95,6 +93,11 @@ function TimelineItem({
               {formatDate(date)}
             </span>
           </div>
+          {remarks && (
+            <p className="text-xs mt-1 text-muted-foreground">
+              {remarks}
+            </p>
+          )}
           {extraInfo}
         </div>
       </div>
@@ -108,7 +111,7 @@ export function RequestTimeline({
   showCancellation = true,
 }: RequestTimelineProps) {
   // Determine if dual approval is enabled
-  const hasDualApproval = data.requires_sales_approval || data.requires_marketing_approval;
+  const hasDualApproval = data.requires_marketing_approval;
 
   // Get approval status styling
   const getApprovalStatusColor = (status: string | null | undefined) => {
@@ -138,42 +141,24 @@ export function RequestTimeline({
           title="Requested"
           person={data.requested_by_name}
           date={data.date_requested}
+          remarks={data.remarks ? `Remarks: ${data.remarks}` : undefined}
         />
+
+        {/* Withdrawn (if withdrawal reason exists) */}
+        {data.withdrawal_reason && (
+          <TimelineItem
+            icon={XCircle}
+            iconColor="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+            title="Withdrawn"
+            person={data.requested_by_name}
+            date={data.date_requested}
+            remarks={`Reason: ${data.withdrawal_reason}`}
+          />
+        )}
 
         {/* Approval Section */}
         {hasDualApproval ? (
           <>
-            {/* Sales Approval */}
-            {data.requires_sales_approval && (
-              <TimelineItem
-                icon={data.sales_approval_status?.toUpperCase() === "REJECTED" ? XCircle : CheckCircle}
-                iconColor={
-                  data.sales_approval_status?.toUpperCase() === "APPROVED"
-                    ? "bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400"
-                    : data.sales_approval_status?.toUpperCase() === "REJECTED"
-                    ? "bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
-                    : "bg-muted text-muted-foreground"
-                }
-                title="Sales Approval"
-                person={data.sales_approved_by_name}
-                date={data.sales_approval_date}
-                extraInfo={
-                  <>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded ${getApprovalStatusColor(data.sales_approval_status)}`}>
-                        {data.sales_approval_status?.toUpperCase() || "PENDING"}
-                      </span>
-                    </div>
-                    {data.sales_rejection_reason && (
-                      <p className={`text-xs mt-1 text-destructive`}>
-                        Reason: {data.sales_rejection_reason}
-                      </p>
-                    )}
-                  </>
-                }
-              />
-            )}
-
             {/* Marketing Approval */}
             {data.requires_marketing_approval && (
               <TimelineItem
@@ -188,19 +173,19 @@ export function RequestTimeline({
                 title="Marketing Approval"
                 person={data.marketing_approved_by_name}
                 date={data.marketing_approval_date}
+                remarks={
+                  data.marketing_approval_status?.toUpperCase() === "REJECTED"
+                    ? data.marketing_rejection_reason ? `Reason: ${data.marketing_rejection_reason}` : undefined
+                    : data.marketing_approval_status?.toUpperCase() === "APPROVED"
+                    ? data.remarks ? `Remarks: ${data.remarks}` : undefined
+                    : undefined
+                }
                 extraInfo={
-                  <>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded ${getApprovalStatusColor(data.marketing_approval_status)}`}>
-                        {data.marketing_approval_status?.toUpperCase() || "PENDING"}
-                      </span>
-                    </div>
-                    {data.marketing_rejection_reason && (
-                      <p className={`text-xs mt-1 text-destructive`}>
-                        Reason: {data.marketing_rejection_reason}
-                      </p>
-                    )}
-                  </>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-xs px-2 py-0.5 rounded ${getApprovalStatusColor(data.marketing_approval_status)}`}>
+                      {data.marketing_approval_status?.toUpperCase() || "PENDING"}
+                    </span>
+                  </div>
                 }
               />
             )}
@@ -219,16 +204,10 @@ export function RequestTimeline({
             title="Reviewed"
             person={data.reviewed_by_name}
             date={data.date_reviewed}
-            extraInfo={
-              data.rejection_reason ? (
-                <p className={`text-xs mt-1 text-destructive`}>
-                  Reason: {data.rejection_reason}
-                </p>
-              ) : data.remarks ? (
-                <p className={`text-xs mt-1 text-muted-foreground`}>
-                  Remarks: {data.remarks}
-                </p>
-              ) : null
+            remarks={
+              data.status?.toUpperCase() === "REJECTED"
+                ? data.rejection_reason ? `Reason: ${data.rejection_reason}` : undefined
+                : data.remarks ? `Remarks: ${data.remarks}` : undefined
             }
           />
         )}
@@ -241,6 +220,7 @@ export function RequestTimeline({
             title="Processed"
             person={data.processed_by_name}
             date={data.date_processed}
+            remarks={data.remarks ? `Remarks: ${data.remarks}` : undefined}
           />
         )}
 
@@ -252,6 +232,7 @@ export function RequestTimeline({
             title="Cancelled"
             person={data.cancelled_by_name}
             date={data.date_cancelled}
+            remarks={data.rejection_reason ? `Reason: ${data.rejection_reason}` : undefined}
           />
         )}
 
@@ -281,14 +262,6 @@ export function RequestTimeline({
           />
         )}
       </div>
-
-      {/* General Remarks (if not shown in approval and exists) */}
-      {hasDualApproval && data.remarks && (
-        <div className={`mt-4 p-3 rounded bg-muted`}>
-          <p className={`text-xs font-medium text-muted-foreground`}>Remarks</p>
-          <p className={`text-sm mt-1 text-foreground`}>{data.remarks}</p>
-        </div>
-      )}
     </div>
   );
 }

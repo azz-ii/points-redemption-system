@@ -91,7 +91,7 @@ export function RedemptionStatusMobileCards({
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => onViewRequest(request)}
-                    className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
                     aria-label={`View details for request #${request.id}`}
                   >
                     View Details
@@ -99,7 +99,7 @@ export function RedemptionStatusMobileCards({
                   {request.status.toUpperCase() === "PENDING" && request.sales_approval_status !== "APPROVED" && request.requested_by_username === username && onCancelRequest && (
                     <button
                       onClick={() => onCancelRequest(request)}
-                      className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-1"
+                      className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-1"
                     >
                       <XCircleIcon className="h-4 w-4" />
                       Cancel
@@ -110,7 +110,7 @@ export function RedemptionStatusMobileCards({
                       {onApprove && (
                         <button
                           onClick={() => onApprove(request)}
-                          className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-1"
+                          className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-1"
                         >
                           <CheckCircle className="h-4 w-4" />
                           Approve
@@ -119,7 +119,7 @@ export function RedemptionStatusMobileCards({
                       {onReject && (
                         <button
                           onClick={() => onReject(request)}
-                          className="flex-1 min-w-[30%] px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-1"
+                          className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-1"
                         >
                           <XCircleIcon className="h-4 w-4" />
                           Reject

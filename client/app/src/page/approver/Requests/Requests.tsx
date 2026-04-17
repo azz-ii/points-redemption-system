@@ -27,11 +27,10 @@ function ApproverRequests() {
   const [selectedRequest, setSelectedRequest] =
     useState<RequestItem | null>(null);
 
-  // Backend filters to NOT_PROCESSED via ?not_processed=1, so no client-side
-  // post-filter is needed. Poll every 30s (same cadence as all other hooks).
+  // Poll every 30s (same cadence as all other hooks).
+  // Show all requests so approvers can see the full lifecycle including cancelled requests.
   const { data: requests = [], isLoading: loading, isFetching: refreshing } = useRequests({
     refetchInterval: 30_000,
-    notProcessed: true,
   });
 
   const approveMutation = useApproveRequest();

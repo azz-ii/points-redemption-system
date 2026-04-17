@@ -10,7 +10,6 @@ interface RedemptionStatusTableProps {
   onReject?: (request: RedemptionRequest) => void;
   username?: string | null;
   userPosition?: string | null;
-  onBulkCancel?: (requests: RedemptionRequest[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   loading: boolean;
@@ -26,7 +25,6 @@ export function RedemptionStatusTable({
   onReject,
   username,
   userPosition,
-  onBulkCancel,
   onRefresh,
   refreshing = false,
   loading,
@@ -68,7 +66,6 @@ export function RedemptionStatusTable({
           data={requests}
           loading={loading}
           error={error}
-          onDeleteSelected={onBulkCancel}
           onRefresh={onRefresh}
           refreshing={refreshing}
           searchPlaceholder="Search by Request ID, Customer, Item..."

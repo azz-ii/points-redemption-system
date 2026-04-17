@@ -10,7 +10,6 @@ interface CustomersTableProps {
   onEdit: (customer: Customer) => void;
   onArchive: (customer: Customer) => void;
   onUnarchive: (customer: Customer) => void;
-  onArchiveSelected?: (customers: Customer[]) => void;
   onPromote?: (customer: Customer) => void;
   onMerge?: (customer: Customer) => void;
   onCreateNew?: () => void;
@@ -37,7 +36,6 @@ export function CustomersTable({
   onEdit,
   onArchive,
   onUnarchive,
-  onArchiveSelected,
   onPromote,
   onMerge,
   onCreateNew,
@@ -70,7 +68,6 @@ export function CustomersTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
-      onDeleteSelected={onArchiveSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Customer"
       createButtonIcon="user"
@@ -99,6 +96,7 @@ export function CustomersTable({
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
       fillHeight={fillHeight}
+      enableRowSelection={true}
     />
   );
 }

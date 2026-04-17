@@ -14,7 +14,6 @@ import {
   ViewCustomerModal,
   ArchiveCustomerModal,
   UnarchiveCustomerModal,
-  BulkArchiveCustomerModal,
   ExportModal,
   PromoteCustomerModal,
   MergeCustomerModal,
@@ -68,6 +67,7 @@ function Customers() {
   const handleToggleArchived = useCallback((checked: boolean) => {
     setShowArchived(checked);
     setTablePage(0);
+    setSearchQuery("");
   }, []);
 
   // Modal and form state for creating new customer
@@ -91,14 +91,12 @@ function Customers() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
-  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingCustomerId, setEditingCustomerId] = useState<number | null>(
     null,
   );
   const [viewTarget, setViewTarget] = useState<Customer | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Customer | null>(null);
   const [unarchiveTarget, setUnarchiveTarget] = useState<Customer | null>(null);
-  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Customer[]>([]);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -253,12 +251,6 @@ function Customers() {
     }
   };
 
-  // Handle bulk archive
-  const handleArchiveSelected = async (selectedCustomers: Customer[]) => {
-    setBulkArchiveTargets(selectedCustomers);
-    setShowBulkArchiveModal(true);
-  };
-
   // Handle promote click
   const handlePromoteClick = (customer: Customer) => {
     setPromoteTarget(customer);
@@ -269,37 +261,6 @@ function Customers() {
   const handleMergeClick = (customer: Customer) => {
     setMergeTarget(customer);
     setShowMergeModal(true);
-  };
-
-  // Confirm bulk archive
-  const confirmBulkArchive = async () => {
-    try {
-      setMutationLoading(true);
-      const archiveResults = await Promise.allSettled(
-        bulkArchiveTargets.map((customer) =>
-          customersApi.deleteCustomer(customer.id)
-        )
-      );
-
-      const successCount = archiveResults.filter((r) => r.status === "fulfilled").length;
-      const failCount = archiveResults.filter((r) => r.status === "rejected").length;
-
-      setShowBulkArchiveModal(false);
-      setBulkArchiveTargets([]);
-
-      if (failCount === 0) {
-        toast.success(`Successfully archived ${successCount} customer(s)`);
-      } else {
-        toast.warning(`Archived ${successCount} of ${bulkArchiveTargets.length} customer(s). ${failCount} failed.`);
-      }
-
-      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
-    } catch (err) {
-      console.error("Error archiving customers:", err);
-      toast.error("Error archiving some customers");
-    } finally {
-      setMutationLoading(false);
-    }
   };
 
   return (
@@ -331,6 +292,7 @@ function Customers() {
           </div>
           <div className="flex-1 min-h-0">
             <CustomersTable
+              key={showArchived ? "archived" : "active"}
               customers={customers}
             loading={loading}
             error={error}
@@ -338,7 +300,6 @@ function Customers() {
             onEdit={handleEditClick}
             onArchive={handleArchiveClick}
             onUnarchive={handleUnarchiveClick}
-            onArchiveSelected={handleArchiveSelected}
             onPromote={handlePromoteClick}
             onMerge={handleMergeClick}
             onCreateNew={() => setShowCreateModal(true)}
@@ -458,15 +419,6 @@ function Customers() {
         customer={unarchiveTarget}
         loading={loading}
         onConfirm={confirmUnarchive}
-      />
-
-      {/* Bulk Archive Confirmation Modal */}
-      <BulkArchiveCustomerModal
-        isOpen={showBulkArchiveModal}
-        onClose={() => setShowBulkArchiveModal(false)}
-        customers={bulkArchiveTargets}
-        loading={loading}
-        onConfirm={confirmBulkArchive}
       />
 
       {/* Export Modal */}

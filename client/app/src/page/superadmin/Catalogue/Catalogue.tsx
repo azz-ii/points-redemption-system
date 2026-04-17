@@ -19,7 +19,6 @@ import {
   ViewItemModal,
   ArchiveItemModal,
   UnarchiveItemModal,
-  BulkArchiveItemModal,
   ExportModal,
 } from "./modals";
 import {
@@ -85,6 +84,7 @@ function Catalogue() {
   const handleToggleArchived = useCallback((checked: boolean) => {
     setShowArchived(checked);
     setTablePage(0);
+    setSearchQuery("");
   }, []);
 
   // Modal and form state for creating new item
@@ -151,12 +151,10 @@ function Catalogue() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
-  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [viewTarget, setViewTarget] = useState<Product | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Product | null>(null);
   const [unarchiveTarget, setUnarchiveTarget] = useState<Product | null>(null);
-  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Product[]>([]);
   const [archiving, setArchiving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -164,8 +162,6 @@ function Catalogue() {
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [editCurrentImage, setEditCurrentImage] = useState<string | null>(null);
   const [editImageRemoved, setEditImageRemoved] = useState(false);
-
-  // Handle create item submission
   const handleCreateItem = async () => {
     setCreateError(null);
 
@@ -475,14 +471,6 @@ function Catalogue() {
     setShowUnarchiveModal(true);
   };
 
-  // Handle bulk archive
-  const handleBulkArchiveClick = (items: Product[]) => {
-    const activeItems = items.filter((item) => !item.is_archived);
-    if (activeItems.length === 0) return;
-    setBulkArchiveTargets(activeItems);
-    setShowBulkArchiveModal(true);
-  };
-
   const confirmArchive = async (id: number) => {
     try {
       setArchiving(true);
@@ -538,29 +526,6 @@ function Catalogue() {
     }
   };
 
-  const confirmBulkArchive = async () => {
-    try {
-      setArchiving(true);
-      for (const item of bulkArchiveTargets) {
-        const response = await fetchWithCsrf(`/api/catalogue/${item.id}/`, {
-          method: "DELETE",
-        });
-        if (!response.ok) {
-          const body = await response.json().catch(() => null);
-          throw new Error(body?.error || `Failed to archive product ${item.item_name}`);
-        }
-      }
-      setShowBulkArchiveModal(false);
-      setBulkArchiveTargets([]);
-      queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
-    } catch (err) {
-      console.error("Error bulk archiving products:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to archive some products. Please try again.");
-    } finally {
-      setArchiving(false);
-    }
-  };
-
   return (
     <>
       {/* Desktop Layout */}
@@ -588,6 +553,7 @@ function Catalogue() {
         {/* Table */}
         <div className="flex-1 min-h-0">
           <CatalogueTable
+            key={showArchived ? "archived" : "active"}
             products={items}
           loading={loading}
           error={error}
@@ -596,7 +562,6 @@ function Catalogue() {
           onEdit={handleEditClick}
           onArchive={handleArchiveClick}
           onUnarchive={handleUnarchiveClick}
-          onArchiveSelected={handleBulkArchiveClick}
           onCreateNew={() => setShowCreateModal(true)}
           onRefresh={handleManualRefresh}
           refreshing={refreshing}
@@ -781,17 +746,6 @@ function Catalogue() {
         item={unarchiveTarget}
         loading={archiving}
         onConfirm={confirmUnarchive}
-      />
-
-      <BulkArchiveItemModal
-        isOpen={showBulkArchiveModal && bulkArchiveTargets.length > 0}
-        onClose={() => {
-          setShowBulkArchiveModal(false);
-          setBulkArchiveTargets([]);
-        }}
-        items={bulkArchiveTargets}
-        loading={archiving}
-        onConfirm={confirmBulkArchive}
       />
 
       <ExportModal

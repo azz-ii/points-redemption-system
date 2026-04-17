@@ -31,8 +31,6 @@ export default function RedemptionStatus() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showBulkWithdrawModal, setShowBulkWithdrawModal] = useState(false);
-  const [bulkWithdrawTargets, setBulkWithdrawTargets] = useState<RedemptionRequest[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const itemsPerPage = 7; // Mobile only
@@ -154,44 +152,6 @@ export default function RedemptionStatus() {
     }
   };
 
-  const handleBulkWithdraw = async (selectedRequests: RedemptionRequest[]) => {
-    setBulkWithdrawTargets(selectedRequests);
-    setShowBulkWithdrawModal(true);
-  };
-
-  const handleBulkWithdrawConfirm = async (reason: string) => {
-    setIsSubmitting(true);
-    try {
-      const results = await Promise.allSettled(
-        bulkWithdrawTargets.map(request =>
-          fetchWithCsrf(`${API_URL}/redemption-requests/${request.id}/withdraw_request/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ withdrawal_reason: reason }),
-          })
-        )
-      );
-
-      const succeeded = results.filter(r => r.status === "fulfilled").length;
-      const failed = results.filter(r => r.status === "rejected").length;
-
-      if (succeeded > 0) {
-        alert(`Successfully cancelled ${succeeded} request(s)${failed > 0 ? `, ${failed} failed` : ""}`);
-      } else {
-        throw new Error("All cancellations failed");
-      }
-
-      setShowBulkWithdrawModal(false);
-      setBulkWithdrawTargets([]);
-      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
-    } catch (err) {
-      console.error("Bulk withdraw failed:", err);
-      alert(err instanceof Error ? err.message : "Failed to cancel requests");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <>
       {/* Mobile Layout */}
@@ -257,7 +217,6 @@ export default function RedemptionStatus() {
               onReject={openRejectModal}
               username={username}
               userPosition={userPosition}
-              onBulkCancel={handleBulkWithdraw}
               onRefresh={handleManualRefresh}
               refreshing={refreshing}
               loading={loading}
@@ -305,16 +264,6 @@ export default function RedemptionStatus() {
           onClose={() => setShowRejectModal(false)}
           request={selectedRequest as any}
           onConfirm={handleRejectConfirm}
-        />
-      )}
-
-      {showBulkWithdrawModal && (
-        <BulkWithdrawModal
-          isOpen={showBulkWithdrawModal}
-          onClose={() => setShowBulkWithdrawModal(false)}
-          onConfirm={handleBulkWithdrawConfirm}
-          requests={bulkWithdrawTargets}
-          isSubmitting={isSubmitting}
         />
       )}
     </>

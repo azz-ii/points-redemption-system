@@ -70,6 +70,8 @@ export interface RedemptionRequest {
   cancelled_by?: number | null;
   cancelled_by_name?: string | null;
   date_cancelled?: string | null;
+  // Withdrawal field
+  withdrawal_reason?: string | null;
   remarks: string | null;
   rejection_reason: string | null;
   items: RedemptionRequestItem[];

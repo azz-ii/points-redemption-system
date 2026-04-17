@@ -7,7 +7,6 @@ interface HistoryTableProps {
   requests: RequestItem[];
   loading: boolean;
   onView: (request: RequestItem) => void;
-  onExport?: (selected: RequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   fillHeight?: boolean;
@@ -17,7 +16,6 @@ export function HistoryTable({
   requests,
   loading,
   onView,
-  onExport,
   onRefresh,
   refreshing,
   fillHeight,
@@ -35,7 +33,6 @@ export function HistoryTable({
       columns={columns}
       data={requests}
       loading={loading}
-      onExport={onExport}
       onRefresh={onRefresh}
       refreshing={refreshing}
       searchPlaceholder="Filter by ID, requested by, or requested for..."
@@ -47,7 +44,6 @@ export function HistoryTable({
           String(row.getValue("requested_for_name") || "").toLowerCase().includes(s)
         );
       }}
-      enableRowSelection={true}
       initialSorting={[{ id: "date_processed", desc: true }]}
       pageSize={15}
       loadingMessage="Loading history..."

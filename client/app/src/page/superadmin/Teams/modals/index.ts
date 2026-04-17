@@ -4,6 +4,7 @@ export { ViewTeamModal } from "./ViewTeamModal";
 export { EditTeamModal } from "./EditTeamModal";
 export { DeleteTeamModal } from "./DeleteTeamModal";
 export { AnalyticsModal } from "./AnalyticsModal";
+export { ExportModal } from "./ExportModal";
 export type {
   ModalBaseProps,
   Team,

@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, ArrowUpDown, XCircle, MoreHorizontal } from "lucide-react"
+import { Eye, ArrowUpDown, XCircle, MoreHorizontal, CheckCircle, XCircle as XCircleIcon } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,10 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { StatusBadge } from "@/components/ui/status-badge"
 import type { RedemptionRequest } from "../modals/types"
-import { StatusChip } from "./StatusChip"
-import { CheckCircle, XCircle as XCircleIcon } from "lucide-react"
 
 interface ColumnContext {
   onViewRequest: (request: RedemptionRequest) => void
@@ -25,32 +23,6 @@ interface ColumnContext {
 }
 
 export const createColumns = (context: ColumnContext): ColumnDef<RedemptionRequest>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-    enableResizing: false,
-    size: 40,
-  },
   {
     accessorKey: "requested_for_name",
     header: ({ column }) => {
@@ -132,14 +104,103 @@ export const createColumns = (context: ColumnContext): ColumnDef<RedemptionReque
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Approval Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const request = row.original
+      const normalizedStatus = request.status?.toUpperCase() || ""
+      
+      let statusLabel = ""
+      let statusType: "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN" = "PENDING"
+      
+      switch (normalizedStatus) {
+        case "APPROVED":
+          statusLabel = "Approved"
+          statusType = "APPROVED"
+          break
+        case "REJECTED":
+          statusLabel = "Rejected"
+          statusType = "REJECTED"
+          break
+        case "WITHDRAWN":
+          statusLabel = "Withdrawn"
+          statusType = "WITHDRAWN"
+          break
+        default:
+          statusLabel = "Pending"
+          statusType = "PENDING"
+      }
+      
       return (
-        <StatusChip
-          status={request.status as any}
-          processingStatus={request.processing_status as any}
-        />
+        <div className="text-sm font-medium">
+          <StatusBadge status={statusType} label={statusLabel} size="sm" />
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "processing_status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Processing Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const request = row.original
+      const approvalStatus = request.status?.toUpperCase() || ""
+      const processingStatus = request.processing_status?.toUpperCase() || ""
+      
+      // Only show processing status if request is approved
+      if (approvalStatus !== "APPROVED") {
+        return (
+          <div className="text-sm text-muted-foreground opacity-50">
+            —
+          </div>
+        )
+      }
+      
+      let statusLabel = ""
+      let statusType: "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN" = "PENDING"
+      
+      switch (processingStatus) {
+        case "PROCESSED":
+          statusLabel = "Processed"
+          statusType = "APPROVED"
+          break
+        case "PARTIALLY_PROCESSED":
+          statusLabel = "Partial"
+          statusType = "APPROVED"
+          break
+        case "CANCELLED":
+          statusLabel = "Cancelled"
+          statusType = "WITHDRAWN"
+          break
+        default:
+          statusLabel = "Pending"
+          statusType = "PENDING"
+      }
+      
+      return (
+        <div className="text-sm font-medium">
+          <StatusBadge status={statusType} label={statusLabel} size="sm" />
+        </div>
       )
     },
   },

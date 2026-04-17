@@ -145,6 +145,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'requires_sales_approval',
             'sales_approval_status', 'sales_approved_by', 'sales_approved_by_name',
             'sales_approval_date', 'sales_rejection_reason',
+            'marketing_rejection_reason',
             'pending_approvals', 'marketing_processing_status',
             # Acknowledgement Receipt fields
             'ar_status', 'ar_status_display', 'ar_number', 'acknowledgement_receipt',

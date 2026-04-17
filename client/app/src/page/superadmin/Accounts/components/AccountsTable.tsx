@@ -12,7 +12,6 @@ interface AccountsTableProps {
   onEditAccount: (account: Account) => void;
   onArchiveAccount: (account: Account) => void;
   onUnarchiveAccount: (account: Account) => void;
-  onArchiveSelected?: (accounts: Account[]) => void;
   onCreateNew?: () => void;
   onSetPoints?: () => void;
   onRefresh?: () => void;
@@ -42,7 +41,6 @@ export function AccountsTable({
   onEditAccount,
   onArchiveAccount,
   onUnarchiveAccount,
-  onArchiveSelected,
   onCreateNew,
   onSetPoints,
   onRefresh,
@@ -91,7 +89,6 @@ export function AccountsTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
-      onDeleteSelected={onArchiveSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add User"
       createButtonIcon="user"
@@ -121,6 +118,7 @@ export function AccountsTable({
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
       fillHeight={fillHeight}
+      enableRowSelection={true}
     />
   );
 }

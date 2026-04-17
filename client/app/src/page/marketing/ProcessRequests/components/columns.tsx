@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import type { FlattenedRequestItem } from "../modals/types";
 
 interface ColumnContext {
@@ -23,33 +22,6 @@ interface ColumnContext {
 export const createColumns = (
   context: ColumnContext
 ): ColumnDef<FlattenedRequestItem>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-        disabled={!!row.original.item_processed_by}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-    enableResizing: false,
-    size: 40,
-  },
   {
     accessorKey: "product_code",
     header: "Item Code",
@@ -124,24 +96,6 @@ export const createColumns = (
     cell: ({ row }) => <div>{row.getValue("quantity")}</div>,
   },
   {
-    accessorKey: "total_points",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Points
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="font-semibold">{row.getValue("total_points")}</div>
-    ),
-  },
-  {
     accessorKey: "date_requested",
     header: ({ column }) => {
       return (
@@ -170,7 +124,18 @@ export const createColumns = (
   },
   {
     accessorKey: "request_status",
-    header: "Request Status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Request Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const status = row.getValue("request_status") as string;
       const statusDisplay = row.original.request_status_display;
@@ -188,7 +153,18 @@ return (
   },
   {
     accessorKey: "request_processing_status",
-    header: "Processing Status",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="px-0 hover:bg-transparent"
+        >
+          Processing Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const processingStatus = row.original.request_processing_status;
       const processingDisplay = row.original.request_processing_status_display;

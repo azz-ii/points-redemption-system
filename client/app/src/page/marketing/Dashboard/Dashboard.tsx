@@ -17,7 +17,6 @@ import {
   MarkItemsProcessedModal,
   CancelRequestModal,
 } from "../ProcessRequests/modals";
-import { BulkMarkProcessedModal } from "../ProcessRequests/components";
 import { DashboardTable, DashboardMobileCards } from "./components";
 
 function MarketingDashboard() {
@@ -28,10 +27,8 @@ function MarketingDashboard() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showProcessModal, setShowProcessModal] = useState(false);
-  const [showBulkProcessModal, setShowBulkProcessModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [bulkProcessTargets, setBulkProcessTargets] = useState<FlattenedRequestItem[]>([]);
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -143,78 +140,16 @@ function MarketingDashboard() {
     }
   };
 
-  const handleBulkMarkProcessed = (selectedItems: FlattenedRequestItem[]) => {
-    const processableItems = selectedItems.filter((item) => !item.item_processed_by);
-
-    if (processableItems.length === 0) {
-      toast.info("All selected items have already been processed");
-      return;
-    }
-
-    setBulkProcessTargets(processableItems);
-    setShowBulkProcessModal(true);
-  };
-
-  const handleBulkMarkProcessedConfirm = async () => {
-    setIsSubmitting(true);
-    try {
-      const requestGroups = bulkProcessTargets.reduce((acc, item) => {
-        if (!acc[item.requestId]) {
-          acc[item.requestId] = [];
-        }
-        acc[item.requestId].push(item);
-        return acc;
-      }, {} as Record<number, FlattenedRequestItem[]>);
-
-      const results = await Promise.allSettled(
-        Object.keys(requestGroups).map((requestId) => {
-          const items = requestGroups[Number(requestId)].map((item) => {
-            const isFixed = !item.pricing_type || item.pricing_type === "FIXED";
-            const remaining = item.remaining_quantity ?? item.quantity;
-            
-            const processItem: ProcessItemData = {
-              item_id: item.id,
-              ...(isFixed ? { fulfilled_quantity: remaining } : {}),
-            };
-            return processItem;
-          });
-
-          return handlerRequestsApi.markItemsProcessed(Number(requestId), items);
-        })
-      );
-
-      const succeeded = results.filter((r) => r.status === "fulfilled").length;
-      const failed = results.filter((r) => r.status === "rejected").length;
-
-      if (succeeded > 0) {
-        toast.success(
-          `Successfully marked ${succeeded} request(s) as processed${failed > 0 ? `, ${failed} failed` : ""}`
-        );
-      } else {
-        throw new Error("All processing operations failed");
-      }
-
-      setShowBulkProcessModal(false);
-      setBulkProcessTargets([]);
-      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
-    } catch (err) {
-      console.error("Bulk mark processed failed:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleCancelClick = (item: FlattenedRequestItem) => {
     setSelectedCancelRequest(item.request);
     setShowCancelModal(true);
   };
 
-  const handleCancelConfirm = async (reason: string, remarks: string) => {
+  const handleCancelConfirm = async (reason: string) => {
     if (!selectedCancelRequest) return;
 
     try {
-      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason);
       toast.success("Request cancelled successfully");
       setShowCancelModal(false);
       setSelectedCancelRequest(null);
@@ -379,7 +314,6 @@ function MarketingDashboard() {
               onViewRequest={handleViewClick}
               onMarkItemProcessed={handleMarkItemProcessedClick}
               onCancelRequest={handleCancelClick}
-              onBulkMarkProcessed={handleBulkMarkProcessed}
               onRefresh={handleManualRefresh}
               refreshing={refreshing}
               fillHeight
@@ -415,19 +349,6 @@ function MarketingDashboard() {
         pendingCount={myProcessingStatus?.pending_items || 0}
         onConfirm={handleMarkProcessedConfirm}
       />
-
-      {showBulkProcessModal && (
-        <BulkMarkProcessedModal
-          isOpen={showBulkProcessModal}
-          onClose={() => {
-            setShowBulkProcessModal(false);
-            setBulkProcessTargets([]);
-          }}
-          onConfirm={handleBulkMarkProcessedConfirm}
-          items={bulkProcessTargets}
-          isSubmitting={isSubmitting}
-        />
-      )}
 
       <CancelRequestModal
         isOpen={showCancelModal}

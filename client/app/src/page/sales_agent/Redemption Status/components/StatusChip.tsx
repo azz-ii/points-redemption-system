@@ -42,6 +42,10 @@ export function StatusChip({ status, processingStatus, arStatus }: StatusChipPro
   if (normalizedStatus === "PENDING") {
     return <StatusBadge status="PENDING" label="Pending" size="md" />;
   }
+
+  if (normalizedStatus === "WITHDRAWN") {
+    return <StatusBadge status="WITHDRAWN" label="Withdrawn" size="md" />;
+  }
   
   return <StatusBadge status="REJECTED" label="Rejected" size="md" />;
 }

@@ -9,8 +9,6 @@ import type { RequestItem } from "@/page/marketing/ProcessRequests/modals/types"
 import { HistoryTable } from "./components/HistoryTable";
 import { HistoryMobileCards } from "./components/HistoryMobileCards";
 import { ViewHistoryModal } from "./modals/ViewHistoryModal";
-import { ExportModal } from "./modals/ExportModal";
-import { exportToCSV, exportToExcel } from "./utils/exportUtils";
 
 export default function MarketingHistory() {
   const queryClient = useQueryClient();
@@ -20,10 +18,7 @@ export default function MarketingHistory() {
   
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [selectedRequests, setSelectedRequests] = useState<RequestItem[]>([]);
-  const [isExporting, setIsExporting] = useState(false);
 
   const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerHistory(30_000);
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load history") : null;
@@ -37,33 +32,6 @@ export default function MarketingHistory() {
     setSelectedRequest(request);
     setShowViewModal(true);
   }, []);
-
-  const handleExport = useCallback((selected: RequestItem[]) => {
-    setSelectedRequests(selected);
-    setShowExportModal(true);
-  }, []);
-
-  const handleExportConfirm = async (format: "csv" | "excel") => {
-    try {
-      setIsExporting(true);
-      const itemsToExport = selectedRequests.length > 0 ? selectedRequests : requests;
-      
-      if (format === "csv") {
-        exportToCSV(itemsToExport, `history_export_${new Date().toISOString().split("T")[0]}`);
-      } else {
-        exportToExcel(itemsToExport, `history_export_${new Date().toISOString().split("T")[0]}`);
-      }
-      
-      toast.success(`Exported ${itemsToExport.length} record(s) successfully`);
-      setShowExportModal(false);
-      setSelectedRequests([]);
-    } catch (err) {
-      console.error("Export error:", err);
-      toast.error("Failed to export data");
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   // Mobile pagination - filter and paginate for mobile cards only
   const { totalPages, safePage, paginatedRequests } = useMemo(() => {
@@ -168,7 +136,6 @@ export default function MarketingHistory() {
               requests={requests}
               loading={loading}
               onView={handleViewClick}
-              onExport={handleExport}
               onRefresh={handleManualRefresh}
               refreshing={refreshing}
               fillHeight
@@ -184,17 +151,6 @@ export default function MarketingHistory() {
           setSelectedRequest(null);
         }}
         request={selectedRequest}
-      />
-
-      <ExportModal
-        isOpen={showExportModal}
-        onClose={() => {
-          setShowExportModal(false);
-          setSelectedRequests([]);
-        }}
-        onConfirm={handleExportConfirm}
-        selectedItems={selectedRequests.length > 0 ? selectedRequests : requests}
-        isExporting={isExporting}
       />
     </>
   );

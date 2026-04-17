@@ -13,7 +13,6 @@ import {
   CreateAccountModal,
   EditAccountModal,
   ArchiveAccountModal,
-  BulkArchiveAccountModal,
   UnarchiveAccountModal,
   ExportModal,
   SetPointsModal,
@@ -92,8 +91,6 @@ function Accounts() {
   const [archiveTarget, setArchiveTarget] = useState<Account | null>(null);
   const [showUnarchiveModal, setShowUnarchiveModal] = useState(false);
   const [unarchiveTarget, setUnarchiveTarget] = useState<Account | null>(null);
-  const [showBulkArchiveModal, setShowBulkArchiveModal] = useState(false);
-  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Account[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
@@ -609,51 +606,6 @@ function Accounts() {
     }
   };
 
-  // Archive selected accounts (bulk archive)
-  const handleArchiveSelected = async (selectedAccounts: Account[]) => {
-    setBulkArchiveTargets(selectedAccounts);
-    setShowBulkArchiveModal(true);
-  };
-
-  // Confirm bulk archive
-  const handleBulkArchiveConfirm = async () => {
-    try {
-      setMutationLoading(true);
-
-      const archiveResults = await Promise.allSettled(
-        bulkArchiveTargets.map((account) =>
-          fetchWithCsrf(`/api/users/${account.id}/archive/`, {
-            method: "POST",
-          }),
-        ),
-      );
-
-      const successCount = archiveResults.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
-      const failCount = archiveResults.filter(
-        (r) => r.status === "rejected",
-      ).length;
-
-      setShowBulkArchiveModal(false);
-      setBulkArchiveTargets([]);
-
-      if (failCount === 0) {
-        toast.success(`Successfully archived ${successCount} account(s)`);
-      } else {
-        toast.error(`Archived ${successCount} of ${bulkArchiveTargets.length} account(s). ${failCount} failed.`);
-      }
-
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
-    } catch (err) {
-      setFormError("Error archiving accounts");
-      console.error("Error archiving accounts:", err);
-      toast.error("Error archiving some accounts");
-    } finally {
-      setMutationLoading(false);
-    }
-  };
-
   // Handle set points submission - batch updates (only changed accounts)
   const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
     try {
@@ -807,7 +759,6 @@ function Accounts() {
             setUnarchiveTarget(account);
             setShowUnarchiveModal(true);
           }}
-          onArchiveSelected={handleArchiveSelected}
           onCreateNew={() => setShowCreateModal(true)}
           onSetPoints={() => setShowSetPointsModal(true)}
           onRefresh={handleManualRefresh}
@@ -957,17 +908,6 @@ function Accounts() {
         account={unarchiveTarget}
         loading={loading}
         onConfirm={(id) => handleUnarchiveAccount(id)}
-      />
-
-      <BulkArchiveAccountModal
-        isOpen={showBulkArchiveModal}
-        onClose={() => {
-          setShowBulkArchiveModal(false);
-          setBulkArchiveTargets([]);
-        }}
-        accounts={bulkArchiveTargets}
-        loading={loading}
-        onConfirm={handleBulkArchiveConfirm}
       />
 
       <ExportModal

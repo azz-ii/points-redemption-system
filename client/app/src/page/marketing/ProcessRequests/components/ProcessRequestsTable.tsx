@@ -9,7 +9,6 @@ interface ProcessRequestsTableProps {
   onViewRequest: (item: FlattenedRequestItem) => void;
   onMarkItemProcessed: (item: FlattenedRequestItem) => void;
   onCancelRequest: (item: FlattenedRequestItem) => void;
-  onBulkMarkProcessed?: (items: FlattenedRequestItem[]) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   fillHeight?: boolean;
@@ -21,7 +20,6 @@ export function ProcessRequestsTable({
   onViewRequest,
   onMarkItemProcessed,
   onCancelRequest,
-  onBulkMarkProcessed,
   onRefresh,
   refreshing = false,
   fillHeight,
@@ -62,8 +60,6 @@ export function ProcessRequestsTable({
         columns={columns}
         data={items}
         loading={loading}
-        onDeleteSelected={onBulkMarkProcessed}
-        deleteSelectedLabel="Process"
         onRefresh={onRefresh}
         refreshing={refreshing}
         searchPlaceholder="Search by Request ID, Item, Customer..."

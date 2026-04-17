@@ -21,32 +21,6 @@ export const createColumns = (
   context: ColumnContext
 ): ColumnDef<RequestItem>[] => [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-    enableResizing: false,
-    size: 40,
-  },
-  {
     accessorKey: "requested_by_name",
     header: ({ column }) => {
       return (
@@ -79,25 +53,6 @@ export const createColumns = (
     cell: ({ row }) => (
       <div>{row.getValue("requested_for_name") || "N/A"}</div>
     ),
-  },
-  {
-    accessorKey: "total_points",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-0 hover:bg-transparent"
-        >
-          Total Points
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const points = row.getValue("total_points") as number;
-      return <div>{points?.toLocaleString() ?? 0} pts</div>;
-    },
   },
   {
     accessorKey: "status",

@@ -11,7 +11,6 @@ interface CatalogueTableProps {
   onEdit: (product: Product) => void;
   onArchive: (product: Product) => void;
   onUnarchive: (product: Product) => void;
-  onArchiveSelected?: (products: Product[]) => void;
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -37,7 +36,6 @@ export function CatalogueTable({
   onEdit,
   onArchive,
   onUnarchive,
-  onArchiveSelected,
   onCreateNew,
   onRefresh,
   refreshing,
@@ -67,7 +65,6 @@ export function CatalogueTable({
       loading={loading}
       error={error}
       onRetry={onRetry}
-      onDeleteSelected={onArchiveSelected}
       onCreateNew={onCreateNew}
       createButtonLabel="Add Product"
       onRefresh={onRefresh}
@@ -87,6 +84,7 @@ export function CatalogueTable({
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
       fillHeight={fillHeight}
+      enableRowSelection={true}
     />
   );
 }

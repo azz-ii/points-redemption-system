@@ -59,8 +59,8 @@ export function useMarkAsProcessed() {
 export function useCancelRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, reason, remarks }: { id: number; reason: string; remarks?: string }) =>
-      redemptionRequestsApi.cancelRequest(id, reason, remarks),
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      redemptionRequestsApi.cancelRequest(id, reason),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.requests.all });
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.agent });

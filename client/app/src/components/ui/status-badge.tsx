@@ -8,7 +8,7 @@ const STATUS_CLASSES: Record<string, string> = {
   REJECTED: "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground",
   INACTIVE: "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground",
   ARCHIVED: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
-  WITHDRAWN: "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground",
+  WITHDRAWN: "bg-destructive/15 text-[color-mix(in_srgb,var(--color-destructive)_70%,black)] dark:bg-destructive/20 dark:text-destructive-foreground",
 
   // Processing statuses
   PROCESSED: "bg-info/15 text-[color-mix(in_srgb,var(--color-info)_70%,black)] dark:bg-info/20 dark:text-info",

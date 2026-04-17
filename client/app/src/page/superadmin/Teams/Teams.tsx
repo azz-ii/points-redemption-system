@@ -24,6 +24,7 @@ import {
   EditTeamModal,
   DeleteTeamModal,
   AnalyticsModal,
+  ExportModal,
   type NewTeamData,
   type EditTeamData,
 } from "./modals";
@@ -45,6 +46,7 @@ function Teams() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{ id: number } | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
@@ -356,6 +358,7 @@ function Teams() {
             onEdit={handleEditClick}
             onDelete={handleDeleteClick}
             onAnalytics={handleAnalyticsClick}
+            onExport={() => setIsExportModalOpen(true)}
             onCreateNew={() => {
               console.log("DEBUG Teams: Opening create modal");
               setIsCreateModalOpen(true);
@@ -606,6 +609,11 @@ function Teams() {
           setTeamForAnalytics(null);
         }}
         team={teamForAnalytics}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
       />
     </>
   );

@@ -9,6 +9,7 @@ interface TeamsTableProps {
   onDelete: (team: Team) => void;
   onAnalytics: (team: Team) => void;
   onDeleteSelected?: (teams: Team[]) => void;
+  onExport?: () => void;
   onCreateNew?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -23,6 +24,7 @@ export function TeamsTable({
   onDelete,
   onAnalytics,
   onDeleteSelected,
+  onExport,
   onCreateNew,
   onRefresh,
   refreshing,
@@ -41,6 +43,7 @@ export function TeamsTable({
       data={teams}
       loading={loading}
       onDeleteSelected={onDeleteSelected}
+      onExport={onExport}
       onCreateNew={onCreateNew}
       createButtonLabel="Create Team"
       createButtonIcon="user"
@@ -65,6 +68,7 @@ export function TeamsTable({
       pageSizeOptions={[15, 50, 100]}
       initialSorting={[{ id: "name", desc: false }]}
       fillHeight={fillHeight}
+      enableRowSelection={true}
     />
   );
 }

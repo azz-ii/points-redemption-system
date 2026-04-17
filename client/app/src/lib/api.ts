@@ -487,12 +487,12 @@ export const redemptionRequestsApi = {
     return response.json();
   },
 
-  async cancelRequest(id: number, cancellation_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
+  async cancelRequest(id: number, cancellation_reason: string): Promise<RedemptionRequestResponse> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/cancel_request/`, {
       method: 'POST',
       headers: getHeaders(),
       credentials: 'include',
-      body: JSON.stringify({ cancellation_reason, remarks }),
+      body: JSON.stringify({ cancellation_reason }),
     });
 
     if (!response.ok) {

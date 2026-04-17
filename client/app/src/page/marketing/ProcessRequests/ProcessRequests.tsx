@@ -17,7 +17,7 @@ import {
   type FlattenedRequestItem,
   type ProcessItemData,
 } from "./modals";
-import { ProcessRequestsTable, ProcessRequestsMobileCards, BulkMarkProcessedModal } from "./components";
+import { ProcessRequestsTable, ProcessRequestsMobileCards } from "./components";
 import { handlerRequestsApi } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
@@ -30,10 +30,8 @@ function ProcessRequests() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showProcessModal, setShowProcessModal] = useState(false);
-  const [showBulkProcessModal, setShowBulkProcessModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [bulkProcessTargets, setBulkProcessTargets] = useState<FlattenedRequestItem[]>([]);
   const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -151,29 +149,16 @@ function ProcessRequests() {
     }
   };
 
-  const handleBulkMarkProcessed = (selectedItems: FlattenedRequestItem[]) => {
-    // Filter to only show items that haven't been processed yet
-    const processableItems = selectedItems.filter(item => !item.item_processed_by);
-    
-    if (processableItems.length === 0) {
-      toast.info("All selected items have already been processed");
-      return;
-    }
-    
-    setBulkProcessTargets(processableItems);
-    setShowBulkProcessModal(true);
-  };
-
   const handleCancelClick = (item: FlattenedRequestItem) => {
     setSelectedCancelRequest(item.request);
     setShowCancelModal(true);
   };
 
-  const handleCancelConfirm = async (reason: string, remarks: string) => {
+  const handleCancelConfirm = async (reason: string) => {
     if (!selectedCancelRequest) return;
 
     try {
-      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason, remarks || undefined);
+      await handlerRequestsApi.cancelRequest(selectedCancelRequest.id, reason);
       toast.success("Request cancelled successfully");
       setShowCancelModal(false);
       setSelectedCancelRequest(null);
@@ -181,52 +166,6 @@ function ProcessRequests() {
     } catch (err) {
       console.error("Error cancelling request:", err);
       toast.error(err instanceof Error ? err.message : "Failed to cancel request");
-    }
-  };
-
-  const handleBulkMarkProcessedConfirm = async () => {
-    setIsSubmitting(true);
-    try {
-      // Group items by request ID
-      const requestGroups = bulkProcessTargets.reduce((acc, item) => {
-        if (!acc[item.requestId]) {
-          acc[item.requestId] = [];
-        }
-        acc[item.requestId].push(item);
-        return acc;
-      }, {} as Record<number, FlattenedRequestItem[]>);
-
-      // Mark items in each request as processed (full remaining quantity)
-      const results = await Promise.allSettled(
-        Object.keys(requestGroups).map((requestId) => {
-          const items: ProcessItemData[] = requestGroups[Number(requestId)].map((item) => ({
-            item_id: item.id,
-            // For FIXED pricing use remaining_quantity; for non-FIXED omit fulfilled_quantity
-            ...(!item.pricing_type || item.pricing_type === "FIXED"
-              ? { fulfilled_quantity: item.remaining_quantity ?? item.quantity }
-              : {}),
-          }));
-          return handlerRequestsApi.markItemsProcessed(Number(requestId), items);
-        })
-      );
-
-      const succeeded = results.filter(r => r.status === "fulfilled").length;
-      const failed = results.filter(r => r.status === "rejected").length;
-
-      if (succeeded > 0) {
-        toast.success(`Successfully marked ${succeeded} request(s) as processed${failed > 0 ? `, ${failed} failed` : ""}`);
-      } else {
-        throw new Error("All processing operations failed");
-      }
-
-      setShowBulkProcessModal(false);
-      setBulkProcessTargets([]);
-      queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
-    } catch (err) {
-      console.error("Bulk mark processed failed:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -314,7 +253,6 @@ function ProcessRequests() {
               onViewRequest={handleViewClick}
               onMarkItemProcessed={handleMarkItemProcessedClick}
               onCancelRequest={handleCancelClick}
-              onBulkMarkProcessed={handleBulkMarkProcessed}
               onRefresh={handleManualRefresh}
               refreshing={refreshing}
               fillHeight
@@ -377,19 +315,6 @@ function ProcessRequests() {
         item={selectedCancelRequest}
         onConfirm={handleCancelConfirm}
       />
-
-      {showBulkProcessModal && (
-        <BulkMarkProcessedModal
-          isOpen={showBulkProcessModal}
-          onClose={() => {
-            setShowBulkProcessModal(false);
-            setBulkProcessTargets([]);
-          }}
-          onConfirm={handleBulkMarkProcessedConfirm}
-          items={bulkProcessTargets}
-          isSubmitting={isSubmitting}
-        />
-      )}
     </>
   );
 }

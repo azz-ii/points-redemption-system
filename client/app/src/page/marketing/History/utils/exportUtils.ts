@@ -13,7 +13,6 @@ export function exportToCSV(requests: RequestItem[], filename: string = "history
   const headers = [
     "Requested By",
     "Requested For",
-    "Total Points",
     "Status",
     "Processing Status",
     "Date Requested",
@@ -24,7 +23,6 @@ export function exportToCSV(requests: RequestItem[], filename: string = "history
   const rows = requests.map((request) => [
     request.requested_by_name,
     request.requested_for_name,
-    request.total_points,
     request.status_display,
     request.processing_status_display,
     new Date(request.date_requested).toLocaleDateString(),
@@ -62,7 +60,6 @@ export function exportToExcel(requests: RequestItem[], filename: string = "histo
   const headers = [
     "Requested By",
     "Requested For",
-    "Total Points",
     "Status",
     "Processing Status",
     "Date Requested",
@@ -72,7 +69,6 @@ export function exportToExcel(requests: RequestItem[], filename: string = "histo
   const rows = requests.map((request) => [
     request.requested_by_name,
     request.requested_for_name,
-    request.total_points,
     request.status_display,
     request.processing_status_display,
     new Date(request.date_requested).toLocaleDateString(),
@@ -87,7 +83,6 @@ export function exportToExcel(requests: RequestItem[], filename: string = "histo
   worksheet["!cols"] = [
     { wch: 25 }, // Requested By
     { wch: 25 }, // Requested For
-    { wch: 15 }, // Total Points
     { wch: 15 }, // Status
     { wch: 20 }, // Processing Status
     { wch: 15 }, // Date Requested

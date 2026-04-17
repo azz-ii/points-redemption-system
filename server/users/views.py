@@ -52,7 +52,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Archived filter — by default exclude archived users
         show_archived = self.request.query_params.get('show_archived', 'false').lower() == 'true'
-        if not show_archived:
+        if show_archived:
+            # Show ONLY archived accounts
+            queryset = queryset.filter(profile__is_archived=True)
+        else:
+            # Show ONLY active (non-archived) accounts
             queryset = queryset.filter(profile__is_archived=False)
 
         # Position filter — accepts comma-separated values, e.g. ?position=Handler,Admin

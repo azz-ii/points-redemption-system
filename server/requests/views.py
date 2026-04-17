@@ -650,11 +650,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 redemption_request.cancelled_by = user
                 redemption_request.date_cancelled = timezone.now()
                 redemption_request.rejection_reason = cancellation_reason
-                
-                # Get remarks if provided
-                if 'remarks' in request.data:
-                    redemption_request.remarks = request.data.get('remarks')
-                
                 redemption_request.save()
                 
                 logger.info(f"Request #{redemption_request.id} cancelled by {user.username}")
@@ -723,8 +718,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 # Update request status to WITHDRAWN
                 redemption_request.status = 'WITHDRAWN'
                 redemption_request.withdrawal_reason = withdrawal_reason
-                redemption_request.cancelled_by = user
-                redemption_request.date_cancelled = timezone.now()
                 
                 # Get remarks if provided
                 if 'remarks' in request.data:

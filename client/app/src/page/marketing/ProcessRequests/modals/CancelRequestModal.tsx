@@ -5,7 +5,7 @@ import type { ModalBaseProps, RequestItem } from "./types";
 
 interface CancelRequestModalProps extends ModalBaseProps {
   item: RequestItem | null;
-  onConfirm: (reason: string, remarks: string) => void;
+  onConfirm: (reason: string) => void;
 }
 
 export function CancelRequestModal({
@@ -15,7 +15,6 @@ export function CancelRequestModal({
   onConfirm,
 }: CancelRequestModalProps) {
   const [reason, setReason] = useState("");
-  const [remarks, setRemarks] = useState("");
 
   if (!isOpen || !item) return null;
 
@@ -24,14 +23,12 @@ export function CancelRequestModal({
       toast.error("Cancellation reason is required");
       return;
     }
-    onConfirm(reason, remarks);
+    onConfirm(reason);
     setReason("");
-    setRemarks("");
   };
 
   const handleClose = () => {
     setReason("");
-    setRemarks("");
     onClose();
   };
 
@@ -85,23 +82,6 @@ export function CancelRequestModal({
                 className="w-full px-4 py-3 rounded border text-base resize-none bg-card border-border text-foreground placeholder:text-muted-foreground"
                 rows={3}
                 aria-required="true"
-              />
-            </div>
-
-            <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                htmlFor="cancel-remarks"
-              >
-                Additional Remarks (Optional)
-              </label>
-              <textarea
-                id="cancel-remarks"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Add any additional remarks..."
-                className="w-full px-4 py-3 rounded border text-base resize-none bg-card border-border text-foreground placeholder:text-muted-foreground"
-                rows={2}
               />
             </div>
           </div>

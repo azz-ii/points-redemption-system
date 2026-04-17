@@ -198,6 +198,13 @@ class RedemptionRequest(models.Model):
         help_text='Reason for sales approval rejection'
     )
     
+    # Marketing Approval Track
+    marketing_rejection_reason = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Reason for marketing approval rejection (dual-approval marketing track)'
+    )
+    
     # Service Vehicle Use fields (Deprecated - Use Generic Items Extra Fields System)
     svc_date = models.DateField(
         blank=True,
