@@ -79,6 +79,9 @@ export interface RedemptionItem {
   cancelled_by_name?: string | null;
   date_cancelled?: string | null;
   remarks?: string | null;
+  initial_remarks?: string | null;
+  approver_remarks?: string | null;
+  processing_remarks?: string | null;
   rejection_reason?: string | null;
   // Acknowledgement Receipt fields
   ar_status?: string | null;

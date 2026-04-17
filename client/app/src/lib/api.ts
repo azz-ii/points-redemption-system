@@ -344,6 +344,9 @@ export interface RedemptionRequestResponse {
   processed_by_name: string | null;
   date_processed: string | null;
   remarks: string | null;
+  initial_remarks?: string | null;
+  approver_remarks?: string | null;
+  processing_remarks?: string | null;
   rejection_reason: string | null;
   // Service Vehicle Use fields
   svc_date: string | null;

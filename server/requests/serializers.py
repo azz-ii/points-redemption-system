@@ -121,6 +121,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     
     # Handler processing status
     marketing_processing_status = serializers.SerializerMethodField()
+    
+    # Processing remarks aggregation from fulfillment logs
+    processing_remarks = serializers.SerializerMethodField()
 
     # Acknowledgement Receipt fields
     ar_status_display = serializers.CharField(source='get_ar_status_display', read_only=True)
@@ -265,6 +268,52 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     def get_marketing_processing_status(self, obj):
         """Get the handler processing status for this request"""
         return obj.get_handler_processing_status()
+
+    def get_processing_remarks(self, obj):
+        """
+        Aggregate handler notes from all item fulfillment logs.
+        If request-level processing_remarks exist, use those.
+        Otherwise, compile a summary of all item-level fulfillment notes.
+        """
+        try:
+            # If request has explicit processing_remarks set, return that
+            if obj.processing_remarks and obj.processing_remarks.strip():
+                return obj.processing_remarks
+            
+            # Otherwise, aggregate notes from all fulfillment logs across all items
+            from .models import ItemFulfillmentLog
+            all_logs = ItemFulfillmentLog.objects.filter(
+                item__request=obj
+            ).select_related('fulfilled_by__profile').order_by('fulfilled_at')
+            
+            if not all_logs.exists():
+                return ''
+            
+            notes_list = []
+            for log in all_logs:
+                if log.notes and log.notes.strip():
+                    handler_name = 'Unknown'
+                    try:
+                        if log.fulfilled_by:
+                            profile = getattr(log.fulfilled_by, 'profile', None)
+                            if profile and hasattr(profile, 'full_name'):
+                                handler_name = profile.full_name or log.fulfilled_by.username
+                            else:
+                                handler_name = log.fulfilled_by.username
+                    except Exception:
+                        handler_name = log.fulfilled_by.username if log.fulfilled_by else 'Unknown'
+                    
+                    try:
+                        date_str = log.fulfilled_at.strftime('%b %d, %Y')
+                    except Exception:
+                        date_str = str(log.fulfilled_at)[:10]
+                    
+                    notes_list.append(f"{log.notes} (by {handler_name} on {date_str})")
+            
+            return ' | '.join(notes_list) if notes_list else ''
+        except Exception as e:
+            # If anything goes wrong, return empty string rather than erroring out
+            return ''
 
 
 class CreateRedemptionRequestSerializer(serializers.Serializer):
