@@ -21,8 +21,10 @@ export interface RequestTimelineData {
   // Cancellation fields
   cancelled_by_name?: string | null;
   date_cancelled?: string | null;
-  // General fields
-  remarks?: string | null;
+  // Stage-specific remarks
+  initial_remarks?: string | null;
+  approver_remarks?: string | null;
+  processing_remarks?: string | null;
   rejection_reason?: string | null;
   status?: string;
   processing_status?: string;
@@ -141,7 +143,7 @@ export function RequestTimeline({
           title="Requested"
           person={data.requested_by_name}
           date={data.date_requested}
-          remarks={data.remarks ? `Remarks: ${data.remarks}` : undefined}
+          remarks={data.initial_remarks ? `Remarks: ${data.initial_remarks}` : undefined}
         />
 
         {/* Withdrawn (if withdrawal reason exists) */}
@@ -177,7 +179,7 @@ export function RequestTimeline({
                   data.marketing_approval_status?.toUpperCase() === "REJECTED"
                     ? data.marketing_rejection_reason ? `Reason: ${data.marketing_rejection_reason}` : undefined
                     : data.marketing_approval_status?.toUpperCase() === "APPROVED"
-                    ? data.remarks ? `Remarks: ${data.remarks}` : undefined
+                    ? data.approver_remarks ? `Remarks: ${data.approver_remarks}` : undefined
                     : undefined
                 }
                 extraInfo={
@@ -207,7 +209,7 @@ export function RequestTimeline({
             remarks={
               data.status?.toUpperCase() === "REJECTED"
                 ? data.rejection_reason ? `Reason: ${data.rejection_reason}` : undefined
-                : data.remarks ? `Remarks: ${data.remarks}` : undefined
+                : data.approver_remarks ? `Remarks: ${data.approver_remarks}` : undefined
             }
           />
         )}
@@ -220,7 +222,7 @@ export function RequestTimeline({
             title="Processed"
             person={data.processed_by_name}
             date={data.date_processed}
-            remarks={data.remarks ? `Remarks: ${data.remarks}` : undefined}
+            remarks={data.processing_remarks ? `Remarks: ${data.processing_remarks}` : undefined}
           />
         )}
 
