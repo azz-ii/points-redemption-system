@@ -66,13 +66,13 @@ export function ApproveRequestModal({
               htmlFor="approve-remarks"
               className="text-xs text-muted-foreground mb-2 block"
             >
-              Remarks (Optional)
+              Approval Remarks (Optional)
             </label>
             <textarea
               id="approve-remarks"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              placeholder="Add any remarks..."
+              placeholder="Add any remarks about your approval..."
               className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               rows={3}
             />

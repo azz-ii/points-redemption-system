@@ -74,7 +74,7 @@ export function RejectRequestModal({
               htmlFor="reject-reason"
               className="text-xs text-muted-foreground mb-2 block"
             >
-              Reason *
+              Rejection Reason *
             </label>
             <textarea
               id="reject-reason"
@@ -84,6 +84,23 @@ export function RejectRequestModal({
               className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               rows={3}
               aria-required="true"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="reject-remarks"
+              className="text-xs text-muted-foreground mb-2 block"
+            >
+              Additional Remarks (Optional)
+            </label>
+            <textarea
+              id="reject-remarks"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Add any additional remarks about your rejection..."
+              className="w-full px-4 py-3 rounded border resize-none bg-muted border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
+              rows={2}
             />
           </div>
         </div>

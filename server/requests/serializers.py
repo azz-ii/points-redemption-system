@@ -140,7 +140,8 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'reviewed_by', 'reviewed_by_name', 'date_reviewed', 
             'processed_by', 'processed_by_name', 'date_processed',
             'cancelled_by', 'cancelled_by_name', 'date_cancelled',
-            'remarks', 'rejection_reason', 'withdrawal_reason',
+            'remarks', 'initial_remarks', 'approver_remarks', 'processing_remarks',
+            'rejection_reason', 'withdrawal_reason',
             # Sales approval fields
             'requires_sales_approval',
             'sales_approval_status', 'sales_approved_by', 'sales_approved_by_name',
@@ -450,7 +451,7 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                 requested_for_customer=validated_data.get('requested_for_customer'),
                 requested_for_type=validated_data.get('requested_for_type', 'DISTRIBUTOR'),
                 points_deducted_from=validated_data.get('points_deducted_from'),
-                remarks=validated_data.get('remarks', ''),
+                initial_remarks=validated_data.get('remarks', ''),
                 svc_date=validated_data.get('svc_date'),
                 svc_time=validated_data.get('svc_time'),
                 svc_driver=validated_data.get('svc_driver'),

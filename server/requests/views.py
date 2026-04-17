@@ -298,9 +298,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     redemption_request.reviewed_by = request.user
                     redemption_request.date_reviewed = timezone.now()
                     
-                    # Get remarks if provided
+                    # Get approver remarks if provided
                     if 'remarks' in request.data:
-                        redemption_request.remarks = request.data['remarks']
+                        redemption_request.approver_remarks = request.data['remarks']
                     
                     redemption_request.save()
                     
@@ -332,7 +332,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                     # Still awaiting other approvals
                     logger.info(f"Request #{redemption_request.id} sales approved, pending approvals: {redemption_request.get_pending_approvals()}")
                     if 'remarks' in request.data:
-                        redemption_request.remarks = request.data['remarks']
+                        redemption_request.approver_remarks = request.data['remarks']
                     redemption_request.save()
         
         except Exception as e:
@@ -419,9 +419,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 redemption_request.date_reviewed = timezone.now()
                 redemption_request.rejection_reason = rejection_reason
                 
-                # Get remarks if provided
+                # Get approver remarks if provided
                 if 'remarks' in request.data:
-                    redemption_request.remarks = request.data['remarks']
+                    redemption_request.approver_remarks = request.data['remarks']
                 
                 redemption_request.save()
                 redemption_request.update_overall_status()
@@ -512,9 +512,9 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             else AcknowledgementReceiptStatus.NOT_REQUIRED
         )
         
-        # Get remarks if provided
+        # Get processing remarks if provided
         if 'remarks' in request.data:
-            redemption_request.remarks = request.data.get('remarks')
+            redemption_request.processing_remarks = request.data.get('remarks')
         
         redemption_request.save()
         
@@ -721,7 +721,7 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 
                 # Get remarks if provided
                 if 'remarks' in request.data:
-                    redemption_request.remarks = request.data.get('remarks')
+                    redemption_request.initial_remarks = request.data.get('remarks')
                 
                 redemption_request.save()
                 

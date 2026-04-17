@@ -152,7 +152,22 @@ class RedemptionRequest(models.Model):
     remarks = models.TextField(
         blank=True,
         null=True,
-        help_text='Additional notes or remarks about the request'
+        help_text='[DEPRECATED] Use initial_remarks, approver_remarks, or processing_remarks instead'
+    )
+    initial_remarks = models.TextField(
+        blank=True,
+        default='',
+        help_text='Remarks added by sales agent when creating the request'
+    )
+    approver_remarks = models.TextField(
+        blank=True,
+        default='',
+        help_text='Remarks added by approver during approval/rejection'
+    )
+    processing_remarks = models.TextField(
+        blank=True,
+        default='',
+        help_text='Remarks added by handler/superadmin during processing'
     )
     rejection_reason = models.TextField(
         blank=True,
