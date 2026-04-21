@@ -999,30 +999,40 @@ class BatchUpdatePointsView(APIView):
                     failed.append({'id': user_id, 'error': 'Missing id or points'})
                     continue
                 
-                user = User.objects.select_related('profile').get(id=user_id, is_superuser=False)
-                if hasattr(user, 'profile'):
-                    old_points = user.profile.points or 0
-                    new_points_int = int(new_points)  # Allow negative points
-                    user.profile.points = new_points_int
-                    user.profile.save(update_fields=['points'])
-                    updated_ids.append(user_id)
-                    
-                    # Collect audit entry
-                    audit_entries.append({
-                        'entity_type': PointsAuditLog.EntityType.USER,
-                        'entity_id': user_id,
-                        'entity_name': user.profile.full_name or user.username,
-                        'previous_points': old_points,
-                        'new_points': new_points_int,
-                        'action_type': PointsAuditLog.ActionType.INDIVIDUAL_SET,
-                        'changed_by': request.user,
-                        'reason': reason,
-                        'batch_id': batch_id,
-                    })
-                else:
-                    failed.append({'id': user_id, 'error': 'User has no profile'})
+                # Get fresh user for entity name
+                user = User.objects.get(id=user_id, is_superuser=False)
+                
+                # Query the profile directly to get the CURRENT points value from DB (not cached)
+                from .models import UserProfile
+                profile = UserProfile.objects.get(user_id=user_id)
+                old_points = profile.points or 0
+                
+                print(f"DEBUG batch_update_points: user_id={user_id}, old_points={old_points}, new_points={new_points}, profile.points={profile.points}")
+                logger.info(f"DEBUG batch_update_points: user_id={user_id}, old_points={old_points}, new_points={new_points}, profile.points={profile.points}")
+                
+                new_points_int = int(new_points)  # Allow negative points
+                
+                # Update points
+                profile.points = new_points_int
+                profile.save(update_fields=['points'])
+                updated_ids.append(user_id)
+                
+                # Collect audit entry with the old and new values
+                audit_entries.append({
+                    'entity_type': PointsAuditLog.EntityType.USER,
+                    'entity_id': user_id,
+                    'entity_name': profile.full_name or user.username,
+                    'previous_points': old_points,
+                    'new_points': new_points_int,
+                    'action_type': PointsAuditLog.ActionType.INDIVIDUAL_SET,
+                    'changed_by': request.user,
+                    'reason': reason,
+                    'batch_id': batch_id,
+                })
             except User.DoesNotExist:
                 failed.append({'id': user_id, 'error': 'User not found'})
+            except UserProfile.DoesNotExist:
+                failed.append({'id': user_id, 'error': 'User has no profile'})
             except (ValueError, TypeError) as e:
                 failed.append({'id': user_id, 'error': f'Invalid points value: {str(e)}'})
             except Exception as e:

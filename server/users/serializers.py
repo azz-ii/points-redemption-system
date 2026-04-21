@@ -46,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(write_only=True, required=False, allow_null=True)
     is_activated = serializers.BooleanField(write_only=True, required=False, default=False)
     uses_points = serializers.BooleanField(write_only=True, required=False, default=False)
-    points = serializers.IntegerField(write_only=True, required=False, default=0)
+    points = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     can_self_request = serializers.BooleanField(write_only=True, required=False, default=False)
     email_notifications_enabled = serializers.BooleanField(write_only=True, required=False, default=True)
     

@@ -333,6 +333,11 @@ function Accounts() {
       return;
     }
 
+    // Capture points change info before async operations
+    const oldPoints = editingAccount.points ?? 0;
+    const newPoints = editAccount.points ?? 0;
+    const pointsChanged = newPoints !== oldPoints;
+
     // Capture team intent before any async work
     const oldTeamId = editingAccount.team_id ?? null;
     const capturedEditTeamId = selectedEditTeamId;
@@ -342,10 +347,12 @@ function Accounts() {
     try {
       setMutationLoading(true);
 
-      // Prepare form data
+      // Prepare form data (excluding points - will be updated separately with audit logging)
       const formData = new FormData();
       Object.entries(editAccount).forEach(([key, value]) => {
-        formData.append(key, String(value));
+        if (key !== 'points') {  // Skip points, will be updated via batch_update_points endpoint
+          formData.append(key, String(value));
+        }
       });
 
       const response = await fetchWithCsrf(`/api/users/${editingAccount.id}/`, {
@@ -356,8 +363,14 @@ function Accounts() {
       const data = await response.json();
 
       if (response.ok) {
-        setShowEditModal(false);
-        setEditingAccount(null);
+        // Update editingAccount with fresh data from the response so subsequent edits use correct values
+        const updatedAccount: Account = {
+          ...editingAccount,
+          ...data,
+          points: data.profile?.points || data.points || editingAccount.points,
+        };
+        setEditingAccount(updatedAccount);
+
         setSelectedEditTeamId(null);
         setApproverTeamsToRemove([]);
         setApproverTeamToAdd(null);
@@ -510,6 +523,31 @@ function Accounts() {
             }
           }
         }
+
+        // Handle points change logging if points were modified
+        if (pointsChanged) {
+          try {
+            await fetchWithCsrf(`${API_URL}/users/batch_update_points/`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                updates: [{ id: editingAccount.id, points: newPoints }],
+                reason: "Account edit",
+              }),
+            });
+            // Update editingAccount with new points value so subsequent edits use correct oldPoints
+            setEditingAccount(prev => prev ? { ...prev, points: newPoints } : null);
+          } catch (err) {
+            console.error("Failed to log points change:", err);
+            // Points update failed, show warning
+            toast.warning("Account updated but points change could not be logged to history");
+          }
+        }
+
+        // Show success and close modal only after all operations complete
+        toast.success(`Account updated successfully`);
+        setShowEditModal(false);
+        setEditingAccount(null);
 
         // Refresh accounts list
         queryClient.invalidateQueries({ queryKey: queryKeys.accounts.all });
