@@ -415,9 +415,9 @@ class UserViewSet(viewsets.ModelViewSet):
             PRODUCTION_FRONTEND_URL = 'https://points-redemption.n01tb.com'
             origin = request.META.get('HTTP_ORIGIN', '')
             referer = request.META.get('HTTP_REFERER', '')
-            if origin and 'localhost' not in origin and '127.0.0.1' not in origin:
+            if origin and ('localhost' in origin or '127.0.0.1' in origin):
                 frontend_url = origin
-            elif referer and 'localhost' not in referer and '127.0.0.1' not in referer:
+            elif referer and ('localhost' in referer or '127.0.0.1' in referer):
                 from urllib.parse import urlparse
                 parsed = urlparse(referer)
                 frontend_url = f"{parsed.scheme}://{parsed.netloc}"
