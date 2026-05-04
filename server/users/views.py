@@ -412,7 +412,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
             # Use the production frontend URL as the authoritative base.
             # Fallback to request origin/referer only for local dev convenience.
-            PRODUCTION_FRONTEND_URL = 'http://points-redemption.n01tb.com'
+            PRODUCTION_FRONTEND_URL = 'https://points-redemption.n01tb.com'
             origin = request.META.get('HTTP_ORIGIN', '')
             referer = request.META.get('HTTP_REFERER', '')
             if origin and 'localhost' not in origin and '127.0.0.1' not in origin:

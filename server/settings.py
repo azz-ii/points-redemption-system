@@ -60,7 +60,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://points.n01tb.com",
     "https://points.n01tb.com",
-    "http://points-redemption.n01tb.com",
+    "https://points-redemption.n01tb.com",
     "https://points-redemption.n01tb.com",
     "https://points-redemption-system.onrender.com",
 ]
@@ -75,7 +75,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://points.n01tb.com",
     "https://points.n01tb.com",
-    "http://points-redemption.n01tb.com",
+    "https://points-redemption.n01tb.com",
     "https://points-redemption.n01tb.com",
     "https://points-redemption-system.onrender.com",
 ]
