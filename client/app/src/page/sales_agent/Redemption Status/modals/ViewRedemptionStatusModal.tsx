@@ -13,14 +13,26 @@ import { fetchWithCsrf } from "@/lib/csrf";
 
 function normalizeMediaUrl(url: string): string {
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(url, window.location.origin);
     // If the URL points to the local MEDIA path, route it through the
     // Django API media endpoint so it bypasses IIS static routing issues.
     if (parsed.pathname.startsWith('/media/')) {
       return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, '')}${parsed.search}${parsed.hash}`;
     }
+    if (parsed.pathname.startsWith('/api/media/')) {
+      return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
     return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
+    if (url.startsWith('/media/')) {
+      return `${window.location.origin}/api/media${url.replace(/^\/media/, '')}`;
+    }
+    if (url.startsWith('/api/media/')) {
+      return `${window.location.origin}${url}`;
+    }
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
     return url;
   }
 }

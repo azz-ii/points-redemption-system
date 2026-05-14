@@ -18,11 +18,25 @@ export interface ProcessingPhotoData {
  */
 function normalizeMediaUrl(url: string): string {
   try {
-    const parsed = new URL(url);
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.pathname.startsWith('/media/')) {
+      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, '')}${parsed.search}${parsed.hash}`;
+    }
+    if (parsed.pathname.startsWith('/api/media/')) {
+      return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
     return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    // Already a relative URL – let the browser resolve it normally
-    return url;
+    if (url.startsWith('/media/')) {
+      return `${window.location.origin}/api/media${url.replace(/^\/media/, '')}`;
+    }
+    if (url.startsWith('/api/media/')) {
+      return `${window.location.origin}${url}`;
+    }
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
+    return `${window.location.origin}/api/media/${url}`;
   }
 }
 
