@@ -1,6 +1,6 @@
 // API Configuration and Service Layer
 // Import API URL from central configuration
-import { API_URL } from './config';
+import { API_URL } from "./config";
 
 export interface PaginatedResponse<T> {
   count: number;
@@ -9,12 +9,10 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
-
-
 const API_BASE_URL = API_URL;
 
 // Backend API Response Types
-export type LegendType = 'Collateral' | 'Giveaway' | 'Asset' | 'Benefit';
+export type LegendType = "Collateral" | "Giveaway" | "Asset" | "Benefit";
 
 export interface Product {
   id: number;
@@ -27,7 +25,14 @@ export interface Product {
   category: string;
   points: string;
   price: string;
-  pricing_formula?: 'NONE' | 'DRIVER_MULTIPLIER' | 'AREA_RATE' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | null;
+  pricing_formula?:
+    | "NONE"
+    | "DRIVER_MULTIPLIER"
+    | "AREA_RATE"
+    | "PER_SQFT"
+    | "PER_INVOICE"
+    | "PER_DAY"
+    | null;
   min_order_qty: number;
   max_order_qty: number | null;
   has_stock: boolean;
@@ -65,13 +70,20 @@ export interface RedeemItemData {
   name: string;
   points: number; // For FIXED items: per-unit points. For dynamic: the multiplier
   category: string;
-  pricing_formula?: 'NONE' | 'DRIVER_MULTIPLIER' | 'AREA_RATE' | 'PER_SQFT' | 'PER_INVOICE' | 'PER_DAY' | null;
+  pricing_formula?:
+    | "NONE"
+    | "DRIVER_MULTIPLIER"
+    | "AREA_RATE"
+    | "PER_SQFT"
+    | "PER_INVOICE"
+    | "PER_DAY"
+    | null;
   has_stock: boolean; // Whether item tracks inventory or is made-to-order
   available_stock: number; // Available stock (stock - committed)
   min_order_qty: number; // Minimum quantity per order
   max_order_qty: number | null; // Maximum quantity per order (null = unlimited)
   request_count: number; // Number of approved requests containing this item
-  
+
   // Rich item details for view modal
   description?: string;
   purpose?: string;
@@ -94,6 +106,8 @@ export interface UserProfile {
   position: string;
   is_activated: boolean;
   is_banned: boolean;
+  plate_number?: string | null;
+  driver_name?: string | null;
   is_archived: boolean;
   uses_points: boolean;
   points: number;
@@ -120,7 +134,7 @@ const legendToCategoryMap: Record<string, string> = {
 export function transformProductToRedeemItem(product: Product): RedeemItemData {
   console.log("[API] Transforming product:", product);
   console.log("[API] Product image field:", product.image);
-  
+
   // Parse points - handle both numeric and formula strings
   let pointsValue = 0;
   try {
@@ -170,16 +184,19 @@ export const transformVariantToRedeemItem = transformProductToRedeemItem;
 // Fetch catalogue items (products) from backend
 export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
   console.log("[API] Fetching products from:", `${API_BASE_URL}/catalogue/`);
-  
+
   try {
     // Fetch all items with a large page_size to get everything at once
-    const response = await fetch(`${API_BASE_URL}/catalogue/?page_size=1000&ordering=popularity`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${API_BASE_URL}/catalogue/?page_size=1000&ordering=popularity`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Include cookies for session authentication
       },
-      credentials: "include", // Include cookies for session authentication
-    });
+    );
 
     console.log("[API] Response status:", response.status);
     console.log("[API] Response ok:", response.ok);
@@ -187,7 +204,9 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[API] Error response:", errorText);
-      throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch products: ${response.status} ${response.statusText}`,
+      );
     }
 
     const data: ProductsResponse = await response.json();
@@ -195,12 +214,14 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     console.log("[API] Number of items:", data.results?.length || 0);
 
     if (!data.results || !Array.isArray(data.results)) {
-      console.error("[API] Invalid response format - results not found or not an array");
+      console.error(
+        "[API] Invalid response format - results not found or not an array",
+      );
       throw new Error("Invalid response format from server");
     }
 
     // Filter out archived items
-    const activeItems = data.results.filter(product => !product.is_archived);
+    const activeItems = data.results.filter((product) => !product.is_archived);
     console.log("[API] Active (non-archived) items:", activeItems.length);
 
     // Transform to frontend format
@@ -208,11 +229,16 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
     console.log("[API] Transformed items:", transformedItems);
 
     // Log image diagnostics
-    const withImage = transformedItems.filter(i => i.image);
-    const withoutImage = transformedItems.filter(i => !i.image);
-    console.log(`[API] Image summary: ${withImage.length} with image, ${withoutImage.length} without`);
+    const withImage = transformedItems.filter((i) => i.image);
+    const withoutImage = transformedItems.filter((i) => !i.image);
+    console.log(
+      `[API] Image summary: ${withImage.length} with image, ${withoutImage.length} without`,
+    );
     if (withoutImage.length > 0) {
-      console.warn("[API] Items missing images:", withoutImage.map(i => `${i.name} (id=${i.id})`));
+      console.warn(
+        "[API] Items missing images:",
+        withoutImage.map((i) => `${i.name} (id=${i.id})`),
+      );
     }
 
     return transformedItems;
@@ -228,8 +254,11 @@ export async function fetchCatalogueItems(): Promise<RedeemItemData[]> {
 
 // Fetch current user profile
 export async function fetchCurrentUser(): Promise<UserProfile> {
-  console.log("[API] Fetching current user profile from:", `${API_BASE_URL}/users/me/`);
-  
+  console.log(
+    "[API] Fetching current user profile from:",
+    `${API_BASE_URL}/users/me/`,
+  );
+
   try {
     const response = await fetch(`${API_BASE_URL}/users/me/`, {
       method: "GET",
@@ -245,12 +274,17 @@ export async function fetchCurrentUser(): Promise<UserProfile> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[API] Error response:", errorText);
-      throw new Error(`Failed to fetch user profile: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch user profile: ${response.status} ${response.statusText}`,
+      );
     }
 
     const userData: UserProfile = await response.json();
     console.log("[API] Received user profile:", userData);
-    console.log("[API] User points:", userData.points || userData.profile?.points);
+    console.log(
+      "[API] User points:",
+      userData.points || userData.profile?.points,
+    );
 
     return userData;
   } catch (error) {
@@ -271,21 +305,21 @@ export async function fetchCurrentUser(): Promise<UserProfile> {
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
   return null;
 }
 
 // Helper to get headers with CSRF token
 function getHeaders(): HeadersInit {
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
-  
-  const csrfToken = getCookie('csrftoken');
+
+  const csrfToken = getCookie("csrftoken");
   if (csrfToken) {
-    headers['X-CSRFToken'] = csrfToken;
+    headers["X-CSRFToken"] = csrfToken;
   }
-  
+
   return headers;
 }
 
@@ -302,19 +336,40 @@ export interface LegacyRedemptionRequestItem {
   extra_data?: Record<string, any>;
 }
 
-export type RequestedForType = 'DISTRIBUTOR' | 'CUSTOMER' | 'SELF';
+export type RequestedForType = "DISTRIBUTOR" | "CUSTOMER" | "SELF";
 
 export interface CreateRedemptionRequestData {
   requested_for?: number; // Distributor ID (optional when type is CUSTOMER or SELF)
   requested_for_customer?: number; // Customer ID (optional when type is DISTRIBUTOR or SELF)
   requested_for_type: RequestedForType;
-  points_deducted_from: 'SELF' | 'DISTRIBUTOR';
+  points_deducted_from: "SELF" | "DISTRIBUTOR";
   remarks?: string;
   items: RedemptionRequestItem[];
   // Service Vehicle Use fields (optional)
   svc_date?: string; // ISO date string (YYYY-MM-DD)
   svc_time?: string; // Time string (HH:MM)
-  svc_driver?: 'WITH_DRIVER' | 'WITHOUT_DRIVER';
+  svc_driver?: "WITH_DRIVER" | "WITHOUT_DRIVER";
+}
+
+export interface UpdateRedemptionRequestItemData {
+  item_id?: number;
+  product_id: number;
+  quantity: number;
+  extra_data?: Record<string, any>;
+}
+
+export interface UpdateRedemptionRequestData {
+  requested_for?: number | null;
+  requested_for_customer?: number | null;
+  requested_for_type?: RequestedForType;
+  points_deducted_from?: "SELF" | "DISTRIBUTOR";
+  remarks?: string;
+  items?: UpdateRedemptionRequestItemData[];
+  svc_date?: string | null;
+  svc_time?: string | null;
+  svc_driver?: "WITH_DRIVER" | "WITHOUT_DRIVER" | null;
+  plate_number?: string | null;
+  driver_name?: string | null;
 }
 
 export interface RedemptionRequestResponse {
@@ -329,12 +384,12 @@ export interface RedemptionRequestResponse {
   requested_for_type: RequestedForType;
   team: number | null;
   team_name: string | null;
-  points_deducted_from: 'SELF' | 'DISTRIBUTOR';
+  points_deducted_from: "SELF" | "DISTRIBUTOR";
   points_deducted_from_display: string;
   total_points: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: "PENDING" | "APPROVED" | "REJECTED";
   status_display: string;
-  processing_status: 'NOT_PROCESSED' | 'PROCESSED' | 'CANCELLED';
+  processing_status: "NOT_PROCESSED" | "PROCESSED" | "CANCELLED";
   processing_status_display: string;
   date_requested: string;
   reviewed_by: number | null;
@@ -348,6 +403,7 @@ export interface RedemptionRequestResponse {
   approver_remarks?: string | null;
   processing_remarks?: string | null;
   rejection_reason: string | null;
+  is_editable?: boolean;
   // Service Vehicle Use fields
   svc_date: string | null;
   svc_time: string | null;
@@ -365,7 +421,14 @@ export interface RedemptionRequestResponse {
     fulfilled_quantity?: number;
     remaining_quantity?: number | null;
     is_fully_fulfilled?: boolean;
-    fulfillment_logs?: Array<{ id: number; fulfilled_quantity: number; fulfilled_by: number | null; fulfilled_by_name: string | null; fulfilled_at: string; notes?: string | null }>;
+    fulfillment_logs?: Array<{
+      id: number;
+      fulfilled_quantity: number;
+      fulfilled_by: number | null;
+      fulfilled_by_name: string | null;
+      fulfilled_at: string;
+      notes?: string | null;
+    }>;
     item_processed_by?: number | null;
     item_processed_by_name?: string | null;
     item_processed_at?: string | null;
@@ -378,6 +441,8 @@ export interface RedemptionRequestResponse {
   ar_uploaded_by: number | null;
   ar_uploaded_by_name: string | null;
   ar_uploaded_at: string | null;
+  plate_number?: string | null;
+  driver_name?: string | null;
   // Processing photos
   processing_photos?: Array<{
     id: number;
@@ -390,39 +455,51 @@ export interface RedemptionRequestResponse {
 }
 
 export const redemptionRequestsApi = {
-  async createRequest(data: CreateRedemptionRequestData): Promise<RedemptionRequestResponse> {
-    console.log('[Redemption API] Creating request:', data);
-    
+  async createRequest(
+    data: CreateRedemptionRequestData,
+  ): Promise<RedemptionRequestResponse> {
+    console.log("[Redemption API] Creating request:", data);
+
     const response = await fetch(`${API_BASE_URL}/redemption-requests/`, {
-      method: 'POST',
+      method: "POST",
       headers: getHeaders(),
-      credentials: 'include',
+      credentials: "include",
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[Redemption API] Error creating request:', errorData);
-      throw new Error(errorData.detail || errorData.error || 'Failed to create redemption request');
+      console.error("[Redemption API] Error creating request:", errorData);
+      throw new Error(
+        errorData.detail ||
+          errorData.error ||
+          "Failed to create redemption request",
+      );
     }
 
     const result = await response.json();
-    console.log('[Redemption API] Request created successfully:', result);
+    console.log("[Redemption API] Request created successfully:", result);
     return result;
   },
 
-  async getRequests(params?: { notProcessed?: boolean; processed?: boolean }): Promise<RedemptionRequestResponse[]> {
-    const url = new URL(`${API_BASE_URL}/redemption-requests/`, window.location.origin);
-    if (params?.notProcessed) url.searchParams.set('not_processed', '1');
-    else if (params?.processed) url.searchParams.set('processed', '1');
+  async getRequests(params?: {
+    notProcessed?: boolean;
+    processed?: boolean;
+  }): Promise<RedemptionRequestResponse[]> {
+    const url = new URL(
+      `${API_BASE_URL}/redemption-requests/`,
+      window.location.origin,
+    );
+    if (params?.notProcessed) url.searchParams.set("not_processed", "1");
+    else if (params?.processed) url.searchParams.set("processed", "1");
     const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch redemption requests');
+      throw new Error("Failed to fetch redemption requests");
     }
 
     return response.json();
@@ -430,102 +507,162 @@ export const redemptionRequestsApi = {
 
   async getRequest(id: number): Promise<RedemptionRequestResponse> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch redemption request');
+      throw new Error("Failed to fetch redemption request");
     }
 
     return response.json();
   },
 
-  async approveRequest(id: number, remarks?: string): Promise<RedemptionRequestResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/approve/`, {
-      method: 'POST',
+  async updateRequest(
+    id: number,
+    data: UpdateRedemptionRequestData,
+  ): Promise<RedemptionRequestResponse> {
+    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/`, {
+      method: "PATCH",
       headers: getHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ remarks }),
+      credentials: "include",
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to approve request');
+      const message =
+        errorData.detail ||
+        errorData.error ||
+        errorData.message ||
+        (typeof errorData === "object" && errorData !== null
+          ? Object.values(errorData).flat().filter(Boolean).join(" ")
+          : null) ||
+        "Failed to update request";
+      throw new Error(message);
     }
 
     return response.json();
   },
 
-  async rejectRequest(id: number, rejection_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/reject/`, {
-      method: 'POST',
-      headers: getHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ rejection_reason, remarks }),
-    });
+  async approveRequest(
+    id: number,
+    remarks?: string,
+  ): Promise<RedemptionRequestResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${id}/approve/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        credentials: "include",
+        body: JSON.stringify({ remarks }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to reject request');
+      throw new Error(errorData.error || "Failed to approve request");
     }
 
     return response.json();
   },
 
-  async markAsProcessed(id: number, remarks?: string): Promise<RedemptionRequestResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/mark_as_processed/`, {
-      method: 'POST',
-      headers: getHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ remarks }),
-    });
+  async rejectRequest(
+    id: number,
+    rejection_reason: string,
+    remarks?: string,
+  ): Promise<RedemptionRequestResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${id}/reject/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        credentials: "include",
+        body: JSON.stringify({ rejection_reason, remarks }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to mark request as processed');
+      throw new Error(errorData.error || "Failed to reject request");
     }
 
     return response.json();
   },
 
-  async cancelRequest(id: number, cancellation_reason: string): Promise<RedemptionRequestResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/cancel_request/`, {
-      method: 'POST',
-      headers: getHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ cancellation_reason }),
-    });
+  async markAsProcessed(
+    id: number,
+    remarks?: string,
+  ): Promise<RedemptionRequestResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${id}/mark_as_processed/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        credentials: "include",
+        body: JSON.stringify({ remarks }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to cancel request');
+      throw new Error(errorData.error || "Failed to mark request as processed");
     }
 
     return response.json();
   },
 
-  async uploadAcknowledgementReceipt(id: number, file: File): Promise<RedemptionRequestResponse> {
+  async cancelRequest(
+    id: number,
+    cancellation_reason: string,
+  ): Promise<RedemptionRequestResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${id}/cancel_request/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        credentials: "include",
+        body: JSON.stringify({ cancellation_reason }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Failed to cancel request");
+    }
+
+    return response.json();
+  },
+
+  async uploadAcknowledgementReceipt(
+    id: number,
+    file: File,
+  ): Promise<RedemptionRequestResponse> {
     const formData = new FormData();
-    formData.append('acknowledgement_receipt', file);
+    formData.append("acknowledgement_receipt", file);
 
-    const csrfToken = getCookie('csrftoken');
+    const csrfToken = getCookie("csrftoken");
     const headers: HeadersInit = {};
     if (csrfToken) {
-      headers['X-CSRFToken'] = csrfToken;
+      headers["X-CSRFToken"] = csrfToken;
     }
 
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${id}/upload_acknowledgement_receipt/`, {
-      method: 'POST',
-      headers,
-      credentials: 'include',
-      body: formData,
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${id}/upload_acknowledgement_receipt/`,
+      {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: formData,
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to upload acknowledgement receipt');
+      throw new Error(
+        errorData.error || "Failed to upload acknowledgement receipt",
+      );
     }
 
     return response.json();
@@ -585,14 +722,14 @@ export const handlerRequestsApi = {
    */
   async getRequests(): Promise<RedemptionRequestResponse[]> {
     const response = await fetch(`${API_BASE_URL}/redemption-requests/`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch requests');
+      throw new Error(errorData.error || "Failed to fetch requests");
     }
 
     return response.json();
@@ -602,16 +739,21 @@ export const handlerRequestsApi = {
    * Get the current user's processing status for a specific request.
    * Shows which items are assigned to them and their processed status.
    */
-  async getMyProcessingStatus(requestId: number): Promise<HandlerProcessingStatus> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/my_processing_status/`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    });
+  async getMyProcessingStatus(
+    requestId: number,
+  ): Promise<HandlerProcessingStatus> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${requestId}/my_processing_status/`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch processing status');
+      throw new Error(errorData.error || "Failed to fetch processing status");
     }
 
     return response.json();
@@ -621,17 +763,23 @@ export const handlerRequestsApi = {
    * Mark specific items as processed (partial or full fulfillment).
    * Each item entry specifies which item, how many units to fulfill, and optional notes.
    */
-  async markItemsProcessed(requestId: number, items: ProcessItemData[]): Promise<MarkItemsProcessedResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/mark_items_processed/`, {
-      method: 'POST',
-      headers: getHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ items }),
-    });
+  async markItemsProcessed(
+    requestId: number,
+    items: ProcessItemData[],
+  ): Promise<MarkItemsProcessedResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${requestId}/mark_items_processed/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        credentials: "include",
+        body: JSON.stringify({ items }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to mark items as processed');
+      throw new Error(errorData.error || "Failed to mark items as processed");
     }
 
     return response.json();
@@ -641,29 +789,36 @@ export const handlerRequestsApi = {
    * Upload a processing photo (handover proof) for a request.
    * Can be called by Handler or Admin users during item processing.
    */
-  async uploadProcessingPhoto(requestId: number, file: File, caption?: string): Promise<RedemptionRequestResponse> {
+  async uploadProcessingPhoto(
+    requestId: number,
+    file: File,
+    caption?: string,
+  ): Promise<RedemptionRequestResponse> {
     const formData = new FormData();
-    formData.append('photo', file);
+    formData.append("photo", file);
     if (caption) {
-      formData.append('caption', caption);
+      formData.append("caption", caption);
     }
 
-    const csrfToken = getCookie('csrftoken');
+    const csrfToken = getCookie("csrftoken");
     const headers: HeadersInit = {};
     if (csrfToken) {
-      headers['X-CSRFToken'] = csrfToken;
+      headers["X-CSRFToken"] = csrfToken;
     }
 
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/upload_processing_photo/`, {
-      method: 'POST',
-      headers,
-      credentials: 'include',
-      body: formData,
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${requestId}/upload_processing_photo/`,
+      {
+        method: "POST",
+        headers,
+        credentials: "include",
+        body: formData,
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to upload processing photo');
+      throw new Error(errorData.error || "Failed to upload processing photo");
     }
 
     return response.json();
@@ -672,17 +827,27 @@ export const handlerRequestsApi = {
   /**
    * Cancel a redemption request. Refunds points and restores stock.
    */
-  async cancelRequest(requestId: number, cancellation_reason: string, remarks?: string): Promise<RedemptionRequestResponse> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/${requestId}/cancel_request/`, {
-      method: 'POST',
-      headers: getHeaders(),
-      credentials: 'include',
-      body: JSON.stringify({ cancellation_reason, ...(remarks ? { remarks } : {}) }),
-    });
+  async cancelRequest(
+    requestId: number,
+    cancellation_reason: string,
+    remarks?: string,
+  ): Promise<RedemptionRequestResponse> {
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/${requestId}/cancel_request/`,
+      {
+        method: "POST",
+        headers: getHeaders(),
+        credentials: "include",
+        body: JSON.stringify({
+          cancellation_reason,
+          ...(remarks ? { remarks } : {}),
+        }),
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to cancel request');
+      throw new Error(errorData.error || "Failed to cancel request");
     }
 
     return response.json();
@@ -693,15 +858,18 @@ export const handlerRequestsApi = {
    * Shows all requests where the current user has processed items.
    */
   async getHistory(): Promise<RedemptionRequestResponse[]> {
-    const response = await fetch(`${API_BASE_URL}/redemption-requests/handler-history/`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/redemption-requests/handler-history/`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      },
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch handler history');
+      throw new Error(errorData.error || "Failed to fetch handler history");
     }
 
     return response.json();
@@ -721,23 +889,24 @@ export const requestHistoryApi = {
     ordering?: string;
   }): Promise<PaginatedResponse<RedemptionRequestResponse>> {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.page_size) queryParams.append('page_size', params.page_size.toString());
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.ordering) queryParams.append('ordering', params.ordering);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.page_size)
+      queryParams.append("page_size", params.page_size.toString());
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.ordering) queryParams.append("ordering", params.ordering);
 
     const qs = queryParams.toString();
-    const url = `${API_BASE_URL}/redemption-requests/history/${qs ? '?' + qs : ''}`;
+    const url = `${API_BASE_URL}/redemption-requests/history/${qs ? "?" + qs : ""}`;
 
     const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch processed requests');
+      throw new Error(errorData.error || "Failed to fetch processed requests");
     }
 
     return response.json();
@@ -762,9 +931,9 @@ export interface BackendCartItem {
  */
 export async function getCart(): Promise<BackendCartItem[]> {
   const response = await fetch(`${API_BASE_URL}/cart/`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -779,8 +948,10 @@ export async function getCart(): Promise<BackendCartItem[]> {
  * Fully replace the server-side cart with the given items.
  * Call this (debounced) on every cart mutation.
  */
-export async function saveCart(items: import('@/components/cart-modal').CartItem[]): Promise<void> {
-  const payload: BackendCartItem[] = items.map(item => ({
+export async function saveCart(
+  items: import("@/components/cart-modal").CartItem[],
+): Promise<void> {
+  const payload: BackendCartItem[] = items.map((item) => ({
     product_id: item.id,
     quantity: item.quantity,
     needs_driver: item.needs_driver ?? false,
@@ -788,9 +959,9 @@ export async function saveCart(items: import('@/components/cart-modal').CartItem
   }));
 
   const response = await fetch(`${API_BASE_URL}/cart/`, {
-    method: 'PUT',
+    method: "PUT",
     headers: getHeaders(),
-    credentials: 'include',
+    credentials: "include",
     body: JSON.stringify({ items: payload }),
   });
 
@@ -804,13 +975,12 @@ export async function saveCart(items: import('@/components/cart-modal').CartItem
  */
 export async function clearCartBackend(): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/cart/`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: getHeaders(),
-    credentials: 'include',
+    credentials: "include",
   });
 
   if (!response.ok) {
     throw new Error(`Failed to clear cart: ${response.status}`);
   }
 }
-

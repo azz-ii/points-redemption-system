@@ -3,38 +3,45 @@ import { Plus, Info } from "lucide-react";
 import type { ItemCardProps } from "../types";
 
 const FORMULA_LABELS: Record<string, string> = {
-  DRIVER_MULTIPLIER: 'Driver Multiplier',
-  AREA_RATE: 'Area Rate',
-  PER_SQFT: 'Per Sqft',
-  PER_INVOICE: 'Per Invoice',
-  PER_DAY: 'Per Day'
+  DRIVER_MULTIPLIER: "Driver Multiplier",
+  AREA_RATE: "Area Rate",
+  PER_SQFT: "Per Sqft",
+  PER_INVOICE: "Per Invoice",
+  PER_DAY: "Per Day",
 };
 
 const FORMULA_DESCRIPTIONS: Record<string, string> = {
-  DRIVER_MULTIPLIER: 'Points vary based on driver multiplier.',
-  AREA_RATE: 'Points vary based on area rate.',
-  PER_SQFT: 'Points vary based on square footage.',
-  PER_INVOICE: 'Points vary based on invoice.',
-  PER_DAY: 'Points vary based on duration.'
+  DRIVER_MULTIPLIER: "Points vary based on driver multiplier.",
+  AREA_RATE: "Points vary based on area rate.",
+  PER_SQFT: "Points vary based on square footage.",
+  PER_INVOICE: "Points vary based on invoice.",
+  PER_DAY: "Points vary based on duration.",
 };
 
-export function ItemCard({ item, layout = "grid", onAddToCart, onViewItem }: ItemCardProps) {
+export function ItemCard({
+  item,
+  layout = "grid",
+  onAddToCart,
+  onViewItem,
+  compact = false,
+}: ItemCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Determine if this is a dynamic pricing item
-  const isDynamicPricing = item.pricing_formula && item.pricing_formula !== 'NONE';
+  const isDynamicPricing =
+    item.pricing_formula && item.pricing_formula !== "NONE";
   const multiplier = item.points_multiplier || item.points;
 
   const isList = layout === "list";
 
   return (
     <div
-      className={`rounded-lg overflow-hidden border bg-card border-border flex ${isList ? 'flex-row' : 'flex-col'}`}
+      className={`rounded-lg overflow-hidden border bg-card border-border flex ${isList ? "flex-row" : "flex-col"}`}
     >
       {/* Image */}
-      <div 
-        className={`${isList ? 'w-20 h-20 md:w-28 md:h-28' : 'h-36 md:h-44'} bg-gray-300 overflow-hidden relative flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity`}
+      <div
+        className={`${isList ? "w-20 h-20 md:w-28 md:h-28" : compact ? "h-24 md:h-28" : "h-36 md:h-44"} bg-gray-300 overflow-hidden relative flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity`}
         onClick={() => onViewItem?.(item)}
       >
         {imageLoading && (
@@ -48,9 +55,9 @@ export function ItemCard({ item, layout = "grid", onAddToCart, onViewItem }: Ite
             const src = e.currentTarget.src;
             console.error(
               `[ItemCard] Image failed to load\n` +
-              `  Item: ${item.name} (id=${item.id})\n` +
-              `  Image field: ${item.image ?? '(empty)'}\n` +
-              `  Resolved URL: ${src}`
+                `  Item: ${item.name} (id=${item.id})\n` +
+                `  Image field: ${item.image ?? "(empty)"}\n` +
+                `  Resolved URL: ${src}`,
             );
             e.currentTarget.src = "/images/tshirt.png";
             setImageLoading(false);
@@ -64,7 +71,7 @@ export function ItemCard({ item, layout = "grid", onAddToCart, onViewItem }: Ite
         {isDynamicPricing && (
           <div className="absolute top-2 left-2 flex items-center gap-1">
             <div className="px-2 py-0.5 rounded text-xs font-medium bg-primary text-primary-foreground">
-              {item.pricing_formula ? FORMULA_LABELS[item.pricing_formula] : ''}
+              {item.pricing_formula ? FORMULA_LABELS[item.pricing_formula] : ""}
             </div>
             <div className="relative">
               <button
@@ -77,7 +84,9 @@ export function ItemCard({ item, layout = "grid", onAddToCart, onViewItem }: Ite
               </button>
               {showTooltip && (
                 <div className="absolute top-6 left-0 z-10 w-64 p-2 rounded shadow-lg text-xs bg-card text-foreground border border-border">
-                  {item.pricing_formula ? FORMULA_DESCRIPTIONS[item.pricing_formula] : ''}
+                  {item.pricing_formula
+                    ? FORMULA_DESCRIPTIONS[item.pricing_formula]
+                    : ""}
                 </div>
               )}
             </div>
@@ -85,55 +94,72 @@ export function ItemCard({ item, layout = "grid", onAddToCart, onViewItem }: Ite
         )}
       </div>
       {/* Info */}
-      <div className={`${isList ? 'p-2 md:p-3' : 'p-3 md:p-4'} flex-1 flex flex-col justify-center ${isList ? 'h-full' : ''}`}>
-        <div className={`flex justify-between flex-1 ${isList ? 'items-center' : 'items-end'}`}>
-          <div className={`flex flex-col ${isList ? 'gap-0 md:gap-1' : 'gap-1'}`}>
-            <h3 
-              className={`font-semibold leading-tight ${isList ? 'text-sm md:text-base' : 'text-xs md:text-sm'} cursor-pointer hover:text-primary transition-colors`}
+      <div
+        className={`${isList ? "p-2 md:p-3" : compact ? "p-2 md:p-3" : "p-3 md:p-4"} flex-1 flex flex-col justify-center ${isList ? "h-full" : ""}`}
+      >
+        <div
+          className={`flex justify-between flex-1 ${isList ? "items-center" : "items-end"}`}
+        >
+          <div
+            className={`flex flex-col ${isList ? "gap-0 md:gap-1" : "gap-1"}`}
+          >
+            <h3
+              className={`font-semibold leading-tight ${isList ? "text-sm md:text-base" : compact ? "text-xs md:text-sm" : "text-xs md:text-sm"} cursor-pointer hover:text-primary transition-colors`}
               onClick={() => onViewItem?.(item)}
             >
               {item.name}
             </h3>
             {isDynamicPricing ? (
-              <p className={`text-primary ${isList ? 'text-xs md:text-sm' : 'text-xs'}`}>
-                {multiplier.toLocaleString()} pts / {item.pricing_formula ? FORMULA_LABELS[item.pricing_formula]?.toLowerCase() : ''}
+              <p
+                className={`text-primary ${isList ? "text-xs md:text-sm" : compact ? "text-[11px]" : "text-xs"}`}
+              >
+                {multiplier.toLocaleString()} pts /{" "}
+                {item.pricing_formula
+                  ? FORMULA_LABELS[item.pricing_formula]?.toLowerCase()
+                  : ""}
               </p>
             ) : (
               <p
-                className={`text-muted-foreground ${isList ? 'text-xs md:text-sm' : 'text-xs'}`}
+                className={`text-muted-foreground ${isList ? "text-xs md:text-sm" : compact ? "text-[11px]" : "text-xs"}`}
               >
                 {item.points.toLocaleString()} pts
               </p>
             )}
             <p
-              className={`text-xs ${isList ? 'md:text-sm' : ''} ${
+              className={`text-xs ${isList ? "md:text-sm" : compact ? "text-[11px]" : ""} ${
                 !item.has_stock
-                  ? 'text-blue-500 dark:text-blue-400'
-                  : item.available_stock === 0 
-                    ? 'text-red-500 font-medium'
+                  ? "text-blue-500 dark:text-blue-400"
+                  : item.available_stock === 0
+                    ? "text-red-500 font-medium"
                     : item.available_stock < 10
-                      ? 'text-amber-500'
-                      : 'text-muted-foreground'
+                      ? "text-amber-500"
+                      : "text-muted-foreground"
               }`}
             >
-              {!item.has_stock 
-                ? 'Made to Order' 
-                : item.available_stock === 0 
-                  ? 'Out of stock' 
-                  : `${item.available_stock} available`} • {item.category}
+              {!item.has_stock
+                ? "Made to Order"
+                : item.available_stock === 0
+                  ? "Out of stock"
+                  : `${item.available_stock} available`}{" "}
+              • {item.category}
             </p>
             {/* Order quantity limits hint */}
-            <p className={`text-muted-foreground text-xs ${isList ? 'md:text-sm' : ''}`}>
-              Qty: {item.min_order_qty ?? 1}{item.max_order_qty ? ` - ${item.max_order_qty}` : '+'}
+            <p
+              className={`text-muted-foreground text-xs ${isList ? "md:text-sm" : compact ? "text-[11px]" : ""}`}
+            >
+              Qty: {item.min_order_qty ?? 1}
+              {item.max_order_qty ? ` - ${item.max_order_qty}` : "+"}
             </p>
           </div>
           {/* Add button */}
           <button
             onClick={() => onAddToCart(item)}
-            className={`${isList ? 'w-7 h-7 md:w-8 md:h-8 ml-4' : 'w-7 h-7 md:w-8 md:h-8'} rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-400 text-black hover:bg-yellow-300 transition-colors`}
+            className={`${isList ? "w-7 h-7 md:w-8 md:h-8 ml-4" : compact ? "w-7 h-7 md:w-7 md:h-7" : "w-7 h-7 md:w-8 md:h-8"} rounded-full flex items-center justify-center flex-shrink-0 bg-yellow-400 text-black hover:bg-yellow-300 transition-colors`}
             aria-label={`Add ${item.name}`}
           >
-            <Plus className={`${isList ? 'h-4 w-4' : 'h-3 w-3 md:h-4 md:w-4'}`} />
+            <Plus
+              className={`${isList ? "h-4 w-4" : compact ? "h-3 w-3" : "h-3 w-3 md:h-4 md:w-4"}`}
+            />
           </button>
         </div>
       </div>

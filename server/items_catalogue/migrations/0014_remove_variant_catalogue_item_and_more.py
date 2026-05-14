@@ -7,16 +7,17 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('items_catalogue', '0013_alter_product_options'),
+        ('requests', '0013_switch_to_product'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='variant',
-            name='catalogue_item',
-        ),
         migrations.AlterUniqueTogether(
             name='variant',
             unique_together=None,
+        ),
+        migrations.RemoveField(
+            model_name='variant',
+            name='catalogue_item',
         ),
         migrations.RemoveField(
             model_name='product',

@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { X, AlertTriangle, Loader2, FileText, ExternalLink } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
+import {
+  X,
+  AlertTriangle,
+  Loader2,
+  FileText,
+  ExternalLink,
+} from "lucide-react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import { fetchWithCsrf } from "@/lib/csrf";
@@ -15,6 +21,7 @@ function normalizeMediaUrl(url: string): string {
 }
 import { StatusChip } from "../components/StatusChip";
 import { AcknowledgementReceiptModal } from "./AcknowledgementReceiptModal";
+import { EditRedemptionRequestModal } from "./EditRedemptionRequestModal.tsx";
 import type { ViewRedemptionStatusModalProps } from "./types";
 
 export interface WithdrawConfirmationModalProps {
@@ -66,7 +73,10 @@ export function WithdrawConfirmationModal({
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
             <div>
-              <h3 id="withdraw-confirmation-title" className="text-lg font-semibold">
+              <h3
+                id="withdraw-confirmation-title"
+                className="text-lg font-semibold"
+              >
                 Cancel Request #{requestId}?
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -76,7 +86,8 @@ export function WithdrawConfirmationModal({
           </div>
 
           <p className="text-sm mb-4 text-foreground">
-            Are you sure you want to cancel this redemption request? The committed stock will be released back to inventory.
+            Are you sure you want to cancel this redemption request? The
+            committed stock will be released back to inventory.
           </p>
 
           <div className="mb-4">
@@ -84,7 +95,8 @@ export function WithdrawConfirmationModal({
               htmlFor="withdrawal-reason"
               className="block text-sm font-medium mb-2 text-foreground"
             >
-              Reason for cancellation <span className="text-destructive">*</span>
+              Reason for cancellation{" "}
+              <span className="text-destructive">*</span>
             </label>
             <textarea
               id="withdrawal-reason"
@@ -95,9 +107,7 @@ export function WithdrawConfirmationModal({
               className={`w-full px-3 py-2 rounded-lg border text-sm resize-none bg-card border-border text-foreground placeholder-muted-foreground ${error ? "border-red-500" : ""}`}
               disabled={isSubmitting}
             />
-            {error && (
-              <p className="text-destructive text-sm mt-1">{error}</p>
-            )}
+            {error && <p className="text-destructive text-sm mt-1">{error}</p>}
           </div>
 
           <div className="flex gap-3">
@@ -132,7 +142,6 @@ export function WithdrawConfirmationModal({
 export function ViewRedemptionStatusModal({
   isOpen,
   onClose,
-  item,
   request,
   onRequestWithdrawn,
   username,
@@ -142,18 +151,24 @@ export function ViewRedemptionStatusModal({
 }: ViewRedemptionStatusModalProps & { onRequestWithdrawn?: () => void }) {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showARModal, setShowARModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [displayRequest, setDisplayRequest] = useState(request);
 
-  if (!isOpen || !request) return null;
+  useEffect(() => {
+    setDisplayRequest(request);
+  }, [request]);
 
-  const normalizedStatus = request.status.toUpperCase();
-  const isOwnRequest = request.requested_by_username === username;
+  if (!isOpen || !displayRequest) return null;
+
+  const normalizedStatus = displayRequest.status.toUpperCase();
+  const isOwnRequest = displayRequest.requested_by_username === username;
 
   // Check if request can be withdrawn
   const canWithdraw =
     normalizedStatus === "PENDING" &&
-    request.sales_approval_status !== "APPROVED" &&
+    displayRequest.sales_approval_status !== "APPROVED" &&
     isOwnRequest;
 
   // Check if request can be approved/rejected
@@ -162,18 +177,31 @@ export function ViewRedemptionStatusModal({
     userPosition?.toLowerCase() === "approver" &&
     !isOwnRequest;
 
+  const canEdit =
+    Boolean(displayRequest.is_editable) &&
+    normalizedStatus === "PENDING" &&
+    displayRequest.processing_status === "NOT_PROCESSED" &&
+    isOwnRequest;
+
   // Show AR button when AR needs to be uploaded or is already uploaded (Customer only)
-  const canShowAR = request.processing_status === "PROCESSED" && request.requested_for_type === "CUSTOMER" && (request.ar_status === "PENDING" || request.ar_status === "UPLOADED");
+  const canShowAR =
+    displayRequest.processing_status === "PROCESSED" &&
+    displayRequest.requested_for_type === "CUSTOMER" &&
+    (displayRequest.ar_status === "PENDING" ||
+      displayRequest.ar_status === "UPLOADED");
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
     setWithdrawError(null);
     try {
-      const response = await fetchWithCsrf(`/api/redemption-requests/${request.id}/withdraw_request/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ withdrawal_reason: reason }),
-      });
+      const response = await fetchWithCsrf(
+        `/api/redemption-requests/${displayRequest.id}/withdraw_request/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ withdrawal_reason: reason }),
+        },
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -184,7 +212,9 @@ export function ViewRedemptionStatusModal({
       onClose();
       onRequestWithdrawn?.();
     } catch (err) {
-      setWithdrawError(err instanceof Error ? err.message : "Failed to cancel request");
+      setWithdrawError(
+        err instanceof Error ? err.message : "Failed to cancel request",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -203,17 +233,24 @@ export function ViewRedemptionStatusModal({
           <div className="flex justify-between items-center p-6">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h2 id="view-redemption-status-title" className="text-xl font-semibold">
+                <h2
+                  id="view-redemption-status-title"
+                  className="text-xl font-semibold"
+                >
                   Request Details
                 </h2>
-                <StatusChip 
-                  status={request.status as any} 
-                  processingStatus={request.processing_status as any}
-                  arStatus={request.ar_status}
+                <StatusChip
+                  status={displayRequest.status}
+                  processingStatus={displayRequest.processing_status}
+                  arStatus={displayRequest.ar_status}
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Request #{request.id} • {new Date(request.date_requested).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                Request #{displayRequest.id} •{" "}
+                {new Date(displayRequest.date_requested).toLocaleDateString(
+                  "en-US",
+                  { year: "numeric", month: "long", day: "numeric" },
+                )}
               </p>
             </div>
             <button
@@ -234,22 +271,38 @@ export function ViewRedemptionStatusModal({
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Customer Name</label>
-                  <p className="text-sm font-medium">{request.requested_for_name}</p>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Customer Name
+                  </label>
+                  <p className="text-sm font-medium">
+                    {displayRequest.requested_for_name}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Requested By</label>
-                  <p className="text-sm font-medium">{request.requested_by_name}</p>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Requested By
+                  </label>
+                  <p className="text-sm font-medium">
+                    {displayRequest.requested_by_name}
+                  </p>
                 </div>
-                {request.team_name && (
+                {displayRequest.team_name && (
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-1">Team</label>
-                    <p className="text-sm font-medium">{request.team_name}</p>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Team
+                    </label>
+                    <p className="text-sm font-medium">
+                      {displayRequest.team_name}
+                    </p>
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Points Source</label>
-                  <p className="text-sm font-medium">{request.points_deducted_from_display}</p>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Points Source
+                  </label>
+                  <p className="text-sm font-medium">
+                    {displayRequest.points_deducted_from_display}
+                  </p>
                 </div>
               </div>
             </div>
@@ -257,7 +310,7 @@ export function ViewRedemptionStatusModal({
             {/* Items List */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Items ({request.items.length})
+                Items ({displayRequest.items.length})
               </h3>
               <div className="border rounded-lg overflow-hidden border-border">
                 <div className="overflow-x-auto">
@@ -267,39 +320,63 @@ export function ViewRedemptionStatusModal({
                         <th className="text-left p-3 font-semibold">Item</th>
                         <th className="text-left p-3 font-semibold">Code</th>
                         <th className="text-right p-3 font-semibold">Qty</th>
-                        <th className="text-right p-3 font-semibold">Points/Item</th>
-                        <th className="text-right p-3 font-semibold">Subtotal</th>
+                        <th className="text-right p-3 font-semibold">
+                          Points/Item
+                        </th>
+                        <th className="text-right p-3 font-semibold">
+                          Subtotal
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {request.items.map((item, idx) => (
+                      {displayRequest.items.map((item, idx) => (
                         <tr key={idx} className="border-t border-border">
                           <td className="p-3">
                             <div>
                               <p className="font-medium">{item.product_name}</p>
                               {item.category && (
-                                <p className="text-xs text-muted-foreground">{item.category}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.category}
+                                </p>
                               )}
-                              {item.extra_data && Object.keys(item.extra_data).length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                  {Object.entries(item.extra_data).map(([key, value]) => {
-                                    if (value === null || value === undefined || value === '') return null;
-                                    let displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                                    let displayValue = String(value);
-                                    if (key === 'driver_type') {
-                                      displayKey = 'Driver';
-                                      displayValue = value === 'WITH_DRIVER' ? 'With Driver' : 'Without Driver';
-                                    } else if (key === 'driver_name') displayKey = 'Driver Name';
-                                    else if (key === 'invoice_amount') displayKey = 'Amount';
-                                    
-                                    return (
-                                      <span key={key} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border">
-                                        {displayKey}: {displayValue}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                              )}
+                              {item.extra_data &&
+                                Object.keys(item.extra_data).length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {Object.entries(item.extra_data).map(
+                                      ([key, value]) => {
+                                        if (
+                                          value === null ||
+                                          value === undefined ||
+                                          value === ""
+                                        )
+                                          return null;
+                                        let displayKey =
+                                          key.charAt(0).toUpperCase() +
+                                          key.slice(1).replace(/_/g, " ");
+                                        let displayValue = String(value);
+                                        if (key === "driver_type") {
+                                          displayKey = "Driver";
+                                          displayValue =
+                                            value === "WITH_DRIVER"
+                                              ? "With Driver"
+                                              : "Without Driver";
+                                        } else if (key === "driver_name")
+                                          displayKey = "Driver Name";
+                                        else if (key === "invoice_amount")
+                                          displayKey = "Amount";
+
+                                        return (
+                                          <span
+                                            key={key}
+                                            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border"
+                                          >
+                                            {displayKey}: {displayValue}
+                                          </span>
+                                        );
+                                      },
+                                    )}
+                                  </div>
+                                )}
                             </div>
                           </td>
                           <td className="p-3">
@@ -308,8 +385,12 @@ export function ViewRedemptionStatusModal({
                             </span>
                           </td>
                           <td className="p-3 text-right">{item.quantity}</td>
-                          <td className="p-3 text-right">{item.points_per_item}</td>
-                          <td className="p-3 text-right font-semibold">{item.total_points}</td>
+                          <td className="p-3 text-right">
+                            {item.points_per_item}
+                          </td>
+                          <td className="p-3 text-right font-semibold">
+                            {item.total_points}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -324,75 +405,92 @@ export function ViewRedemptionStatusModal({
                 Total Points for Request
               </p>
               <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                {request.total_points} Points
+                {displayRequest.total_points} Points
               </p>
             </div>
 
             {/* Request Timeline */}
             <RequestTimeline
               data={{
-                requested_by_name: request.requested_by_name,
-                date_requested: request.date_requested,
-                reviewed_by_name: request.reviewed_by_name,
-                date_reviewed: request.date_reviewed,
-                requires_marketing_approval: request.requires_marketing_approval,
-                marketing_approval_status: request.marketing_approval_status,
-                marketing_approved_by_name: request.marketing_approved_by_name,
-                marketing_approval_date: request.marketing_approval_date,
-                marketing_rejection_reason: request.marketing_rejection_reason,
-                withdrawal_reason: request.withdrawal_reason,
-                processed_by_name: request.processed_by_name,
-                date_processed: request.date_processed,
-                cancelled_by_name: request.cancelled_by_name,
-                date_cancelled: request.date_cancelled,
-                initial_remarks: request.initial_remarks,
-                approver_remarks: request.approver_remarks,
-                processing_remarks: request.processing_remarks,
-                rejection_reason: request.rejection_reason,
-                status: request.status,
-                processing_status: request.processing_status,
-                ar_status: request.ar_status,
-                ar_uploaded_by_name: request.ar_uploaded_by_name,
-                ar_uploaded_at: request.ar_uploaded_at,
-                requested_for_type: request.requested_for_type,
+                requested_by_name: displayRequest.requested_by_name,
+                date_requested: displayRequest.date_requested,
+                reviewed_by_name: displayRequest.reviewed_by_name,
+                date_reviewed: displayRequest.date_reviewed,
+                requires_marketing_approval:
+                  displayRequest.requires_marketing_approval,
+                marketing_approval_status:
+                  displayRequest.marketing_approval_status,
+                marketing_approved_by_name:
+                  displayRequest.marketing_approved_by_name,
+                marketing_approval_date: displayRequest.marketing_approval_date,
+                marketing_rejection_reason:
+                  displayRequest.marketing_rejection_reason,
+                withdrawal_reason: displayRequest.withdrawal_reason,
+                processed_by_name: displayRequest.processed_by_name,
+                date_processed: displayRequest.date_processed,
+                cancelled_by_name: displayRequest.cancelled_by_name,
+                date_cancelled: displayRequest.date_cancelled,
+                initial_remarks: displayRequest.initial_remarks,
+                approver_remarks: displayRequest.approver_remarks,
+                processing_remarks: displayRequest.processing_remarks,
+                rejection_reason: displayRequest.rejection_reason,
+                status: displayRequest.status,
+                processing_status: displayRequest.processing_status,
+                ar_status: displayRequest.ar_status,
+                ar_uploaded_by_name: displayRequest.ar_uploaded_by_name,
+                ar_uploaded_at: displayRequest.ar_uploaded_at,
+                requested_for_type: displayRequest.requested_for_type,
               }}
               showProcessing={true}
               showCancellation={true}
             />
 
             {/* Acknowledgement Receipt */}
-            {request.ar_status === "UPLOADED" && request.acknowledgement_receipt && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Acknowledgement Receipt {request.ar_number ? `(${request.ar_number})` : ''}
-                </h3>
-                {request.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
-                  <a
-                    href={normalizeMediaUrl(request.acknowledgement_receipt)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
-                  >
-                    <FileText className="w-5 h-5 text-primary" />
-                    <span>View Signed AR Document</span>
-                    <ExternalLink className="w-4 h-4 ml-1 text-muted-foreground" />
-                  </a>
-                ) : (
-                  <div className="border rounded-lg overflow-hidden border-border inline-block">
-                    <img
-                      src={normalizeMediaUrl(request.acknowledgement_receipt)}
-                      alt="Acknowledgement Receipt"
-                      className="max-w-full max-h-64 object-contain"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+            {displayRequest.ar_status === "UPLOADED" &&
+              displayRequest.acknowledgement_receipt && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Acknowledgement Receipt{" "}
+                    {displayRequest.ar_number
+                      ? `(${displayRequest.ar_number})`
+                      : ""}
+                  </h3>
+                  {displayRequest.acknowledgement_receipt
+                    .toLowerCase()
+                    .endsWith(".pdf") ? (
+                    <a
+                      href={normalizeMediaUrl(
+                        displayRequest.acknowledgement_receipt,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                    >
+                      <FileText className="w-5 h-5 text-primary" />
+                      <span>View Signed AR Document</span>
+                      <ExternalLink className="w-4 h-4 ml-1 text-muted-foreground" />
+                    </a>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden border-border inline-block">
+                      <img
+                        src={normalizeMediaUrl(
+                          displayRequest.acknowledgement_receipt,
+                        )}
+                        alt="Acknowledgement Receipt"
+                        className="max-w-full max-h-64 object-contain"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
             {/* Processing Photos */}
-            {request.processing_photos && request.processing_photos.length > 0 && (
-              <ProcessingPhotosGallery photos={request.processing_photos} />
-            )}
+            {displayRequest.processing_photos &&
+              displayRequest.processing_photos.length > 0 && (
+                <ProcessingPhotosGallery
+                  photos={displayRequest.processing_photos}
+                />
+              )}
           </div>
 
           {/* Footer */}
@@ -405,7 +503,7 @@ export function ViewRedemptionStatusModal({
                 <button
                   onClick={() => {
                     onClose();
-                    setTimeout(() => onReject(request), 0);
+                    setTimeout(() => onReject(displayRequest), 0);
                   }}
                   className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white"
                 >
@@ -416,7 +514,7 @@ export function ViewRedemptionStatusModal({
                 <button
                   onClick={() => {
                     onClose();
-                    setTimeout(() => onApprove(request), 0);
+                    setTimeout(() => onApprove(displayRequest), 0);
                   }}
                   className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-green-600 hover:bg-green-700 text-white"
                 >
@@ -437,6 +535,14 @@ export function ViewRedemptionStatusModal({
                   Cancel Request
                 </button>
               )}
+              {canEdit && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="px-6 py-2.5 rounded-lg font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Edit Request
+                </button>
+              )}
               {canShowAR && (
                 <button
                   onClick={() => setShowARModal(true)}
@@ -453,17 +559,29 @@ export function ViewRedemptionStatusModal({
           isOpen={showWithdrawModal}
           onClose={() => setShowWithdrawModal(false)}
           onConfirm={handleWithdraw}
-          requestId={request.id}
+          requestId={displayRequest.id}
           isSubmitting={isSubmitting}
         />
 
         <AcknowledgementReceiptModal
           isOpen={showARModal}
           onClose={() => setShowARModal(false)}
-          request={request}
+          request={displayRequest}
           onUploaded={() => {
             setShowARModal(false);
             onClose();
+            onRequestWithdrawn?.();
+          }}
+        />
+
+        <EditRedemptionRequestModal
+          key={`${displayRequest.id}-${showEditModal ? "open" : "closed"}`}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          request={displayRequest}
+          onSaved={(updatedRequest) => {
+            setDisplayRequest(updatedRequest);
+            setShowEditModal(false);
             onRequestWithdrawn?.();
           }}
         />

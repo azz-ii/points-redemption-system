@@ -14,6 +14,7 @@ export function ItemsGrid({
   onAddToCart,
   onViewItem,
   onRetry,
+  compact = false,
 }: ItemsGridProps) {
   if (loading) {
     return <ItemsLoadingState />;
@@ -24,17 +25,33 @@ export function ItemsGrid({
   }
 
   if (items.length === 0) {
-    return <ItemsEmptyState searchQuery={searchQuery} activeCategory={activeCategory} />;
+    return (
+      <ItemsEmptyState
+        searchQuery={searchQuery}
+        activeCategory={activeCategory}
+      />
+    );
   }
 
   return (
-    <div className={
-      viewMode === "grid"
-        ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"
-        : "flex flex-col gap-3"
-    }>
+    <div
+      className={
+        viewMode === "grid"
+          ? compact
+            ? "grid grid-cols-2 md:grid-cols-4 gap-3"
+            : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"
+          : "flex flex-col gap-3"
+      }
+    >
       {items.map((item) => (
-        <ItemCard key={item.id} item={item} layout={viewMode} onAddToCart={onAddToCart} onViewItem={onViewItem} />
+        <ItemCard
+          key={item.id}
+          item={item}
+          layout={viewMode}
+          onAddToCart={onAddToCart}
+          onViewItem={onViewItem}
+          compact={compact}
+        />
       ))}
     </div>
   );

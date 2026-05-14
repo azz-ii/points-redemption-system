@@ -1,8 +1,187 @@
+from collections import defaultdict
+from decimal import Decimal
+from types import SimpleNamespace
+
 from rest_framework import serializers
 from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog, ProcessingPhoto, RequestedForType
 from items_catalogue.models import Product
 from distributers.models import Distributor
 from customers.models import Customer
+
+
+def calculate_request_item_total(
+    product,
+    quantity,
+    extra_data=None,
+    *,
+    pricing_formula=None,
+    base_points=None,
+    points_multiplier=None,
+):
+    """Calculate the snapshot total for a request item."""
+    extra_data = extra_data or {}
+
+    try:
+        base_value = base_points if base_points is not None else product.points
+        base_points_per_item = int(float(base_value))
+    except (ValueError, TypeError):
+        base_points_per_item = 0
+
+    pricing_formula = pricing_formula if pricing_formula is not None else product.pricing_formula
+    if pricing_formula and pricing_formula != 'NONE':
+        from items_catalogue.formulas import FORMULA_REGISTRY
+
+        formula_func = FORMULA_REGISTRY.get(pricing_formula)
+        if not formula_func:
+            raise serializers.ValidationError(f"Formula '{pricing_formula}' is not registered.")
+
+        formula_product = SimpleNamespace(
+            points_multiplier=(
+                points_multiplier if points_multiplier is not None else product.points_multiplier
+            )
+        )
+        formula_total = formula_func(Decimal(str(base_points_per_item)), extra_data, formula_product)
+        return quantity * formula_total
+
+    return quantity * base_points_per_item
+
+
+def build_request_item_edit_plan(request_instance, items_data):
+    """Validate and normalize an editable replacement item payload."""
+    current_items = list(request_instance.items.select_related('product').all())
+    current_items_by_id = {item.id: item for item in current_items}
+    current_qty_by_product = defaultdict(int)
+    incoming_qty_by_product = defaultdict(int)
+    normalized_items = []
+    total_points = 0
+
+    for current_item in current_items:
+        current_qty_by_product[current_item.product_id] += current_item.quantity
+
+    for raw_item in items_data:
+        item_id = raw_item.get('item_id')
+        product_id = raw_item.get('product_id')
+
+        if item_id is not None:
+            current_item = current_items_by_id.pop(item_id, None)
+            if not current_item:
+                raise serializers.ValidationError({
+                    'items': f'Item {item_id} does not belong to this request'
+                })
+
+            if product_id is None:
+                product = current_item.product
+                product_id = product.id
+            else:
+                try:
+                    product = Product.objects.get(id=product_id)
+                except Product.DoesNotExist:
+                    raise serializers.ValidationError({
+                        'items': f'Product with id {product_id} does not exist'
+                    })
+
+            if current_item.product_id != product.id:
+                raise serializers.ValidationError({
+                    'items': f'Item {item_id} cannot change products during edit'
+                })
+        else:
+            if product_id is None:
+                raise serializers.ValidationError({
+                    'items': 'Each new item must include a product_id'
+                })
+            try:
+                product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                raise serializers.ValidationError({
+                    'items': f'Product with id {product_id} does not exist'
+                })
+            current_item = None
+
+        if product.is_archived:
+            raise serializers.ValidationError({
+                'items': f"Product '{product.item_name}' is archived and cannot be redeemed"
+            })
+
+        extra_data = raw_item.get('extra_data')
+        if extra_data is None and current_item is not None:
+            extra_data = current_item.extra_data or {}
+        extra_data = extra_data or {}
+
+        for extra_field in product.extra_fields.all():
+            if extra_field.is_required and extra_field.field_key not in extra_data:
+                raise serializers.ValidationError({
+                    'items': f"Missing required extra field '{extra_field.field_key}' for product '{product.item_name}'"
+                })
+
+        if 'quantity' not in raw_item:
+            raise serializers.ValidationError({
+                'items': 'Each item must have a quantity'
+            })
+
+        quantity = raw_item['quantity']
+        if quantity <= 0:
+            raise serializers.ValidationError({
+                'items': 'Quantity must be greater than 0'
+            })
+
+        pricing_formula = current_item.pricing_formula if current_item and current_item.pricing_formula else product.pricing_formula
+        base_points = current_item.points_per_item if current_item and current_item.points_per_item is not None else product.points
+        points_multiplier = (
+            current_item.points_multiplier
+            if current_item and current_item.points_multiplier is not None
+            else product.points_multiplier
+        )
+        item_total = calculate_request_item_total(
+            product,
+            quantity,
+            extra_data,
+            pricing_formula=pricing_formula,
+            base_points=base_points,
+            points_multiplier=points_multiplier,
+        )
+        total_points += item_total
+
+        current_quantity = current_item.quantity if current_item else 0
+        quantity_delta = quantity - current_quantity
+        incoming_qty_by_product[product.id] += quantity
+
+        normalized_items.append({
+            'item_id': item_id,
+            'product': product,
+            'product_id': product.id,
+            'quantity': quantity,
+            'extra_data': extra_data,
+            'pricing_formula': pricing_formula,
+            'points_per_item': int(float(base_points)) if base_points is not None else 0,
+            'points_multiplier': points_multiplier,
+            'item_total': item_total,
+            'current_item': current_item,
+            'quantity_delta': quantity_delta,
+        })
+
+    for product_id, incoming_quantity in incoming_qty_by_product.items():
+        current_quantity = current_qty_by_product.get(product_id, 0)
+        required_delta = max(0, incoming_quantity - current_quantity)
+        if not required_delta:
+            continue
+
+        product = next(item['product'] for item in normalized_items if item['product_id'] == product_id)
+        if product.has_stock and product.available_stock < required_delta:
+            raise serializers.ValidationError({
+                'insufficient_stock': [{
+                    'item_code': product.item_code,
+                    'item_name': product.item_name,
+                    'available': product.available_stock,
+                    'requested': required_delta,
+                }],
+                'message': 'Not enough available stock for the following items'
+            })
+
+    return {
+        'items': normalized_items,
+        'total_points': total_points,
+        'removed_items': list(current_items_by_id.values()),
+    }
 
 
 class ProcessingPhotoSerializer(serializers.ModelSerializer):
@@ -130,6 +309,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
     ar_number = serializers.CharField(read_only=True)
     ar_uploaded_by_name = serializers.SerializerMethodField()
     received_by_signature_method_display = serializers.SerializerMethodField()
+    is_editable = serializers.SerializerMethodField()
 
     class Meta:
         model = RedemptionRequest
@@ -159,6 +339,7 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'received_by_signature_method_display', 'received_by_name', 'received_by_date',
             # SVC fields
             'svc_date', 'svc_time', 'svc_driver',
+            'is_editable',
             'items',
             # Processing photos
             'processing_photos',
@@ -264,6 +445,9 @@ class RedemptionRequestSerializer(serializers.ModelSerializer):
             'PHOTO': 'Photo Upload'
         }
         return method_map.get(obj.received_by_signature_method, obj.received_by_signature_method)
+
+    def get_is_editable(self, obj):
+        return obj.can_be_edited()
 
     def get_marketing_processing_status(self, obj):
         """Get the handler processing status for this request"""
@@ -565,6 +749,101 @@ class CreateRedemptionRequestSerializer(serializers.Serializer):
                 })
         
         return redemption_request
+
+
+class UpdateRedemptionRequestSerializer(serializers.Serializer):
+    requested_for = serializers.PrimaryKeyRelatedField(
+        queryset=Distributor.objects.filter(is_archived=False),
+        required=False,
+        allow_null=True
+    )
+    requested_for_customer = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.filter(is_archived=False),
+        required=False,
+        allow_null=True
+    )
+    requested_for_type = serializers.ChoiceField(
+        choices=['DISTRIBUTOR', 'CUSTOMER'],
+        required=False
+    )
+    points_deducted_from = serializers.ChoiceField(
+        choices=['SELF', 'DISTRIBUTOR'],
+        required=False
+    )
+    remarks = serializers.CharField(required=False, allow_blank=True)
+    items = serializers.ListField(
+        child=serializers.DictField(),
+        min_length=1,
+        required=False
+    )
+    svc_date = serializers.DateField(required=False, allow_null=True)
+    svc_time = serializers.TimeField(required=False, allow_null=True)
+    svc_driver = serializers.ChoiceField(
+        choices=['WITH_DRIVER', 'WITHOUT_DRIVER'],
+        required=False,
+        allow_null=True
+    )
+    plate_number = serializers.CharField(max_length=20, required=False, allow_blank=True, allow_null=True)
+    driver_name = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
+
+    def validate(self, data):
+        instance = self.instance
+        if not instance:
+            raise serializers.ValidationError({'detail': 'Request instance is required for editing'})
+
+        if not instance.can_be_edited():
+            raise serializers.ValidationError({'detail': 'This request can no longer be edited'})
+
+        requested_for_type = data.get('requested_for_type', instance.requested_for_type)
+        requested_for = data.get('requested_for', instance.requested_for)
+        requested_for_customer = data.get('requested_for_customer', instance.requested_for_customer)
+        points_deducted_from = data.get('points_deducted_from', instance.points_deducted_from)
+
+        user = self.context['request'].user
+        profile = getattr(user, 'profile', None)
+
+        if instance.requested_by_id != user.id:
+            raise serializers.ValidationError({'detail': 'You can only edit your own request'})
+
+        if requested_for_type == 'DISTRIBUTOR':
+            if profile and profile.position == 'Approver' and not profile.can_self_request:
+                raise serializers.ValidationError({
+                    'requested_for_type': 'You are not authorized to create distributor requests.'
+                })
+            if not requested_for:
+                raise serializers.ValidationError({
+                    'requested_for': 'Distributor is required when requested_for_type is DISTRIBUTOR'
+                })
+            if requested_for.is_archived:
+                raise serializers.ValidationError({
+                    'requested_for': 'Cannot create request for archived distributor'
+                })
+            data['requested_for_customer'] = None
+        elif requested_for_type == 'CUSTOMER':
+            if profile and profile.position == 'Approver' and not profile.can_self_request:
+                raise serializers.ValidationError({
+                    'requested_for_type': 'You are not authorized to create customer requests.'
+                })
+            if not requested_for_customer:
+                raise serializers.ValidationError({
+                    'requested_for_customer': 'Customer is required when requested_for_type is CUSTOMER'
+                })
+            if requested_for_customer.is_archived:
+                raise serializers.ValidationError({
+                    'requested_for_customer': 'Cannot create request for archived customer'
+                })
+            data['requested_for'] = None
+
+        if points_deducted_from == 'DISTRIBUTOR' and requested_for_type != 'DISTRIBUTOR':
+            raise serializers.ValidationError({
+                'points_deducted_from': 'Cannot deduct from distributor when request is for a customer'
+            })
+
+        items = data.get('items')
+        if items is not None:
+            build_request_item_edit_plan(instance, items)
+
+        return data
 
 
 class PartialFulfillmentItemSerializer(serializers.Serializer):

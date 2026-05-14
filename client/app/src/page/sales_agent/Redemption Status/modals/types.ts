@@ -23,7 +23,9 @@ export interface RedemptionRequestItem {
   quantity: number;
   points_per_item: number;
   total_points: number;
+  points_multiplier?: number | null;
   extra_data?: Record<string, any> | null;
+  pricing_formula?: string | null;
 }
 
 export interface RedemptionRequest {
@@ -92,6 +94,11 @@ export interface RedemptionRequest {
   received_by_signature_method_display?: string | null;
   received_by_name?: string | null;
   received_by_date?: string | null;
+  svc_date?: string | null;
+  svc_time?: string | null;
+  svc_driver?: string | null;
+  plate_number?: string | null;
+  driver_name?: string | null;
   // Processing photos
   processing_photos?: Array<{
     id: number;
@@ -101,6 +108,7 @@ export interface RedemptionRequest {
     uploaded_at: string;
     caption: string | null;
   }>;
+  is_editable?: boolean;
 }
 
 export interface ViewRedemptionStatusModalProps extends ModalBaseProps {
@@ -127,4 +135,25 @@ export interface BulkWithdrawModalProps {
   onConfirm: (reason: string) => Promise<void>;
   requests: RedemptionRequest[];
   isSubmitting: boolean;
+}
+
+export interface EditRedemptionRequestItem {
+  item_id?: number;
+  product_id: number;
+  quantity: number;
+  extra_data?: Record<string, any>;
+}
+
+export interface UpdateRedemptionRequestData {
+  requested_for?: number | null;
+  requested_for_customer?: number | null;
+  requested_for_type?: "DISTRIBUTOR" | "CUSTOMER" | "SELF";
+  points_deducted_from?: "SELF" | "DISTRIBUTOR";
+  remarks?: string;
+  items?: EditRedemptionRequestItem[];
+  svc_date?: string | null;
+  svc_time?: string | null;
+  svc_driver?: "WITH_DRIVER" | "WITHOUT_DRIVER" | null;
+  plate_number?: string | null;
+  driver_name?: string | null;
 }

@@ -9,7 +9,6 @@ def create_default_team(apps, schema_editor):
     TeamMembership = apps.get_model('teams', 'TeamMembership')
     User = apps.get_model('auth', 'User')
     UserProfile = apps.get_model('users', 'UserProfile')
-    Distributor = apps.get_model('distributers', 'Distributor')
     
     # Find first approver
     approver_profile = UserProfile.objects.filter(position='Approver').first()
@@ -35,11 +34,6 @@ def create_default_team(apps, schema_editor):
         member_count += 1
     
     print(f"✓ Assigned {member_count} Sales Agents to {default_team.name}")
-    
-    # Assign all distributors without team to default team
-    distributor_count = Distributor.objects.filter(team__isnull=True).update(team=default_team)
-    
-    print(f"✓ Assigned {distributor_count} distributors to {default_team.name}")
 
 
 def reverse_default_team(apps, schema_editor):
@@ -58,7 +52,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('teams', '0001_initial'),
-        ('distributers', '0004_distributor_team'),
         ('users', '0007_alter_userprofile_position'),  # Adjust if needed
     ]
 

@@ -368,17 +368,23 @@ class RedemptionRequest(models.Model):
         
         self.save()
     
-    def deduct_points(self):
+    def deduct_points(self, amount=None):
         """
         Deduct points from the appropriate account (agent or distributor).
         Raises ValueError if insufficient points.
         Should be called within a transaction.
         """
+        points_to_deduct = self.total_points if amount is None else amount
+
         # Check if sufficient points are available
         if self.points_deducted_from == 'SELF':
             user_profile = self.requested_by.profile
             previous_points = user_profile.points
-            user_profile.points -= self.total_points
+            if user_profile.points < points_to_deduct:
+                raise ValueError(
+                    f'Insufficient points: Agent has {user_profile.points} points but needs {points_to_deduct} points'
+                )
+            user_profile.points -= points_to_deduct
             user_profile.save()
             log_points_change(
                 entity_type='USER',
@@ -395,12 +401,12 @@ class RedemptionRequest(models.Model):
             distributor = self.requested_for
             if not distributor:
                 raise ValueError('No distributor assigned to this request')
-            if distributor.points < self.total_points:
+            if distributor.points < points_to_deduct:
                 raise ValueError(
-                    f'Insufficient points: Distributor has {distributor.points} points but needs {self.total_points} points'
+                    f'Insufficient points: Distributor has {distributor.points} points but needs {points_to_deduct} points'
                 )
             previous_points = distributor.points
-            distributor.points -= self.total_points
+            distributor.points -= points_to_deduct
             distributor.save()
             log_points_change(
                 entity_type='DISTRIBUTOR',
@@ -411,6 +417,51 @@ class RedemptionRequest(models.Model):
                 action_type='REDEMPTION_DEDUCT',
                 changed_by=self.requested_by,
                 reason=f'Redemption request #{self.id}',
+            )
+        else:
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Unexpected points_deducted_from value: {self.points_deducted_from!r} on request #{self.id}')
+            raise ValueError(f'Invalid points_deducted_from: {self.points_deducted_from}')
+
+    def refund_points(self, changed_by=None, amount=None):
+        """
+        Refund points previously deducted for this request.
+        Should be called within a transaction.
+        """
+        points_to_refund = self.total_points if amount is None else amount
+        actor = changed_by or self.requested_by
+
+        if self.points_deducted_from == 'SELF':
+            user_profile = self.requested_by.profile
+            previous_points = user_profile.points
+            user_profile.points += points_to_refund
+            user_profile.save()
+            log_points_change(
+                entity_type='USER',
+                entity_id=user_profile.user_id,
+                entity_name=user_profile.full_name or self.requested_by.username,
+                previous_points=previous_points,
+                new_points=user_profile.points,
+                action_type='REDEMPTION_REFUND',
+                changed_by=actor,
+                reason=f'Edit of request #{self.id}',
+            )
+        elif self.points_deducted_from == 'DISTRIBUTOR':
+            distributor = self.requested_for
+            if not distributor:
+                raise ValueError('No distributor assigned to this request')
+            previous_points = distributor.points
+            distributor.points += points_to_refund
+            distributor.save()
+            log_points_change(
+                entity_type='DISTRIBUTOR',
+                entity_id=distributor.id,
+                entity_name=distributor.name,
+                previous_points=previous_points,
+                new_points=distributor.points,
+                action_type='REDEMPTION_REFUND',
+                changed_by=actor,
+                reason=f'Edit of request #{self.id}',
             )
         else:
             logger = logging.getLogger(__name__)
@@ -571,6 +622,20 @@ class RedemptionRequest(models.Model):
             'is_complete': processed == total if total > 0 else True,
             'users': list(user_status.values())
         }
+
+    def can_be_edited(self):
+        """Return True when the request is still in the safe editable window."""
+        if self.status in [RequestStatus.REJECTED, RequestStatus.WITHDRAWN]:
+            return False
+        if self.processing_status in [ProcessingStatus.PROCESSED, ProcessingStatus.CANCELLED, ProcessingStatus.PARTIALLY_PROCESSED]:
+            return False
+        if self.has_any_fulfillment_progress():
+            return False
+
+        if self.requires_sales_approval:
+            return self.status == RequestStatus.PENDING and self.sales_approval_status == ApprovalStatusChoice.PENDING
+
+        return self.status == RequestStatus.APPROVED and self.sales_approval_status == ApprovalStatusChoice.NOT_REQUIRED
 
     class Meta:
         verbose_name = "Redemption Request"

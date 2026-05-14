@@ -1,12 +1,18 @@
-export { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./ViewRedemptionStatusModal";
+export {
+  ViewRedemptionStatusModal,
+  WithdrawConfirmationModal,
+} from "./ViewRedemptionStatusModal";
 export { BulkWithdrawModal } from "./BulkWithdrawModal";
 export { AcknowledgementReceiptModal } from "./AcknowledgementReceiptModal";
-export type { 
+export { EditRedemptionRequestModal } from "./EditRedemptionRequestModal";
+export type {
   RedemptionRequest,
   RedemptionRequestItem,
   CatalogueItem,
-  ModalBaseProps, 
+  ModalBaseProps,
   ViewRedemptionStatusModalProps,
   WithdrawConfirmationModalProps,
-  BulkWithdrawModalProps
+  BulkWithdrawModalProps,
+  EditRedemptionRequestItem,
+  UpdateRedemptionRequestData,
 } from "./types";

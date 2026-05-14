@@ -74,8 +74,8 @@ export function RedemptionStatusMobileCards({
                     <h3 className="text-base font-semibold">{request.requested_for_name}</h3>
                   </div>
                   <StatusChip 
-                    status={request.status as any} 
-                    processingStatus={request.processing_status as any} 
+                    status={request.status} 
+                    processingStatus={request.processing_status} 
                   />
                 </div>
                 

@@ -11,8 +11,10 @@ from .models import RedemptionRequest, RedemptionRequestItem, ItemFulfillmentLog
 from .serializers import (
     RedemptionRequestSerializer, 
     CreateRedemptionRequestSerializer,
+    UpdateRedemptionRequestSerializer,
     RedemptionRequestItemSerializer,
     PartialFulfillmentSerializer,
+    build_request_item_edit_plan,
 )
 from utils.email_service import (
     send_request_approved_email, 
@@ -142,7 +144,152 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return CreateRedemptionRequestSerializer
+        if self.action in ['update', 'partial_update']:
+            return UpdateRedemptionRequestSerializer
         return RedemptionRequestSerializer
+
+    def _is_auto_approved_unprocessed(self, redemption_request):
+        return (
+            redemption_request.status == RequestStatus.APPROVED
+            and redemption_request.sales_approval_status == ApprovalStatusChoice.NOT_REQUIRED
+            and redemption_request.processing_status == ProcessingStatus.NOT_PROCESSED
+        )
+
+    def _apply_request_edit(self, redemption_request, validated_data, user):
+        original_total_points = redemption_request.total_points
+        was_auto_approved = self._is_auto_approved_unprocessed(redemption_request)
+        economic_change = validated_data.get('items') is not None
+
+        for field_name in ['requested_for', 'requested_for_customer', 'requested_for_type', 'points_deducted_from']:
+            if field_name in validated_data and getattr(redemption_request, field_name) != validated_data[field_name]:
+                economic_change = True
+
+        items_payload = validated_data.get('items')
+        item_plan = None
+        if items_payload is not None:
+            item_plan = build_request_item_edit_plan(redemption_request, items_payload)
+
+        if was_auto_approved and economic_change:
+            redemption_request.refund_points(changed_by=user, amount=original_total_points)
+
+        # Apply request header fields first so the new target/source is used for any new deduction.
+        for field_name in [
+            'requested_for', 'requested_for_customer', 'requested_for_type',
+            'points_deducted_from', 'remarks', 'svc_date', 'svc_time',
+            'svc_driver', 'plate_number', 'driver_name'
+        ]:
+            if field_name in validated_data:
+                value = validated_data[field_name]
+                if field_name == 'remarks':
+                    redemption_request.initial_remarks = value
+                else:
+                    setattr(redemption_request, field_name, value)
+
+        if item_plan is not None:
+            total_points = 0
+            for planned_item in item_plan['items']:
+                current_item = planned_item['current_item']
+                product = planned_item['product']
+                quantity = planned_item['quantity']
+                extra_data = planned_item['extra_data']
+                item_total = planned_item['item_total']
+
+                if current_item:
+                    quantity_delta = planned_item['quantity_delta']
+                    if quantity_delta > 0:
+                        product.commit_stock(quantity_delta)
+                    elif quantity_delta < 0:
+                        product.uncommit_stock(abs(quantity_delta))
+
+                    current_item.quantity = quantity
+                    current_item.extra_data = extra_data
+                    current_item.points_per_item = planned_item['points_per_item']
+                    current_item.total_points = item_total
+                    current_item.points_multiplier = planned_item['points_multiplier']
+                    current_item.pricing_formula = planned_item['pricing_formula']
+                    current_item.save()
+                else:
+                    product.commit_stock(quantity)
+                    RedemptionRequestItem.objects.create(
+                        request=redemption_request,
+                        product=product,
+                        quantity=quantity,
+                        points_per_item=planned_item['points_per_item'],
+                        total_points=item_total,
+                        points_multiplier=planned_item['points_multiplier'],
+                        extra_data=extra_data,
+                        pricing_formula=planned_item['pricing_formula'],
+                    )
+
+                total_points += item_total
+
+            for removed_item in item_plan['removed_items']:
+                removed_item.product.uncommit_stock(removed_item.quantity)
+                removed_item.delete()
+
+            redemption_request.total_points = total_points
+            redemption_request.requires_sales_approval = any(
+                item['product'].requires_sales_approval for item in item_plan['items']
+            )
+
+        if redemption_request.requires_sales_approval:
+            redemption_request.sales_approval_status = ApprovalStatusChoice.PENDING
+            redemption_request.status = RequestStatus.PENDING
+            redemption_request.reviewed_by = None
+            redemption_request.date_reviewed = None
+            redemption_request.sales_approved_by = None
+            redemption_request.sales_approval_date = None
+        else:
+            redemption_request.sales_approval_status = ApprovalStatusChoice.NOT_REQUIRED
+            redemption_request.status = RequestStatus.APPROVED
+            redemption_request.reviewed_by = None
+            redemption_request.date_reviewed = None
+            redemption_request.sales_approved_by = None
+            redemption_request.sales_approval_date = None
+
+            if economic_change:
+                redemption_request.deduct_points(amount=redemption_request.total_points)
+
+        redemption_request.save()
+
+        return redemption_request
+
+    def update(self, request, *args, **kwargs):
+        """Edit a request while it is still within the safe editable window."""
+        redemption_request = self.get_object()
+        serializer = self.get_serializer(instance=redemption_request, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            with transaction.atomic():
+                redemption_request = RedemptionRequest.objects.select_for_update().get(pk=redemption_request.pk)
+                user = request.user
+                if redemption_request.requested_by_id != user.id:
+                    return Response(
+                        {'error': 'Permission denied: You can only edit your own request'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                if not redemption_request.can_be_edited():
+                    return Response(
+                        {'error': 'This request can no longer be edited'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                redemption_request = self._apply_request_edit(redemption_request, serializer.validated_data, user)
+        except Exception as e:
+            logger.error(f"Failed to update request #{redemption_request.id}: {str(e)}")
+            return Response(
+                {'error': 'Failed to update request', 'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        response_serializer = RedemptionRequestSerializer(redemption_request, context={'request': request})
+        publish_sse_event('request_updated', {
+            'request_id': redemption_request.id,
+        }, target_users=[redemption_request.requested_by_id])
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         """Create a new redemption request and notify team approver"""

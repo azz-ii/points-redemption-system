@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query-keys';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import {
   redemptionRequestsApi,
   type CreateRedemptionRequestData,
-} from '@/lib/api';
+  type UpdateRedemptionRequestData,
+} from "@/lib/api";
 
 export function useCreateRequest() {
   const qc = useQueryClient();
@@ -35,8 +36,15 @@ export function useApproveRequest() {
 export function useRejectRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, reason, remarks }: { id: number; reason: string; remarks?: string }) =>
-      redemptionRequestsApi.rejectRequest(id, reason, remarks),
+    mutationFn: ({
+      id,
+      reason,
+      remarks,
+    }: {
+      id: number;
+      reason: string;
+      remarks?: string;
+    }) => redemptionRequestsApi.rejectRequest(id, reason, remarks),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.requests.all });
       qc.invalidateQueries({ queryKey: queryKeys.dashboard.approver });
@@ -69,22 +77,49 @@ export function useCancelRequest() {
   });
 }
 
+export function useEditRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: UpdateRedemptionRequestData;
+    }) => redemptionRequestsApi.updateRequest(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.requests.all });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.agent });
+      qc.invalidateQueries({ queryKey: queryKeys.dashboard.approver });
+      qc.invalidateQueries({ queryKey: queryKeys.currentUser });
+    },
+  });
+}
+
 export function useWithdrawRequest() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, reason, remarks }: { id: number; reason: string; remarks?: string }) => {
+    mutationFn: async ({
+      id,
+      reason,
+      remarks,
+    }: {
+      id: number;
+      reason: string;
+      remarks?: string;
+    }) => {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:8000'}/api/redemption-requests/${id}/withdraw_request/`,
+        `${import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : "http://localhost:8000"}/api/redemption-requests/${id}/withdraw_request/`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ withdrawal_reason: reason, remarks }),
         },
       );
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to withdraw request');
+        throw new Error(err.error || "Failed to withdraw request");
       }
       return response.json();
     },
