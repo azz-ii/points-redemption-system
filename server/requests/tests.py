@@ -343,7 +343,6 @@ class MediaServingTests(TestCase):
         except Exception:
             pass
 
-    def test_media_url_serves_pdf(self):
     @override_settings(DEBUG=True)
     def test_media_url_serves_pdf(self):
         url = f'/media/{self.rel_dir.replace('\\', '/')}/{self.filename}'
