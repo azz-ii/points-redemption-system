@@ -24,10 +24,13 @@ from .analytics import (
     TeamAnalyticsView,
 )
 
+from .views import media_file_view
+
 router = DefaultRouter()
 router.register(r'redemption-requests', RedemptionRequestViewSet, basename='redemption-request')
 
 urlpatterns = [
+    path('media/<path:path>/', media_file_view, name='media-file'),
     path('redemption-requests/history/', ProcessedRequestHistoryView.as_view(), name='processed-request-history'),
     path('redemption-requests/handler-history/', HandlerHistoryView.as_view(), name='handler-history'),
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),

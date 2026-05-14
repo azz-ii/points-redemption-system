@@ -31,6 +31,12 @@ from customers.models import Customer
 from points_audit.utils import log_points_change, bulk_log_points_changes, generate_batch_id
 from points_audit.models import PointsAuditLog
 
+from django.conf import settings
+from django.http import FileResponse, Http404
+import mimetypes
+import os
+
+
 # Configure logger for request operations
 logger = logging.getLogger('email')
 
@@ -74,6 +80,33 @@ def _build_base_queryset():
             )
         ),
     )
+
+
+def media_file_view(request, path):
+    """Serve a file from MEDIA_ROOT at /api/media/<path>.
+
+    This endpoint is a minimal fallback when IIS isn't serving /media
+    correctly (deployed behind IIS with missing virtual directory).
+    It requires the request to be authenticated via session cookie.
+    """
+    # Lazy import for auth decorator to avoid circular imports
+    from django.contrib.auth.decorators import login_required
+
+    @login_required
+    def _inner(request, path):
+        # Normalize and secure path
+        safe_path = os.path.normpath(path).lstrip("\\/")
+        full_path = os.path.join(settings.MEDIA_ROOT, safe_path)
+        if not os.path.exists(full_path) or not os.path.isfile(full_path):
+            raise Http404("Media file not found")
+
+        mime_type, _ = mimetypes.guess_type(full_path)
+        response = FileResponse(open(full_path, 'rb'), content_type=mime_type or 'application/octet-stream')
+        # Let browser display inline (PDFs) rather than force download
+        response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(full_path)
+        return response
+
+    return _inner(request, path)
 
 
 class RedemptionRequestViewSet(viewsets.ModelViewSet):
