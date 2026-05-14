@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase, Client
+from django.test import override_settings
 from django.urls import reverse
 
 from customers.models import Customer
@@ -342,6 +343,8 @@ class MediaServingTests(TestCase):
         except Exception:
             pass
 
+    def test_media_url_serves_pdf(self):
+    @override_settings(DEBUG=True)
     def test_media_url_serves_pdf(self):
         url = f'/media/{self.rel_dir.replace('\\', '/')}/{self.filename}'
         response = self.client.get(url)
