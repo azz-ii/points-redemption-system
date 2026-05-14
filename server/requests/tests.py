@@ -10,7 +10,13 @@ from distributers.models import Distributor
 from items_catalogue.models import Product
 from teams.models import Team, TeamMembership
 from users.models import UserProfile
-from .models import RedemptionRequest, RedemptionRequestItem
+from .models import (
+    AcknowledgementReceiptStatus,
+    ProcessingStatus,
+    RedemptionRequest,
+    RedemptionRequestItem,
+    RequestedForType,
+)
 
 
 class RedemptionRequestEditTests(TestCase):
@@ -206,3 +212,102 @@ class RedemptionRequestEditTests(TestCase):
         self.assertIn('detail', response.json())
         request_obj.refresh_from_db()
         self.assertEqual(request_obj.processing_status, 'PROCESSED')
+
+
+class RedemptionRequestArNumberTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.agent = self._create_user('agent', 'Sales Agent', points=100)
+        self.customer = Customer.objects.create(
+            name='Customer A',
+            brand='Brand A',
+            sales_channel='Retail',
+        )
+
+    def _create_user(self, username, position, points=100, can_self_request=False):
+        user = User.objects.create_user(username=username, password='password123')
+        UserProfile.objects.create(
+            user=user,
+            position=position,
+            email=f'{username}@example.com',
+            full_name=username.title(),
+            points=points,
+            can_self_request=can_self_request,
+        )
+        return user
+
+    def _create_product(self, code, name, points):
+        return Product.objects.create(
+            item_code=code,
+            item_name=name,
+            legend='Giveaway',
+            category='General',
+            points=points,
+            price=points,
+            pricing_formula='NONE',
+            has_stock=True,
+            stock=20,
+            committed_stock=0,
+            requires_sales_approval=False,
+        )
+
+    def _create_processed_customer_request(self):
+        product = self._create_product('AR-1', 'AR Product', 10)
+        redemption_request = RedemptionRequest.objects.create(
+            requested_by=self.agent,
+            requested_for_type=RequestedForType.CUSTOMER,
+            requested_for_customer=self.customer,
+            points_deducted_from='SELF',
+            total_points=10,
+            status='APPROVED',
+            processing_status=ProcessingStatus.PROCESSED,
+            ar_status=AcknowledgementReceiptStatus.PENDING,
+            requires_sales_approval=False,
+            sales_approval_status='NOT_REQUIRED',
+        )
+        RedemptionRequestItem.objects.create(
+            request=redemption_request,
+            product=product,
+            quantity=1,
+            points_per_item=10,
+            total_points=10,
+        )
+        return redemption_request
+
+    def test_sales_agent_can_reserve_ar_number_once(self):
+        request_obj = self._create_processed_customer_request()
+        self.client.force_login(self.agent)
+
+        response = self.client.post(
+            f'/api/redemption-requests/{request_obj.id}/reserve_ar_number/',
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200, response.content.decode())
+        expected_ar_number = f'PRS-{request_obj.id:04d}'
+        self.assertEqual(response.json()['ar_number'], expected_ar_number)
+
+        request_obj.refresh_from_db()
+        self.assertEqual(request_obj.ar_number, expected_ar_number)
+
+        repeat_response = self.client.post(
+            f'/api/redemption-requests/{request_obj.id}/reserve_ar_number/',
+            content_type='application/json',
+        )
+
+        self.assertEqual(repeat_response.status_code, 200, repeat_response.content.decode())
+        self.assertEqual(repeat_response.json()['ar_number'], expected_ar_number)
+
+    def test_reserve_ar_number_rejects_unprocessed_request(self):
+        request_obj = self._create_processed_customer_request()
+        request_obj.processing_status = ProcessingStatus.NOT_PROCESSED
+        request_obj.save(update_fields=['processing_status'])
+
+        self.client.force_login(self.agent)
+        response = self.client.post(
+            f'/api/redemption-requests/{request_obj.id}/reserve_ar_number/',
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 400, response.content.decode())
+        self.assertIn('error', response.json())

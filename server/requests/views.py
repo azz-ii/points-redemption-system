@@ -1209,6 +1209,43 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
             'items': RedemptionRequestItemSerializer(my_items, many=True).data,
         })
 
+    @action(detail=True, methods=['post'], url_path='reserve_ar_number')
+    def reserve_ar_number(self, request, pk=None):
+        """Reserve the acknowledgement receipt number before PDF generation."""
+        redemption_request = self.get_object()
+        user = request.user
+
+        if redemption_request.requested_by != user:
+            return Response(
+                {'error': 'Permission denied: Only the requesting sales agent can reserve the AR number'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if redemption_request.requested_for_type != RequestedForType.CUSTOMER:
+            return Response(
+                {'error': 'Only customer requests can reserve an acknowledgement receipt number'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if redemption_request.processing_status != ProcessingStatus.PROCESSED:
+            return Response(
+                {'error': 'Only processed requests can reserve an acknowledgement receipt number'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if redemption_request.ar_status != AcknowledgementReceiptStatus.PENDING:
+            return Response(
+                {'error': 'This request does not require an acknowledgement receipt number'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not redemption_request.ar_number:
+            redemption_request.ar_number = f'PRS-{redemption_request.id:04d}'
+            redemption_request.save(update_fields=['ar_number'])
+
+        serializer = self.get_serializer(redemption_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], url_path='upload_acknowledgement_receipt')
     def upload_acknowledgement_receipt(self, request, pk=None):
         """Upload an acknowledgement receipt photo and customer signature for a customer request."""
