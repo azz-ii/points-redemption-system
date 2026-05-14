@@ -23,6 +23,8 @@ admin.site.site_title = 'OPC Admin'
 admin.site.index_title = 'Site Administration'
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import re_path
+from django.views.static import serve
 from views import (
     LoginView,
     LogoutView,
@@ -86,3 +88,9 @@ if settings.DEBUG:
 # Always serve media files — images must be available regardless of DEBUG mode.
 # In production IIS serves them directly, but this keeps Django as a fallback.
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Fallback: ensure Django can serve media files even when DEBUG was False
+# at import time (useful for tests or when IIS virtual dir isn't configured).
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
