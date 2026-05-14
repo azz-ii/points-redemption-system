@@ -311,3 +311,40 @@ class RedemptionRequestArNumberTests(TestCase):
 
         self.assertEqual(response.status_code, 400, response.content.decode())
         self.assertIn('error', response.json())
+
+
+class MediaServingTests(TestCase):
+    """Integration test to verify Django serves files under MEDIA_URL."""
+
+    def setUp(self):
+        from django.conf import settings
+        import os
+
+        self.client = Client()
+        self.settings = settings
+        # create a predictable media path and file
+        self.rel_dir = os.path.join('acknowledgement_receipts', '2026', '05')
+        self.filename = 'AR-PRS-0317-test_customer.pdf'
+        self.full_dir = os.path.join(self.settings.MEDIA_ROOT, self.rel_dir)
+        os.makedirs(self.full_dir, exist_ok=True)
+        self.full_path = os.path.join(self.full_dir, self.filename)
+        # write a small PDF-like header so mimetype is detected
+        with open(self.full_path, 'wb') as f:
+            f.write(b'%PDF-1.4\n%Test PDF content')
+
+    def tearDown(self):
+        import shutil
+        import os
+
+        # remove the file and directories we created
+        try:
+            shutil.rmtree(os.path.join(self.settings.MEDIA_ROOT, 'acknowledgement_receipts'))
+        except Exception:
+            pass
+
+    def test_media_url_serves_pdf(self):
+        url = f'/media/{self.rel_dir.replace('\\', '/')}/{self.filename}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200, f'GET {url} returned {response.status_code}')
+        content_type = response.get('Content-Type', '')
+        self.assertTrue(content_type.startswith('application/pdf'))
