@@ -32,7 +32,7 @@ from points_audit.utils import log_points_change, bulk_log_points_changes, gener
 from points_audit.models import PointsAuditLog
 
 from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
 import mimetypes
 import os
 
@@ -98,13 +98,31 @@ def media_file_view(request, path):
         safe_path = os.path.normpath(path).lstrip("\\/")
         full_path = os.path.join(settings.MEDIA_ROOT, safe_path)
         if not os.path.exists(full_path) or not os.path.isfile(full_path):
-            raise Http404("Media file not found")
+            # Return JSON 404 + diagnostic info for debugging
+            return JsonResponse(
+                {
+                    'error': 'Media file not found',
+                    'path': safe_path,
+                    'detail': 'The requested acknowledgement receipt file does not exist. It may have been deleted or never uploaded successfully.'
+                },
+                status=404
+            )
 
-        mime_type, _ = mimetypes.guess_type(full_path)
-        response = FileResponse(open(full_path, 'rb'), content_type=mime_type or 'application/octet-stream')
-        # Let browser display inline (PDFs) rather than force download
-        response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(full_path)
-        return response
+        try:
+            mime_type, _ = mimetypes.guess_type(full_path)
+            response = FileResponse(open(full_path, 'rb'), content_type=mime_type or 'application/octet-stream')
+            # Let browser display inline (PDFs) rather than force download
+            response['Content-Disposition'] = 'inline; filename="%s"' % os.path.basename(full_path)
+            return response
+        except (OSError, IOError) as e:
+            logger.error(f"Error serving media file {full_path}: {str(e)}")
+            return JsonResponse(
+                {
+                    'error': 'Unable to serve media file',
+                    'detail': 'An error occurred while trying to read the file.'
+                },
+                status=500
+            )
 
     return _inner(request, path)
 
@@ -1358,17 +1376,44 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         if sig_file and redemption_request.received_by_signature:
             redemption_request.received_by_signature.delete(save=False)
 
-        redemption_request.acknowledgement_receipt = ar_file
-        if sig_file:
-            redemption_request.received_by_signature = sig_file
-            redemption_request.received_by_signature_method = signature_method
-        if received_by_name:
-            redemption_request.received_by_name = received_by_name
-        redemption_request.received_by_date = timezone.now()
-        redemption_request.ar_status = AcknowledgementReceiptStatus.UPLOADED
-        redemption_request.ar_uploaded_by = user
-        redemption_request.ar_uploaded_at = timezone.now()
-        redemption_request.save()
+        # Save files and verify they were actually written to disk before marking as UPLOADED
+        try:
+            # Assign files for saving
+            redemption_request.acknowledgement_receipt = ar_file
+            if sig_file:
+                redemption_request.received_by_signature = sig_file
+                redemption_request.received_by_signature_method = signature_method
+            if received_by_name:
+                redemption_request.received_by_name = received_by_name
+            redemption_request.received_by_date = timezone.now()
+            redemption_request.ar_status = AcknowledgementReceiptStatus.UPLOADED
+            redemption_request.ar_uploaded_by = user
+            redemption_request.ar_uploaded_at = timezone.now()
+            
+            # Save to database
+            redemption_request.save()
+            
+            # Verify files were actually saved to disk
+            if redemption_request.acknowledgement_receipt:
+                saved_ar_path = redemption_request.acknowledgement_receipt.path
+                if not os.path.exists(saved_ar_path):
+                    # File save failed but DB record exists - rollback
+                    redemption_request.ar_status = AcknowledgementReceiptStatus.PENDING
+                    redemption_request.ar_uploaded_by = None
+                    redemption_request.ar_uploaded_at = None
+                    redemption_request.acknowledgement_receipt = None
+                    redemption_request.save()
+                    logger.error(f"AR file save failed for request {pk}: file not found at {saved_ar_path}")
+                    return Response(
+                        {'error': 'File upload failed: file was not saved to disk. Please try again.'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+        except Exception as e:
+            logger.error(f"AR upload error for request {pk}: {str(e)}")
+            return Response(
+                {'error': f'Upload failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         logger.info(f"AR with signature uploaded for request #{redemption_request.id} by {user.username}. Signature method: {signature_method}")
 
