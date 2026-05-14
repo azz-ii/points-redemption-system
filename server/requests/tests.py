@@ -345,8 +345,17 @@ class MediaServingTests(TestCase):
 
     @override_settings(DEBUG=True)
     def test_media_url_serves_pdf(self):
+        import os
+        # Verify the file was created where expected
+        print('MEDIA_ROOT:', self.settings.MEDIA_ROOT)
+        print('expected file path:', self.full_path)
+        exists = os.path.exists(self.full_path)
+        print('file exists:', exists)
+        self.assertTrue(exists, f'Expected media file at {self.full_path} but it does not exist')
+
         url = f'/media/{self.rel_dir.replace('\\', '/')}/{self.filename}'
         response = self.client.get(url)
+        print('GET', url, '->', response.status_code)
         self.assertEqual(response.status_code, 200, f'GET {url} returned {response.status_code}')
         content_type = response.get('Content-Type', '')
         self.assertTrue(content_type.startswith('application/pdf'))
