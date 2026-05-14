@@ -152,8 +152,8 @@ return (
               {item.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
                 <a
                   href={normalizeMediaUrl(item.acknowledgement_receipt)}
-                  target="_blank"
                   rel="noopener noreferrer"
+                  download={item.acknowledgement_receipt.split('/').pop() || `AR-${item.ar_number || item.id}.pdf`}
                   className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
                 >
                   <FileText className="w-5 h-5 text-primary" />

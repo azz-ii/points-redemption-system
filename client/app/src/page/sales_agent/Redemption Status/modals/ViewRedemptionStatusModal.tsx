@@ -479,8 +479,8 @@ export function ViewRedemptionStatusModal({
                       href={normalizeMediaUrl(
                         displayRequest.acknowledgement_receipt,
                       )}
-                      target="_blank"
                       rel="noopener noreferrer"
+                      download={displayRequest.acknowledgement_receipt.split('/').pop() || `AR-${displayRequest.ar_number || displayRequest.id}.pdf`}
                       className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
                     >
                       <FileText className="w-5 h-5 text-primary" />
