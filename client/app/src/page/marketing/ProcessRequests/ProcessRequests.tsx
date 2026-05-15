@@ -37,7 +37,7 @@ function ProcessRequests() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
 
-  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerRequests(30_000);
+  const { data: requests = [], dataUpdatedAt, isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerRequests(30_000);
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load requests") : null;
 
   const markItemsMutation = useMarkItemsProcessed();
@@ -74,6 +74,15 @@ function ProcessRequests() {
       request: request,
     }))
   ), [requests]);
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   // Mobile filtering and pagination
   const pageSize = 7;
@@ -179,6 +188,15 @@ function ProcessRequests() {
           <p className="text-xs text-muted-foreground">
             View and process approved redemption requests for your assigned items
           </p>
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Mobile Search Bar */}
@@ -239,6 +257,15 @@ function ProcessRequests() {
           <p className="text-sm text-muted-foreground">
             View and process approved redemption requests for your assigned items
           </p>
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 min-h-0">

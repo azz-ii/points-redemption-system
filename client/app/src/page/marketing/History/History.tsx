@@ -20,7 +20,7 @@ export default function MarketingHistory() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
 
-  const { data: requests = [], isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerHistory(30_000);
+  const { data: requests = [], dataUpdatedAt, isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerHistory(30_000);
   const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load history") : null;
 
   const handleManualRefresh = useCallback(() => {
@@ -56,6 +56,15 @@ export default function MarketingHistory() {
     };
   }, [requests, searchQuery, currentPage, pageSize]);
 
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
+
   return (
     <>
       {/* Mobile Layout */}
@@ -66,6 +75,15 @@ export default function MarketingHistory() {
           <p className="text-xs text-muted-foreground">
             View your processed redemption requests
           </p>
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Mobile Search Bar */}
@@ -124,6 +142,15 @@ export default function MarketingHistory() {
           <p className="text-sm text-muted-foreground">
             View your processed redemption requests
           </p>
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 min-h-0">

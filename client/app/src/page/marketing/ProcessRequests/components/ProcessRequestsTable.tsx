@@ -67,6 +67,7 @@ export function ProcessRequestsTable({
         showSearch={true}
         showPagination={true}
         showColumnVisibility={true}
+        preservePageOnDataRefresh={true}
         pageSize={15}
         initialSorting={[{ id: "date_requested", desc: true }]}
         loadingMessage="Loading items..."

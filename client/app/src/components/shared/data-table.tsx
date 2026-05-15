@@ -97,6 +97,7 @@ interface DataTableProps<TData, TValue> {
   currentPage?: number
   onPageChange?: (pageIndex: number) => void
   onSearch?: (query: string) => void
+  preservePageOnDataRefresh?: boolean
 
   // Page size selection
   pageSizeOptions?: number[]
@@ -152,6 +153,7 @@ export function DataTable<TData, TValue>({
   currentPage,
   onPageChange,
   onSearch,
+  preservePageOnDataRefresh = false,
   pageSizeOptions = [15, 50, 100],
   onPageSizeChange,
   fillHeight = false,
@@ -161,6 +163,9 @@ export function DataTable<TData, TValue>({
   const handleSortingChange = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
     const newSorting = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
     setInternalSorting(newSorting)
+    if (preservePageOnDataRefresh) {
+      table.setPageIndex(0)
+    }
     if (externalOnSortingChange) {
       externalOnSortingChange(newSorting)
     }
@@ -207,6 +212,7 @@ export function DataTable<TData, TValue>({
     manualSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    autoResetPageIndex: !preservePageOnDataRefresh,
     ...(manualPagination
       ? {
           manualPagination: true,
@@ -234,6 +240,20 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  React.useEffect(() => {
+    if (!preservePageOnDataRefresh) return
+
+    const pageCountValue = table.getPageCount()
+    if (pageCountValue <= 0) return
+
+    const pageIndex = table.getState().pagination.pageIndex
+    const lastPageIndex = Math.max(0, pageCountValue - 1)
+
+    if (pageIndex > lastPageIndex) {
+      table.setPageIndex(lastPageIndex)
+    }
+  }, [data, columnFilters, globalFilter, preservePageOnDataRefresh, sorting, table])
+
   const selectedRows = enableRowSelection
     ? table.getFilteredSelectedRowModel().rows.map(row => row.original)
     : []
@@ -255,6 +275,9 @@ export function DataTable<TData, TValue>({
                     setSearchValue(event.target.value)
                   } else {
                     setGlobalFilter(event.target.value)
+                    if (preservePageOnDataRefresh) {
+                      table.setPageIndex(0)
+                    }
                   }
                 }}
                 className="max-w-sm"

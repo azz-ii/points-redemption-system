@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ function MarketingDashboard() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
 
-  const { data: requests = [], isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useHandlerRequests(5000);
+  const { data: requests = [], dataUpdatedAt, isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useHandlerRequests(5000);
   const { data: historyRequests = [], isLoading: historyLoading } = useHandlerHistory(10000);
 
   const loading = requestsLoading || historyLoading;
@@ -79,6 +79,15 @@ function MarketingDashboard() {
     0
   );
   const totalRequests = requests.length;
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   // Mobile pagination
   const pageSize = 7;
@@ -181,6 +190,15 @@ function MarketingDashboard() {
           <p className="text-xs text-muted-foreground">
             Manage points, track redemptions and process items
           </p>
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 5s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Mobile Stats Cards */}
@@ -267,6 +285,15 @@ function MarketingDashboard() {
             <p className="text-sm text-muted-foreground">
               Manage points, track redemptions and process items
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Auto-refreshes every 5s</span>
+              {lastUpdatedLabel && (
+                <span>
+                  • Updated {lastUpdatedLabel}
+                  {refreshing ? " · refreshing" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { Input } from "@/components/ui/input";
@@ -16,13 +16,22 @@ function ItemAssignments() {
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: assignedData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useAssignedItemsPage(
+  const { data: assignedData, dataUpdatedAt, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useAssignedItemsPage(
     tablePage + 1, pageSize, searchQuery, 10000,
   );
   const items = assignedData?.results ?? [];
   const totalCount = assignedData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const error = queryError ? "Failed to load assigned items. Please try again." : null;
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   const handleManualRefresh = useCallback(() => {
     queryClient.resetQueries({ queryKey: queryKeys.catalogue.all });
@@ -61,6 +70,15 @@ function ItemAssignments() {
             <p className="text-sm text-muted-foreground">
               View items assigned to you for processing.
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Auto-refreshes every 10s</span>
+              {lastUpdatedLabel && (
+                <span>
+                  • Updated {lastUpdatedLabel}
+                  {refreshing ? " · refreshing" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -80,6 +98,7 @@ function ItemAssignments() {
             currentPage={tablePage}
             onPageChange={handlePageChange}
             onSearch={handleSearch}
+            preservePageOnDataRefresh
             pageSize={pageSize}
             pageSizeOptions={[15, 50, 100]}
             onPageSizeChange={handlePageSizeChange}
@@ -94,6 +113,15 @@ function ItemAssignments() {
         <p className="text-xs mb-4 text-muted-foreground">
           Items assigned to you for processing
         </p>
+        <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span>Auto-refreshes every 10s</span>
+          {lastUpdatedLabel && (
+            <span>
+              • Updated {lastUpdatedLabel}
+              {refreshing ? " · refreshing" : ""}
+            </span>
+          )}
+        </div>
 
         {/* Mobile Search */}
         <div className="mb-4">

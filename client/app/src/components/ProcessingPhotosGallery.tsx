@@ -1,4 +1,5 @@
-import { Camera } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Camera, X } from "lucide-react";
 
 export interface ProcessingPhotoData {
   id: number;
@@ -40,30 +41,6 @@ function normalizeMediaUrl(url: string): string {
   }
 }
 
-async function openMediaInNewTab(url: string) {
-  const tab = window.open("about:blank", "_blank", "noopener,noreferrer");
-  const response = await fetch(normalizeMediaUrl(url), {
-    credentials: "include",
-  });
-
-  if (!response.ok) {
-    if (tab) tab.close();
-    throw new Error("Failed to load image");
-  }
-
-  const blob = await response.blob();
-  const blobUrl = URL.createObjectURL(blob);
-
-  if (tab) {
-    tab.location.href = blobUrl;
-    tab.opener = null;
-  } else {
-    window.open(blobUrl, "_blank", "noopener,noreferrer");
-  }
-
-  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-}
-
 interface ProcessingPhotosGalleryProps {
   photos: ProcessingPhotoData[];
 }
@@ -71,6 +48,26 @@ interface ProcessingPhotosGalleryProps {
 export function ProcessingPhotosGallery({
   photos,
 }: ProcessingPhotosGalleryProps) {
+  const [selectedPhoto, setSelectedPhoto] = useState<ProcessingPhotoData | null>(null);
+
+  useEffect(() => {
+    if (!selectedPhoto) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedPhoto(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedPhoto]);
+
   if (!photos || photos.length === 0) return null;
 
   return (
@@ -86,7 +83,7 @@ export function ProcessingPhotosGallery({
             <div key={photo.id} className="space-y-1">
               <button
                 type="button"
-                onClick={() => openMediaInNewTab(photo.photo)}
+                onClick={() => setSelectedPhoto(photo)}
                 className="block border rounded-lg overflow-hidden border-border hover:ring-2 hover:ring-primary transition-all text-left"
               >
                 <img
@@ -113,6 +110,48 @@ export function ProcessingPhotosGallery({
           );
         })}
       </div>
+
+      {selectedPhoto && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm p-4 sm:p-6 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Processing photo preview"
+          onClick={() => setSelectedPhoto(null)}
+        >
+          <div
+            className="relative w-full max-w-6xl max-h-[92vh] rounded-2xl bg-card border border-border shadow-2xl overflow-hidden flex flex-col"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 p-4 sm:p-5 border-b border-border">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {selectedPhoto.caption || "Processing photo"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedPhoto.uploaded_by_name || "Unknown"} • {new Date(selectedPhoto.uploaded_at).toLocaleDateString()}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedPhoto(null)}
+                className="shrink-0 rounded-lg border border-border bg-background/70 p-2 hover:bg-accent transition-colors"
+                aria-label="Close preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 min-h-0 bg-black flex items-center justify-center p-4 sm:p-6">
+              <img
+                src={normalizeMediaUrl(selectedPhoto.photo)}
+                alt={selectedPhoto.caption || "Processing photo"}
+                className="max-h-[78vh] max-w-full object-contain select-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

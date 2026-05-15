@@ -46,6 +46,7 @@ export function HistoryTable({
       }}
       initialSorting={[{ id: "date_processed", desc: true }]}
       pageSize={15}
+      preservePageOnDataRefresh={true}
       loadingMessage="Loading history..."
       emptyMessage="No history records found"
       pageSizeOptions={[15, 50, 100]}

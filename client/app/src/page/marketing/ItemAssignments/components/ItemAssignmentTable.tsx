@@ -19,6 +19,7 @@ interface ItemAssignmentTableProps {
   pageSize?: number;
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
+  preservePageOnDataRefresh?: boolean;
   fillHeight?: boolean;
 }
 
@@ -39,6 +40,7 @@ export function ItemAssignmentTable({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  preservePageOnDataRefresh,
   fillHeight,
 }: ItemAssignmentTableProps) {
   const columns = createColumns({ onView });
@@ -62,6 +64,7 @@ export function ItemAssignmentTable({
       currentPage={currentPage}
       onPageChange={onPageChange}
       onSearch={onSearch}
+      preservePageOnDataRefresh={preservePageOnDataRefresh}
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
