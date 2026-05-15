@@ -40,6 +40,30 @@ function normalizeMediaUrl(url: string): string {
   }
 }
 
+async function openMediaInNewTab(url: string) {
+  const tab = window.open("about:blank", "_blank", "noopener,noreferrer");
+  const response = await fetch(normalizeMediaUrl(url), {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    if (tab) tab.close();
+    throw new Error("Failed to load image");
+  }
+
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+
+  if (tab) {
+    tab.location.href = blobUrl;
+    tab.opener = null;
+  } else {
+    window.open(blobUrl, "_blank", "noopener,noreferrer");
+  }
+
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+}
+
 interface ProcessingPhotosGalleryProps {
   photos: ProcessingPhotoData[];
 }
@@ -60,18 +84,17 @@ export function ProcessingPhotosGallery({
           const src = normalizeMediaUrl(photo.photo);
           return (
             <div key={photo.id} className="space-y-1">
-              <a
-                href={src}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block border rounded-lg overflow-hidden border-border hover:ring-2 hover:ring-primary transition-all"
+              <button
+                type="button"
+                onClick={() => openMediaInNewTab(photo.photo)}
+                className="block border rounded-lg overflow-hidden border-border hover:ring-2 hover:ring-primary transition-all text-left"
               >
                 <img
                   src={src}
                   alt={photo.caption || "Processing photo"}
                   className="h-24 w-24 object-cover"
                 />
-              </a>
+              </button>
               <p className="text-[10px] text-muted-foreground leading-tight max-w-[6rem] truncate">
                 {photo.uploaded_by_name || "Unknown"}
               </p>
