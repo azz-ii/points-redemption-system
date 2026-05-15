@@ -6,6 +6,7 @@ import {
   FileText,
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AcknowledgementReceiptPreview } from "@/components/AcknowledgementReceiptPreview";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import { fetchWithCsrf } from "@/lib/csrf";
@@ -520,9 +521,12 @@ export function ViewRedemptionStatusModal({
                       ? `(${displayRequest.ar_number})`
                       : ""}
                   </h3>
+                  <AcknowledgementReceiptPreview
+                    receiptUrl={displayRequest.acknowledgement_receipt}
+                  />
                   {displayRequest.acknowledgement_receipt
                     .toLowerCase()
-                    .endsWith(".pdf") ? (
+                    .endsWith(".pdf") && (
                     <button
                       type="button"
                       onClick={handleArDownload}
@@ -531,16 +535,6 @@ export function ViewRedemptionStatusModal({
                       <FileText className="w-5 h-5 text-primary" />
                       <span>Download Signed AR Document</span>
                     </button>
-                  ) : (
-                    <div className="border rounded-lg overflow-hidden border-border inline-block">
-                      <img
-                        src={normalizeMediaUrl(
-                          displayRequest.acknowledgement_receipt,
-                        )}
-                        alt="Acknowledgement Receipt"
-                        className="max-w-full max-h-64 object-contain"
-                      />
-                    </div>
                   )}
                 </div>
               )}

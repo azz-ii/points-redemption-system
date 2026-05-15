@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getStatusClasses } from "@/components/ui/status-badge";
 import { X, Package, CheckCircle, FileText } from "lucide-react";
+import { AcknowledgementReceiptPreview } from "@/components/AcknowledgementReceiptPreview";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { RequestHistoryItem } from "./types";
@@ -207,7 +208,10 @@ export function ViewRequestModal({
                 Acknowledgement Receipt{" "}
                 {item.ar_number ? `(${item.ar_number})` : ""}
               </h3>
-              {item.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
+              <AcknowledgementReceiptPreview
+                receiptUrl={item.acknowledgement_receipt}
+              />
+              {item.acknowledgement_receipt.toLowerCase().endsWith(".pdf") && (
                 <button
                   type="button"
                   onClick={handleArDownload}
@@ -216,14 +220,6 @@ export function ViewRequestModal({
                   <FileText className="w-5 h-5 text-primary" />
                   <span>Download Signed AR Document</span>
                 </button>
-              ) : (
-                <div className="border rounded-lg overflow-hidden border-border inline-block">
-                  <img
-                    src={normalizeMediaUrl(item.acknowledgement_receipt)}
-                    alt="Acknowledgement Receipt"
-                    className="max-w-full max-h-64 object-contain"
-                  />
-                </div>
               )}
               {arError && <p className="text-destructive text-sm">{arError}</p>}
             </div>
