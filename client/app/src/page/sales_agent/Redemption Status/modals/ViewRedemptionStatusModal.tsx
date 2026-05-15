@@ -4,42 +4,68 @@ import {
   AlertTriangle,
   Loader2,
   FileText,
-  ExternalLink,
 } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import { fetchWithCsrf } from "@/lib/csrf";
+import { StatusChip } from "../components/StatusChip";
+import { AcknowledgementReceiptModal } from "./AcknowledgementReceiptModal";
+import { EditRedemptionRequestModal } from "./EditRedemptionRequestModal.tsx";
+import type { ViewRedemptionStatusModalProps } from "./types";
 
 function normalizeMediaUrl(url: string): string {
   try {
     const parsed = new URL(url, window.location.origin);
     // If the URL points to the local MEDIA path, route it through the
     // Django API media endpoint so it bypasses IIS static routing issues.
-    if (parsed.pathname.startsWith('/media/')) {
-      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, '')}${parsed.search}${parsed.hash}`;
+    if (parsed.pathname.startsWith("/media/")) {
+      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, "")}${parsed.search}${parsed.hash}`;
     }
-    if (parsed.pathname.startsWith('/api/media/')) {
+    if (parsed.pathname.startsWith("/api/media/")) {
       return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
     }
     return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    if (url.startsWith('/media/')) {
-      return `${window.location.origin}/api/media${url.replace(/^\/media/, '')}`;
+    if (url.startsWith("/media/")) {
+      return `${window.location.origin}/api/media${url.replace(/^\/media/, "")}`;
     }
-    if (url.startsWith('/api/media/')) {
+    if (url.startsWith("/api/media/")) {
       return `${window.location.origin}${url}`;
     }
-    if (url.startsWith('/')) {
+    if (url.startsWith("/")) {
       return `${window.location.origin}${url}`;
     }
     return url;
   }
 }
-import { StatusChip } from "../components/StatusChip";
-import { AcknowledgementReceiptModal } from "./AcknowledgementReceiptModal";
-import { EditRedemptionRequestModal } from "./EditRedemptionRequestModal.tsx";
-import type { ViewRedemptionStatusModalProps } from "./types";
+
+function getMediaFilename(url: string, fallback: string): string {
+  const trimmed = url.split("?")[0].split("#")[0];
+  const filename = trimmed.split("/").pop();
+  return filename || fallback;
+}
+
+async function downloadMediaFile(url: string, filename: string) {
+  const response = await fetch(normalizeMediaUrl(url), {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to download file");
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
 
 export interface WithdrawConfirmationModalProps {
   isOpen: boolean;
@@ -171,10 +197,12 @@ export function ViewRedemptionStatusModal({
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  const [arError, setArError] = useState<string | null>(null);
   const [displayRequest, setDisplayRequest] = useState(request);
 
   useEffect(() => {
     setDisplayRequest(request);
+    setArError(null);
   }, [request]);
 
   if (!isOpen || !displayRequest) return null;
@@ -234,6 +262,26 @@ export function ViewRedemptionStatusModal({
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleArDownload = async () => {
+    if (!displayRequest.acknowledgement_receipt) return;
+
+    setArError(null);
+    try {
+      const filename = getMediaFilename(
+        displayRequest.acknowledgement_receipt,
+        `AR-${displayRequest.ar_number || displayRequest.id}.pdf`,
+      );
+      await downloadMediaFile(
+        displayRequest.acknowledgement_receipt,
+        filename,
+      );
+    } catch (error) {
+      setArError(
+        error instanceof Error ? error.message : "Failed to download file",
+      );
     }
   };
 
@@ -475,18 +523,14 @@ export function ViewRedemptionStatusModal({
                   {displayRequest.acknowledgement_receipt
                     .toLowerCase()
                     .endsWith(".pdf") ? (
-                    <a
-                      href={normalizeMediaUrl(
-                        displayRequest.acknowledgement_receipt,
-                      )}
-                      rel="noopener noreferrer"
-                      download={displayRequest.acknowledgement_receipt.split('/').pop() || `AR-${displayRequest.ar_number || displayRequest.id}.pdf`}
+                    <button
+                      type="button"
+                      onClick={handleArDownload}
                       className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
                     >
                       <FileText className="w-5 h-5 text-primary" />
-                      <span>View Signed AR Document</span>
-                      <ExternalLink className="w-4 h-4 ml-1 text-muted-foreground" />
-                    </a>
+                      <span>Download Signed AR Document</span>
+                    </button>
                   ) : (
                     <div className="border rounded-lg overflow-hidden border-border inline-block">
                       <img
@@ -500,6 +544,7 @@ export function ViewRedemptionStatusModal({
                   )}
                 </div>
               )}
+            {arError && <p className="text-destructive text-sm">{arError}</p>}
 
             {/* Processing Photos */}
             {displayRequest.processing_photos &&

@@ -1,4 +1,9 @@
-import { ChevronLeft, ChevronRight, CheckCircle, XCircle as XCircleIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  XCircle as XCircleIcon,
+} from "lucide-react";
 import { MobileCardsSkeleton } from "@/components/shared/mobile-cards-skeleton";
 import { StatusChip } from "./StatusChip";
 import type { RedemptionRequest } from "../modals/types";
@@ -43,7 +48,8 @@ export function RedemptionStatusMobileCards({
     <div className="md:hidden" aria-live="polite">
       <h2 className="text-xl font-bold mb-2">Request History</h2>
       <p className="text-muted-foreground text-xs mb-4">
-        Showing {requests.length} of {filteredCount} request{filteredCount !== 1 ? 's' : ''}
+        Showing {requests.length} of {filteredCount} request
+        {filteredCount !== 1 ? "s" : ""}
       </p>
 
       {error ? (
@@ -58,12 +64,14 @@ export function RedemptionStatusMobileCards({
         <div className="space-y-3">
           {requests.map((request) => {
             const itemCount = request.items?.length || 0;
-            const formattedDate = new Date(request.date_requested).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
+            const formattedDate = new Date(
+              request.date_requested,
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
             });
-            
+
             return (
               <div
                 key={request.id}
@@ -71,17 +79,20 @@ export function RedemptionStatusMobileCards({
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="text-base font-semibold">{request.requested_for_name}</h3>
+                    <h3 className="text-base font-semibold">
+                      {request.requested_for_name}
+                    </h3>
                   </div>
-                  <StatusChip 
-                    status={request.status} 
-                    processingStatus={request.processing_status} 
+                  <StatusChip
+                    status={request.status}
+                    processingStatus={request.processing_status}
                   />
                 </div>
-                
+
                 <div className="space-y-1 mb-3">
                   <p className="text-sm text-muted-foreground">
-                    {itemCount} item{itemCount !== 1 ? 's' : ''} • {request.total_points} points
+                    {itemCount} item{itemCount !== 1 ? "s" : ""} •{" "}
+                    {request.total_points} points
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formattedDate}
@@ -96,37 +107,42 @@ export function RedemptionStatusMobileCards({
                   >
                     View Details
                   </button>
-                  {request.status.toUpperCase() === "PENDING" && request.sales_approval_status !== "APPROVED" && request.requested_by_username === username && onCancelRequest && (
-                    <button
-                      onClick={() => onCancelRequest(request)}
-                      className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-1"
-                    >
-                      <XCircleIcon className="h-4 w-4" />
-                      Cancel
-                    </button>
-                  )}
-                  {request.status.toUpperCase() === "PENDING" && userPosition?.toLowerCase() === "approver" && request.requested_by_username !== username && (
-                    <>
-                      {onApprove && (
-                        <button
-                          onClick={() => onApprove(request)}
-                          className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-1"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Approve
-                        </button>
-                      )}
-                      {onReject && (
-                        <button
-                          onClick={() => onReject(request)}
-                          className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-1"
-                        >
-                          <XCircleIcon className="h-4 w-4" />
-                          Reject
-                        </button>
-                      )}
-                    </>
-                  )}
+                  {request.status.toUpperCase() === "PENDING" &&
+                    request.sales_approval_status !== "APPROVED" &&
+                    request.requested_by_username === username &&
+                    onCancelRequest && (
+                      <button
+                        onClick={() => onCancelRequest(request)}
+                        className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-destructive hover:bg-destructive/90 text-white flex items-center justify-center gap-1"
+                      >
+                        <XCircleIcon className="h-4 w-4" />
+                        Cancel
+                      </button>
+                    )}
+                  {request.status.toUpperCase() === "PENDING" &&
+                    userPosition?.toLowerCase() === "approver" &&
+                    request.requested_by_username !== username && (
+                      <>
+                        {onApprove && (
+                          <button
+                            onClick={() => onApprove(request)}
+                            className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-1"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Approve
+                          </button>
+                        )}
+                        {onReject && (
+                          <button
+                            onClick={() => onReject(request)}
+                            className="flex-1 min-w-[30%] px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-red-500 hover:bg-red-600 text-white flex items-center justify-center gap-1"
+                          >
+                            <XCircleIcon className="h-4 w-4" />
+                            Reject
+                          </button>
+                        )}
+                      </>
+                    )}
                 </div>
               </div>
             );

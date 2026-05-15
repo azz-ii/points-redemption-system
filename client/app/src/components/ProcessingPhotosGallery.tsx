@@ -19,21 +19,21 @@ export interface ProcessingPhotoData {
 function normalizeMediaUrl(url: string): string {
   try {
     const parsed = new URL(url, window.location.origin);
-    if (parsed.pathname.startsWith('/media/')) {
-      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, '')}${parsed.search}${parsed.hash}`;
+    if (parsed.pathname.startsWith("/media/")) {
+      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, "")}${parsed.search}${parsed.hash}`;
     }
-    if (parsed.pathname.startsWith('/api/media/')) {
+    if (parsed.pathname.startsWith("/api/media/")) {
       return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
     }
     return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    if (url.startsWith('/media/')) {
-      return `${window.location.origin}/api/media${url.replace(/^\/media/, '')}`;
+    if (url.startsWith("/media/")) {
+      return `${window.location.origin}/api/media${url.replace(/^\/media/, "")}`;
     }
-    if (url.startsWith('/api/media/')) {
+    if (url.startsWith("/api/media/")) {
       return `${window.location.origin}${url}`;
     }
-    if (url.startsWith('/')) {
+    if (url.startsWith("/")) {
       return `${window.location.origin}${url}`;
     }
     return `${window.location.origin}/api/media/${url}`;
@@ -44,7 +44,9 @@ interface ProcessingPhotosGalleryProps {
   photos: ProcessingPhotoData[];
 }
 
-export function ProcessingPhotosGallery({ photos }: ProcessingPhotosGalleryProps) {
+export function ProcessingPhotosGallery({
+  photos,
+}: ProcessingPhotosGalleryProps) {
   if (!photos || photos.length === 0) return null;
 
   return (
@@ -57,31 +59,34 @@ export function ProcessingPhotosGallery({ photos }: ProcessingPhotosGalleryProps
         {photos.map((photo) => {
           const src = normalizeMediaUrl(photo.photo);
           return (
-          <div key={photo.id} className="space-y-1">
-            <a
-              href={src}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block border rounded-lg overflow-hidden border-border hover:ring-2 hover:ring-primary transition-all"
-            >
-              <img
-                src={src}
-                alt={photo.caption || "Processing photo"}
-                className="h-24 w-24 object-cover"
-              />
-            </a>
-            <p className="text-[10px] text-muted-foreground leading-tight max-w-[6rem] truncate">
-              {photo.uploaded_by_name || "Unknown"}
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-tight max-w-[6rem]">
-              {new Date(photo.uploaded_at).toLocaleDateString()}
-            </p>
-            {photo.caption && (
-              <p className="text-[10px] text-muted-foreground leading-tight max-w-[6rem] truncate" title={photo.caption}>
-                {photo.caption}
+            <div key={photo.id} className="space-y-1">
+              <a
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block border rounded-lg overflow-hidden border-border hover:ring-2 hover:ring-primary transition-all"
+              >
+                <img
+                  src={src}
+                  alt={photo.caption || "Processing photo"}
+                  className="h-24 w-24 object-cover"
+                />
+              </a>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[6rem] truncate">
+                {photo.uploaded_by_name || "Unknown"}
               </p>
-            )}
-          </div>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[6rem]">
+                {new Date(photo.uploaded_at).toLocaleDateString()}
+              </p>
+              {photo.caption && (
+                <p
+                  className="text-[10px] text-muted-foreground leading-tight max-w-[6rem] truncate"
+                  title={photo.caption}
+                >
+                  {photo.caption}
+                </p>
+              )}
+            </div>
           );
         })}
       </div>

@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { getStatusClasses } from "@/components/ui/status-badge";
-import { X, Package, CheckCircle, FileText, ExternalLink } from "lucide-react";
+import { X, Package, CheckCircle, FileText } from "lucide-react";
 import { RequestTimeline } from "@/components/modals";
 import { ProcessingPhotosGallery } from "@/components/ProcessingPhotosGallery";
 import type { RequestHistoryItem } from "./types";
@@ -7,25 +8,52 @@ import type { RequestHistoryItem } from "./types";
 function normalizeMediaUrl(url: string): string {
   try {
     const parsed = new URL(url, window.location.origin);
-    if (parsed.pathname.startsWith('/media/')) {
-      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, '')}${parsed.search}${parsed.hash}`;
+    if (parsed.pathname.startsWith("/media/")) {
+      return `${window.location.origin}/api/media${parsed.pathname.replace(/^\/media/, "")}${parsed.search}${parsed.hash}`;
     }
-    if (parsed.pathname.startsWith('/api/media/')) {
+    if (parsed.pathname.startsWith("/api/media/")) {
       return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
     }
     return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    if (url.startsWith('/media/')) {
-      return `${window.location.origin}/api/media${url.replace(/^\/media/, '')}`;
+    if (url.startsWith("/media/")) {
+      return `${window.location.origin}/api/media${url.replace(/^\/media/, "")}`;
     }
-    if (url.startsWith('/api/media/')) {
+    if (url.startsWith("/api/media/")) {
       return `${window.location.origin}${url}`;
     }
-    if (url.startsWith('/')) {
+    if (url.startsWith("/")) {
       return `${window.location.origin}${url}`;
     }
     return `${window.location.origin}/api/media/${url}`;
   }
+}
+
+function getMediaFilename(url: string, fallback: string): string {
+  const trimmed = url.split("?")[0].split("#")[0];
+  const filename = trimmed.split("/").pop();
+  return filename || fallback;
+}
+
+async function downloadMediaFile(url: string, filename: string) {
+  const response = await fetch(normalizeMediaUrl(url), {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to download file");
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
 }
 
 interface ViewRequestModalProps {
@@ -39,9 +67,28 @@ export function ViewRequestModal({
   onClose,
   item,
 }: ViewRequestModalProps) {
+  const [arError, setArError] = useState<string | null>(null);
+
   if (!isOpen || !item) return null;
 
-return (
+  const handleArDownload = async () => {
+    if (!item.acknowledgement_receipt) return;
+
+    setArError(null);
+    try {
+      const filename = getMediaFilename(
+        item.acknowledgement_receipt,
+        `AR-${item.ar_number || item.id}.pdf`,
+      );
+      await downloadMediaFile(item.acknowledgement_receipt, filename);
+    } catch (error) {
+      setArError(
+        error instanceof Error ? error.message : "Failed to download file",
+      );
+    }
+  };
+
+  return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/30 backdrop-blur-sm">
       <div
         className="bg-card rounded-lg shadow-2xl max-w-lg w-full border divide-y border-border divide-gray-700 max-h-[90vh] flex flex-col overflow-hidden"
@@ -77,12 +124,18 @@ return (
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Requested For</label>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  Requested For
+                </label>
                 <p className="font-semibold">{item.requested_for_name}</p>
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Total Points</label>
-                <p className="font-semibold">{item.total_points.toLocaleString()} pts</p>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  Total Points
+                </label>
+                <p className="font-semibold">
+                  {item.total_points.toLocaleString()} pts
+                </p>
               </div>
             </div>
           </div>
@@ -94,17 +147,21 @@ return (
             </h3>
             <div className="flex gap-4">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Approval Status</label>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  Approval Status
+                </label>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusClasses(
-                    item.status
+                    item.status,
                   )}`}
                 >
                   {item.status_display || item.status}
                 </span>
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Processing Status</label>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  Processing Status
+                </label>
                 <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white">
                   {item.processing_status_display || "Processed"}
                 </span>
@@ -147,19 +204,18 @@ return (
           {item.ar_status === "UPLOADED" && item.acknowledgement_receipt && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Acknowledgement Receipt {item.ar_number ? `(${item.ar_number})` : ''}
+                Acknowledgement Receipt{" "}
+                {item.ar_number ? `(${item.ar_number})` : ""}
               </h3>
               {item.acknowledgement_receipt.toLowerCase().endsWith(".pdf") ? (
-                <a
-                  href={normalizeMediaUrl(item.acknowledgement_receipt)}
-                  rel="noopener noreferrer"
-                  download={item.acknowledgement_receipt.split('/').pop() || `AR-${item.ar_number || item.id}.pdf`}
+                <button
+                  type="button"
+                  onClick={handleArDownload}
                   className="inline-flex items-center gap-2 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors text-sm font-medium"
                 >
                   <FileText className="w-5 h-5 text-primary" />
-                  <span>View Signed AR Document</span>
-                  <ExternalLink className="w-4 h-4 ml-1 text-muted-foreground" />
-                </a>
+                  <span>Download Signed AR Document</span>
+                </button>
               ) : (
                 <div className="border rounded-lg overflow-hidden border-border inline-block">
                   <img
@@ -169,6 +225,7 @@ return (
                   />
                 </div>
               )}
+              {arError && <p className="text-destructive text-sm">{arError}</p>}
             </div>
           )}
 
@@ -201,40 +258,63 @@ return (
                         Legend: {it.item_legend || "—"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Qty: {it.quantity} × {it.points_per_item} pts = {it.total_points} pts
+                        Qty: {it.quantity} × {it.points_per_item} pts ={" "}
+                        {it.total_points} pts
                       </p>
-                      {it.extra_data && Object.keys(it.extra_data).length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5 border-t border-border/50 pt-2 pb-1">
-                          {Object.entries(it.extra_data).map(([key, value]) => {
-                            if (value === null || value === undefined || value === '') return null;
-                            let displayKey = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-                            let displayValue = String(value);
-                            if (key === 'driver_type') {
-                              displayKey = 'Driver';
-                              displayValue = value === 'WITH_DRIVER' ? 'With Driver' : 'Without Driver';
-                            } else if (key === 'driver_name') displayKey = 'Driver Name';
-                            else if (key === 'invoice_amount') displayKey = 'Amount';
-                            
-                            return (
-                              <span key={key} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border">
-                                {displayKey}: {displayValue}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
+                      {it.extra_data &&
+                        Object.keys(it.extra_data).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5 border-t border-border/50 pt-2 pb-1">
+                            {Object.entries(it.extra_data).map(
+                              ([key, value]) => {
+                                if (
+                                  value === null ||
+                                  value === undefined ||
+                                  value === ""
+                                )
+                                  return null;
+                                let displayKey =
+                                  key.charAt(0).toUpperCase() +
+                                  key.slice(1).replace(/_/g, " ");
+                                let displayValue = String(value);
+                                if (key === "driver_type") {
+                                  displayKey = "Driver";
+                                  displayValue =
+                                    value === "WITH_DRIVER"
+                                      ? "With Driver"
+                                      : "Without Driver";
+                                } else if (key === "driver_name")
+                                  displayKey = "Driver Name";
+                                else if (key === "invoice_amount")
+                                  displayKey = "Amount";
+
+                                return (
+                                  <span
+                                    key={key}
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground border border-border"
+                                  >
+                                    {displayKey}: {displayValue}
+                                  </span>
+                                );
+                              },
+                            )}
+                          </div>
+                        )}
                       {it.item_processed_by_name ? (
                         <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                           Processed by: {it.item_processed_by_name}
                           {it.item_processed_at && (
                             <span className="ml-1">
-                              on {new Date(it.item_processed_at).toLocaleDateString()}
+                              on{" "}
+                              {new Date(
+                                it.item_processed_at,
+                              ).toLocaleDateString()}
                             </span>
                           )}
                         </p>
                       ) : (it.fulfilled_quantity ?? 0) > 0 ? (
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                          Partially processed: {it.fulfilled_quantity}/{it.quantity} units
+                          Partially processed: {it.fulfilled_quantity}/
+                          {it.quantity} units
                         </p>
                       ) : null}
                     </div>
