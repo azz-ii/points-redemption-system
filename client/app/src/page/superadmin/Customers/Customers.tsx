@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Search, Plus } from "lucide-react";
@@ -31,19 +31,38 @@ function Customers() {
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: customersData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useCustomersPage(
-    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  const {
+    data: customersData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useCustomersPage(
+    tablePage + 1,
+    pageSize,
+    searchQuery,
+    showArchived,
+    10000,
   );
   const customers = customersData?.results ?? [];
   const totalCount = customersData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
-  const error = queryError ? "Failed to load customers. Please try again." : null;
+  const error = queryError
+    ? "Failed to load customers. Please try again."
+    : null;
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   const [mutationLoading, setMutationLoading] = useState(false);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.customers.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   // Reset to first page when showArchived changes
   useEffect(() => {
@@ -231,21 +250,25 @@ function Customers() {
     try {
       setMutationLoading(true);
       const response = await fetch(`${API_URL}/customers/${id}/unarchive/`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to unarchive customer');
+        throw new Error(errorData.error || "Failed to unarchive customer");
       }
-      
+
       setShowUnarchiveModal(false);
       setUnarchiveTarget(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all });
     } catch (err) {
       console.error("Error unarchiving customer:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to unarchive customer. Please try again.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to unarchive customer. Please try again.",
+      );
     } finally {
       setMutationLoading(false);
     }
@@ -265,35 +288,34 @@ function Customers() {
 
   return (
     <>
-
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold">Customers</h1>
-              <p
-                className="text-sm text-muted-foreground"
-              >
-                View and manage customer information.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showArchived}
-                  onChange={(e) => handleToggleArchived(e.target.checked)}
-                  className="rounded border-border"
-                />
-                Show Archived
-              </label>
-            </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold">Customers</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage customer information.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
-          <div className="flex-1 min-h-0">
-            <CustomersTable
-              key={showArchived ? "archived" : "active"}
-              customers={customers}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => handleToggleArchived(e.target.checked)}
+                className="rounded border-border"
+              />
+              Show Archived
+            </label>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0">
+          <CustomersTable
+            key={showArchived ? "archived" : "active"}
+            customers={customers}
             loading={loading}
             error={error}
             onRetry={() => refetch()}
@@ -317,63 +339,57 @@ function Customers() {
             onPageSizeChange={handlePageSizeChange}
             fillHeight
           />
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
+        <h2 className="text-xl font-semibold mb-2">Customers</h2>
+        <p className="text-xs mb-4 text-muted-foreground">Manage customers</p>
+
+        {/* Mobile Search */}
+        <div className="mb-4">
+          <div className="relative flex items-center rounded-lg border bg-card border-border">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search....."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setTablePage(0);
+              }}
+              className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-          <h2 className="text-xl font-semibold mb-2">Customers</h2>
-          <p
-            className="text-xs mb-4 text-muted-foreground"
+        <div className="mb-4">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-card text-foreground border-border hover:bg-accent"
           >
-            Manage customers
-          </p>
-
-          {/* Mobile Search */}
-          <div className="mb-4">
-            <div
-              className="relative flex items-center rounded-lg border bg-card border-border"
-            >
-              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setTablePage(0);
-                }}
-                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-card text-foreground border-border hover:bg-accent"
-            >
-              <Plus className="h-4 w-4" />
-              Add Customer
-            </button>
-          </div>
-
-          {/* Mobile Cards */}
-          <CustomersMobileCards
-            customers={customers}
-            paginatedCustomers={customers}
-            filteredCustomers={customers}
-            loading={loading}
-            error={error}
-            onRetry={() => refetch()}
-            page={tablePage + 1}
-            totalPages={pageCount}
-            onPageChange={(p) => setTablePage(p - 1)}
-            onView={handleViewClick}
-            onEdit={handleEditClick}
-            onArchive={handleArchiveClick}
-            onUnarchive={handleUnarchiveClick}
-          />
+            <Plus className="h-4 w-4" />
+            Add Customer
+          </button>
         </div>
+
+        {/* Mobile Cards */}
+        <CustomersMobileCards
+          customers={customers}
+          paginatedCustomers={customers}
+          filteredCustomers={customers}
+          loading={loading}
+          error={error}
+          onRetry={() => refetch()}
+          page={tablePage + 1}
+          totalPages={pageCount}
+          onPageChange={(p) => setTablePage(p - 1)}
+          onView={handleViewClick}
+          onEdit={handleEditClick}
+          onArchive={handleArchiveClick}
+          onUnarchive={handleUnarchiveClick}
+        />
+      </div>
       {/* Create Customer Modal */}
       <CreateCustomerModal
         isOpen={showCreateModal}
@@ -434,7 +450,9 @@ function Customers() {
         isOpen={showPromoteModal}
         onClose={() => setShowPromoteModal(false)}
         customer={promoteTarget}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })}
+        onSuccess={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
+        }
       />
 
       {/* Merge Customer Modal */}
@@ -442,7 +460,9 @@ function Customers() {
         isOpen={showMergeModal}
         onClose={() => setShowMergeModal(false)}
         customer={mergeTarget}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })}
+        onSuccess={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
+        }
       />
     </>
   );

@@ -1,17 +1,21 @@
 import { useState, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRequests } from "@/hooks/queries/useRequests";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
-import { useApproveRequest, useRejectRequest } from "@/hooks/mutations/useRequestMutations";
+import {
+  useApproveRequest,
+  useRejectRequest,
+} from "@/hooks/mutations/useRequestMutations";
 import { toast } from "sonner";
-import { ViewRequestModal, ApproveRequestModal, RejectRequestModal, type RequestItem } from "./modals";
+import {
+  ViewRequestModal,
+  ApproveRequestModal,
+  RejectRequestModal,
+  type RequestItem,
+} from "./modals";
 import { RequestsTable, RequestsMobileCards } from "./components";
 
 function ApproverRequests() {
@@ -24,12 +28,18 @@ function ApproverRequests() {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] =
-    useState<RequestItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null,
+  );
 
   // Poll every 30s (same cadence as all other hooks).
   // Show all requests so approvers can see the full lifecycle including cancelled requests.
-  const { data: requests = [], isLoading: loading, isFetching: refreshing } = useRequests({
+  const {
+    data: requests = [],
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+  } = useRequests({
     refetchInterval: 30_000,
   });
 
@@ -41,6 +51,15 @@ function ApproverRequests() {
   }, [queryClient]);
 
   const pageSize = 15;
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   // Memoise the filter + pagination so they don't recompute on unrelated renders.
   const { paginatedRequests, totalPages, safePage } = useMemo(() => {
@@ -106,7 +125,7 @@ function ApproverRequests() {
         onError: (err) => {
           console.error("Error approving request:", err);
           toast.error(
-            err instanceof Error ? err.message : "Failed to approve request"
+            err instanceof Error ? err.message : "Failed to approve request",
           );
         },
       },
@@ -129,7 +148,7 @@ function ApproverRequests() {
         onError: (err) => {
           console.error("Error rejecting request:", err);
           toast.error(
-            err instanceof Error ? err.message : "Failed to reject request"
+            err instanceof Error ? err.message : "Failed to reject request",
           );
         },
       },
@@ -146,6 +165,15 @@ function ApproverRequests() {
           <p className="text-xs text-muted-foreground mb-4">
             Review and approve incoming requests
           </p>
+          <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
 
           {/* Search */}
           <div className="relative mb-6">
@@ -184,9 +212,7 @@ function ApproverRequests() {
               Page {safePage} of {totalPages}
             </span>
             <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, safePage + 1))
-              }
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
               disabled={safePage === totalPages}
               className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
             >
@@ -205,6 +231,15 @@ function ApproverRequests() {
             <p className="text-sm text-muted-foreground">
               Review and approve incoming redemption requests
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Auto-refreshes every 30s</span>
+              {lastUpdatedLabel && (
+                <span>
+                  • Updated {lastUpdatedLabel}
+                  {refreshing ? " · refreshing" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

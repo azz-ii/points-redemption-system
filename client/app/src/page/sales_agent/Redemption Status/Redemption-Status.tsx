@@ -3,9 +3,15 @@ import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useRequests } from "@/hooks/queries/useRequests";
-import { useApproveRequest, useRejectRequest } from "@/hooks/mutations/useRequestMutations";
+import {
+  useApproveRequest,
+  useRejectRequest,
+} from "@/hooks/mutations/useRequestMutations";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ViewRedemptionStatusModal, WithdrawConfirmationModal } from "./modals/ViewRedemptionStatusModal";
+import {
+  ViewRedemptionStatusModal,
+  WithdrawConfirmationModal,
+} from "./modals/ViewRedemptionStatusModal";
 import { BulkWithdrawModal } from "./modals/BulkWithdrawModal";
 import { ApproveRequestModal } from "@/page/approver/Requests/modals/ApproveRequestModal";
 import { RejectRequestModal } from "@/page/approver/Requests/modals/RejectRequestModal";
@@ -27,7 +33,8 @@ export default function RedemptionStatus() {
 
   // State for data
   const [searchQuery, setSearchQuery] = useState(""); // Mobile only
-  const [selectedRequest, setSelectedRequest] = useState<RedemptionRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<RedemptionRequest | null>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -35,8 +42,22 @@ export default function RedemptionStatus() {
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
   const itemsPerPage = 7; // Mobile only
 
-  const { data: requests = [], isLoading: loading, isFetching: refreshing } = useRequests(30_000);
+  const {
+    data: requests = [],
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+  } = useRequests(30_000);
   const error: string | null = null;
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   const handleManualRefresh = useCallback(() => {
     queryClient.resetQueries({ queryKey: queryKeys.requests.all });
@@ -50,9 +71,10 @@ export default function RedemptionStatus() {
         request.id.toString().includes(q) ||
         request.requested_for_name.toLowerCase().includes(q) ||
         request.status_display.toLowerCase().includes(q) ||
-        request.items.some(item => 
-          item.product_code.toLowerCase().includes(q) ||
-          item.product_name.toLowerCase().includes(q)
+        request.items.some(
+          (item) =>
+            item.product_code.toLowerCase().includes(q) ||
+            item.product_name.toLowerCase().includes(q),
         )
       );
     });
@@ -71,7 +93,7 @@ export default function RedemptionStatus() {
   const openDetails = (request: RedemptionRequest) => {
     setSelectedRequest(request);
   };
-  
+
   const closeDetails = () => {
     setSelectedRequest(null);
   };
@@ -104,9 +126,11 @@ export default function RedemptionStatus() {
       { id: selectedRequest.id, remarks },
       {
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to approve request");
+          toast.error(
+            err instanceof Error ? err.message : "Failed to approve request",
+          );
         },
-      }
+      },
     );
   };
 
@@ -119,22 +143,27 @@ export default function RedemptionStatus() {
       { id: selectedRequest.id, reason, remarks },
       {
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to reject request");
+          toast.error(
+            err instanceof Error ? err.message : "Failed to reject request",
+          );
         },
-      }
+      },
     );
   };
 
   const handleWithdraw = async (reason: string) => {
     if (!selectedRequest) return;
-    
+
     setIsSubmitting(true);
     try {
-      const response = await fetchWithCsrf(`${API_URL}/redemption-requests/${selectedRequest.id}/withdraw_request/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ withdrawal_reason: reason }),
-      });
+      const response = await fetchWithCsrf(
+        `${API_URL}/redemption-requests/${selectedRequest.id}/withdraw_request/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ withdrawal_reason: reason }),
+        },
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -162,6 +191,15 @@ export default function RedemptionStatus() {
           <p className="text-xs text-muted-foreground">
             See exactly where your rewards are
           </p>
+          <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Mobile Search Bar */}
@@ -205,6 +243,15 @@ export default function RedemptionStatus() {
           <p className="text-sm text-muted-foreground">
             See exactly where your rewards are
           </p>
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 min-h-0">
@@ -228,11 +275,18 @@ export default function RedemptionStatus() {
       </div>
 
       <ViewRedemptionStatusModal
-        isOpen={!!selectedRequest && !showWithdrawModal && !showApproveModal && !showRejectModal}
+        isOpen={
+          !!selectedRequest &&
+          !showWithdrawModal &&
+          !showApproveModal &&
+          !showRejectModal
+        }
         onClose={closeDetails}
         item={selectedRequest?.items[0] || null}
         request={selectedRequest}
-        onRequestWithdrawn={() => queryClient.invalidateQueries({ queryKey: queryKeys.requests.all })}
+        onRequestWithdrawn={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.requests.all })
+        }
         username={username}
         userPosition={userPosition}
         onApprove={openApproveModal}

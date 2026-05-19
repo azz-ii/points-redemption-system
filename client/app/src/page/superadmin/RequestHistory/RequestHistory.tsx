@@ -1,12 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { requestHistoryApi } from "@/lib/api";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import {
   ViewRequestModal,
@@ -16,12 +11,14 @@ import {
 import { RequestHistoryTable, RequestHistoryMobileCards } from "./components";
 import { toast } from "sonner";
 
-function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
+function RequestHistory() {
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<RequestHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -39,6 +36,7 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
       setError(null);
       const data = await requestHistoryApi.getProcessedRequests();
       setRequests(data as unknown as RequestHistoryItem[]);
+      setLastUpdatedAt(Date.now());
     } catch (err) {
       console.error("Error fetching processed requests:", err);
       setError(
@@ -61,9 +59,15 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
   useAutoRefresh(() => fetchRequests(true), 10000);
 
   const handleManualRefresh = useCallback(() => {
-    setRequests([]);
-    fetchRequests();
+    fetchRequests(true);
   }, [fetchRequests]);
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!lastUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(lastUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [lastUpdatedAt]);
 
   const pageSize = 7;
   const filteredRequests = requests.filter((request) => {
@@ -89,105 +93,102 @@ function RequestHistory() {  const [currentPage, setCurrentPage] = useState(1);
 
   return (
     <>
-
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-semibold">Request History</h1>
-              <p
-                className="text-sm text-muted-foreground"
-              >
-                View all processed redemption requests
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleManualRefresh}
-                disabled={refreshing}
-                className={`p-2 rounded-lg bg-card hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
-                title="Refresh"
-              >
-                <RefreshCw
-                  className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
-                />
-              </button>
-            </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-semibold">Request History</h1>
+            <p className="text-sm text-muted-foreground">
+              View all processed redemption requests
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
-
-          {error ? (
-            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          ) : (
-            <div className="flex-1 min-h-0">
-              <RequestHistoryTable
-                requests={filteredRequests}
-                loading={loading}
-                onView={handleViewClick}
-                onRefresh={handleManualRefresh}
-                refreshing={refreshing}
-                onExport={() => setShowExportModal(true)}
-                fillHeight
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className={`p-2 rounded-lg bg-card hover:bg-accent transition-colors ${refreshing ? "opacity-50" : ""}`}
+              title="Refresh"
+            >
+              <RefreshCw
+                className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`}
               />
-            </div>
-          )}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
-          <div className="p-4">
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search requests..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-
-            <RequestHistoryMobileCards
-              paginatedItems={paginatedRequests}
-              filteredItems={filteredRequests}
+        {error ? (
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+            {error}
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0">
+            <RequestHistoryTable
+              requests={filteredRequests}
               loading={loading}
-              currentPage={safePage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
               onView={handleViewClick}
+              onRefresh={handleManualRefresh}
+              refreshing={refreshing}
+              onExport={() => setShowExportModal(true)}
+              fillHeight
             />
+          </div>
+        )}
+      </div>
 
-            {/* Mobile Pagination */}
-            <div className="flex items-center justify-between mt-6">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Prev
-              </button>
-              <span className="text-xs font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto pb-20">
+        <div className="p-4">
+          {/* Search */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search requests..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10 h-12 bg-card border-border text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
+
+          <RequestHistoryMobileCards
+            paginatedItems={paginatedRequests}
+            filteredItems={filteredRequests}
+            loading={loading}
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onView={handleViewClick}
+          />
+
+          {/* Mobile Pagination */}
+          <div className="flex items-center justify-between mt-6">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Prev
+            </button>
+            <span className="text-xs font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
+      </div>
       <ViewRequestModal
         isOpen={showViewModal}
         onClose={() => {

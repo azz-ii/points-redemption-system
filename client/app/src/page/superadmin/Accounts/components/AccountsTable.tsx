@@ -79,7 +79,7 @@ export function AccountsTable({
       onViewPointsHistory,
       onSendPasswordResetEmail,
       onUnlockAccount,
-    ]
+    ],
   );
 
   return (
@@ -98,17 +98,24 @@ export function AccountsTable({
       onExport={onExport}
       searchPlaceholder="Filter by username, email, or full name..."
       globalFilterFn={(row, _columnId, filterValue) => {
-        const s = String(filterValue).toLowerCase()
+        const s = String(filterValue).toLowerCase();
         return (
-          String(row.getValue("username") || "").toLowerCase().includes(s) ||
-          String(row.original.email || "").toLowerCase().includes(s) ||
-          String(row.getValue("full_name") || "").toLowerCase().includes(s)
-        )
+          String(row.getValue("username") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.original.email || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("full_name") || "")
+            .toLowerCase()
+            .includes(s)
+        );
       }}
       initialSorting={[{ id: "username", desc: false }]}
       loadingMessage="Loading accounts..."
       emptyMessage="No accounts found"
       manualPagination={manualPagination}
+      preservePageOnDataRefresh={true}
       pageCount={pageCount}
       totalResults={totalResults}
       currentPage={currentPage}

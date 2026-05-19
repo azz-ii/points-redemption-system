@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,13 @@ import type { Team } from "./components/columns";
 function Teams() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: teams = [], isLoading: loading, isFetching: refreshing, refetch } = useTeams(10000);
+  const {
+    data: teams = [],
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    refetch,
+  } = useTeams(10000);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
@@ -63,11 +69,20 @@ function Teams() {
   });
   const [teamToEdit, setTeamToEdit] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
-  const [teamForAnalytics, setTeamForAnalytics] = useState<{ id: number; name: string } | null>(null);
+  const [teamForAnalytics, setTeamForAnalytics] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.teams.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   // Filter teams based on search query
   const filteredTeams = teams.filter(
@@ -169,9 +184,7 @@ function Teams() {
         queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
       } else {
         const errorMessage =
-          data.name?.[0] ||
-          data.error ||
-          "Failed to create team";
+          data.name?.[0] || data.error || "Failed to create team";
         setCreateError(errorMessage);
         console.error("DEBUG Teams: Failed to create team", data);
       }
@@ -249,9 +262,7 @@ function Teams() {
         queryClient.invalidateQueries({ queryKey: queryKeys.teams.all });
       } else {
         const errorMessage =
-          data.name?.[0] ||
-          data.error ||
-          "Failed to update team";
+          data.name?.[0] || data.error || "Failed to update team";
         setEditError(errorMessage);
         console.error("DEBUG Teams: Failed to update team", data);
       }
@@ -334,25 +345,24 @@ function Teams() {
 
   return (
     <>
-
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold">Teams</h1>
-              <p
-                className="text-sm text-muted-foreground"
-              >
-                View and manage sales teams.
-              </p>
-            </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold">Teams</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage sales teams.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
+        </div>
 
-          {/* Teams Table */}
-          <div className="flex-1 min-h-0">
-            <TeamsTable
-              teams={teams}
+        {/* Teams Table */}
+        <div className="flex-1 min-h-0">
+          <TeamsTable
+            teams={teams}
             loading={loading}
             onView={(team) => handleViewTeam(team.id)}
             onEdit={handleEditClick}
@@ -367,179 +377,164 @@ function Teams() {
             refreshing={refreshing}
             fillHeight
           />
-          </div>
         </div>
+      </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto pb-20">
-          <div className="p-4 space-y-4">
-            <h2 className="text-xl font-semibold mb-2">Teams</h2>
-            <p
-              className="text-xs mb-4 text-muted-foreground"
-            >
-              Manage sales teams
-            </p>
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto pb-20">
+        <div className="p-4 space-y-4">
+          <h2 className="text-xl font-semibold mb-2">Teams</h2>
+          <p className="text-xs mb-4 text-muted-foreground">
+            Manage sales teams
+          </p>
 
-            {/* Mobile Search */}
-            <div className="mb-4">
-              <div
-                className="relative flex items-center rounded-lg border bg-card border-border"
-              >
-                <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search....."
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
+          {/* Mobile Search */}
+          <div className="mb-4">
+            <div className="relative flex items-center rounded-lg border bg-card border-border">
+              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search....."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
+              />
             </div>
+          </div>
 
-            {/* Create Team Button */}
-            <button
-              onClick={() => {
-                console.log("DEBUG Teams: Opening create modal (mobile)");
-                setIsCreateModalOpen(true);
-              }}
-              className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold text-sm"
-            >
-              <Users className="h-5 w-5" />
-              <span>Create Team</span>
-            </button>
+          {/* Create Team Button */}
+          <button
+            onClick={() => {
+              console.log("DEBUG Teams: Opening create modal (mobile)");
+              setIsCreateModalOpen(true);
+            }}
+            className="w-full px-4 py-2 rounded-lg flex items-center justify-center gap-2 mb-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold text-sm"
+          >
+            <Users className="h-5 w-5" />
+            <span>Create Team</span>
+          </button>
 
-            {/* Mobile Cards */}
-            <div className="space-y-3">
-              {loading && teams.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  Loading teams...
-                </div>
-              ) : filteredTeams.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  No teams found
-                </div>
-              ) : (
-                paginatedTeams.map((team) => (
-                  <div
-                    key={team.id}
-                    className="p-4 rounded-lg border bg-card border-border transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <p
-                          className="text-xs font-semibold mb-2 text-muted-foreground"
-                        >
-                          ID {team.id}
-                        </p>
-                        <p className="font-semibold text-sm mb-1">
-                          {team.name}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1 ml-2">
-                        <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300 text-center">
-                          {team.member_count}{" "}
-                          {team.member_count === 1 ? "member" : "members"}
-                        </span>
-                      </div>
+          {/* Mobile Cards */}
+          <div className="space-y-3">
+            {loading && teams.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                Loading teams...
+              </div>
+            ) : filteredTeams.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No teams found
+              </div>
+            ) : (
+              paginatedTeams.map((team) => (
+                <div
+                  key={team.id}
+                  className="p-4 rounded-lg border bg-card border-border transition-colors"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold mb-2 text-muted-foreground">
+                        ID {team.id}
+                      </p>
+                      <p className="font-semibold text-sm mb-1">{team.name}</p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-xs text-muted-foreground">
-                        Created:{" "}
-                        {new Date(team.created_at).toLocaleDateString()}
-                      </div>
-                      <div className="relative">
-                        <button
-                          onClick={() =>
-                            setOpenMenuId(
-                              openMenuId === team.id ? null : team.id,
-                            )
-                          }
-                          className="px-4 py-2 rounded-lg text-sm font-medium bg-card hover:bg-accent text-foreground transition-colors"
-                          disabled={loading}
-                        >
-                          Actions
-                        </button>
-
-                        {openMenuId === team.id && (
-                          <div
-                            className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-10 bg-card border-border"
-                          >
-                            <div className="py-1">
-                              <button
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleViewTeam(team.id);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
-                              >
-                                <Eye className="h-4 w-4" />
-                                View Details
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleEditClick(team);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
-                              >
-                                <Pencil className="h-4 w-4" />
-                                Edit Team
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleDeleteClick(team);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 text-red-500 hover:bg-accent"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Delete Team
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleAnalyticsClick(team);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
-                              >
-                                <Eye className="h-4 w-4" />
-                                Analytics
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex flex-col gap-1 ml-2">
+                      <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 border border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:border-blue-800/50 dark:text-blue-300 text-center">
+                        {team.member_count}{" "}
+                        {team.member_count === 1 ? "member" : "members"}
+                      </span>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs text-muted-foreground">
+                      Created: {new Date(team.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setOpenMenuId(openMenuId === team.id ? null : team.id)
+                        }
+                        className="px-4 py-2 rounded-lg text-sm font-medium bg-card hover:bg-accent text-foreground transition-colors"
+                        disabled={loading}
+                      >
+                        Actions
+                      </button>
 
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                <ChevronLeft className="h-4 w-4" /> Prev
-              </button>
-              <span className="text-xs font-medium">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, safePage + 1))
-                }
-                disabled={safePage === totalPages}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+                      {openMenuId === team.id && (
+                        <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-10 bg-card border-border">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleViewTeam(team.id);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
+                            >
+                              <Eye className="h-4 w-4" />
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleEditClick(team);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Edit Team
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleDeleteClick(team);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 text-red-500 hover:bg-accent"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete Team
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleAnalyticsClick(team);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-accent"
+                            >
+                              <Eye className="h-4 w-4" />
+                              Analytics
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              <ChevronLeft className="h-4 w-4" /> Prev
+            </button>
+            <span className="text-xs font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
+            >
+              Next <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
+      </div>
 
       {/* Modals */}
       <CreateTeamModal
@@ -567,7 +562,9 @@ function Teams() {
           setSelectedTeam(null);
         }}
         team={selectedTeam}
-        onRefresh={() => queryClient.invalidateQueries({ queryKey: queryKeys.teams.all })}
+        onRefresh={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.teams.all })
+        }
       />
 
       <EditTeamModal
@@ -587,7 +584,9 @@ function Teams() {
         error={editError}
         setError={setEditError}
         onSubmit={handleEditTeam}
-        onRefresh={() => queryClient.invalidateQueries({ queryKey: queryKeys.teams.all })}
+        onRefresh={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.teams.all })
+        }
       />
 
       <DeleteTeamModal

@@ -14,7 +14,12 @@ function ApproverHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
 
-  const { data: historyItems = [], isLoading: loading, isFetching: refreshing } = useRequests({
+  const {
+    data: historyItems = [],
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+  } = useRequests({
     refetchInterval: 30_000,
     processed: true,
   });
@@ -25,6 +30,15 @@ function ApproverHistory() {
 
   // Mobile filtering, sorting, and pagination
   const pageSize = 15;
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
+
   const { sortedItems, totalPages, safePage, paginatedItems } = useMemo(() => {
     const filtered = historyItems.filter((item) => {
       if (!searchQuery.trim()) return true;
@@ -39,7 +53,9 @@ function ApproverHistory() {
     });
 
     const sorted = [...filtered].sort(
-      (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+      (a, b) =>
+        new Date(b.date_requested).getTime() -
+        new Date(a.date_requested).getTime(),
     );
     const pages = Math.max(1, Math.ceil(sorted.length / pageSize));
     const safe = Math.min(currentPage, pages);
@@ -62,6 +78,15 @@ function ApproverHistory() {
           <p className="text-xs text-muted-foreground mb-4">
             View your processed redemption requests
           </p>
+          <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {refreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
 
           {/* Search */}
           <div className="relative mb-6">
@@ -98,9 +123,7 @@ function ApproverHistory() {
               Page {safePage} of {totalPages}
             </span>
             <button
-              onClick={() =>
-                setCurrentPage(Math.min(totalPages, safePage + 1))
-              }
+              onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
               disabled={safePage === totalPages}
               className="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 bg-card border border-border hover:bg-accent"
             >
@@ -119,6 +142,15 @@ function ApproverHistory() {
             <p className="text-sm text-muted-foreground">
               View and manage the complete history of point redemptions.
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Auto-refreshes every 30s</span>
+              {lastUpdatedLabel && (
+                <span>
+                  • Updated {lastUpdatedLabel}
+                  {refreshing ? " · refreshing" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

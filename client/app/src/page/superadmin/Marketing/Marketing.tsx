@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { X, RotateCw, Download } from "lucide-react";
@@ -24,13 +24,24 @@ function Marketing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: marketingData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useHandlerUsersPage(
-    tablePage + 1, pageSize, searchQuery, 10000,
-  );
+  const {
+    data: marketingData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useHandlerUsersPage(tablePage + 1, pageSize, searchQuery, 10000);
   const marketingUsers = marketingData?.results ?? [];
   const totalCount = marketingData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const error = queryError ? "Error connecting to server" : "";
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -41,8 +52,8 @@ function Marketing() {
   const [showExportModal, setShowExportModal] = useState(false);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.handler.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -94,21 +105,23 @@ function Marketing() {
 
   return (
     <>
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold">Item Handlers</h1>
-              <p className="text-sm text-muted-foreground">
-                View and manage item handler assignments.
-              </p>
-            </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold">Item Handlers</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage item handler assignments.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
+        </div>
 
-          <div className="flex-1 min-h-0">
-            <MarketingUsersTable
-              users={marketingUsers}
+        <div className="flex-1 min-h-0">
+          <MarketingUsersTable
+            users={marketingUsers}
             loading={loading}
             error={error}
             onRetry={() => refetch()}
@@ -128,52 +141,50 @@ function Marketing() {
             onPageSizeChange={handlePageSizeChange}
             fillHeight
           />
-          </div>
         </div>
+      </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex flex-col flex-1 p-4 mb-16">
-          <div className="flex items-center justify-between mb-4">
+      {/* Mobile Layout */}
+      <div className="md:hidden flex flex-col flex-1 p-4 mb-16">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-semibold">Item Handlers</h1>
             <p className="text-xs text-muted-foreground">
               Manage item handlers
             </p>
           </div>
-            <button
-              onClick={() => refetch()}
-              disabled={loading}
-              className="p-2 rounded-lg bg-card text-foreground hover:bg-accent disabled:opacity-50"
-            >
-              <RotateCw
-                className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-          </div>
-
-          <Input
-            type="text"
-            placeholder="Search handler users..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setTablePage(0);
-            }}
-            className="mb-4"
-          />
-
-          <MarketingUsersMobileCards
-            paginatedUsers={marketingUsers}
-            loading={loading}
-            error={error}
-            onRetry={() => refetch()}
-            currentPage={tablePage + 1}
-            totalPages={pageCount}
-            onPageChange={(p) => setTablePage(p - 1)}
-            onViewAccount={handleViewClick}
-            onEditAccount={handleEditClick}
-          />
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="p-2 rounded-lg bg-card text-foreground hover:bg-accent disabled:opacity-50"
+          >
+            <RotateCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
+
+        <Input
+          type="text"
+          placeholder="Search handler users..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setTablePage(0);
+          }}
+          className="mb-4"
+        />
+
+        <MarketingUsersMobileCards
+          paginatedUsers={marketingUsers}
+          loading={loading}
+          error={error}
+          onRetry={() => refetch()}
+          currentPage={tablePage + 1}
+          totalPages={pageCount}
+          onPageChange={(p) => setTablePage(p - 1)}
+          onViewAccount={handleViewClick}
+          onEditAccount={handleEditClick}
+        />
+      </div>
       {/* Modals */}
       <ViewAccountModal
         isOpen={showViewModal}

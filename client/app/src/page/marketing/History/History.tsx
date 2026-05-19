@@ -15,13 +15,25 @@ export default function MarketingHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
-  
+
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null,
+  );
 
-  const { data: requests = [], dataUpdatedAt, isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerHistory(30_000);
-  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load history") : null;
+  const {
+    data: requests = [],
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+  } = useHandlerHistory(30_000);
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : "Failed to load history"
+    : null;
 
   const handleManualRefresh = useCallback(() => {
     queryClient.resetQueries({ queryKey: queryKeys.requests.all });

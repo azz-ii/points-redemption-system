@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -8,7 +8,7 @@ import type {
   VisibilityState,
   FilterFn,
   RowSelectionState,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -16,7 +16,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
   ChevronLeft,
   ChevronRight,
@@ -29,7 +29,7 @@ import {
   Coins,
   BookOpen,
   TrendingUp,
-} from "lucide-react"
+} from "lucide-react";
 
 import {
   Table,
@@ -38,9 +38,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -48,69 +48,69 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  loading?: boolean
-  error?: string | null
-  onRetry?: () => void
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 
   // Toolbar actions
-  onDeleteSelected?: (selectedRows: TData[]) => void
-  onCreateNew?: () => void
-  createButtonLabel?: string
-  createButtonIcon?: "user" | "plus"
-  onSetPoints?: () => void
-  onSetInventory?: () => void
-  onAllocateSalesVolume?: () => void
-  onRefresh?: () => void
-  refreshing?: boolean
-  onExport?: (selectedRows: TData[]) => void
+  onDeleteSelected?: (selectedRows: TData[]) => void;
+  onCreateNew?: () => void;
+  createButtonLabel?: string;
+  createButtonIcon?: "user" | "plus";
+  onSetPoints?: () => void;
+  onSetInventory?: () => void;
+  onAllocateSalesVolume?: () => void;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  onExport?: (selectedRows: TData[]) => void;
 
   // Row selection
-  enableRowSelection?: boolean
+  enableRowSelection?: boolean;
   // Custom labels
-  deleteSelectedLabel?: string
+  deleteSelectedLabel?: string;
 
   // Search
-  searchPlaceholder?: string
-  globalFilterFn?: FilterFn<TData>
-  showSearch?: boolean
+  searchPlaceholder?: string;
+  globalFilterFn?: FilterFn<TData>;
+  showSearch?: boolean;
 
   // Display
-  showPagination?: boolean
-  showColumnVisibility?: boolean
-  pageSize?: number
-  initialSorting?: SortingState
-  initialColumnVisibility?: VisibilityState
-  loadingMessage?: string
-  emptyMessage?: string
+  showPagination?: boolean;
+  showColumnVisibility?: boolean;
+  pageSize?: number;
+  initialSorting?: SortingState;
+  initialColumnVisibility?: VisibilityState;
+  loadingMessage?: string;
+  emptyMessage?: string;
 
   // Server-side pagination
-  manualPagination?: boolean
-  manualSorting?: boolean
-  onSortingChange?: (sorting: SortingState) => void
-  pageCount?: number
-  totalResults?: number
-  currentPage?: number
-  onPageChange?: (pageIndex: number) => void
-  onSearch?: (query: string) => void
-  preservePageOnDataRefresh?: boolean
+  manualPagination?: boolean;
+  manualSorting?: boolean;
+  onSortingChange?: (sorting: SortingState) => void;
+  pageCount?: number;
+  totalResults?: number;
+  currentPage?: number;
+  onPageChange?: (pageIndex: number) => void;
+  onSearch?: (query: string) => void;
+  preservePageOnDataRefresh?: boolean;
 
   // Page size selection
-  pageSizeOptions?: number[]
-  onPageSizeChange?: (pageSize: number) => void
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 
   // Inline editing (Accounts-specific)
-  editingRowId?: number | null
-  editedData?: Record<string, any>
-  onFieldChange?: (field: string, value: any) => void
-  fieldErrors?: Record<string, string>
+  editingRowId?: number | null;
+  editedData?: Record<string, any>;
+  onFieldChange?: (field: string, value: any) => void;
+  fieldErrors?: Record<string, string>;
 
   // Layout
-  fillHeight?: boolean
+  fillHeight?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -146,9 +146,9 @@ export function DataTable<TData, TValue>({
   onFieldChange,
   fieldErrors = {},
   manualPagination = false,
-    manualSorting = false,
-    onSortingChange: externalOnSortingChange,
-    pageCount,
+  manualSorting = false,
+  onSortingChange: externalOnSortingChange,
+  pageCount,
   totalResults,
   currentPage,
   onPageChange,
@@ -158,35 +158,44 @@ export function DataTable<TData, TValue>({
   onPageSizeChange,
   fillHeight = false,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setInternalSorting] = React.useState<SortingState>(initialSorting)
+  const [sorting, setInternalSorting] =
+    React.useState<SortingState>(initialSorting);
 
-  const handleSortingChange = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
-    const newSorting = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
-    setInternalSorting(newSorting)
+  const handleSortingChange = (
+    updaterOrValue: SortingState | ((old: SortingState) => SortingState),
+  ) => {
+    const newSorting =
+      typeof updaterOrValue === "function"
+        ? updaterOrValue(sorting)
+        : updaterOrValue;
+    setInternalSorting(newSorting);
     if (preservePageOnDataRefresh) {
-      table.setPageIndex(0)
+      table.setPageIndex(0);
     }
     if (externalOnSortingChange) {
-      externalOnSortingChange(newSorting)
+      externalOnSortingChange(newSorting);
     }
-  }
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility)
-  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const [searchValue, setSearchValue] = React.useState("")
+  };
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>(initialColumnVisibility);
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [searchValue, setSearchValue] = React.useState("");
 
   // Debounce server-side search
   React.useEffect(() => {
-    if (!onSearch) return
+    if (!onSearch) return;
     const timer = setTimeout(() => {
-      onSearch(searchValue)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchValue, onSearch])
+      onSearch(searchValue);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchValue, onSearch]);
 
-  const enableRowSelection = enableRowSelectionProp ?? !!(onDeleteSelected)
-  const CreateIcon = createButtonIcon === "user" ? UserPlus : Plus
+  const enableRowSelection = enableRowSelectionProp ?? !!onDeleteSelected;
+  const CreateIcon = createButtonIcon === "user" ? UserPlus : Plus;
 
   const table = useReactTable({
     data,
@@ -218,14 +227,17 @@ export function DataTable<TData, TValue>({
           manualPagination: true,
           pageCount: pageCount ?? -1,
           onPaginationChange: (updater: any) => {
-            const old = { pageIndex: currentPage ?? 0, pageSize }
-            const newState = typeof updater === 'function' ? updater(old) : updater
-            onPageChange?.(newState.pageIndex)
+            const old = { pageIndex: currentPage ?? 0, pageSize };
+            const newState =
+              typeof updater === "function" ? updater(old) : updater;
+            onPageChange?.(newState.pageIndex);
           },
         }
       : { onGlobalFilterChange: setGlobalFilter }),
     getCoreRowModel: getCoreRowModel(),
-    ...(!manualPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
+    ...(!manualPagination
+      ? { getPaginationRowModel: getPaginationRowModel() }
+      : {}),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     ...(!manualPagination && globalFilterFn ? { globalFilterFn } : {}),
@@ -238,31 +250,48 @@ export function DataTable<TData, TValue>({
         pageSize,
       },
     },
-  })
+  });
 
   React.useEffect(() => {
-    if (!preservePageOnDataRefresh) return
+    if (!preservePageOnDataRefresh) return;
 
-    const pageCountValue = table.getPageCount()
-    if (pageCountValue <= 0) return
+    const pageCountValue = table.getPageCount();
+    if (pageCountValue <= 0) return;
 
-    const pageIndex = table.getState().pagination.pageIndex
-    const lastPageIndex = Math.max(0, pageCountValue - 1)
+    const pageIndex = table.getState().pagination.pageIndex;
+    const lastPageIndex = Math.max(0, pageCountValue - 1);
 
     if (pageIndex > lastPageIndex) {
-      table.setPageIndex(lastPageIndex)
+      table.setPageIndex(lastPageIndex);
     }
-  }, [data, columnFilters, globalFilter, preservePageOnDataRefresh, sorting, table])
+  }, [
+    data,
+    columnFilters,
+    globalFilter,
+    preservePageOnDataRefresh,
+    sorting,
+    table,
+  ]);
 
   const selectedRows = enableRowSelection
-    ? table.getFilteredSelectedRowModel().rows.map(row => row.original)
-    : []
-  const hasSelection = selectedRows.length > 0
+    ? table.getFilteredSelectedRowModel().rows.map((row) => row.original)
+    : [];
+  const hasSelection = selectedRows.length > 0;
 
-  const showToolbar = showSearch || onRefresh || showColumnVisibility || onExport || onCreateNew || onSetPoints || onSetInventory || onAllocateSalesVolume
+  const showToolbar =
+    showSearch ||
+    onRefresh ||
+    showColumnVisibility ||
+    onExport ||
+    onCreateNew ||
+    onSetPoints ||
+    onSetInventory ||
+    onAllocateSalesVolume;
 
   return (
-    <div className={fillHeight ? "flex flex-col h-full gap-4 pb-2" : "space-y-4"}>
+    <div
+      className={fillHeight ? "flex flex-col h-full gap-4 pb-2" : "space-y-4"}
+    >
       {showToolbar && (
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -272,11 +301,11 @@ export function DataTable<TData, TValue>({
                 value={manualPagination ? searchValue : (globalFilter ?? "")}
                 onChange={(event) => {
                   if (manualPagination) {
-                    setSearchValue(event.target.value)
+                    setSearchValue(event.target.value);
                   } else {
-                    setGlobalFilter(event.target.value)
+                    setGlobalFilter(event.target.value);
                     if (preservePageOnDataRefresh) {
-                      table.setPageIndex(0)
+                      table.setPageIndex(0);
                     }
                   }
                 }}
@@ -291,7 +320,9 @@ export function DataTable<TData, TValue>({
                 disabled={refreshing}
                 className="h-9 flex gap-2"
               >
-                <RotateCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <RotateCw
+                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
                 Refresh
               </Button>
             )}
@@ -314,14 +345,17 @@ export function DataTable<TData, TValue>({
                     .getAllColumns()
                     .filter(
                       (column) =>
-                        typeof column.accessorFn !== "undefined" && column.getCanHide()
+                        typeof column.accessorFn !== "undefined" &&
+                        column.getCanHide(),
                     )
                     .map((column) => (
                       <DropdownMenuCheckboxItem
                         key={column.id}
                         className="capitalize"
                         checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
                       >
                         {column.id.replace(/_/g, " ")}
                       </DropdownMenuCheckboxItem>
@@ -351,7 +385,10 @@ export function DataTable<TData, TValue>({
               </Button>
             )}
           </div>
-          {(onCreateNew || onSetPoints || onSetInventory || onAllocateSalesVolume) && (
+          {(onCreateNew ||
+            onSetPoints ||
+            onSetInventory ||
+            onAllocateSalesVolume) && (
             <div className="flex gap-2">
               {onSetInventory && (
                 <button
@@ -394,8 +431,22 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
-      <div className="border rounded-lg overflow-hidden flex-shrink min-h-0" style={fillHeight ? { display: "flex", flexDirection: "column" } : { height: "70vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ minHeight: 0, overflow: "auto", scrollbarGutter: "stable", paddingRight: "20px" }}>
+      <div
+        className="border rounded-lg overflow-hidden flex-shrink min-h-0"
+        style={
+          fillHeight
+            ? { display: "flex", flexDirection: "column" }
+            : { height: "70vh", display: "flex", flexDirection: "column" }
+        }
+      >
+        <div
+          style={{
+            minHeight: 0,
+            overflow: "auto",
+            scrollbarGutter: "stable",
+            paddingRight: "20px",
+          }}
+        >
           <Table style={{ width: "100%", minWidth: table.getTotalSize() }}>
             <TableHeader className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -410,7 +461,7 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                       {header.column.getCanResize() && (
                         <div
@@ -432,36 +483,48 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {loading && data.length === 0 ? (
                 // Skeleton loading rows
-                Array.from({ length: fillHeight ? 15: 10 }).map((_, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {table.getAllColumns().filter(col => col.getIsVisible()).map((column, colIndex) => {
-                      const isFirstCol = colIndex === 0;
-                      const isLastCol = colIndex === table.getVisibleFlatColumns().length - 1;
-                      const isSecondLastCol = colIndex === table.getVisibleFlatColumns().length - 2;
-                      
-                      return (
-                        <TableCell key={column.id} style={{ width: column.getSize() }}>
-                          {isFirstCol && enableRowSelection ? (
-                            // Checkbox column
-                            <div className="h-4 w-4 rounded bg-muted animate-pulse" />
-                          ) : isLastCol ? (
-                            // Actions column
-                            <div className="flex justify-end gap-2">
-                              <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
-                              <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
-                            </div>
-                          ) : isSecondLastCol ? (
-                            // Status badge column
-                            <div className="h-6 w-20 rounded-full bg-muted animate-pulse" />
-                          ) : (
-                            // Regular text column
-                            <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))
+                Array.from({ length: fillHeight ? 15 : 10 }).map(
+                  (_, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {table
+                        .getAllColumns()
+                        .filter((col) => col.getIsVisible())
+                        .map((column, colIndex) => {
+                          const isFirstCol = colIndex === 0;
+                          const isLastCol =
+                            colIndex ===
+                            table.getVisibleFlatColumns().length - 1;
+                          const isSecondLastCol =
+                            colIndex ===
+                            table.getVisibleFlatColumns().length - 2;
+
+                          return (
+                            <TableCell
+                              key={column.id}
+                              style={{ width: column.getSize() }}
+                            >
+                              {isFirstCol && enableRowSelection ? (
+                                // Checkbox column
+                                <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+                              ) : isLastCol ? (
+                                // Actions column
+                                <div className="flex justify-end gap-2">
+                                  <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
+                                  <div className="h-8 w-8 rounded-md bg-muted animate-pulse" />
+                                </div>
+                              ) : isSecondLastCol ? (
+                                // Status badge column
+                                <div className="h-6 w-20 rounded-full bg-muted animate-pulse" />
+                              ) : (
+                                // Regular text column
+                                <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                    </TableRow>
+                  ),
+                )
               ) : error ? (
                 <TableRow>
                   <TableCell
@@ -471,11 +534,7 @@ export function DataTable<TData, TValue>({
                     <div className="flex flex-col items-center justify-center gap-3">
                       <p className="text-red-500 text-sm">{error}</p>
                       {onRetry && (
-                        <Button
-                          onClick={onRetry}
-                          variant="outline"
-                          size="sm"
-                        >
+                        <Button onClick={onRetry} variant="outline" size="sm">
                           Retry
                         </Button>
                       )}
@@ -484,25 +543,35 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => {
-                  const rowId = (row.original as any)?.id
-                  const isRowEditing = editingRowId != null && editingRowId === rowId
+                  const rowId = (row.original as any)?.id;
+                  const isRowEditing =
+                    editingRowId != null && editingRowId === rowId;
 
                   return (
                     <TableRow
                       key={row.id}
-                      data-state={enableRowSelection && row.getIsSelected() ? "selected" : undefined}
-                      className={isRowEditing ? "bg-blue-50 dark:bg-blue-950" : ""}
+                      data-state={
+                        enableRowSelection && row.getIsSelected()
+                          ? "selected"
+                          : undefined
+                      }
+                      className={
+                        isRowEditing ? "bg-blue-50 dark:bg-blue-950" : ""
+                      }
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
+                        <TableCell
+                          key={cell.id}
+                          style={{ width: cell.column.getSize() }}
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </TableCell>
                       ))}
                     </TableRow>
-                  )
+                  );
                 })
               ) : (
                 <TableRow>
@@ -524,23 +593,33 @@ export function DataTable<TData, TValue>({
               <div className="flex-1 text-sm text-muted-foreground">
                 {hasSelection ? (
                   <span>
-                    {selectedRows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} row(s) selected
+                    {selectedRows.length} of{" "}
+                    {manualPagination
+                      ? (totalResults ?? data.length)
+                      : table.getFilteredRowModel().rows.length}{" "}
+                    row(s) selected
                   </span>
                 ) : (
                   <span>
-                    Showing {table.getRowModel().rows.length} of {manualPagination ? (totalResults ?? data.length) : table.getFilteredRowModel().rows.length} results
+                    Showing {table.getRowModel().rows.length} of{" "}
+                    {manualPagination
+                      ? (totalResults ?? data.length)
+                      : table.getFilteredRowModel().rows.length}{" "}
+                    results
                   </span>
                 )}
               </div>
               {pageSizeOptions.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">Rows per page:</span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    Rows per page:
+                  </span>
                   <select
                     value={table.getState().pagination.pageSize}
                     onChange={(e) => {
-                      const newSize = Number(e.target.value)
-                      table.setPageSize(newSize)
-                      onPageSizeChange?.(newSize)
+                      const newSize = Number(e.target.value);
+                      table.setPageSize(newSize);
+                      onPageSizeChange?.(newSize);
                     }}
                     className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
@@ -569,7 +648,8 @@ export function DataTable<TData, TValue>({
                 <ChevronLeft className="h-4 w-4" /> Previous
               </Button>
               <span className="text-sm font-medium">
-                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
               </span>
               <Button
                 variant="outline"
@@ -585,5 +665,5 @@ export function DataTable<TData, TValue>({
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,18 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { API_URL } from "@/lib/config";
 import { fetchWithCsrf } from "@/lib/csrf";
-import {
-  Search,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCataloguePage } from "@/hooks/queries/useCatalogue";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { Product, User } from "./modals";
+import type { ProductExtraField } from "./modals/types";
 import {
   CreateItemModal,
   EditItemModal,
@@ -21,29 +17,45 @@ import {
   UnarchiveItemModal,
   ExportModal,
 } from "./modals";
-import {
-  CatalogueTable,
-  CatalogueMobileCards,
-} from "./components";
+import { CatalogueTable, CatalogueMobileCards } from "./components";
 
 function Catalogue() {
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [_users, setUsers] = useState<User[]>([]);
+  const [, setUsers] = useState<User[]>([]);
 
   // Pagination state (0-indexed for DataTable compatibility)
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: catalogueData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useCataloguePage(
-    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  const {
+    data: catalogueData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useCataloguePage(
+    tablePage + 1,
+    pageSize,
+    searchQuery,
+    showArchived,
+    10000,
   );
   const items = catalogueData?.results ?? [];
   const totalCount = catalogueData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
-  const error = queryError ? "Failed to load products. Please try again." : null;
+  const error = queryError
+    ? "Failed to load products. Please try again."
+    : null;
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   // Fetch users for dropdowns
   useEffect(() => {
@@ -64,8 +76,8 @@ function Catalogue() {
   }, []);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.catalogue.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   const handlePageChange = useCallback((pageIndex: number) => {
     setTablePage(pageIndex);
@@ -93,7 +105,9 @@ function Catalogue() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [createImageFile, setCreateImageFile] = useState<File | null>(null);
-  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(
+    null,
+  );
   const [newItem, setNewItem] = useState({
     item_code: "",
     item_name: "",
@@ -101,12 +115,15 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "Giveaway" as
-      | "Collateral"
-      | "Giveaway"
-      | "Asset"
-      | "Benefit",
-    pricing_formula: null as "NONE" | "DRIVER_MULTIPLIER" | "AREA_RATE" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | null,
+    legend: "Giveaway" as "Collateral" | "Giveaway" | "Asset" | "Benefit",
+    pricing_formula: null as
+      | "NONE"
+      | "DRIVER_MULTIPLIER"
+      | "AREA_RATE"
+      | "PER_SQFT"
+      | "PER_INVOICE"
+      | "PER_DAY"
+      | null,
     points: "",
     price: "",
     min_order_qty: "1",
@@ -117,7 +134,7 @@ function Catalogue() {
     points_multiplier: "",
     price_multiplier: "",
     mktg_admin: "",
-    extra_fields: [] as any[],
+    extra_fields: [] as ProductExtraField[],
   });
 
   const [editItem, setEditItem] = useState({
@@ -127,12 +144,15 @@ function Catalogue() {
     description: "",
     purpose: "",
     specifications: "",
-    legend: "Giveaway" as
-      | "Collateral"
-      | "Giveaway"
-      | "Asset"
-      | "Benefit",
-    pricing_formula: null as "NONE" | "DRIVER_MULTIPLIER" | "AREA_RATE" | "PER_SQFT" | "PER_INVOICE" | "PER_DAY" | null,
+    legend: "Giveaway" as "Collateral" | "Giveaway" | "Asset" | "Benefit",
+    pricing_formula: null as
+      | "NONE"
+      | "DRIVER_MULTIPLIER"
+      | "AREA_RATE"
+      | "PER_SQFT"
+      | "PER_INVOICE"
+      | "PER_DAY"
+      | null,
     points: "",
     price: "",
     min_order_qty: "1",
@@ -143,7 +163,7 @@ function Catalogue() {
     points_multiplier: "",
     price_multiplier: "",
     mktg_admin: "",
-    extra_fields: [] as any[],
+    extra_fields: [] as ProductExtraField[],
   });
 
   // Modal state for edit/view/archive
@@ -179,7 +199,10 @@ function Catalogue() {
       return;
     }
 
-    const isFixed = !newItem.pricing_formula || newItem.pricing_formula === "NONE" || newItem.pricing_formula === "DRIVER_MULTIPLIER";
+    const isFixed =
+      !newItem.pricing_formula ||
+      newItem.pricing_formula === "NONE" ||
+      newItem.pricing_formula === "DRIVER_MULTIPLIER";
     if (isFixed) {
       if (!newItem.points.trim()) {
         setCreateError("Points is required");
@@ -237,7 +260,7 @@ function Catalogue() {
         }
       });
       if (createImageFile) {
-        formData.append('image', createImageFile);
+        formData.append("image", createImageFile);
       }
 
       console.log("[Catalogue] Creating product (POST) payload:", payload);
@@ -328,7 +351,7 @@ function Catalogue() {
       points_multiplier: !isFixed ? item.points?.toString() : "",
       price_multiplier: !isFixed ? item.price?.toString() : "",
       mktg_admin: item.mktg_admin?.toString() || "",
-      extra_fields: (item as any).extra_fields || [],
+      extra_fields: item.extra_fields || [],
     });
   };
 
@@ -352,7 +375,10 @@ function Catalogue() {
       return;
     }
 
-    const isFixed = !editItem.pricing_formula || editItem.pricing_formula === "NONE" || editItem.pricing_formula === "DRIVER_MULTIPLIER";
+    const isFixed =
+      !editItem.pricing_formula ||
+      editItem.pricing_formula === "NONE" ||
+      editItem.pricing_formula === "DRIVER_MULTIPLIER";
     if (isFixed) {
       if (!editItem.points.trim()) {
         setEditError("Points is required");
@@ -410,9 +436,9 @@ function Catalogue() {
         }
       });
       if (editImageFile) {
-        formData.append('image', editImageFile);
+        formData.append("image", editImageFile);
       } else if (editImageRemoved) {
-        formData.append('remove_image', 'true');
+        formData.append("remove_image", "true");
       }
 
       console.log(
@@ -422,10 +448,13 @@ function Catalogue() {
         payload,
       );
 
-      const response = await fetchWithCsrf(`/api/catalogue/${editingProductId}/`, {
-        method: "PATCH",
-        body: formData,
-      });
+      const response = await fetchWithCsrf(
+        `/api/catalogue/${editingProductId}/`,
+        {
+          method: "PATCH",
+          body: formData,
+        },
+      );
 
       console.log("[Catalogue] PATCH response status:", response.status);
 
@@ -495,7 +524,11 @@ function Catalogue() {
       queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error archiving product:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to archive product. Please try again.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to archive product. Please try again.",
+      );
     } finally {
       setArchiving(false);
     }
@@ -520,7 +553,11 @@ function Catalogue() {
       queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all });
     } catch (err) {
       console.error("Error restoring product:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to restore product. Please try again.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to restore product. Please try again.",
+      );
     } finally {
       setArchiving(false);
     }
@@ -535,6 +572,9 @@ function Catalogue() {
             <h1 className="text-2xl font-semibold">Catalogue</h1>
             <p className="text-sm text-muted-foreground">
               View and manage the catalogue of redeemable items.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -555,28 +595,28 @@ function Catalogue() {
           <CatalogueTable
             key={showArchived ? "archived" : "active"}
             products={items}
-          loading={loading}
-          error={error}
-          onRetry={() => refetch()}
-          onView={handleViewClick}
-          onEdit={handleEditClick}
-          onArchive={handleArchiveClick}
-          onUnarchive={handleUnarchiveClick}
-          onCreateNew={() => setShowCreateModal(true)}
-          onRefresh={handleManualRefresh}
-          refreshing={refreshing}
-          onExport={() => setShowExportModal(true)}
-          manualPagination
-          pageCount={pageCount}
-          totalResults={totalCount}
-          currentPage={tablePage}
-          onPageChange={handlePageChange}
-          onSearch={handleSearch}
-          pageSize={pageSize}
-          pageSizeOptions={[15, 50, 100]}
-          onPageSizeChange={handlePageSizeChange}
-          fillHeight
-        />
+            loading={loading}
+            error={error}
+            onRetry={() => refetch()}
+            onView={handleViewClick}
+            onEdit={handleEditClick}
+            onArchive={handleArchiveClick}
+            onUnarchive={handleUnarchiveClick}
+            onCreateNew={() => setShowCreateModal(true)}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
+            onExport={() => setShowExportModal(true)}
+            manualPagination
+            pageCount={pageCount}
+            totalResults={totalCount}
+            currentPage={tablePage}
+            onPageChange={handlePageChange}
+            onSearch={handleSearch}
+            pageSize={pageSize}
+            pageSizeOptions={[15, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
+            fillHeight
+          />
         </div>
       </div>
 
@@ -651,7 +691,9 @@ function Catalogue() {
               Page {tablePage + 1} of {pageCount}
             </span>
             <button
-              onClick={() => setTablePage((p) => Math.min(pageCount - 1, p + 1))}
+              onClick={() =>
+                setTablePage((p) => Math.min(pageCount - 1, p + 1))
+              }
               disabled={tablePage >= pageCount - 1}
               className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
             >
@@ -712,7 +754,8 @@ function Catalogue() {
           setEditImageRemoved(true);
         }}
         currentMktgAdminUsername={
-          items.find((i) => i.id === editingProductId)?.mktg_admin_username ?? null
+          items.find((i) => i.id === editingProductId)?.mktg_admin_username ??
+          null
         }
       />
 
@@ -723,7 +766,9 @@ function Catalogue() {
           setViewTarget(null);
         }}
         product={viewTarget}
-        onAssignmentChange={() => queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all })}
+        onAssignmentChange={() =>
+          queryClient.invalidateQueries({ queryKey: queryKeys.catalogue.all })
+        }
       />
 
       <ArchiveItemModal

@@ -52,7 +52,7 @@ export function MarketingUsersTable({
         onViewAccount,
         onEditAccount,
       }),
-    [onViewAccount, onEditAccount]
+    [onViewAccount, onEditAccount],
   );
 
   return (
@@ -67,16 +67,23 @@ export function MarketingUsersTable({
       onExport={onExport}
       searchPlaceholder="Filter by username, email, or full name..."
       globalFilterFn={(row, _columnId, filterValue) => {
-        const s = String(filterValue).toLowerCase()
+        const s = String(filterValue).toLowerCase();
         return (
-          (String(row.getValue("username") || "")).toLowerCase().includes(s) ||
-          (String(row.getValue("email") || "")).toLowerCase().includes(s) ||
-          (String(row.getValue("full_name") || "")).toLowerCase().includes(s)
-        )
+          String(row.getValue("username") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("email") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("full_name") || "")
+            .toLowerCase()
+            .includes(s)
+        );
       }}
       loadingMessage="Loading users..."
       emptyMessage="No marketing users found"
       manualPagination={manualPagination}
+      preservePageOnDataRefresh={true}
       initialSorting={[{ id: "username", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}

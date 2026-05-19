@@ -31,27 +31,27 @@ export function ProcessRequestsTable({
         onMarkItemProcessed,
         onCancelRequest,
       }),
-    [onViewRequest, onMarkItemProcessed, onCancelRequest]
+    [onViewRequest, onMarkItemProcessed, onCancelRequest],
   );
 
   // Custom global filter function that searches across multiple fields
   const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
     const item = row.original as FlattenedRequestItem;
     const searchLower = String(filterValue).toLowerCase();
-    
+
     // Search in: request ID, product code, product name, customer, category
     const searchableFields = [
       String(item.requestId),
-      item.product_code?.toLowerCase() || '',
-      item.product_name?.toLowerCase() || '',
-      item.requested_for_name?.toLowerCase() || '',
-      item.requested_by_name?.toLowerCase() || '',
-      item.category?.toLowerCase() || '',
-      item.request_status_display?.toLowerCase() || '',
-      item.request_processing_status_display?.toLowerCase() || '',
+      item.product_code?.toLowerCase() || "",
+      item.product_name?.toLowerCase() || "",
+      item.requested_for_name?.toLowerCase() || "",
+      item.requested_by_name?.toLowerCase() || "",
+      item.category?.toLowerCase() || "",
+      item.request_status_display?.toLowerCase() || "",
+      item.request_processing_status_display?.toLowerCase() || "",
     ];
-    
-    return searchableFields.some(field => field.includes(searchLower));
+
+    return searchableFields.some((field) => field.includes(searchLower));
   };
 
   return (

@@ -74,6 +74,7 @@ export function CatalogueTable({
       loadingMessage="Loading catalogue items..."
       emptyMessage="No catalogue items found"
       manualPagination={manualPagination}
+      preservePageOnDataRefresh={true}
       initialSorting={[{ id: "item_code", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}

@@ -76,16 +76,23 @@ export function CustomersTable({
       onExport={onExport}
       searchPlaceholder="Filter by name, brand, or sales channel..."
       globalFilterFn={(row, _columnId, filterValue) => {
-        const s = String(filterValue).toLowerCase()
+        const s = String(filterValue).toLowerCase();
         return (
-          String(row.getValue("name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("brand") || "").toLowerCase().includes(s) ||
-          String(row.getValue("sales_channel") || "").toLowerCase().includes(s)
-        )
+          String(row.getValue("name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("brand") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("sales_channel") || "")
+            .toLowerCase()
+            .includes(s)
+        );
       }}
       loadingMessage="Loading customers..."
       emptyMessage="No customers found"
       manualPagination={manualPagination}
+      preservePageOnDataRefresh={true}
       initialSorting={[{ id: "name", desc: false }]}
       pageCount={pageCount}
       totalResults={totalResults}

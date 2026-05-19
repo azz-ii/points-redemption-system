@@ -23,13 +23,13 @@ export function DashboardTable({
       createColumns({
         onViewRequest,
       }),
-    [onViewRequest]
+    [onViewRequest],
   );
 
   const globalFilterFn = (
     row: Row<RedemptionItem>,
     _columnId: string,
-    filterValue: string
+    filterValue: string,
   ) => {
     const item = row.original as RedemptionItem;
     const searchLower = String(filterValue).toLowerCase();
@@ -57,6 +57,7 @@ export function DashboardTable({
         showSearch={true}
         showPagination={true}
         showColumnVisibility={true}
+        preservePageOnDataRefresh={true}
         pageSize={10}
         initialSorting={[{ id: "date_requested", desc: true }]}
         loadingMessage="Loading requests..."

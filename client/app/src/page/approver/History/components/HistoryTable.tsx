@@ -20,10 +20,7 @@ export function HistoryTable({
   refreshing,
   fillHeight,
 }: HistoryTableProps) {
-  const columns = useMemo(
-    () => createColumns({ onView }),
-    [onView]
-  );
+  const columns = useMemo(() => createColumns({ onView }), [onView]);
 
   return (
     <DataTable
@@ -36,16 +33,27 @@ export function HistoryTable({
       globalFilterFn={(row, _columnId, filterValue) => {
         const s = String(filterValue).toLowerCase();
         return (
-          String(row.getValue("requested_by_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("requested_for_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("team_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("status") || "").toLowerCase().includes(s) ||
-          String(row.getValue("processed_by_name") || "").toLowerCase().includes(s) ||
+          String(row.getValue("requested_by_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("requested_for_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("team_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("status") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("processed_by_name") || "")
+            .toLowerCase()
+            .includes(s) ||
           String(row.original.id || "").includes(s)
         );
       }}
       initialSorting={[{ id: "date_processed", desc: true }]}
       pageSize={15}
+      preservePageOnDataRefresh={true}
       loadingMessage="Loading history..."
       emptyMessage="No processed requests found"
       pageSizeOptions={[15, 50, 100]}

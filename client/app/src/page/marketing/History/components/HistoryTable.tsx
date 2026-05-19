@@ -25,7 +25,7 @@ export function HistoryTable({
       createColumns({
         onView,
       }),
-    [onView]
+    [onView],
   );
 
   return (
@@ -39,9 +39,15 @@ export function HistoryTable({
       globalFilterFn={(row, _columnId, filterValue) => {
         const s = String(filterValue).toLowerCase();
         return (
-          String(row.getValue("id") || "").toLowerCase().includes(s) ||
-          String(row.getValue("requested_by_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("requested_for_name") || "").toLowerCase().includes(s)
+          String(row.getValue("id") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("requested_by_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("requested_for_name") || "")
+            .toLowerCase()
+            .includes(s)
         );
       }}
       initialSorting={[{ id: "date_processed", desc: true }]}

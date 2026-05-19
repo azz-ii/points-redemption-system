@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { usersApi } from "@/lib/users-api";
 import { API_URL } from "@/lib/config";
@@ -25,7 +24,6 @@ import { AccountsTable, AccountsMobileCards } from "./components";
 import { PointsHistoryModal } from "@/components/modals/PointsHistoryModal";
 
 function Accounts() {
-  const { username: loggedInUsername } = useAuth();
   const queryClient = useQueryClient();
 
   // Server-side pagination state
@@ -35,16 +33,33 @@ function Accounts() {
   const [showArchived, setShowArchived] = useState(false);
 
   // Mutation-specific state (loading spinners for mutations, form validation errors)
-  const [mutationLoading, setMutationLoading] = useState(false);
+  const [, setMutationLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const { data: accountsData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useAccountsPage(
-    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  const {
+    data: accountsData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useAccountsPage(
+    tablePage + 1,
+    pageSize,
+    searchQuery,
+    showArchived,
+    10000,
   );
   const accounts = accountsData?.results ?? [];
   const totalCount = accountsData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const error = queryError ? "Failed to load accounts" : formError;
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -66,14 +81,22 @@ function Accounts() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   // Team membership for Approver on creation (which team they belong to as a member)
-  const [selectedMemberTeamId, setSelectedMemberTeamId] = useState<number | null>(null);
+  const [selectedMemberTeamId, setSelectedMemberTeamId] = useState<
+    number | null
+  >(null);
 
   // Team management for edit modal
-  const [selectedEditTeamId, setSelectedEditTeamId] = useState<number | null | "REMOVE">(null);
+  const [selectedEditTeamId, setSelectedEditTeamId] = useState<
+    number | null | "REMOVE"
+  >(null);
 
   // Team management for Approver (edit modal)
-  const [approverTeamsToRemove, setApproverTeamsToRemove] = useState<number[]>([]);
-  const [approverTeamToAdd, setApproverTeamToAdd] = useState<number | null>(null);
+  const [approverTeamsToRemove, setApproverTeamsToRemove] = useState<number[]>(
+    [],
+  );
+  const [approverTeamToAdd, setApproverTeamToAdd] = useState<number | null>(
+    null,
+  );
 
   const [editAccount, setEditAccount] = useState({
     username: "",
@@ -94,16 +117,18 @@ function Accounts() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
-  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Account | null>(null);
+  const [pointsHistoryTarget, setPointsHistoryTarget] =
+    useState<Account | null>(null);
   const [showSendResetEmailModal, setShowSendResetEmailModal] = useState(false);
-  const [sendResetEmailTarget, setSendResetEmailTarget] = useState<Account | null>(null);
+  const [sendResetEmailTarget, setSendResetEmailTarget] =
+    useState<Account | null>(null);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [unlockTarget, setUnlockTarget] = useState<Account | null>(null);
   const [unlockLoading, setUnlockLoading] = useState(false);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.accounts.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   // Fetch teams lazily when the create or edit modal opens
   useEffect(() => {
@@ -194,7 +219,11 @@ function Accounts() {
       .then(async (data) => {
         if (!data.error) {
           // Assign to team if selected
-          if (capturedTeamId && positionWas === "Sales Agent" && data.user?.id) {
+          if (
+            capturedTeamId &&
+            positionWas === "Sales Agent" &&
+            data.user?.id
+          ) {
             try {
               const teamRes = await fetchWithCsrf(
                 `${API_URL}/teams/${capturedTeamId}/assign_member/`,
@@ -248,7 +277,11 @@ function Accounts() {
           }
 
           // Assign membership team if Approver (member of team)
-          if (capturedMemberTeamId && positionWas === "Approver" && data.user?.id) {
+          if (
+            capturedMemberTeamId &&
+            positionWas === "Approver" &&
+            data.user?.id
+          ) {
             try {
               const memberRes = await fetchWithCsrf(
                 `${API_URL}/teams/${capturedMemberTeamId}/assign_member/`,
@@ -270,7 +303,9 @@ function Accounts() {
                 );
               }
             } catch {
-              toast.warning("Account created but team membership assignment failed.");
+              toast.warning(
+                "Account created but team membership assignment failed.",
+              );
             }
           }
           // Silently refresh accounts list in background
@@ -350,7 +385,8 @@ function Accounts() {
       // Prepare form data (excluding points - will be updated separately with audit logging)
       const formData = new FormData();
       Object.entries(editAccount).forEach(([key, value]) => {
-        if (key !== 'points') {  // Skip points, will be updated via batch_update_points endpoint
+        if (key !== "points") {
+          // Skip points, will be updated via batch_update_points endpoint
           formData.append(key, String(value));
         }
       });
@@ -379,8 +415,7 @@ function Accounts() {
         // Handle team changes
         if (editAccount.position === "Sales Agent") {
           const shouldRemove =
-            oldTeamId != null &&
-            capturedEditTeamId !== oldTeamId;
+            oldTeamId != null && capturedEditTeamId !== oldTeamId;
           const shouldAssign =
             typeof capturedEditTeamId === "number" &&
             capturedEditTeamId !== oldTeamId;
@@ -442,7 +477,9 @@ function Accounts() {
             );
             removalResults.forEach((result) => {
               if (result.status === "rejected") {
-                toast.warning("Account updated but failed to remove from a team.");
+                toast.warning(
+                  "Account updated but failed to remove from a team.",
+                );
               }
             });
           }
@@ -476,8 +513,7 @@ function Accounts() {
           // Handle membership team changes for Approver
           const oldMemberTeamId = editingAccount.team_id ?? null;
           const shouldRemoveMembership =
-            oldMemberTeamId != null &&
-            capturedEditTeamId !== oldMemberTeamId;
+            oldMemberTeamId != null && capturedEditTeamId !== oldMemberTeamId;
           const shouldAssignMembership =
             typeof capturedEditTeamId === "number" &&
             capturedEditTeamId !== oldMemberTeamId;
@@ -493,7 +529,9 @@ function Accounts() {
                 },
               );
             } catch {
-              toast.warning("Account updated but failed to remove membership from team.");
+              toast.warning(
+                "Account updated but failed to remove membership from team.",
+              );
             }
           }
 
@@ -519,7 +557,9 @@ function Accounts() {
                 );
               }
             } catch {
-              toast.warning("Account updated but team membership assignment failed.");
+              toast.warning(
+                "Account updated but team membership assignment failed.",
+              );
             }
           }
         }
@@ -536,11 +576,15 @@ function Accounts() {
               }),
             });
             // Update editingAccount with new points value so subsequent edits use correct oldPoints
-            setEditingAccount(prev => prev ? { ...prev, points: newPoints } : null);
+            setEditingAccount((prev) =>
+              prev ? { ...prev, points: newPoints } : null,
+            );
           } catch (err) {
             console.error("Failed to log points change:", err);
             // Points update failed, show warning
-            toast.warning("Account updated but points change could not be logged to history");
+            toast.warning(
+              "Account updated but points change could not be logged to history",
+            );
           }
         }
 
@@ -621,13 +665,20 @@ function Accounts() {
     setUnlockLoading(true);
     try {
       console.debug(`[Accounts] unlock_account request for id=${id}`);
-      const response = await fetchWithCsrf(`${API_URL}/users/${id}/unlock_account/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+      const response = await fetchWithCsrf(
+        `${API_URL}/users/${id}/unlock_account/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        },
+      );
       const data = await response.json();
-      console.debug(`[Accounts] unlock_account response:`, response.status, data);
+      console.debug(
+        `[Accounts] unlock_account response:`,
+        response.status,
+        data,
+      );
       if (response.ok) {
         toast.success(data.message || "Account unlocked successfully");
         setShowUnlockModal(false);
@@ -645,7 +696,10 @@ function Accounts() {
   };
 
   // Handle set points submission - batch updates (only changed accounts)
-  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
+  const handleSetPoints = async (
+    updates: { id: number; points: number }[],
+    reason: string = "",
+  ) => {
     try {
       setMutationLoading(true);
 
@@ -655,9 +709,13 @@ function Accounts() {
       setShowSetPointsModal(false);
 
       if (result.failed_count === 0) {
-        toast.success(`Successfully updated points for ${result.updated_count} account(s)`);
+        toast.success(
+          `Successfully updated points for ${result.updated_count} account(s)`,
+        );
       } else {
-        toast.error(`Updated ${result.updated_count} of ${updates.length} account(s). ${result.failed_count} failed.`);
+        toast.error(
+          `Updated ${result.updated_count} of ${updates.length} account(s). ${result.failed_count} failed.`,
+        );
       }
 
       // Refresh accounts list
@@ -762,6 +820,9 @@ function Accounts() {
             <p className="text-sm text-muted-foreground">
               View and manage user accounts.
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
             <input
@@ -778,53 +839,53 @@ function Accounts() {
         <div className="flex-1 min-h-0">
           <AccountsTable
             key={showArchived ? "archived" : "active"}
-          accounts={accounts}
-          loading={loading}
-          error={error}
-          onRetry={() => refetch()}
-          onViewAccount={(account) => {
-            setViewTarget(account);
-            setShowViewModal(true);
-            setFormError("");
-          }}
-          onEditAccount={handleEditClick}
-          onArchiveAccount={(account) => {
-            setArchiveTarget(account);
-            setShowArchiveModal(true);
-            setFormError("");
-          }}
-          onUnarchiveAccount={(account) => {
-            setUnarchiveTarget(account);
-            setShowUnarchiveModal(true);
-          }}
-          onCreateNew={() => setShowCreateModal(true)}
-          onSetPoints={() => setShowSetPointsModal(true)}
-          onRefresh={handleManualRefresh}
-          refreshing={refreshing}
-          onExport={() => setShowExportModal(true)}
-          onViewPointsHistory={(account) => {
-            setPointsHistoryTarget(account);
-            setShowPointsHistory(true);
-          }}
-          onSendPasswordResetEmail={(account) => {
-            setSendResetEmailTarget(account);
-            setShowSendResetEmailModal(true);
-          }}
-          onUnlockAccount={(account) => {
-            setUnlockTarget(account);
-            setShowUnlockModal(true);
-          }}
-          manualPagination
-          pageCount={pageCount}
-          totalResults={totalCount}
-          currentPage={tablePage}
-          onPageChange={handlePageChange}
-          onSearch={handleSearch}
-          pageSize={pageSize}
-          pageSizeOptions={[15, 50, 100]}
-          onPageSizeChange={handlePageSizeChange}
-          fillHeight
-        />
+            accounts={accounts}
+            loading={loading}
+            error={error}
+            onRetry={() => refetch()}
+            onViewAccount={(account) => {
+              setViewTarget(account);
+              setShowViewModal(true);
+              setFormError("");
+            }}
+            onEditAccount={handleEditClick}
+            onArchiveAccount={(account) => {
+              setArchiveTarget(account);
+              setShowArchiveModal(true);
+              setFormError("");
+            }}
+            onUnarchiveAccount={(account) => {
+              setUnarchiveTarget(account);
+              setShowUnarchiveModal(true);
+            }}
+            onCreateNew={() => setShowCreateModal(true)}
+            onSetPoints={() => setShowSetPointsModal(true)}
+            onRefresh={handleManualRefresh}
+            refreshing={refreshing}
+            onExport={() => setShowExportModal(true)}
+            onViewPointsHistory={(account) => {
+              setPointsHistoryTarget(account);
+              setShowPointsHistory(true);
+            }}
+            onSendPasswordResetEmail={(account) => {
+              setSendResetEmailTarget(account);
+              setShowSendResetEmailModal(true);
+            }}
+            onUnlockAccount={(account) => {
+              setUnlockTarget(account);
+              setShowUnlockModal(true);
+            }}
+            manualPagination
+            pageCount={pageCount}
+            totalResults={totalCount}
+            currentPage={tablePage}
+            onPageChange={handlePageChange}
+            onSearch={handleSearch}
+            pageSize={pageSize}
+            pageSizeOptions={[15, 50, 100]}
+            onPageSizeChange={handlePageSizeChange}
+            fillHeight
+          />
         </div>
       </div>
 
@@ -853,7 +914,11 @@ function Accounts() {
           error={error}
           onRetry={() => refetch()}
           currentPage={tablePage + 1}
-          setCurrentPage={((p: number) => setTablePage(p - 1)) as React.Dispatch<React.SetStateAction<number>>}
+          setCurrentPage={
+            ((p: number) => setTablePage(p - 1)) as React.Dispatch<
+              React.SetStateAction<number>
+            >
+          }
           onViewAccount={(account) => {
             setViewTarget(account);
             setShowViewModal(true);
@@ -974,7 +1039,9 @@ function Accounts() {
           }}
           entityType="USER"
           entityId={pointsHistoryTarget.id}
-          entityName={pointsHistoryTarget.full_name || pointsHistoryTarget.username}
+          entityName={
+            pointsHistoryTarget.full_name || pointsHistoryTarget.username
+          }
         />
       )}
 
@@ -997,7 +1064,6 @@ function Accounts() {
         loading={unlockLoading}
         onConfirm={(id, password) => handleUnlockAccount(id, password)}
       />
-
     </>
   );
 }

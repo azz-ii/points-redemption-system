@@ -3,9 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { useApproverDashboardStats } from "@/hooks/queries/useDashboard";
 import { useRequests } from "@/hooks/queries/useRequests";
-import { useApproveRequest, useRejectRequest } from "@/hooks/mutations/useRequestMutations";
+import {
+  useApproveRequest,
+  useRejectRequest,
+} from "@/hooks/mutations/useRequestMutations";
 import { toast } from "sonner";
-import { ViewRequestModal, ApproveRequestModal, RejectRequestModal, type RequestItem } from "../Requests/modals";
+import {
+  ViewRequestModal,
+  ApproveRequestModal,
+  RejectRequestModal,
+  type RequestItem,
+} from "../Requests/modals";
 import { RequestsTable, RequestsMobileCards } from "../Requests/components";
 
 function ApproverDashboard() {
@@ -15,24 +23,45 @@ function ApproverDashboard() {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null,
+  );
 
-  const { data: stats, isLoading: statsLoading } = useApproverDashboardStats(5000);
-  const { data: allRequests = [], isLoading: requestsLoading, isFetching: isRefreshing, refetch } = useRequests(5000);
+  const { data: stats, isLoading: statsLoading } =
+    useApproverDashboardStats(5000);
+  const {
+    data: allRequests = [],
+    dataUpdatedAt,
+    isLoading: requestsLoading,
+    isFetching: isRefreshing,
+    refetch,
+  } = useRequests(5000);
 
   const requests = useMemo(
-    () => allRequests.filter(
-      (req) =>
-        req.status === "PENDING" &&
-        (req.processing_status === "NOT_PROCESSED" || !req.processing_status),
-    ),
+    () =>
+      allRequests.filter(
+        (req) =>
+          req.status === "PENDING" &&
+          (req.processing_status === "NOT_PROCESSED" || !req.processing_status),
+      ),
     [allRequests],
   );
 
   const approveMutation = useApproveRequest();
   const rejectMutation = useRejectRequest();
 
-  const handleRefresh = () => { refetch(); };
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
+
+  const handleRefresh = () => {
+    refetch();
+  };
 
   const handleViewClick = (request: RequestItem) => {
     setSelectedRequest(request);
@@ -99,6 +128,15 @@ function ApproverDashboard() {
           <p className="text-xs text-muted-foreground mb-4">
             Review and approve redemption requests
           </p>
+          <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 5s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {isRefreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
@@ -108,7 +146,7 @@ function ApproverDashboard() {
                 <p className="text-xs font-semibold">Pending</p>
               </div>
               <p className="text-2xl font-bold">
-                {statsLoading ? "-" : stats?.pending_count ?? 0}
+                {statsLoading ? "-" : (stats?.pending_count ?? 0)}
               </p>
             </div>
 
@@ -118,7 +156,7 @@ function ApproverDashboard() {
                 <p className="text-xs font-semibold">Approved</p>
               </div>
               <p className="text-2xl font-bold">
-                {statsLoading ? "-" : stats?.approved_count ?? 0}
+                {statsLoading ? "-" : (stats?.approved_count ?? 0)}
               </p>
             </div>
 
@@ -128,7 +166,7 @@ function ApproverDashboard() {
                 <p className="text-xs font-semibold">Rejected</p>
               </div>
               <p className="text-2xl font-bold">
-                {statsLoading ? "-" : stats?.rejected_count ?? 0}
+                {statsLoading ? "-" : (stats?.rejected_count ?? 0)}
               </p>
             </div>
 
@@ -138,7 +176,7 @@ function ApproverDashboard() {
                 <p className="text-xs font-semibold">Processed</p>
               </div>
               <p className="text-2xl font-bold">
-                {statsLoading ? "-" : stats?.processed_count ?? 0}
+                {statsLoading ? "-" : (stats?.processed_count ?? 0)}
               </p>
             </div>
           </div>
@@ -160,7 +198,9 @@ function ApproverDashboard() {
 
             <RequestsMobileCards
               requests={[...(requests as unknown as RequestItem[])].sort(
-                (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+                (a, b) =>
+                  new Date(b.date_requested).getTime() -
+                  new Date(a.date_requested).getTime(),
               )}
               loading={requestsLoading}
               onView={handleViewClick}
@@ -182,6 +222,15 @@ function ApproverDashboard() {
                 ? `Managing ${stats.team_count} team${stats.team_count > 1 ? "s" : ""}: ${stats.team_names.join(", ")}`
                 : "Review and approve redemption requests from your teams"}
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Auto-refreshes every 5s</span>
+              {lastUpdatedLabel && (
+                <span>
+                  • Updated {lastUpdatedLabel}
+                  {isRefreshing ? " · refreshing" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -193,7 +242,7 @@ function ApproverDashboard() {
               <p className="font-semibold text-sm">Pending</p>
             </div>
             <p className="text-4xl font-bold">
-              {statsLoading ? "-" : stats?.pending_count ?? 0}
+              {statsLoading ? "-" : (stats?.pending_count ?? 0)}
             </p>
           </div>
 
@@ -203,7 +252,7 @@ function ApproverDashboard() {
               <p className="font-semibold text-sm">Approved</p>
             </div>
             <p className="text-4xl font-bold">
-              {statsLoading ? "-" : stats?.approved_count ?? 0}
+              {statsLoading ? "-" : (stats?.approved_count ?? 0)}
             </p>
           </div>
 
@@ -213,7 +262,7 @@ function ApproverDashboard() {
               <p className="font-semibold text-sm">Rejected</p>
             </div>
             <p className="text-4xl font-bold">
-              {statsLoading ? "-" : stats?.rejected_count ?? 0}
+              {statsLoading ? "-" : (stats?.rejected_count ?? 0)}
             </p>
           </div>
 
@@ -223,7 +272,7 @@ function ApproverDashboard() {
               <p className="font-semibold text-sm">Processed</p>
             </div>
             <p className="text-4xl font-bold">
-              {statsLoading ? "-" : stats?.processed_count ?? 0}
+              {statsLoading ? "-" : (stats?.processed_count ?? 0)}
             </p>
           </div>
         </div>
@@ -261,7 +310,9 @@ function ApproverDashboard() {
 
           <RequestsTable
             requests={[...(requests as unknown as RequestItem[])].sort(
-              (a, b) => new Date(b.date_requested).getTime() - new Date(a.date_requested).getTime()
+              (a, b) =>
+                new Date(b.date_requested).getTime() -
+                new Date(a.date_requested).getTime(),
             )}
             loading={requestsLoading}
             onView={handleViewClick}

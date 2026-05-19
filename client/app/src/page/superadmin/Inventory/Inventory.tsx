@@ -1,12 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { fetchWithCsrf } from "@/lib/csrf";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useInventoryPage } from "@/hooks/queries/useInventory";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
@@ -19,10 +15,7 @@ import {
 } from "./modals";
 import { inventoryApi } from "@/lib/inventory-api";
 import { InventoryHistoryModal } from "@/components/modals";
-import {
-  InventoryTable,
-  InventoryMobileCards,
-} from "./components";
+import { InventoryTable, InventoryMobileCards } from "./components";
 
 function Inventory() {
   const queryClient = useQueryClient();
@@ -33,13 +26,26 @@ function Inventory() {
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: inventoryData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useInventoryPage(
-    tablePage + 1, pageSize, searchQuery, 10000,
-  );
+  const {
+    data: inventoryData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useInventoryPage(tablePage + 1, pageSize, searchQuery, 10000);
   const items = inventoryData?.results ?? [];
   const totalCount = inventoryData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
-  const error = queryError ? "Failed to load inventory items. Please try again." : null;
+  const error = queryError
+    ? "Failed to load inventory items. Please try again."
+    : null;
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -48,7 +54,11 @@ function Inventory() {
   const [viewTarget, setViewTarget] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTarget, setEditTarget] = useState<InventoryItem | null>(null);
-  const [editData, setEditData] = useState({ action: "add" as "add" | "decrease", quantity: "", reason: "" });
+  const [editData, setEditData] = useState({
+    action: "add" as "add" | "decrease",
+    quantity: "",
+    reason: "",
+  });
   const [updating, setUpdating] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -57,11 +67,13 @@ function Inventory() {
 
   // History modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyTarget, setHistoryTarget] = useState<InventoryItem | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<InventoryItem | null>(
+    null,
+  );
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.inventory.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   const handlePageChange = useCallback((pageIndex: number) => {
     setTablePage(pageIndex);
@@ -102,7 +114,9 @@ function Inventory() {
   };
 
   // Handle set inventory - batch updates (only changed items)
-  const handleSetStock = async (updates: { id: number; adjustment: number; reason: string }[]) => {
+  const handleSetStock = async (
+    updates: { id: number; adjustment: number; reason: string }[],
+  ) => {
     try {
       setMutationLoading(true);
 
@@ -113,7 +127,9 @@ function Inventory() {
       setShowSetInventoryModal(false);
 
       if (result.failed_count === 0) {
-        toast.success(`Successfully updated stock for ${result.updated_count} item(s)`);
+        toast.success(
+          `Successfully updated stock for ${result.updated_count} item(s)`,
+        );
       } else {
         toast.warning(
           `Updated ${result.updated_count} of ${updates.length} item(s). ${result.failed_count} failed.`,
@@ -123,17 +139,27 @@ function Inventory() {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
     } catch (err) {
       console.error("Error updating stock:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to update stock");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update stock",
+      );
     } finally {
       setMutationLoading(false);
     }
   };
 
   // Handle bulk set stock
-  const handleBulkSetStock = async (stockDelta: number, password: string, reason: string) => {
+  const handleBulkSetStock = async (
+    stockDelta: number,
+    password: string,
+    reason: string,
+  ) => {
     try {
       setMutationLoading(true);
-      const result = await inventoryApi.bulkUpdateStock(stockDelta, password, reason);
+      const result = await inventoryApi.bulkUpdateStock(
+        stockDelta,
+        password,
+        reason,
+      );
 
       // Success
       setShowSetInventoryModal(false);
@@ -144,7 +170,9 @@ function Inventory() {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all });
     } catch (err) {
       console.error("Error bulk updating stock:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to bulk update stock");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to bulk update stock",
+      );
     } finally {
       setMutationLoading(false);
     }
@@ -226,25 +254,24 @@ function Inventory() {
 
   return (
     <>
-
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold">Inventory</h1>
-              <p
-                className="text-sm text-muted-foreground"
-              >
-                View and manage stock levels and reorder points.
-              </p>
-            </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold">Inventory</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage stock levels and reorder points.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
+        </div>
 
-          {/* Table */}
-          <div className="flex-1 min-h-0">
-            <InventoryTable
-              items={items}
+        {/* Table */}
+        <div className="flex-1 min-h-0">
+          <InventoryTable
+            items={items}
             loading={loading}
             error={error}
             onViewItem={handleViewClick}
@@ -266,69 +293,67 @@ function Inventory() {
             onPageSizeChange={handlePageSizeChange}
             fillHeight
           />
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
+        <h2 className="text-xl font-semibold mb-2">Inventory</h2>
+        <p className="text-xs mb-4 text-muted-foreground">
+          Manage stock levels
+        </p>
+
+        {/* Mobile Search */}
+        <div className="mb-4">
+          <div className="relative flex items-center rounded-lg border bg-card border-border">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search....."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setTablePage(0);
+              }}
+              className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-          <h2 className="text-xl font-semibold mb-2">Inventory</h2>
-          <p
-            className="text-xs mb-4 text-muted-foreground"
-          >
-            Manage stock levels
-          </p>
+        {/* Mobile Cards and Pagination */}
+        <InventoryMobileCards
+          items={items}
+          loading={loading}
+          error={error}
+          onViewItem={handleViewClick}
+          onEditItem={handleEditClick}
+          onRetry={() => refetch()}
+          searchQuery={searchQuery}
+        />
 
-          {/* Mobile Search */}
-          <div className="mb-4">
-            <div
-              className="relative flex items-center rounded-lg border bg-card border-border"
+        {items.length > 0 && !loading && !error && (
+          <div className="flex items-center justify-center gap-2 mt-4 pb-2">
+            <button
+              onClick={() => setTablePage((p) => Math.max(0, p - 1))}
+              disabled={tablePage === 0}
+              className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setTablePage(0);
-                }}
-                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-xs font-medium px-2">
+              Page {tablePage + 1} of {pageCount}
+            </span>
+            <button
+              onClick={() =>
+                setTablePage((p) => Math.min(pageCount - 1, p + 1))
+              }
+              disabled={tablePage >= pageCount - 1}
+              className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
-
-          {/* Mobile Cards and Pagination */}
-          <InventoryMobileCards
-            items={items}
-            loading={loading}
-            error={error}
-            onViewItem={handleViewClick}
-            onEditItem={handleEditClick}
-            onRetry={() => refetch()}
-            searchQuery={searchQuery}
-          />
-
-          {items.length > 0 && !loading && !error && (
-            <div className="flex items-center justify-center gap-2 mt-4 pb-2">
-              <button
-                onClick={() => setTablePage((p) => Math.max(0, p - 1))}
-                disabled={tablePage === 0}
-                className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <span className="text-xs font-medium px-2">
-                Page {tablePage + 1} of {pageCount}
-              </span>
-              <button
-                onClick={() => setTablePage((p) => Math.min(pageCount - 1, p + 1))}
-                disabled={tablePage >= pageCount - 1}
-                className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
       <ViewInventoryModal
         isOpen={showViewModal && !!viewTarget}

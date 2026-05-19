@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Search, Plus } from "lucide-react";
@@ -6,7 +6,11 @@ import { useDistributorsPage } from "@/hooks/queries/useDistributors";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
-import { distributorsApi, type Distributor, type ChunkedUpdateProgress } from "@/lib/distributors-api";
+import {
+  distributorsApi,
+  type Distributor,
+  type ChunkedUpdateProgress,
+} from "@/lib/distributors-api";
 import { API_URL } from "@/lib/config";
 import {
   CreateDistributorModal,
@@ -33,19 +37,38 @@ function Distributors() {
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: distributorsData, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useDistributorsPage(
-    tablePage + 1, pageSize, searchQuery, showArchived, 10000,
+  const {
+    data: distributorsData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useDistributorsPage(
+    tablePage + 1,
+    pageSize,
+    searchQuery,
+    showArchived,
+    10000,
   );
   const distributors = distributorsData?.results ?? [];
   const totalCount = distributorsData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
-  const error = queryError ? "Failed to load distributors. Please try again." : null;
+  const error = queryError
+    ? "Failed to load distributors. Please try again."
+    : null;
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) {
+      return "Auto-refreshes every 10s";
+    }
+    return `Auto-refreshes every 10s • Updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [dataUpdatedAt]);
 
   const [mutationLoading, setMutationLoading] = useState(false);
 
   const handleManualRefresh = useCallback(() => {
-    queryClient.resetQueries({ queryKey: queryKeys.distributors.all });
-  }, [queryClient]);
+    refetch();
+  }, [refetch]);
 
   // Reset to first page when showArchived changes
   useEffect(() => {
@@ -98,16 +121,22 @@ function Distributors() {
   >(null);
   const [viewTarget, setViewTarget] = useState<Distributor | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Distributor | null>(null);
-  const [unarchiveTarget, setUnarchiveTarget] = useState<Distributor | null>(null);
-  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Distributor[]>([]);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<Distributor | null>(
+    null,
+  );
+  const [bulkArchiveTargets, setBulkArchiveTargets] = useState<Distributor[]>(
+    [],
+  );
   const [editError, setEditError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSetPointsModal, setShowSetPointsModal] = useState(false);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
-  const [pointsHistoryTarget, setPointsHistoryTarget] = useState<Distributor | null>(null);
+  const [pointsHistoryTarget, setPointsHistoryTarget] =
+    useState<Distributor | null>(null);
   const [settingPoints, setSettingPoints] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState<ChunkedUpdateProgress | null>(null);
+  const [updateProgress, setUpdateProgress] =
+    useState<ChunkedUpdateProgress | null>(null);
   const [showSalesVolumeModal, setShowSalesVolumeModal] = useState(false);
   const [allocatingVolume, setAllocatingVolume] = useState(false);
 
@@ -238,21 +267,25 @@ function Distributors() {
     try {
       setMutationLoading(true);
       const response = await fetch(`${API_URL}/distributors/${id}/unarchive/`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to unarchive distributor');
+        throw new Error(errorData.error || "Failed to unarchive distributor");
       }
-      
+
       setShowUnarchiveModal(false);
       setUnarchiveTarget(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error unarchiving distributor:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to unarchive distributor. Please try again.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to unarchive distributor. Please try again.",
+      );
     } finally {
       setMutationLoading(false);
     }
@@ -270,12 +303,16 @@ function Distributors() {
       setMutationLoading(true);
       const archiveResults = await Promise.allSettled(
         bulkArchiveTargets.map((distributor) =>
-          distributorsApi.deleteDistributor(distributor.id)
-        )
+          distributorsApi.deleteDistributor(distributor.id),
+        ),
       );
 
-      const successCount = archiveResults.filter((r) => r.status === "fulfilled").length;
-      const failCount = archiveResults.filter((r) => r.status === "rejected").length;
+      const successCount = archiveResults.filter(
+        (r) => r.status === "fulfilled",
+      ).length;
+      const failCount = archiveResults.filter(
+        (r) => r.status === "rejected",
+      ).length;
 
       setShowBulkArchiveModal(false);
       setBulkArchiveTargets([]);
@@ -283,7 +320,9 @@ function Distributors() {
       if (failCount === 0) {
         toast.success(`Successfully archived ${successCount} distributor(s)`);
       } else {
-        toast.warning(`Archived ${successCount} of ${bulkArchiveTargets.length} distributor(s). ${failCount} failed.`);
+        toast.warning(
+          `Archived ${successCount} of ${bulkArchiveTargets.length} distributor(s). ${failCount} failed.`,
+        );
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
@@ -296,7 +335,10 @@ function Distributors() {
   };
 
   // Handle set points submission - batch updates with chunking for large datasets
-  const handleSetPoints = async (updates: { id: number; points: number }[], reason: string = '') => {
+  const handleSetPoints = async (
+    updates: { id: number; points: number }[],
+    reason: string = "",
+  ) => {
     try {
       setSettingPoints(true);
       setUpdateProgress(null);
@@ -309,7 +351,7 @@ function Distributors() {
             setUpdateProgress(progress);
           },
           150, // Chunk size
-          reason
+          reason,
         );
 
         setShowSetPointsModal(false);
@@ -451,26 +493,35 @@ function Distributors() {
   // Handle sales volume allocation
   const handleSalesVolumeAllocate = async (
     allocations: { id: number; sales_volume: number }[],
-    reason: string = ''
+    reason: string = "",
   ) => {
     try {
       setAllocatingVolume(true);
-      const result = await distributorsApi.allocateSalesVolume(allocations, reason);
+      const result = await distributorsApi.allocateSalesVolume(
+        allocations,
+        reason,
+      );
 
       setShowSalesVolumeModal(false);
 
       if (result.failed_count === 0) {
-        toast.success(`Successfully allocated points for ${result.updated_count} distributor(s)`);
+        toast.success(
+          `Successfully allocated points for ${result.updated_count} distributor(s)`,
+        );
       } else {
         toast.warning(
-          `Allocated points for ${result.updated_count} distributor(s). ${result.failed_count} failed.`
+          `Allocated points for ${result.updated_count} distributor(s). ${result.failed_count} failed.`,
         );
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeys.distributors.all });
     } catch (err) {
       console.error("Error allocating sales volume points:", err);
-      toast.error(err instanceof Error ? err.message : "Error allocating points. Please try again.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Error allocating points. Please try again.",
+      );
     } finally {
       setAllocatingVolume(false);
     }
@@ -478,32 +529,33 @@ function Distributors() {
 
   return (
     <>
-
-
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-semibold">Distributors</h1>
-              <p className="text-sm text-muted-foreground">
-                View and manage distributor information.
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showArchived}
-                  onChange={(e) => handleToggleArchived(e.target.checked)}
-                  className="rounded border-border"
-                />
-                Show Archived
-              </label>
-            </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex md:flex-col md:h-full md:overflow-hidden md:p-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold">Distributors</h1>
+            <p className="text-sm text-muted-foreground">
+              View and manage distributor information.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lastUpdatedLabel}
+            </p>
           </div>
-          <div className="flex-1 min-h-0">
-            <DistributorsTable
-              distributors={distributors}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => handleToggleArchived(e.target.checked)}
+                className="rounded border-border"
+              />
+              Show Archived
+            </label>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0">
+          <DistributorsTable
+            distributors={distributors}
             loading={loading}
             error={error}
             onRetry={() => refetch()}
@@ -532,63 +584,59 @@ function Distributors() {
             onPageSizeChange={handlePageSizeChange}
             fillHeight
           />
+        </div>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
+        <h2 className="text-xl font-semibold mb-2">Distributors</h2>
+        <p className="text-xs mb-4 text-muted-foreground">
+          Manage distributors
+        </p>
+
+        {/* Mobile Search */}
+        <div className="mb-4">
+          <div className="relative flex items-center rounded-lg border bg-card border-border">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search....."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setTablePage(0);
+              }}
+              className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
+            />
           </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 overflow-y-auto p-4 pb-24">
-          <h2 className="text-xl font-semibold mb-2">Distributors</h2>
-          <p
-            className="text-xs mb-4 text-muted-foreground"
+        <div className="mb-4">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-card text-foreground border-border hover:bg-accent"
           >
-            Manage distributors
-          </p>
-
-          {/* Mobile Search */}
-          <div className="mb-4">
-            <div
-              className="relative flex items-center rounded-lg border bg-card border-border"
-            >
-              <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search....."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setTablePage(0);
-                }}
-                className="pl-10 w-full text-sm bg-transparent border-0 text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 border text-sm font-semibold transition-colors bg-card text-foreground border-border hover:bg-accent"
-            >
-              <Plus className="h-4 w-4" />
-              Add Distributor
-            </button>
-          </div>
-
-          {/* Mobile Cards */}
-          <DistributorsMobileCards
-            distributors={distributors}
-            paginatedDistributors={distributors}
-            filteredDistributors={distributors}
-            loading={loading}
-            error={error}
-            onRetry={() => refetch()}
-            page={tablePage + 1}
-            totalPages={pageCount}
-            onPageChange={(p) => setTablePage(p - 1)}
-            onView={handleViewClick}
-            onEdit={handleEditClick}
-            onArchive={handleArchiveClick}
-            onUnarchive={handleUnarchiveClick}
-          />
+            <Plus className="h-4 w-4" />
+            Add Distributor
+          </button>
         </div>
+
+        {/* Mobile Cards */}
+        <DistributorsMobileCards
+          distributors={distributors}
+          paginatedDistributors={distributors}
+          filteredDistributors={distributors}
+          loading={loading}
+          error={error}
+          onRetry={() => refetch()}
+          page={tablePage + 1}
+          totalPages={pageCount}
+          onPageChange={(p) => setTablePage(p - 1)}
+          onView={handleViewClick}
+          onEdit={handleEditClick}
+          onArchive={handleArchiveClick}
+          onUnarchive={handleUnarchiveClick}
+        />
+      </div>
       {/* Create Distributor Modal */}
       <CreateDistributorModal
         isOpen={showCreateModal}

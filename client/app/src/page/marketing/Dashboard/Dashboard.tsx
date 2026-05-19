@@ -3,7 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { handlerRequestsApi } from "@/lib/api";
-import { useHandlerRequests, useHandlerHistory } from "@/hooks/queries/useMarketingRequests";
+import {
+  useHandlerRequests,
+  useHandlerHistory,
+} from "@/hooks/queries/useMarketingRequests";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -27,18 +30,35 @@ function MarketingDashboard() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showProcessModal, setShowProcessModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+  const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(
+    null,
+  );
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null,
+  );
+  const [myProcessingStatus, setMyProcessingStatus] =
+    useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
+  const [selectedCancelRequest, setSelectedCancelRequest] =
+    useState<RequestItem | null>(null);
 
-  const { data: requests = [], dataUpdatedAt, isLoading: requestsLoading, isFetching: refreshing, error: requestsError } = useHandlerRequests(5000);
-  const { data: historyRequests = [], isLoading: historyLoading } = useHandlerHistory(10000);
+  const {
+    data: requests = [],
+    dataUpdatedAt,
+    isLoading: requestsLoading,
+    isFetching: refreshing,
+    error: requestsError,
+  } = useHandlerRequests(5000);
+  const { data: historyRequests = [], isLoading: historyLoading } =
+    useHandlerHistory(10000);
 
   const loading = requestsLoading || historyLoading;
-  const error = requestsError ? (requestsError instanceof Error ? requestsError.message : "Failed to load dashboard data") : null;
+  const error = requestsError
+    ? requestsError instanceof Error
+      ? requestsError.message
+      : "Failed to load dashboard data"
+    : null;
 
   const handleManualRefresh = useCallback(() => {
     queryClient.resetQueries({ queryKey: queryKeys.requests.all });
@@ -69,14 +89,17 @@ function MarketingDashboard() {
       request_processing_status_display: request.processing_status_display,
       date_requested: request.date_requested,
       request: request,
-    }))
+    })),
   );
 
   // Compute stats
-  const itemsToProcess = flattenedItems.filter((item) => !item.item_processed_by).length;
+  const itemsToProcess = flattenedItems.filter(
+    (item) => !item.item_processed_by,
+  ).length;
   const processedItemsCount = historyRequests.reduce(
-    (count, req) => count + req.items.filter((item) => !!item.item_processed_by).length,
-    0
+    (count, req) =>
+      count + req.items.filter((item) => !!item.item_processed_by).length,
+    0,
   );
   const totalRequests = requests.length;
 
@@ -129,7 +152,10 @@ function MarketingDashboard() {
     }
   };
 
-  const handleMarkProcessedConfirm = async (items: ProcessItemData[], photo?: File) => {
+  const handleMarkProcessedConfirm = async (
+    items: ProcessItemData[],
+    photo?: File,
+  ) => {
     if (!selectedRequest) return;
 
     setIsSubmitting(true);
@@ -143,7 +169,11 @@ function MarketingDashboard() {
       queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error marking items as processed:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark items as processed",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -165,7 +195,9 @@ function MarketingDashboard() {
       queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error cancelling request:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to cancel request");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to cancel request",
+      );
     }
   };
 

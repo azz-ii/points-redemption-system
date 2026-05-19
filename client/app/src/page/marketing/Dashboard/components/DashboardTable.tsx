@@ -32,25 +32,29 @@ export function DashboardTable({
         onMarkItemProcessed,
         onCancelRequest,
       }),
-    [onViewRequest, onMarkItemProcessed, onCancelRequest]
+    [onViewRequest, onMarkItemProcessed, onCancelRequest],
   );
 
-  const globalFilterFn = (row: Row<FlattenedRequestItem>, _columnId: string, filterValue: string) => {
+  const globalFilterFn = (
+    row: Row<FlattenedRequestItem>,
+    _columnId: string,
+    filterValue: string,
+  ) => {
     const item = row.original as FlattenedRequestItem;
     const searchLower = String(filterValue).toLowerCase();
 
     const searchableFields = [
       String(item.requestId),
-      item.product_code?.toLowerCase() || '',
-      item.product_name?.toLowerCase() || '',
-      item.requested_for_name?.toLowerCase() || '',
-      item.requested_by_name?.toLowerCase() || '',
-      item.category?.toLowerCase() || '',
-      item.request_status_display?.toLowerCase() || '',
-      item.request_processing_status_display?.toLowerCase() || '',
+      item.product_code?.toLowerCase() || "",
+      item.product_name?.toLowerCase() || "",
+      item.requested_for_name?.toLowerCase() || "",
+      item.requested_by_name?.toLowerCase() || "",
+      item.category?.toLowerCase() || "",
+      item.request_status_display?.toLowerCase() || "",
+      item.request_processing_status_display?.toLowerCase() || "",
     ];
 
-    return searchableFields.some(field => field.includes(searchLower));
+    return searchableFields.some((field) => field.includes(searchLower));
   };
 
   return (

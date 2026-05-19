@@ -16,13 +16,20 @@ function ItemAssignments() {
   const [tablePage, setTablePage] = useState(0);
   const [pageSize, setPageSize] = useState(15);
 
-  const { data: assignedData, dataUpdatedAt, isLoading: loading, isFetching: refreshing, error: queryError, refetch } = useAssignedItemsPage(
-    tablePage + 1, pageSize, searchQuery, 10000,
-  );
+  const {
+    data: assignedData,
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+    refetch,
+  } = useAssignedItemsPage(tablePage + 1, pageSize, searchQuery, 10000);
   const items = assignedData?.results ?? [];
   const totalCount = assignedData?.count ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
-  const error = queryError ? "Failed to load assigned items. Please try again." : null;
+  const error = queryError
+    ? "Failed to load assigned items. Please try again."
+    : null;
 
   const lastUpdatedLabel = useMemo(() => {
     if (!dataUpdatedAt) return null;
@@ -162,7 +169,9 @@ function ItemAssignments() {
               Page {tablePage + 1} of {pageCount}
             </span>
             <button
-              onClick={() => setTablePage((p) => Math.min(pageCount - 1, p + 1))}
+              onClick={() =>
+                setTablePage((p) => Math.min(pageCount - 1, p + 1))
+              }
               disabled={tablePage >= pageCount - 1}
               className="p-1.5 rounded transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
             >

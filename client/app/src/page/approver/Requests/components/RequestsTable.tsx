@@ -28,7 +28,7 @@ export function RequestsTable({
 }: RequestsTableProps) {
   const columns = useMemo(
     () => createColumns({ onView, onApprove, onReject, currentUserUsername }),
-    [onView, onApprove, onReject, currentUserUsername]
+    [onView, onApprove, onReject, currentUserUsername],
   );
 
   return (
@@ -42,15 +42,24 @@ export function RequestsTable({
       globalFilterFn={(row, _columnId, filterValue) => {
         const s = String(filterValue).toLowerCase();
         return (
-          String(row.getValue("requested_by_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("requested_for_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("team_name") || "").toLowerCase().includes(s) ||
-          String(row.getValue("status") || "").toLowerCase().includes(s) ||
+          String(row.getValue("requested_by_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("requested_for_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("team_name") || "")
+            .toLowerCase()
+            .includes(s) ||
+          String(row.getValue("status") || "")
+            .toLowerCase()
+            .includes(s) ||
           String(row.original.id || "").includes(s)
         );
       }}
       initialSorting={[{ id: "date_requested", desc: true }]}
       pageSize={15}
+      preservePageOnDataRefresh={true}
       loadingMessage="Loading requests..."
       emptyMessage="No requests found"
       pageSizeOptions={[15, 50, 100]}

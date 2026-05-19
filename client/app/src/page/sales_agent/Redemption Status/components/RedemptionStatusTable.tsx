@@ -44,22 +44,26 @@ export function RedemptionStatusTable({
   const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
     const request = row.original as RedemptionRequest;
     const searchLower = String(filterValue).toLowerCase();
-    
+
     // Search in: request ID, customer name, item names, total points, status
     const searchableFields = [
       String(request.id),
-      request.requested_for_name?.toLowerCase() || '',
-      request.status_display?.toLowerCase() || '',
+      request.requested_for_name?.toLowerCase() || "",
+      request.status_display?.toLowerCase() || "",
       String(request.total_points),
-      ...(request.items?.map(item => item.product_name.toLowerCase()) || []),
-      ...(request.items?.map(item => item.product_code.toLowerCase()) || []),
+      ...(request.items?.map((item) => item.product_name.toLowerCase()) || []),
+      ...(request.items?.map((item) => item.product_code.toLowerCase()) || []),
     ];
-    
-    return searchableFields.some(field => field.includes(searchLower));
+
+    return searchableFields.some((field) => field.includes(searchLower));
   };
 
   return (
-    <div className={fillHeight ? "h-full overflow-hidden relative" : "hidden md:block"}>
+    <div
+      className={
+        fillHeight ? "h-full overflow-hidden relative" : "hidden md:block"
+      }
+    >
       <div className={fillHeight ? "absolute inset-0" : undefined}>
         <DataTable
           columns={columns}
@@ -73,6 +77,7 @@ export function RedemptionStatusTable({
           showSearch={true}
           showPagination={true}
           showColumnVisibility={true}
+          preservePageOnDataRefresh={true}
           pageSize={15}
           initialSorting={[{ id: "date_requested", desc: true }]}
           loadingMessage="Loading requests..."

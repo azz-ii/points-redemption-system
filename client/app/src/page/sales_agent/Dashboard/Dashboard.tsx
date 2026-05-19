@@ -13,29 +13,46 @@ function SalesAgentDashboard() {
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = useAgentDashboardStats(30_000);
-  const { data: allRequests = [], isLoading: requestsLoading, isFetching: isRefreshing, refetch } = useRequests(30_000);
+  const { data: stats, isLoading: statsLoading } =
+    useAgentDashboardStats(30_000);
+  const {
+    data: allRequests = [],
+    dataUpdatedAt,
+    isLoading: requestsLoading,
+    isFetching: isRefreshing,
+    refetch,
+  } = useRequests(30_000);
 
   const requests = useMemo(
-    () => (allRequests as any[])
-      .filter((req) => req.status === "PENDING")
-      .map(
-        (req) =>
-          ({
-            id: req.id,
-            requested_by: req.requested_by,
-            requested_by_name: req.requested_by_name,
-            requested_for: req.requested_for,
-            requested_for_name: req.requested_for_name,
-            status: req.status,
-            processing_status: req.processing_status,
-            total_points: req.total_points,
-            date_requested: req.date_requested,
-            items: req.items,
-          }) as RedemptionItem,
-      ),
+    () =>
+      (allRequests as any[])
+        .filter((req) => req.status === "PENDING")
+        .map(
+          (req) =>
+            ({
+              id: req.id,
+              requested_by: req.requested_by,
+              requested_by_name: req.requested_by_name,
+              requested_for: req.requested_for,
+              requested_for_name: req.requested_for_name,
+              status: req.status,
+              processing_status: req.processing_status,
+              total_points: req.total_points,
+              date_requested: req.date_requested,
+              items: req.items,
+            }) as RedemptionItem,
+        ),
     [allRequests],
   );
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!dataUpdatedAt) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(dataUpdatedAt);
+  }, [dataUpdatedAt]);
 
   const handleRefreshRequests = () => {
     refetch();
@@ -52,16 +69,21 @@ function SalesAgentDashboard() {
           <p className="text-xs text-muted-foreground mb-4">
             Manage your points and track redemptions
           </p>
+          <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>Auto-refreshes every 30s</span>
+            {lastUpdatedLabel && (
+              <span>
+                • Updated {lastUpdatedLabel}
+                {isRefreshing ? " · refreshing" : ""}
+              </span>
+            )}
+          </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <div
-              className="p-4 rounded-lg border bg-card border-border"
-            >
+            <div className="p-4 rounded-lg border bg-card border-border">
               <div className="flex items-center gap-2 mb-2">
-                <div
-                  className="w-2 h-2 rounded-full bg-yellow-500 dark:bg-yellow-400"
-                />
+                <div className="w-2 h-2 rounded-full bg-yellow-500 dark:bg-yellow-400" />
                 <p className="text-xs font-semibold">Pending</p>
               </div>
               <p className="text-2xl font-bold">
@@ -69,13 +91,9 @@ function SalesAgentDashboard() {
               </p>
             </div>
 
-            <div
-              className="p-4 rounded-lg border bg-card border-border"
-            >
+            <div className="p-4 rounded-lg border bg-card border-border">
               <div className="flex items-center gap-2 mb-2">
-                <div
-                  className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400"
-                />
+                <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" />
                 <p className="text-xs font-semibold">Processed</p>
               </div>
               <p className="text-2xl font-bold">
@@ -83,13 +101,9 @@ function SalesAgentDashboard() {
               </p>
             </div>
 
-            <div
-              className="p-4 rounded-lg border bg-card border-border"
-            >
+            <div className="p-4 rounded-lg border bg-card border-border">
               <div className="flex items-center gap-2 mb-2">
-                <div
-                  className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400"
-                />
+                <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400" />
                 <p className="text-xs font-semibold">Approved</p>
               </div>
               <p className="text-2xl font-bold">
@@ -97,13 +111,9 @@ function SalesAgentDashboard() {
               </p>
             </div>
 
-            <div
-              className="p-4 rounded-lg border bg-card border-border"
-            >
+            <div className="p-4 rounded-lg border bg-card border-border">
               <div className="flex items-center gap-2 mb-2">
-                <div
-                  className="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400"
-                />
+                <div className="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400" />
                 <p className="text-xs font-semibold">Rejected</p>
               </div>
               <p className="text-2xl font-bold">
@@ -196,24 +206,27 @@ function SalesAgentDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-semibold">Dashboard</h1>
-            <p
-              className="text-sm text-muted-foreground"
-            >
+            <p className="text-sm text-muted-foreground">
               Manage your points and track pending redemption requests
             </p>
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Auto-refreshes every 30s</span>
+              {lastUpdatedLabel && (
+                <span>
+                  • Updated {lastUpdatedLabel}
+                  {isRefreshing ? " · refreshing" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-6 mb-8 lg:grid-cols-4">
           {/* Pending Requests */}
-          <div
-            className="p-6 rounded-lg border bg-card border-border transition-colors"
-          >
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
             <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-2 h-2 rounded-full bg-yellow-500 dark:bg-yellow-400"
-              />
+              <div className="w-2 h-2 rounded-full bg-yellow-500 dark:bg-yellow-400" />
               <p className="font-semibold text-sm">Pending</p>
             </div>
             <p className="text-4xl font-bold">
@@ -222,13 +235,9 @@ function SalesAgentDashboard() {
           </div>
 
           {/* Approved Requests */}
-          <div
-            className="p-6 rounded-lg border bg-card border-border transition-colors"
-          >
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
             <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400"
-              />
+              <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400" />
               <p className="font-semibold text-sm">Approved</p>
             </div>
             <p className="text-4xl font-bold">
@@ -237,13 +246,9 @@ function SalesAgentDashboard() {
           </div>
 
           {/* Processed Requests */}
-          <div
-            className="p-6 rounded-lg border bg-card border-border transition-colors"
-          >
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
             <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400"
-              />
+              <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" />
               <p className="font-semibold text-sm">Processed</p>
             </div>
             <p className="text-4xl font-bold">
@@ -252,19 +257,13 @@ function SalesAgentDashboard() {
           </div>
 
           {/* Points Balance */}
-          <div
-            className="p-6 rounded-lg border bg-card border-border transition-colors"
-          >
+          <div className="p-6 rounded-lg border bg-card border-border transition-colors">
             <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-2 h-2 rounded-full bg-purple-500 dark:bg-purple-400"
-              />
+              <div className="w-2 h-2 rounded-full bg-purple-500 dark:bg-purple-400" />
               <p className="font-semibold text-sm">Points Balance</p>
             </div>
             <p className="text-4xl font-bold">
-              {statsLoading
-                ? "-"
-                : (stats?.agent_points || 0).toLocaleString()}
+              {statsLoading ? "-" : (stats?.agent_points || 0).toLocaleString()}
             </p>
           </div>
         </div>
@@ -308,7 +307,9 @@ function SalesAgentDashboard() {
             onRefresh={handleRefreshRequests}
             refreshing={isRefreshing}
             onViewRequest={(item) => {
-              const fullRequest = allRequests.find((req: any) => req.id === item.id);
+              const fullRequest = allRequests.find(
+                (req: any) => req.id === item.id,
+              );
               if (fullRequest) {
                 setSelectedRequest(fullRequest);
                 setShowViewModal(true);
@@ -317,7 +318,7 @@ function SalesAgentDashboard() {
           />
         </div>
       </div>
-      
+
       <ViewRedemptionStatusModal
         isOpen={showViewModal}
         onClose={() => {

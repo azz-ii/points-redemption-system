@@ -1,13 +1,12 @@
 import { useState, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useHandlerRequests } from "@/hooks/queries/useMarketingRequests";
-import { useMarkItemsProcessed, useHandlerCancelRequest } from "@/hooks/mutations/useMarketingMutations";
+import {
+  useMarkItemsProcessed,
+  useHandlerCancelRequest,
+} from "@/hooks/mutations/useMarketingMutations";
 import {
   ViewRequestModal,
   MarkItemsProcessedModal,
@@ -30,15 +29,31 @@ function ProcessRequests() {
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [showProcessModal, setShowProcessModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
-  const [myProcessingStatus, setMyProcessingStatus] = useState<MyProcessingStatus | null>(null);
+  const [selectedItem, setSelectedItem] = useState<FlattenedRequestItem | null>(
+    null,
+  );
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(
+    null,
+  );
+  const [myProcessingStatus, setMyProcessingStatus] =
+    useState<MyProcessingStatus | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedCancelRequest, setSelectedCancelRequest] = useState<RequestItem | null>(null);
+  const [selectedCancelRequest, setSelectedCancelRequest] =
+    useState<RequestItem | null>(null);
 
-  const { data: requests = [], dataUpdatedAt, isLoading: loading, isFetching: refreshing, error: queryError } = useHandlerRequests(30_000);
-  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load requests") : null;
+  const {
+    data: requests = [],
+    dataUpdatedAt,
+    isLoading: loading,
+    isFetching: refreshing,
+    error: queryError,
+  } = useHandlerRequests(30_000);
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : "Failed to load requests"
+    : null;
 
   const markItemsMutation = useMarkItemsProcessed();
   const cancelMutation = useHandlerCancelRequest();
@@ -60,20 +75,24 @@ function ProcessRequests() {
   };
 
   // Flatten requests to items for table display
-  const flattenedItems: FlattenedRequestItem[] = useMemo(() => requests.flatMap((request) =>
-    request.items.map((item) => ({
-      ...item,
-      requestId: request.id,
-      requested_by_name: request.requested_by_name,
-      requested_for_name: request.requested_for_name,
-      request_status: request.status,
-      request_status_display: request.status_display,
-      request_processing_status: request.processing_status,
-      request_processing_status_display: request.processing_status_display,
-      date_requested: request.date_requested,
-      request: request,
-    }))
-  ), [requests]);
+  const flattenedItems: FlattenedRequestItem[] = useMemo(
+    () =>
+      requests.flatMap((request) =>
+        request.items.map((item) => ({
+          ...item,
+          requestId: request.id,
+          requested_by_name: request.requested_by_name,
+          requested_for_name: request.requested_for_name,
+          request_status: request.status,
+          request_status_display: request.status_display,
+          request_processing_status: request.processing_status,
+          request_processing_status_display: request.processing_status_display,
+          date_requested: request.date_requested,
+          request: request,
+        })),
+      ),
+    [requests],
+  );
 
   const lastUpdatedLabel = useMemo(() => {
     if (!dataUpdatedAt) return null;
@@ -129,7 +148,10 @@ function ProcessRequests() {
     }
   };
 
-  const handleMarkProcessedConfirm = async (items: ProcessItemData[], photo?: File) => {
+  const handleMarkProcessedConfirm = async (
+    items: ProcessItemData[],
+    photo?: File,
+  ) => {
     if (!selectedRequest) return;
 
     setIsSubmitting(true);
@@ -138,10 +160,15 @@ function ProcessRequests() {
       // Upload processing photo if provided (separate call, non-blocking on success)
       if (photo) {
         try {
-          await handlerRequestsApi.uploadProcessingPhoto(selectedRequest.id, photo);
+          await handlerRequestsApi.uploadProcessingPhoto(
+            selectedRequest.id,
+            photo,
+          );
         } catch (photoErr) {
           console.error("Error uploading processing photo:", photoErr);
-          toast.warning("Items processed, but photo upload failed. You can try again later.");
+          toast.warning(
+            "Items processed, but photo upload failed. You can try again later.",
+          );
         }
       }
       toast.success("Items marked as processed successfully");
@@ -152,7 +179,11 @@ function ProcessRequests() {
       queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error marking items as processed:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to mark items as processed");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to mark items as processed",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -174,7 +205,9 @@ function ProcessRequests() {
       queryClient.invalidateQueries({ queryKey: queryKeys.requests.all });
     } catch (err) {
       console.error("Error cancelling request:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to cancel request");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to cancel request",
+      );
     }
   };
 
@@ -186,7 +219,8 @@ function ProcessRequests() {
         <div className="mb-4">
           <h1 className="text-xl font-semibold mb-1">Process Requests</h1>
           <p className="text-xs text-muted-foreground">
-            View and process approved redemption requests for your assigned items
+            View and process approved redemption requests for your assigned
+            items
           </p>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
             <span>Auto-refreshes every 30s</span>
@@ -255,7 +289,8 @@ function ProcessRequests() {
         <div className="mb-6">
           <h1 className="text-2xl font-semibold mb-1">Process Requests</h1>
           <p className="text-sm text-muted-foreground">
-            View and process approved redemption requests for your assigned items
+            View and process approved redemption requests for your assigned
+            items
           </p>
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <span>Auto-refreshes every 30s</span>
