@@ -4,12 +4,12 @@ import * as XLSX from "xlsx";
 import type { RequestHistoryItem } from "../modals";
 
 export interface ExportColumn {
-  key: keyof RequestHistoryItem;
+  key: string;
   label: string;
   enabled: boolean;
 }
 
-export type SortField = keyof RequestHistoryItem;
+export type SortField = string;
 export type SortDirection = "asc" | "desc";
 
 export interface ExportOptions {
@@ -21,12 +21,41 @@ export interface ExportOptions {
 }
 
 export const DEFAULT_EXPORT_COLUMNS: ExportColumn[] = [
+  { key: "id", label: "Request ID", enabled: true },
   { key: "requested_by_name", label: "Requested By", enabled: true },
-  { key: "requested_for_name", label: "Requested For", enabled: true },
+  { key: "requested_for_name", label: "Requested For / Customer", enabled: true },
+  { key: "requested_for_type", label: "Request Type", enabled: false },
+  { key: "team_name", label: "Team", enabled: false },
+  { key: "items_names", label: "Item(s)", enabled: true },
+  { key: "items_quantities", label: "Quantity", enabled: true },
+  { key: "items_points", label: "Points/Item", enabled: true },
+  { key: "total_points", label: "Total Points", enabled: true },
   { key: "status_display", label: "Status", enabled: true },
   { key: "processing_status_display", label: "Processing Status", enabled: true },
-  { key: "total_points", label: "Total Points", enabled: true },
   { key: "date_requested", label: "Date Requested", enabled: true },
+  { key: "initial_remarks", label: "Remarks", enabled: true },
+  { key: "points_deducted_from_display", label: "Points Deducted From", enabled: false },
+  { key: "reviewed_by_name", label: "Reviewed By", enabled: false },
+  { key: "date_reviewed", label: "Date Reviewed", enabled: false },
+  { key: "approver_remarks", label: "Approver Remarks", enabled: false },
+  { key: "rejection_reason", label: "Rejection Reason", enabled: false },
+  { key: "sales_approval_status", label: "Sales Approval Status", enabled: false },
+  { key: "sales_approved_by_name", label: "Sales Approved By", enabled: false },
+  { key: "sales_approval_date", label: "Sales Approval Date", enabled: false },
+  { key: "sales_rejection_reason", label: "Sales Rejection Reason", enabled: false },
+  { key: "processed_by_name", label: "Processed By", enabled: false },
+  { key: "date_processed", label: "Date Processed", enabled: false },
+  { key: "processing_remarks", label: "Processing Remarks", enabled: false },
+  { key: "cancelled_by_name", label: "Cancelled By", enabled: false },
+  { key: "date_cancelled", label: "Date Cancelled", enabled: false },
+  { key: "withdrawal_reason", label: "Withdrawal Reason", enabled: false },
+  { key: "ar_number", label: "AR Number", enabled: false },
+  { key: "ar_status_display", label: "AR Status", enabled: false },
+  { key: "ar_uploaded_by_name", label: "AR Uploaded By", enabled: false },
+  { key: "ar_uploaded_at", label: "AR Uploaded At", enabled: false },
+  { key: "received_by_name", label: "Received By", enabled: false },
+  { key: "received_by_date", label: "Received By Date", enabled: false },
+  { key: "received_by_signature_method_display", label: "Signature Method", enabled: false },
 ];
 
 /**
@@ -48,23 +77,30 @@ function formatDate(dateString: string): string {
 /**
  * Get cell value for export
  */
-function getCellValue(item: RequestHistoryItem, key: ExportColumn["key"]): string | number {
-  switch (key) {
-    case "date_requested": {
-      const value = item[key];
-      return value ? formatDate(value) : "";
-    }
-    default: {
-      const value = item[key as keyof RequestHistoryItem];
-      if (typeof value === "boolean") {
-        return value ? "Yes" : "No";
-      }
-      if (Array.isArray(value)) {
-        return String(value.length);
-      }
-      return value ?? "";
-    }
+function getCellValue(item: RequestHistoryItem, key: string): string | number {
+  if (key === "items_names") {
+    return item.items?.map(i => i.product_name).join(", ") || "";
   }
+  if (key === "items_quantities") {
+    return item.items?.map(i => i.quantity).join(", ") || "";
+  }
+  if (key === "items_points") {
+    return item.items?.map(i => i.points_per_item).join(", ") || "";
+  }
+
+  const value = item[key as keyof RequestHistoryItem];
+  
+  if (key.includes("date") || key.includes("_at") || key === "sales_approval_date") {
+    return value ? formatDate(String(value)) : "";
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  if (Array.isArray(value)) {
+    return String(value.length);
+  }
+  return value ?? "";
 }
 
 /**
@@ -76,11 +112,16 @@ function sortItems(
   sortDirection: SortDirection
 ): RequestHistoryItem[] {
   return [...items].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
+    let aValue: any = a[sortField as keyof RequestHistoryItem];
+    let bValue: any = b[sortField as keyof RequestHistoryItem];
 
-    if (aValue === null || aValue === undefined) return 1;
-    if (bValue === null || bValue === undefined) return -1;
+    if (sortField === "items_names" || sortField === "items_quantities" || sortField === "items_points") {
+      aValue = getCellValue(a, sortField);
+      bValue = getCellValue(b, sortField);
+    }
+
+    if (aValue === null || aValue === undefined || aValue === "") return 1;
+    if (bValue === null || bValue === undefined || bValue === "") return -1;
 
     let comparison = 0;
     if (typeof aValue === "number" && typeof bValue === "number") {

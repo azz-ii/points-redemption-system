@@ -36,7 +36,7 @@ export function ExportModal({ isOpen, onClose, requests }: ExportModalProps) {
     { approved: 0, rejected: 0, cancelled: 0 }
   );
 
-  const toggleColumn = useCallback((key: keyof RequestHistoryItem) => {
+  const toggleColumn = useCallback((key: string) => {
     setColumns((prev) =>
       prev.map((col) => (col.key === key ? { ...col, enabled: !col.enabled } : col))
     );
