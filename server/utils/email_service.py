@@ -901,3 +901,62 @@ def send_request_withdrawn_confirmation_email(request_obj, distributor, withdraw
         logger.error(f"Error sending withdrawal confirmation email for request #{request_obj.id}: {str(e)}")
         logger.exception("Full traceback:")
         return False
+
+
+def send_acknowledgement_receipt_submitted_email(request_obj):
+    """
+    Send email notification to Admins when an acknowledgement receipt is submitted.
+    
+    Args:
+        request_obj: RedemptionRequest model instance
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        from users.models import UserProfile
+        from django.utils import timezone
+        
+        # Get all superadmin (Admin) emails
+        admin_profiles = UserProfile.objects.filter(position='Admin')
+        admin_emails = [profile.email for profile in admin_profiles if profile.email]
+        
+        if not admin_emails:
+            logger.warning(f"No admin emails found for AR submission notification of request #{request_obj.id}")
+            return False
+
+        recipient_name = "Admin"
+        
+        logger.debug(f"Preparing AR submitted notification email for request #{request_obj.id}")
+        logger.debug(f"Sending to {len(admin_emails)} admin(s): {', '.join(admin_emails)}")
+        
+        # Get sales agent
+        sales_agent_name = request_obj.requested_by.username
+        if hasattr(request_obj.requested_by, 'profile') and request_obj.requested_by.profile.full_name:
+            sales_agent_name = request_obj.requested_by.profile.full_name
+            
+        # Customer name
+        customer = request_obj.get_requested_for_entity()
+        customer_name = customer.name if customer else 'Unknown'
+        
+        date_submitted_str = timezone.now().strftime('%B %d, %Y at %I:%M %p')
+        
+        context = {
+            'recipient_name': recipient_name,
+            'request_id': request_obj.id,
+            'sales_agent_name': sales_agent_name,
+            'customer_name': customer_name,
+            'date_submitted': date_submitted_str,
+        }
+        
+        return send_html_email(
+            subject=f"Acknowledgement Receipt Uploaded - Request #{request_obj.id}",
+            template_name='emails/acknowledgement_receipt_submitted.html',
+            context=context,
+            recipient_list=admin_emails
+        )
+        
+    except Exception as e:
+        logger.error(f"Error sending AR submitted email for request #{request_obj.id}: {str(e)}")
+        logger.exception("Full traceback:")
+        return False

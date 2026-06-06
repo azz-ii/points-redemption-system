@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acknowledgement Receipt Submitted</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .email-container {
+            max-width: 650px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .email-body {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 15px;
+            color: #4b5563;
+            margin-bottom: 25px;
+        }
+        .success-badge {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 25px 0;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        }
+        .info-box {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .info-box h3 {
+            margin: 0 0 15px 0;
+            color: #065f46;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #d1fae5;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #065f46;
+            min-width: 180px;
+        }
+        .info-value {
+            color: #374151;
+            flex: 1;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: white;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s;
+        }
+        .action-button:hover {
+            background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
+            box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4);
+        }
+        .footer {
+            background: #f9fafb;
+            padding: 25px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Acknowledgement Receipt Submitted</h1>
+            <p>A receipt has been successfully uploaded for a redemption request</p>
+        </div>
+        
+        <div class="email-body">
+            <div class="greeting">
+                Hello {{ recipient_name }},
+            </div>
+            
+            <div class="success-badge">
+                Receipt Uploaded Successfully
+            </div>
+            
+            <div class="message">
+                An Acknowledgement Receipt for redemption request #{{ request_id }} has been submitted by the sales agent.
+            </div>
+            
+            <div class="info-box">
+                <h3>Submission Details</h3>
+                <div class="info-row">
+                    <span class="info-label">Request ID:</span>
+                    <span class="info-value">#{{ request_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Submitted By:</span>
+                    <span class="info-value">{{ sales_agent_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Customer:</span>
+                    <span class="info-value">{{ customer_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Submitted:</span>
+                    <span class="info-value">{{ date_submitted }}</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="https://points-redemption.n01tb.com/requests" class="action-button">View Request Details</a>
+            </div>
+            
+            <div class="message" style="margin-top: 30px; font-size: 14px;">
+                You can log in to the Points Redemption System to view the attached Acknowledgement Receipt and verify its contents.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Points Redemption System</strong></p>
+            <p>This is an automated notification. Please do not reply to this email.</p>
+            <p>&copy; 2025 All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

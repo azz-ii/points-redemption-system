@@ -54,7 +54,7 @@ export function RedeemItemHeader({
               : "text-yellow-600 dark:text-yellow-300"
           }`}
         >
-          {userLoading ? "Points: 999,999,999" : `Points: ${userPoints.toLocaleString()}`}
+          {userLoading ? "Points: 676767" : `Points: ${userPoints.toLocaleString()}`}
         </div>
         <button
           className="relative p-2 rounded-lg transition-colors hover:bg-accent"

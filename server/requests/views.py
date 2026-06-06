@@ -1417,6 +1417,17 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
 
         logger.info(f"AR with signature uploaded for request #{redemption_request.id} by {user.username}. Signature method: {signature_method}")
 
+        # Send email notification to Admin
+        try:
+            from utils.email_service import send_acknowledgement_receipt_submitted_email
+            email_sent = send_acknowledgement_receipt_submitted_email(redemption_request)
+            if email_sent:
+                logger.info(f"✓ AR submitted email sent for request #{redemption_request.id}")
+            else:
+                logger.warning(f"⚠ Failed to send AR submitted email for request #{redemption_request.id}")
+        except Exception as e:
+            logger.error(f"Error calling send_acknowledgement_receipt_submitted_email: {e}")
+
         serializer = self.get_serializer(redemption_request)
 
         # SSE: notify admins about AR upload
