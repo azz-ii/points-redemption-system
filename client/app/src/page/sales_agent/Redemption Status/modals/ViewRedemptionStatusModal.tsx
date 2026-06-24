@@ -229,12 +229,10 @@ export function ViewRedemptionStatusModal({
     displayRequest.processing_status === "NOT_PROCESSED" &&
     isOwnRequest;
 
-  // Show AR button when AR needs to be uploaded or is already uploaded (Customer only)
+  // Show AR button when AR needs to be uploaded
   const canShowAR =
     displayRequest.processing_status === "PROCESSED" &&
-    displayRequest.requested_for_type === "CUSTOMER" &&
-    (displayRequest.ar_status === "PENDING" ||
-      displayRequest.ar_status === "UPLOADED");
+    displayRequest.ar_status === "PENDING";
 
   const handleWithdraw = async (reason: string) => {
     setIsSubmitting(true);
@@ -330,15 +328,15 @@ export function ViewRedemptionStatusModal({
 
           {/* Content */}
           <div className="p-6 space-y-6 flex-1 overflow-y-auto min-h-0">
-            {/* Customer Information */}
+            {/* Receiver Information */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Customer Information
+                Receiver Information
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">
-                    Customer Name
+                    Receiver Name
                   </label>
                   <p className="text-sm font-medium">
                     {displayRequest.requested_for_name}

@@ -50,7 +50,7 @@ export function AcknowledgementReceiptModal({
 
   if (!isOpen) return null;
 
-  const canUploadAR = request.processing_status === "PROCESSED" && request.ar_status === "PENDING" && request.requested_for_type === "CUSTOMER";
+  const canUploadAR = request.processing_status === "PROCESSED" && request.ar_status === "PENDING";
 
   // --- Signature handlers ---
   const handleSignatureCapture = (file: File, method: "DRAWN" | "PHOTO") => {
@@ -383,9 +383,9 @@ export function AcknowledgementReceiptModal({
           {/* Signature capture — print-esig only */}
           {activeTab === "print-esig" && (
             <div className="pt-2 border-t border-border">
-              <h4 className="text-sm font-medium mb-3">Customer e-Signature</h4>
+              <h4 className="text-sm font-medium mb-3">Receiver e-Signature</h4>
               <p className="text-xs text-muted-foreground mb-3">
-                Capture the customer's signature to include in the generated PDF.
+                Capture the receiver's signature to include in the generated PDF.
               </p>
               <SignatureCapture
                 onSignatureCapture={handleSignatureCapture}

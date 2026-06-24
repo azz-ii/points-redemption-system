@@ -551,10 +551,7 @@ class RedemptionRequest(models.Model):
                 self.processing_status = ProcessingStatus.PROCESSED
                 self.processed_by = processed_by_user
                 self.date_processed = timezone.now()
-                requires_ar = (
-                    self.requested_for_type == RequestedForType.CUSTOMER
-                    and self.items.filter(product__has_stock=True).exists()
-                )
+                requires_ar = self.items.filter(product__has_stock=True).exists()
                 self.ar_status = (
                     AcknowledgementReceiptStatus.PENDING if requires_ar
                     else AcknowledgementReceiptStatus.NOT_REQUIRED

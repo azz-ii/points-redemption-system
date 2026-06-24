@@ -33,7 +33,7 @@ class Command(BaseCommand):
             request.ar_uploaded_at = None
             request.ar_number = None
             
-            if request.requested_for_type == 'CUSTOMER':
+            if request.items.filter(product__has_stock=True).exists():
                 request.ar_status = AcknowledgementReceiptStatus.PENDING
             else:
                 request.ar_status = AcknowledgementReceiptStatus.NOT_REQUIRED
@@ -49,11 +49,12 @@ class Command(BaseCommand):
                 request.ar_number = None
                 changed = True
             
-            if request.requested_for_type == 'CUSTOMER' and request.ar_status == AcknowledgementReceiptStatus.UPLOADED:
+            has_inventoried_items = request.items.filter(product__has_stock=True).exists()
+            if has_inventoried_items and request.ar_status == AcknowledgementReceiptStatus.UPLOADED:
                 request.ar_status = AcknowledgementReceiptStatus.PENDING
                 changed = True
                 
-            if request.requested_for_type != 'CUSTOMER' and request.ar_status != AcknowledgementReceiptStatus.NOT_REQUIRED:
+            if not has_inventoried_items and request.ar_status != AcknowledgementReceiptStatus.NOT_REQUIRED:
                 request.ar_status = AcknowledgementReceiptStatus.NOT_REQUIRED
                 changed = True
                 

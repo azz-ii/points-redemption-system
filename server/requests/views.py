@@ -700,11 +700,8 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
         redemption_request.processed_by = user
         redemption_request.date_processed = timezone.now()
         
-        # Set AR status: required only for customer requests that contain at least one inventoried item
-        requires_ar = (
-            redemption_request.requested_for_type == RequestedForType.CUSTOMER
-            and redemption_request.items.filter(product__has_stock=True).exists()
-        )
+        # Set AR status: required for any requests that contain at least one inventoried item
+        requires_ar = redemption_request.items.filter(product__has_stock=True).exists()
         redemption_request.ar_status = (
             AcknowledgementReceiptStatus.PENDING if requires_ar
             else AcknowledgementReceiptStatus.NOT_REQUIRED
@@ -1272,11 +1269,6 @@ class RedemptionRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if redemption_request.requested_for_type != RequestedForType.CUSTOMER:
-            return Response(
-                {'error': 'Only customer requests can reserve an acknowledgement receipt number'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
         if redemption_request.processing_status != ProcessingStatus.PROCESSED:
             return Response(

@@ -20,36 +20,42 @@ export function SignatureCapture({ onSignatureCapture, onClear, preview }: Signa
 
   // Initialize signature pad
   useEffect(() => {
-    if (mode === "DRAWN" && canvasRef.current && !signaturePadRef.current) {
+    if (mode === "DRAWN" && !preview && canvasRef.current) {
       const canvas = canvasRef.current;
       // Set canvas size to match container
-      const rect = canvas.parentElement?.getBoundingClientRect();
-      if (rect) {
-        canvas.width = rect.width;
-        canvas.height = 120;
+      const container = canvas.parentElement;
+      const width = container?.getBoundingClientRect().width || container?.offsetWidth || 500;
+      
+      canvas.width = width;
+      canvas.height = 120;
 
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = rect.width * dpr;
-        canvas.height = 120 * dpr;
-        const context = canvas.getContext("2d");
-        if (context) {
-          context.scale(dpr, dpr);
-        }
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = 120 * dpr;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.scale(dpr, dpr);
       }
 
-      signaturePadRef.current = new SignaturePad(canvas, {
+      const pad = new SignaturePad(canvas, {
         minWidth: 0.5,
         maxWidth: 2.5,
         throttle: 16,
       });
+      signaturePadRef.current = pad;
 
-      signaturePadRef.current.addEventListener("beginStroke", () => setIsDrawing(true));
-      signaturePadRef.current.addEventListener("endStroke", () => {
+      pad.addEventListener("beginStroke", () => setIsDrawing(true));
+      pad.addEventListener("endStroke", () => {
         setIsDrawing(false);
-        setHasSignature(!signaturePadRef.current!.isEmpty());
+        setHasSignature(!pad.isEmpty());
       });
+
+      return () => {
+        pad.off();
+        signaturePadRef.current = null;
+      };
     }
-  }, [mode]);
+  }, [mode, preview]);
 
   const handleClearSignature = () => {
     if (mode === "DRAWN" && signaturePadRef.current) {
@@ -104,33 +110,35 @@ export function SignatureCapture({ onSignatureCapture, onClear, preview }: Signa
   return (
     <div className="space-y-3">
       {/* Mode tabs */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleModeChange("DRAWN")}
-          className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2 ${
-            mode === "DRAWN"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted hover:bg-accent text-foreground border border-border"
-          }`}
-        >
-          <Pen className="h-4 w-4" />
-          Draw
-        </button>
-        <button
-          onClick={() => handleModeChange("PHOTO")}
-          className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2 ${
-            mode === "PHOTO"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted hover:bg-accent text-foreground border border-border"
-          }`}
-        >
-          <Camera className="h-4 w-4" />
-          Photo
-        </button>
-      </div>
+      {!preview && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleModeChange("DRAWN")}
+            className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2 ${
+              mode === "DRAWN"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted hover:bg-accent text-foreground border border-border"
+            }`}
+          >
+            <Pen className="h-4 w-4" />
+            Draw
+          </button>
+          <button
+            onClick={() => handleModeChange("PHOTO")}
+            className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2 ${
+              mode === "PHOTO"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted hover:bg-accent text-foreground border border-border"
+            }`}
+          >
+            <Camera className="h-4 w-4" />
+            Photo
+          </button>
+        </div>
+      )}
 
       {/* Draw mode */}
-      {mode === "DRAWN" && (
+      {!preview && mode === "DRAWN" && (
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
             Sign in the box below
@@ -163,7 +171,7 @@ export function SignatureCapture({ onSignatureCapture, onClear, preview }: Signa
       )}
 
       {/* Photo mode */}
-      {mode === "PHOTO" && (
+      {!preview && mode === "PHOTO" && (
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
             Take or upload a photo of the signature
@@ -187,15 +195,27 @@ export function SignatureCapture({ onSignatureCapture, onClear, preview }: Signa
 
       {/* Preview */}
       {preview && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Signature Preview
-          </label>
-          <div className="border rounded-lg overflow-hidden bg-muted/30 p-2 inline-block">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-foreground">
+              Signature Preview
+            </label>
+            <button
+              onClick={() => {
+                onClear();
+                handleClearSignature();
+              }}
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors bg-muted hover:bg-destructive hover:text-white text-foreground border border-border flex items-center gap-1.5"
+            >
+              <Trash2 className="h-3 w-3" />
+              Retake / Redraw
+            </button>
+          </div>
+          <div className="border rounded-lg overflow-hidden bg-muted/30 p-4 flex justify-center w-full">
             <img
               src={preview}
               alt="Signature preview"
-              className="max-w-xs max-h-24 object-contain"
+              className="max-w-full max-h-32 object-contain"
             />
           </div>
         </div>

@@ -239,7 +239,7 @@ export function RequestTimeline({
         )}
 
         {/* Acknowledgement Receipt */}
-        {data.processing_status === "PROCESSED" && data.requested_for_type === "CUSTOMER" && data.ar_status && data.ar_status !== "NOT_REQUIRED" && (
+        {data.processing_status === "PROCESSED" && data.ar_status && data.ar_status !== "NOT_REQUIRED" && (
           <TimelineItem
             icon={data.ar_status === "UPLOADED" ? Upload : Package}
             iconColor={
